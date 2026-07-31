@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="面向异步与缺失卫星观测的可靠下一日山火蔓延预测：10个月研究计划书">
+  <title>卫星山火预测研究计划书（导师修订版）</title>
+  <style>
+    :root {
+      --bg: #f4f7f3;
+      --panel: #ffffff;
+      --panel-soft: #f7faf6;
+      --text: #17231d;
+      --muted: #5c6b62;
+      --line: #d9e3dc;
+      --primary: #176b47;
+      --primary-2: #0e4f34;
+      --primary-soft: #e7f4ec;
+      --accent: #c35a19;
+      --accent-soft: #fff1e7;
+      --blue: #24658a;
+      --blue-soft: #e8f3f8;
+      --purple: #6850a5;
+      --purple-soft: #f0ecfa;
+      --danger: #9b2f2f;
+      --danger-soft: #faeaea;
+      --warning: #7a5a06;
+      --warning-soft: #fff6d8;
+      --shadow: 0 10px 30px rgba(29, 58, 40, 0.08);
+      --radius: 15px;
+      --sidebar: 290px;
+      --max: 1460px;
+      --font-scale: 1;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f1713;
+      --panel: #15221b;
+      --panel-soft: #192820;
+      --text: #e8f0eb;
+      --muted: #aab8af;
+      --line: #2b3b31;
+      --primary: #58c58d;
+      --primary-2: #84d9aa;
+      --primary-soft: #183829;
+      --accent: #f09a5d;
+      --accent-soft: #3b261c;
+      --blue: #79bce3;
+      --blue-soft: #183241;
+      --purple: #b8a7eb;
+      --purple-soft: #2b2540;
+      --danger: #ef8d8d;
+      --danger-soft: #3a2020;
+      --warning: #f0cf72;
+      --warning-soft: #382f18;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(39, 138, 86, 0.10), transparent 30rem),
+        radial-gradient(circle at 95% 18%, rgba(195, 90, 25, 0.07), transparent 24rem),
+        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      font-size: calc(16px * var(--font-scale));
+      line-height: 1.75;
+    }
+
+    a { color: var(--primary); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--accent); }
+    button, input { font: inherit; }
+    code {
+      padding: .08em .35em;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--primary-2);
+      background: var(--panel-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 62px;
+      padding: 9px max(18px, calc((100vw - var(--max)) / 2));
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .brand {
+      min-width: 0;
+      margin-right: auto;
+      font-weight: 720;
+      letter-spacing: .01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .progress-track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 3px;
+      background: transparent;
+    }
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+    .tool-button {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 7px 10px;
+      color: var(--text);
+      background: var(--panel);
+      cursor: pointer;
+    }
+    .tool-button:hover { border-color: var(--primary); }
+    .language-button {
+      min-width: 76px;
+      color: var(--primary-2);
+      font-weight: 700;
+    }
+    .mobile-only { display: none; }
+
+    .hero {
+      padding: 64px 24px 54px;
+      color: #f5fff8;
+      background:
+        linear-gradient(120deg, rgba(9, 63, 39, .96), rgba(20, 111, 72, .91)),
+        linear-gradient(30deg, transparent 50%, rgba(255,255,255,.08));
+    }
+    .hero-inner { max-width: 1180px; margin: 0 auto; }
+    .eyebrow {
+      margin-bottom: 14px;
+      color: #b9e8cc;
+      font-size: .79rem;
+      font-weight: 760;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      max-width: 1060px;
+      margin: 0;
+      font-size: clamp(2rem, 4.6vw, 4.1rem);
+      line-height: 1.16;
+      letter-spacing: -.035em;
+    }
+    .subtitle {
+      max-width: 980px;
+      margin: 17px 0 0;
+      color: #d8f1e2;
+      font-size: clamp(1rem, 1.7vw, 1.26rem);
+    }
+    .hero-pills, .meta-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .hero-pills {
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      margin-top: 32px;
+    }
+    .hero-pill {
+      padding: 13px 14px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px;
+      background: rgba(255,255,255,.08);
+      text-align: center;
+    }
+    .hero-pill strong { display: block; font-size: 1.25rem; }
+    .hero-pill span { color: #ccebd8; font-size: .83rem; }
+    .meta-grid {
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 15px;
+    }
+    .meta-item {
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: #d8f1e2;
+      background: rgba(3, 36, 22, .30);
+      font-size: .86rem;
+    }
+    .meta-item b { color: #fff; }
+
+    .truth-banner {
+      max-width: 1180px;
+      margin: -23px auto 25px;
+      padding: 17px 20px;
+      border: 1px solid #e0b795;
+      border-left: 6px solid var(--accent);
+      border-radius: 13px;
+      color: #3f291b;
+      background: #fff5ec;
+      box-shadow: var(--shadow);
+    }
+    [data-theme="dark"] .truth-banner { color: #f6dfcd; background: #33251c; }
+    .truth-banner strong { color: var(--accent); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      gap: 27px;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 22px 70px;
+    }
+    .sidebar {
+      position: sticky;
+      top: 82px;
+      align-self: start;
+      max-height: calc(100vh - 100px);
+      overflow: auto;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .search {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--panel-soft);
+      outline: none;
+    }
+    .search:focus { border-color: var(--primary); }
+    .toc-title {
+      margin: 7px 0 8px;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .toc { list-style: none; margin: 0; padding: 0; }
+    .toc a {
+      display: block;
+      margin: 2px 0;
+      padding: 7px 9px;
+      border-radius: 7px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .88rem;
+      line-height: 1.35;
+    }
+    .toc a:hover, .toc a.active { color: var(--primary-2); background: var(--primary-soft); }
+
+    main { min-width: 0; }
+    .section {
+      margin-bottom: 24px;
+      padding: clamp(21px, 3vw, 36px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .section[hidden] { display: none; }
+    .section-kicker {
+      margin-bottom: 5px;
+      color: var(--primary);
+      font-size: .75rem;
+      font-weight: 780;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(1.45rem, 2.5vw, 2.05rem);
+      line-height: 1.3;
+      letter-spacing: -.018em;
+    }
+    h3 { margin: 28px 0 10px; font-size: 1.17rem; line-height: 1.45; }
+    h4 { margin: 20px 0 7px; font-size: 1rem; }
+    p { margin: 10px 0; }
+    ul, ol { padding-left: 1.35rem; }
+    li + li { margin-top: 5px; }
+
+    .lead {
+      color: var(--muted);
+      font-size: 1.06rem;
+    }
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel-soft);
+    }
+    .card h3, .card h4 { margin-top: 0; }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+    .decision {
+      border-top: 4px solid var(--primary);
+      background: linear-gradient(180deg, var(--primary-soft), var(--panel-soft));
+    }
+    .risk { border-top: 4px solid var(--danger); }
+    .accent { border-top: 4px solid var(--accent); }
+
+    .badge {
+      display: inline-block;
+      margin: 2px 4px 2px 0;
+      padding: 2px 8px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 730;
+      line-height: 1.55;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .verified { color: var(--primary-2); border-color: #9bc9ad; background: var(--primary-soft); }
+    .peer { color: var(--blue); border-color: #a9cbdc; background: var(--blue-soft); }
+    .preprint { color: var(--purple); border-color: #c1b6df; background: var(--purple-soft); }
+    .decision-badge { color: var(--accent); border-color: #e5b793; background: var(--accent-soft); }
+    .hypothesis { color: var(--warning); border-color: #ddc979; background: var(--warning-soft); }
+    .danger-badge { color: var(--danger); border-color: #d8a2a2; background: var(--danger-soft); }
+
+    .callout {
+      margin: 18px 0;
+      padding: 15px 17px;
+      border-left: 5px solid var(--primary);
+      border-radius: 0 10px 10px 0;
+      background: var(--primary-soft);
+    }
+    .callout.warning { border-left-color: var(--warning); background: var(--warning-soft); }
+    .callout.danger { border-left-color: var(--danger); background: var(--danger-soft); }
+    .callout.blue { border-left-color: var(--blue); background: var(--blue-soft); }
+
+    .table-wrap {
+      width: 100%;
+      margin: 15px 0;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      background: var(--panel);
+    }
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--primary-2);
+      background: var(--panel-soft);
+      font-size: .84rem;
+      line-height: 1.45;
+    }
+    td { font-size: .89rem; line-height: 1.58; }
+    tr:last-child td { border-bottom: 0; }
+
+    .rq {
+      padding: 20px;
+      border: 2px solid var(--primary);
+      border-radius: 12px;
+      color: var(--primary-2);
+      background: var(--primary-soft);
+      font-size: 1.12rem;
+      font-weight: 680;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: 1.15fr auto 1fr auto 1.25fr auto 1fr;
+      align-items: stretch;
+      gap: 9px;
+      margin: 20px 0;
+    }
+    .flow-node {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 94px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel-soft);
+      text-align: center;
+      font-size: .88rem;
+    }
+    .flow-node strong { display: block; color: var(--primary-2); }
+    .flow-arrow { align-self: center; color: var(--primary); font-size: 1.4rem; font-weight: 750; }
+    .formula {
+      overflow-x: auto;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--primary-2);
+      background: var(--panel-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .91rem;
+      white-space: nowrap;
+    }
+
+    .gate {
+      display: grid;
+      grid-template-columns: 94px 1fr;
+      gap: 13px;
+      margin: 11px 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel-soft);
+    }
+    .gate-time {
+      color: var(--primary-2);
+      font-weight: 760;
+      text-align: center;
+    }
+    .timeline {
+      position: relative;
+      margin: 15px 0;
+      padding-left: 27px;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 8px;
+      width: 2px;
+      background: var(--line);
+    }
+    .timeline-item {
+      position: relative;
+      margin: 0 0 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel-soft);
+    }
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      top: 20px;
+      left: -25px;
+      width: 12px;
+      height: 12px;
+      border: 3px solid var(--panel);
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { position: relative; padding-left: 27px; }
+    .checklist li::before {
+      content: "□";
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-size: 1.1rem;
+      font-weight: 720;
+    }
+    .small { color: var(--muted); font-size: .86rem; }
+    .strike { color: var(--muted); text-decoration: line-through; }
+    .source-list { padding-left: 1.2rem; }
+    .source-list li { margin-bottom: 11px; }
+    .source-title { font-weight: 680; }
+    .footer {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 24px 50px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .84rem;
+    }
+
+    @media (max-width: 1040px) {
+      .hero-pills { grid-template-columns: repeat(3, 1fr); }
+      .meta-grid { grid-template-columns: repeat(2, 1fr); }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        z-index: 70;
+        top: 67px;
+        left: 12px;
+        width: min(330px, calc(100vw - 24px));
+        max-height: calc(100vh - 82px);
+        transform: translateX(-115%);
+        transition: transform .2s ease;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-only { display: inline-block; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); text-align: center; }
+    }
+    @media (max-width: 720px) {
+      .hero { padding: 48px 18px 45px; }
+      .hero-pills, .meta-grid, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .layout { padding: 0 12px 50px; }
+      .section { padding: 20px 17px; }
+      .truth-banner { margin-left: 12px; margin-right: 12px; }
+      .hide-mobile { display: none; }
+      .gate { grid-template-columns: 1fr; }
+      .gate-time { text-align: left; }
+    }
+
+    @media print {
+      :root { --bg: #fff; --panel: #fff; --panel-soft: #fafafa; --text: #111; --muted: #444; --line: #ccc; }
+      body { font-size: 10.5pt; background: #fff; }
+      .topbar, .sidebar { display: none !important; }
+      .hero { padding: 28px 0; color: #111; background: #fff; border-bottom: 2px solid #176b47; }
+      .hero h1, .subtitle, .eyebrow, .hero-pill span, .meta-item, .meta-item b { color: #111; }
+      .hero-pill, .meta-item { border: 1px solid #bbb; background: #fff; }
+      .truth-banner { margin: 15px 0; box-shadow: none; }
+      .layout { display: block; max-width: none; padding: 0; }
+      .section { break-inside: avoid; margin: 12px 0; padding: 16px; box-shadow: none; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; }
+      a { color: #111; text-decoration: none; }
+      a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 7.5pt; word-break: break-all; }
+      .footer { padding: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <button class="tool-button mobile-only" id="navToggle" aria-label="打开目录">☰</button>
+    <div class="brand">卫星山火预测 · 导师修订计划</div>
+    <button class="tool-button hide-mobile" id="fontDown" aria-label="缩小字号">A−</button>
+    <button class="tool-button hide-mobile" id="fontUp" aria-label="放大字号">A+</button>
+    <button class="tool-button language-button" id="languageToggle" aria-label="切换到英文">English</button>
+    <button class="tool-button" id="themeToggle" aria-label="切换明暗主题">◐</button>
+    <button class="tool-button" onclick="window.print()" aria-label="打印或导出 PDF">打印 / PDF</button>
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">Research plan · Revised version</div>
+      <h1>面向异步与缺失卫星观测的可靠下一日山火蔓延预测</h1>
+      <p class="subtitle">Reliable Next-Day Wildfire Spread Forecasting under Asynchronous and Missing Satellite Observations</p>
+      <div class="meta-grid">
+        <div class="meta-item"><b>研究周期：</b>10 个月</div>
+        <div class="meta-item"><b>论文目标：</b>国际同行评审会议 Full / Regular Paper</div>
+        <div class="meta-item"><b>主数据集：</b>WSTS+</div>
+        <div class="meta-item"><b>资料核验日期：</b>2026-07-30</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="truth-banner">
+    本文件为研究计划，不含实验结果。文中的性能判断均为待检验假设；数据集、相关论文和会议信息附有来源。
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <input class="search" id="searchBox" type="search" placeholder="搜索计划书内容…" aria-label="搜索计划书">
+      <div class="toc-title">目录</div>
+      <nav>
+        <ul class="toc" id="toc">
+          <li><a href="#s1">01 · 研究目标与范围</a></li>
+          <li><a href="#s2">02 · 研究基础与相关工作</a></li>
+          <li><a href="#s3">03 · 研究问题与假设</a></li>
+          <li><a href="#s4">04 · 数据与预测合同</a></li>
+          <li><a href="#s5">05 · 方法设计</a></li>
+          <li><a href="#s6">06 · 实验设计</a></li>
+          <li><a href="#s7">07 · 评估指标</a></li>
+          <li><a href="#s8">08 · 阶段目标与止损条件</a></li>
+          <li><a href="#s9">09 · 时间安排</a></li>
+          <li><a href="#s10">10 · 可复现要求</a></li>
+          <li><a href="#s11">11 · 投稿计划</a></li>
+          <li><a href="#s12">12 · 参考资料</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main id="mainContent">
+      <section class="section searchable" id="s1">
+        <div class="section-kicker">01</div>
+        <h2>研究目标与范围</h2>
+        <p>本项目研究卫星观测不完整时的下一日山火蔓延预测。给定预测时点之前的火情、天气、地形和植被信息，模型输出 24 小时后的活跃火点概率图。研究重点是观测缺失和观测时间不一致对预测结果的影响。</p>
+
+        <p>计划以 WSTS+ 为主数据集。若标签和时间定义能够对齐，再使用 TS-SatFire 做独立验证。方法部分只研究一项改动：根据模态有效性、观测时间间隔和可用的质量字段，对多源特征进行加权融合。</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>计划完成的工作</h3>
+            <ul>
+              <li>复现公开基线，并建立事件隔离的跨年份划分；</li>
+              <li>实现质量与观测时间感知的融合模块；</li>
+              <li>比较完整观测、自然缺失和受控缺失条件下的结果；</li>
+              <li>完成消融实验、事件级统计和失败案例分析。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>不纳入本项目</h3>
+            <ul>
+              <li>山火发生概率、长期轨迹和完整生命周期预测；</li>
+              <li>跨灾种迁移、全球尺度模型和大型基础模型训练；</li>
+              <li>大规模架构搜索和多套物理模块；</li>
+              <li>缺少数据依据的实时部署或预警系统结论。</li>
+            </ul>
+          </div>
+        </div>
+
+        <p>项目周期为 10 个月，计划使用一张约 24GB 显存 GPU 或同等算力。第一个月应完成数据检查和公开基线复现；若发现数据存在无法排除的未来信息泄漏，应先调整题目，不继续增加模型结构。</p>
+      </section>
+
+      <section class="section searchable" id="s2">
+        <div class="section-kicker">02</div>
+        <h2>研究基础与相关工作</h2>
+
+        <h3>公开数据集</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>资源</th>
+                <th>已核验事实</th>
+                <th>与本项目的关系</th>
+                <th>使用时的限制</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>WildfireSpreadTS</strong><br><span class="badge peer">NeurIPS 2023</span></td>
+                <td>论文报告 13,607 个时空样本、607 个火灾事件、23 个通道，覆盖美国 2018 至 2021 年；目标是 24 小时后的二值活跃火点图，标签以 VIIRS 为代理。<a href="https://proceedings.neurips.cc/paper_files/paper/2023/file/ebd545176bdaa9cd5d45954947bd74b7-Paper-Datasets_and_Benchmarks.pdf" target="_blank" rel="noopener">论文</a> · <a href="https://github.com/SebastianGer/WildfireSpreadTS" target="_blank" rel="noopener">代码</a></td>
+                <td>用于确定任务、输入通道和公开基线。</td>
+                <td>活跃火点图是代理标签，不等同于真实火线或完整烧毁范围。</td>
+              </tr>
+              <tr>
+                <td><strong>WSTS+</strong><br><span class="badge peer">WACV 2026</span></td>
+                <td>论文和项目卡称其在原 WSTS 上增加四年数据并扩展地理范围；项目卡列出 2016 至 2023 年、1,005 个事件、24,462 张影像。<a href="https://arxiv.org/abs/2502.12003" target="_blank" rel="noopener">论文记录</a> · <a href="https://huggingface.co/saadlahrichi/WSTSPlus" target="_blank" rel="noopener">项目卡</a></td>
+                <td>作为主数据集，用于跨年份实验。</td>
+                <td>所需 QA、时间戳和传感器质量字段是否公开，仍需在数据审计时确认。</td>
+              </tr>
+              <tr>
+                <td><strong>TS-SatFire</strong><br><span class="badge peer">Scientific Data 2025</span></td>
+                <td>论文报告 179 个事件、3,552 张影像、约 71GB，覆盖 2017 至 2021 年；包含活跃火检测、烧毁区域制图和蔓延预测三项任务。蔓延标签是“下一日新烧毁区域”。<a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">论文</a> · <a href="https://github.com/zhaoyutim/TS-SatFire" target="_blank" rel="noopener">代码</a></td>
+                <td>标签能够对齐时，用于独立验证或辅助监督。</td>
+                <td>其“新烧毁区域”与 WSTS 的“下一日活跃火点图”不是同一个输出合同，不能直接混合分数。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>相关方法</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>工作</th>
+                <th>主要内容</th>
+                <th>与本项目的关系</th>
+                <th>发表状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">Robust Wildfire Forecasting under Partial Observability</a></td>
+                <td>在 WSTS 上以像素和块遮挡模拟 10% 至 80% 的数据损坏，采用先重建、后预测的两阶段方法，并进行留一年验证。</td>
+                <td>这是最直接的对比工作。本项目需要进一步研究观测时间间隔、异步模态和非随机缺失。</td>
+                <td><span class="badge preprint">预印本 · 2026</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">AGFlow</a></td>
+                <td>使用时间戳条件化的异步 Sentinel-1/2 融合进行云去除与任意时刻重建。</td>
+                <td>说明时间戳驱动的异步融合已有研究。本项目的区别在于山火预测任务和预测时点约束。</td>
+                <td><span class="badge preprint">预印本 · 2026</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">Incomplete Multimodal Learning for Remote Sensing Data Fusion</a></td>
+                <td>研究遥感多模态缺失，通过重建与对比式融合支持下游任务。</td>
+                <td>可用于设计缺失模态基线，避免把通用技术当作山火领域的新方法。</td>
+                <td><span class="badge preprint">预印本 · 2023</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://arxiv.org/abs/2603.02505" target="_blank" rel="noopener">SGMA</a> / <a href="https://arxiv.org/abs/2601.17342" target="_blank" rel="noopener">STARS</a></td>
+                <td>面向不完整遥感多模态数据，研究模态可靠性估计、加权融合以及共享与专属表示对齐。</td>
+                <td>可选取其中一个方法进行适配，比较可靠性估计和加权融合的效果。</td>
+                <td><span class="badge preprint">预印本 · 2026</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>拟解决的问题</h3>
+        <p>现有工作已经涉及缺失模态、时间戳融合和山火部分可观测预测，因此本项目不能把这些概念本身作为创新点。论文需要说明：在事件隔离和预测时点约束下，观测年龄与质量信息是否对下一日山火预测有稳定作用。</p>
+
+        <p>实验设计中需要特别处理三个问题。第一，WSTS 与 TS-SatFire 的标签含义不同。第二，目标日观测和事后重分析数据可能造成未来信息泄漏。第三，随机遮挡只能作为压力测试，不能替代云、烟和卫星过境时间造成的实际缺失。</p>
+      </section>
+
+      <section class="section searchable" id="s3">
+        <div class="section-kicker">03</div>
+        <h2>研究问题与假设</h2>
+
+        <div class="rq">
+          在事件隔离和跨年份条件下，使用模态有效性、观测时间间隔与缺失模式，能否改善部分可观测条件下的下一日山火蔓延预测，同时保持完整观测条件下的性能？
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>假设</th>
+                <th>计划检验</th>
+                <th>什么结果会否定它</th>
+                <th>处置</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge hypothesis">H1</span><br>质量、有效性和观测年龄门控优于简单拼接与 mask-only 基线。</td>
+                <td>在自然缺失可得的切片和预先定义的合成压力测试上，对比相同训练预算的基线；至少 3 个随机种子。</td>
+                <td>收益仅出现在单一缺失率、单一年份或单一随机种子；或完整观测性能明显下降。</td>
+                <td>简化或删除门控模块。</td>
+              </tr>
+              <tr>
+                <td><span class="badge hypothesis">H2</span><br>显式 <code>Δt</code> 编码改善异步观测下的预测。</td>
+                <td>固定其余结构，对比 no-time、absolute timestamp、observation-age 三种编码。</td>
+                <td>去除 <code>Δt</code> 后结果等价或更好，或收益无法跨年份复现。</td>
+                <td>不把时间编码列为论文贡献。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>第一个月完成基线方差估计后，确定性能改善的判定标准。该标准和主评估指标应在运行测试集之前固定。</p>
+      </section>
+
+      <section class="section searchable" id="s4">
+        <div class="section-kicker">04</div>
+        <h2>数据与预测合同</h2>
+
+        <h3>数据集安排</h3>
+        <div class="grid-2">
+          <div class="card decision">
+            <h4>WSTS+</h4>
+            <p>作为主数据集，用于训练、验证和跨年份测试。正式使用前确认下载许可、字段定义和官方划分。</p>
+          </div>
+          <div class="card">
+            <h4>TS-SatFire</h4>
+            <p>仅用于独立验证。若第二个月仍无法对齐标签、空间分辨率和时间定义，则取消这部分实验。</p>
+          </div>
+        </div>
+
+        <h3>预测时点</h3>
+        <div class="callout danger">
+          给定预测时点 <code>t</code>，模型只能使用当时已经可获得的数据，预测 <code>t+24h</code> 的目标。每个输入字段需记录观测时间、可用时间、空间分辨率、缺失含义和预处理版本。
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>字段类别</th>
+                <th>允许条件</th>
+                <th>泄漏风险</th>
+                <th>审计动作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>历史火情图</td>
+                <td>仅使用时间戳 ≤ <code>t</code> 的观测，并保留探测有效性/缺失信息。</td>
+                <td>目标日火点混入输入；预处理窗口跨过签发时点。</td>
+                <td>逐样本断言最大输入时间 ≤ <code>t</code>。</td>
+              </tr>
+              <tr>
+                <td>天气</td>
+                <td>明确区分“签发时可得的天气预报”与“事后观测/重分析”。</td>
+                <td>用目标时段的真实观测天气训练和测试，却声称现实预报。</td>
+                <td>数据清单写明产品名、发布延迟和预报时效，并比较预报数据与重分析数据的差异。</td>
+              </tr>
+              <tr>
+                <td>静态地形/燃料</td>
+                <td>只要时间版本不晚于事件，并记录空间重采样方法。</td>
+                <td>使用事后更新的燃料/烧毁产品。</td>
+                <td>保存数据版本和获取日期。</td>
+              </tr>
+              <tr>
+                <td>QA、云/烟、模态有效性</td>
+                <td>只有在真实数据包或可追溯原始产品中存在时使用。</td>
+                <td>把从目标标签反推的“质量”作为输入。</td>
+                <td>第一周核对字段来源；不可得时不使用该字段。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>标签合同</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>数据集</th>
+                <th>目标语义</th>
+                <th>本计划中的称呼</th>
+                <th>可否直接合并</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>WSTS / WSTS+</td>
+                <td>下一日 VIIRS 活跃火点二值图（代理标签）。</td>
+                <td>next-day active-fire map / 局地蔓延代理</td>
+                <td><strong>否</strong>，除非重新定义共同目标并给出映射误差。</td>
+              </tr>
+              <tr>
+                <td>TS-SatFire</td>
+                <td>下一日新烧毁区域。</td>
+                <td>newly-burned-area progression</td>
+                <td><strong>否</strong>，只能分别训练/评估或作为迁移实验。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>数据划分与缺失设置</h3>
+        <ul>
+          <li>同一火灾事件不得跨训练集、验证集和测试集。</li>
+          <li>优先采用按年份前推或 leave-one-year-out；具体划分在主实验前固定。</li>
+          <li>自然缺失只在数据提供有效性或 QA 字段时报告，并单独统计缺失率。</li>
+          <li>受控缺失包括随机像素、空间块、连续时间段和整模态缺失。</li>
+          <li>超参数、阈值和早停只使用训练集与验证集确定。</li>
+        </ul>
+
+        <h3>第一周数据检查</h3>
+        <ul class="checklist">
+          <li>确认下载地址、许可、文件完整性与校验和；</li>
+          <li>核对事件 ID、年份、样本数、时间戳和 QA 字段；</li>
+          <li>检查每个输入字段是否早于预测时点；</li>
+          <li>统计正类比例、事件长度、缺失率和年度分布；</li>
+          <li>保存 <code>data_manifest.csv</code> 与 <code>split_manifest.csv</code>。</li>
+        </ul>
+      </section>
+
+      <section class="section searchable" id="s5">
+        <div class="section-kicker">05</div>
+        <h2>方法设计</h2>
+
+        <div class="flow" role="img" aria-label="最小模型流程：多模态输入，经模态编码、可靠性门控和时序融合，输出下一日蔓延图">
+          <div class="flow-node"><div><strong>多模态历史输入</strong>火情 · 天气 · 地形/燃料<br>时间戳 · 有效性 · QA</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div><strong>轻量模态编码器</strong>共享空间尺度<br>保留模态身份</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div><strong>可靠性门控</strong>质量 q · 观测年龄 Δt<br>缺失 mask · 模态 ID</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div><strong>时序融合 + 单解码器</strong>输出下一日概率图<br>可选辅助头</div></div>
+        </div>
+
+        <div class="formula">
+          z<sub>t</sub> = Σ<sub>m</sub> α<sub>m,t</sub> · E<sub>m</sub>(x<sub>m,t</sub>), &nbsp;
+          α<sub>m,t</sub> = softmax<sub>m</sub>(g([q<sub>m,t</sub>, Δt<sub>m,t</sub>, mask<sub>m,t</sub>, id<sub>m</sub>]))
+        </div>
+        <p class="small">其中 <code>q</code> 表示数据中可用的质量字段。若数据不提供该字段，则仅使用 <code>Δt + mask + modality ID</code>。</p>
+
+        <h3>模型组成</h3>
+        <div class="grid-4">
+          <div class="card">
+            <h4>1. 模态编码</h4>
+            <p>每类输入由轻量编码器映射到共同空间尺度，编码器沿用公开基线。</p>
+          </div>
+          <div class="card">
+            <h4>2. 可靠性估计</h4>
+            <p>使用质量字段、有效性 mask 和观测年龄估计各模态权重。</p>
+          </div>
+          <div class="card">
+            <h4>3. 时序融合</h4>
+            <p>从 ConvLSTM、时序卷积或公开基线中选择一种结构。</p>
+          </div>
+          <div class="card">
+            <h4>4. 单任务解码</h4>
+            <p>模型输出下一日概率图，损失函数按类别不平衡情况确定。</p>
+          </div>
+        </div>
+
+        <p>质量与观测年龄门控是必做模块。辅助监督仅在 TS-SatFire 标签核对完成后考虑。物理一致性项和大型预训练模型不纳入本周期。</p>
+      </section>
+
+      <section class="section searchable" id="s6">
+        <div class="section-kicker">06</div>
+        <h2>实验设计</h2>
+
+        <h3>对比基线</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>层级</th>
+                <th>基线</th>
+                <th>作用</th>
+                <th>实施要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>规则基线</td>
+                <td>No-fire、Persistence、固定形态学膨胀</td>
+                <td>检验学习模型是否超过全负预测和火情延续假设。</td>
+                <td>参数只在验证集确定。</td>
+              </tr>
+              <tr>
+                <td>领域启发</td>
+                <td>条件允许时加入风向驱动椭圆膨胀</td>
+                <td>提供简单的方向性蔓延对照。</td>
+                <td>需核对气象方向和坐标转换。</td>
+              </tr>
+              <tr>
+                <td>公开学习基线</td>
+                <td>WSTS/WSTS+ 官方或作者公开的最强可复现模型</td>
+                <td>核对数据处理和训练流程。</td>
+                <td>记录代码版本、环境、预处理和训练预算。</td>
+              </tr>
+              <tr>
+                <td>最小神经基线</td>
+                <td>Simple concat、concat + mask、modality dropout</td>
+                <td>检验可靠性门控是否超过常用缺失处理方法。</td>
+                <td>尽量同 backbone、同参数量级、同训练预算。</td>
+              </tr>
+              <tr>
+                <td>最近邻</td>
+                <td>可复现时加入 reconstruction→prediction 的部分可观测方法</td>
+                <td>与山火部分可观测预测的直接相关工作比较。</td>
+                <td>代码不可得或实验条件不一致时，只作定性讨论。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>主实验</h3>
+        <div class="grid-2">
+          <div class="card">
+            <h4>E1 · 标准完整观测</h4>
+            <p>比较公开基线与拟议方法在固定划分下的性能，并检查完整观测条件下是否退化。</p>
+          </div>
+          <div class="card">
+            <h4>E2 · 缺失与异步压力测试</h4>
+            <p>分别评估自然缺失和四类受控缺失，绘制性能随缺失强度变化的曲线。</p>
+          </div>
+          <div class="card">
+            <h4>E3 · 跨年份/事件泛化</h4>
+            <p>进行至少一个时间外测试，并按事件大小、持续时间和正类比例分层报告。</p>
+          </div>
+          <div class="card">
+            <h4>E4 · 消融与失败分析</h4>
+            <p>依次移除 <code>q</code>、<code>Δt</code>、mask、门控；展示典型真阳性、漏检和错误扩散案例。</p>
+          </div>
+        </div>
+
+        <h3>实验一致性</h3>
+        <ul>
+          <li>学习模型至少运行 3 个固定随机种子，并保存每次运行的预测结果。</li>
+          <li>同类模型使用一致的数据增强、训练轮数/早停、输入历史长度和调参预算。</li>
+          <li>主结论只使用预先指定的指标和测试划分。</li>
+          <li>只有数据、划分、预处理和指标一致时，才进行数值对比。</li>
+        </ul>
+      </section>
+
+      <section class="section searchable" id="s7">
+        <div class="section-kicker">07</div>
+        <h2>评估指标</h2>
+
+        <p>山火蔓延标签中正类像素较少，因此主指标采用 Average Precision（AP/AUPRC），不以 Accuracy 作为主要结果。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>层级</th>
+                <th>指标</th>
+                <th>报告方式</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>主指标</strong></td>
+                <td>Average Precision / AUPRC</td>
+                <td>报告像素汇总值和事件级宏平均，并给出 95% 事件 bootstrap 区间。</td>
+                <td>用于主结果比较。</td>
+              </tr>
+              <tr>
+                <td>空间重叠</td>
+                <td>IoU、F1、Precision、Recall</td>
+                <td>阈值在验证集确定，同时给出 PR 曲线。</td>
+                <td>用于评价空间重叠。</td>
+              </tr>
+              <tr>
+                <td>概率质量</td>
+                <td>Brier score、ECE</td>
+                <td>模型输出需要解释为概率时报告。</td>
+                <td>ECE binning 方案需预先固定。</td>
+              </tr>
+              <tr>
+                <td>分层结果</td>
+                <td>最差年份、缺失强度曲线、事件规模分层</td>
+                <td>报告均值、分布和样本量。</td>
+                <td>用于判断结果是否由少数事件或年份驱动。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>统计单位</h3>
+        <p>置信区间以火灾事件为重采样单位，跨年份实验同时报告各年度结果。事件数量不足时，应直接报告较宽的置信区间，不使用像素级检验替代事件级统计。</p>
+      </section>
+
+      <section class="section searchable" id="s8">
+        <div class="section-kicker">08</div>
+        <h2>阶段目标与止损条件</h2>
+
+        <div class="gate">
+          <div class="gate-time">第 1 个月</div>
+          <div>
+            <strong>目标：</strong>公开基线可以运行；完成事件、年份、标签和时间字段核对。
+            <br><strong>未完成时：</strong>暂停模型开发。若主数据不可获得或标签无法解释，则调整题目。
+          </div>
+        </div>
+
+        <div class="gate">
+          <div class="gate-time">第 3 个月</div>
+          <div>
+            <strong>目标：</strong>门控模块在预先指定的缺失条件下，跨 3 个种子呈一致方向；完整观测性能没有明显下降。
+            <br><strong>未完成时：</strong>简化模块并复查一次。结果仍不稳定时，停止该方法方向。
+          </div>
+        </div>
+
+        <div class="gate">
+          <div class="gate-time">第 5 个月</div>
+          <div>
+            <strong>目标：</strong>至少在一个时间外年份或第二种 backbone 上保持相同结果方向，并完成事件级置信区间与失败案例分析。
+            <br><strong>未完成时：</strong>重新评估论文是否仍有独立的评估贡献；若没有，则降低投稿目标。
+          </div>
+        </div>
+
+        <div class="gate">
+          <div class="gate-time">第 7 个月</div>
+          <div>
+            <strong>目标：</strong>固定方法、数据划分、主表和主图，之后只处理错误修复、复现实验和论文写作。
+            <br><strong>未完成时：</strong>缩小实验范围，不再增加新模块。
+          </div>
+        </div>
+
+        <p>投稿前应确认结果在多个随机种子和关键数据切片上保持一致，事件级统计不由少数大事件主导，且所有输入满足预测时点约束。</p>
+      </section>
+
+      <section class="section searchable" id="s9">
+        <div class="section-kicker">09</div>
+        <h2>时间安排</h2>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <strong>第 1 个月：数据检查与基线复现</strong>
+            <p>下载并校验数据，建立 manifest，核对事件隔离和输入时间，复现 no-fire、persistence 与公开学习基线。</p>
+          </div>
+          <div class="timeline-item">
+            <strong>第 2 至 3 个月：核心模块</strong>
+            <p>实现 concat + mask 和 observation-age gate，完成小规模验证、3 个固定随机种子及第一组缺失强度实验。</p>
+          </div>
+          <div class="timeline-item">
+            <strong>第 4 至 5 个月：主实验与跨年份验证</strong>
+            <p>完成 E1 至 E3、事件 bootstrap、跨年份实验和第二种 backbone，并检查不同事件规模和缺失条件下的结果。</p>
+          </div>
+          <div class="timeline-item">
+            <strong>第 6 个月：外部验证与补充实验</strong>
+            <p>在标签核对通过后加入 TS-SatFire 外部验证；若无法对齐，则用于补充随机种子、第二种划分或数据质量分析。</p>
+          </div>
+          <div class="timeline-item">
+            <strong>第 7 个月：消融与方法固定</strong>
+            <p>完成 E4、计算成本和预测时点敏感性实验，生成主表和主图，固定方法与数据划分。</p>
+          </div>
+          <div class="timeline-item">
+            <strong>第 8 至 9 个月：论文写作与内部审阅</strong>
+            <p>完成论文初稿，核对引用和实验数字，根据内部审阅补充必要实验，并整理代码与复现说明。</p>
+          </div>
+          <div class="timeline-item">
+            <strong>第 10 个月：投稿准备</strong>
+            <p>完成最终复现、匿名仓库、格式调整和投稿材料，不再增加新的研究模块。</p>
+          </div>
+        </div>
+
+        <p>延长后的时间主要用于跨年份验证、第二种 backbone、外部数据集、更多随机种子和论文复现，不扩大主研究问题。</p>
+      </section>
+
+      <section class="section searchable" id="s10">
+        <div class="section-kicker">10</div>
+        <h2>可复现要求</h2>
+
+        <p>数据划分、训练配置、随机种子、环境版本和评估脚本均需保存在仓库中。论文表格由统一评估脚本生成，避免手工整理造成差错。</p>
+
+        <h3>交付物</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>交付物</th>
+                <th>完成标准</th>
+                <th>检查方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>数据审计报告</td>
+                <td>每个字段有来源、时间语义、缺失含义、空间/时间分辨率和许可。</td>
+                <td>随机抽取 20 个样本，对照原文件与可视化结果。</td>
+              </tr>
+              <tr>
+                <td>基线复现记录</td>
+                <td>规则基线和至少一个公开学习基线可从新环境重跑。</td>
+                <td>在新环境中执行固定命令，保存日志。</td>
+              </tr>
+              <tr>
+                <td>实验注册表</td>
+                <td>每次运行有唯一 ID、commit、配置、seed、硬件和结果路径。</td>
+                <td>结果 CSV 可以定位模型 checkpoint 与预测文件。</td>
+              </tr>
+              <tr>
+                <td>评估包</td>
+                <td>同一脚本生成 AP、事件宏平均、空间指标、bootstrap 区间和曲线。</td>
+                <td>固定小样本测试集有已知答案的单元测试。</td>
+              </tr>
+              <tr>
+                <td>论文与补充材料</td>
+                <td>所有数字能够追溯到结果文件，外部事实均有来源。</td>
+                <td>投稿前核对论文数字和引用链接。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>在数据许可允许的情况下，公开训练与评估代码、配置和划分 manifest；不重新分发受限原始数据。</p>
+      </section>
+
+      <section class="section searchable" id="s11">
+        <div class="section-kicker">11</div>
+        <h2>投稿计划</h2>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>候选</th>
+                <th>适配条件</th>
+                <th>已核验信息</th>
+                <th>当前决策</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>ICME 2027</strong></td>
+                <td>适合以多模态时序融合和视觉预测为主要贡献的论文。</td>
+                <td>IEEE 官方页列会议时间为 2027-07-13 至 07-17、地点厦门，并写明更多信息待发布。<a href="https://ieee-cas.org/event/conference/2027-ieee-international-conference-multimedia-expo-icme" target="_blank" rel="noopener">官方会议页</a></td>
+                <td><span class="badge decision-badge">主目标</span><br>截稿日尚未公布。</td>
+              </tr>
+              <tr>
+                <td><strong>CIKM 2027</strong></td>
+                <td>适合以时空数据挖掘、评估方法和跨年份泛化为主要贡献的论文。</td>
+                <td>该会议涉及数据挖掘与知识管理方向；2027 年截稿日尚未确认，需以官方征稿通知为准。</td>
+                <td><span class="badge decision-badge">备选</span></td>
+              </tr>
+              <tr>
+                <td><strong>ICASSP 2027</strong></td>
+                <td>适合遥感信号处理和时空学习方向。</td>
+                <td>官方 CFP 含 Remote Sensing &amp; Signal Processing，Full Paper 截止日为 2026-09-16。<a href="https://2027.ieeeicassp.org/call-for-papers/" target="_blank" rel="noopener">官方 CFP</a></td>
+                <td><span class="badge danger-badge">时间不足</span><br>不作为本项目的主要投稿时间线。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>投稿规则</h3>
+        <ul>
+          <li>以提交当年的会议官方 CFP 为准；征稿范围、稿件类型和截稿日可能变化。</li>
+          <li>Full / Regular、Short、Demo 和 Workshop 的审稿要求与论文篇幅不同，具体稿件类型需根据官方 CFP 逐项核验。</li>
+          <li>第 5 至 6 个月根据实际贡献选择投稿会议，并按官方截止日期安排写作。</li>
+          <li>若结果仅支持单数据集上的有限改进，则调整投稿目标。</li>
+        </ul>
+      </section>
+
+      <section class="section searchable" id="s12">
+        <div class="section-kicker">12</div>
+        <h2>参考资料</h2>
+
+        <p>正文中的数据集、论文和会议信息均链接至原始来源。预印本已单独标注，投稿前需更新其发表状态。</p>
+
+        <ol class="source-list">
+          <li><span class="source-title">Huot et al. Next Day Wildfire Spread: A Machine Learning Data Set to Predict Wildfire Spreading From Remote-Sensing Data.</span> IEEE TGRS, 2022. <span class="badge peer">同行评审</span> <a href="https://doi.org/10.1109/TGRS.2022.3192974" target="_blank" rel="noopener">DOI</a></li>
+          <li><span class="source-title">Gerard, Zhao, Sullivan. WildfireSpreadTS: A Dataset of Multi-Modal Time Series for Wildfire Spread Prediction.</span> NeurIPS Datasets and Benchmarks, 2023. <span class="badge peer">同行评审</span> <a href="https://proceedings.neurips.cc/paper_files/paper/2023/file/ebd545176bdaa9cd5d45954947bd74b7-Paper-Datasets_and_Benchmarks.pdf" target="_blank" rel="noopener">PDF</a></li>
+          <li><span class="source-title">Lahrichi, Bova, Johnson, Malof. Improved Wildfire Spread Prediction with Time-Series Data and WSTS+ Benchmark.</span> WACV, 2026. <span class="badge peer">同行评审</span> <a href="https://arxiv.org/abs/2502.12003" target="_blank" rel="noopener">论文记录</a> · <a href="https://huggingface.co/saadlahrichi/WSTSPlus" target="_blank" rel="noopener">项目卡</a></li>
+          <li><span class="source-title">Zhao, Gerard, Ban. TS-SatFire: A Multi-Task Satellite Image Time-Series Dataset for Wildfire Detection and Prediction.</span> Scientific Data, 2025. <span class="badge peer">同行评审</span> <a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">论文</a></li>
+          <li><span class="source-title">Yang, Zafari, Duan, Swindlehurst. Robust Wildfire Forecasting under Partial Observability: From Reconstruction to Prediction.</span> 2026. <span class="badge preprint">预印本</span> <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">arXiv</a></li>
+          <li><span class="source-title">Fallah et al. Asynchronous Remote Sensing Time-Series Fusion for Cloud Removal and Anytime Reconstruction.</span> 2026. <span class="badge preprint">预印本 · AGFlow</span> <a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">arXiv</a></li>
+          <li><span class="source-title">Chen, Zhao, Bruzzone. Incomplete Multimodal Learning for Remote Sensing Data Fusion.</span> 2023. <span class="badge preprint">预印本</span> <a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">arXiv</a></li>
+          <li><span class="source-title">Wen, Liao, Xiao, Wang. SGMA: Semantic-Guided Modality-Aware Segmentation for Remote Sensing with Incomplete Multimodal Data.</span> 2026. <span class="badge preprint">预印本</span> <a href="https://arxiv.org/abs/2603.02505" target="_blank" rel="noopener">arXiv</a></li>
+          <li><span class="source-title">Wang et al. STARS: Shared-specific Translation and Alignment for Missing-modality Remote Sensing Semantic Segmentation.</span> 2026. <span class="badge preprint">预印本</span> <a href="https://arxiv.org/abs/2601.17342" target="_blank" rel="noopener">arXiv</a></li>
+          <li><span class="source-title">IEEE Circuits and Systems Society. 2027 IEEE International Conference on Multimedia &amp; Expo.</span> <span class="badge verified">官方会议页</span> <a href="https://ieee-cas.org/event/conference/2027-ieee-international-conference-multimedia-expo-icme" target="_blank" rel="noopener">ICME 2027</a></li>
+          <li><span class="source-title">IEEE ICASSP 2027. Call for Papers.</span> <span class="badge verified">官方 CFP</span> <a href="https://2027.ieeeicassp.org/call-for-papers/" target="_blank" rel="noopener">ICASSP 2027</a></li>
+        </ol>
+
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>卫星山火预测研究计划书 · 导师修订版 · 事实核验日期 2026-07-30</p>
+    <p>本文件不包含实验结果；所有外部链接和会议信息应在正式投稿前再次核验。</p>
+  </footer>
+
+  <script>
+    (() => {
+      const translations = new Map([
+        ["卫星山火预测研究计划书（导师修订版）", "Wildfire Forecasting Research Plan (Supervisor-Revised Version)"],
+        ["卫星山火预测 · 导师修订计划", "Satellite Wildfire Forecasting · Supervisor-Revised Research Plan"],
+        ["打印 / PDF", "Print / PDF"],
+        ["面向异步与缺失卫星观测的可靠下一日山火蔓延预测", "Reliable Next-Day Wildfire Spread Forecasting under Asynchronous and Missing Satellite Observations"],
+        ["研究周期：", "Research period:"],
+        ["10 个月", "10 months"],
+        ["论文目标：", "Publication target:"],
+        ["国际同行评审会议 Full / Regular Paper", "Full / Regular Paper at an international peer-reviewed conference"],
+        ["主数据集：", "Primary dataset:"],
+        ["资料核验日期：", "Sources verified:"],
+        ["本文件为研究计划，不含实验结果。文中的性能判断均为待检验假设；数据集、相关论文和会议信息附有来源。", "This document is a research plan and contains no experimental results. All statements about expected performance are hypotheses to be tested. Sources are provided for datasets, related work, and conference information."],
+        ["目录", "Contents"],
+        ["01 · 研究目标与范围", "01 · Research objective and scope"],
+        ["02 · 研究基础与相关工作", "02 · Research basis and related work"],
+        ["03 · 研究问题与假设", "03 · Research question and hypotheses"],
+        ["04 · 数据与预测合同", "04 · Data and forecast contract"],
+        ["05 · 方法设计", "05 · Method"],
+        ["06 · 实验设计", "06 · Experimental design"],
+        ["07 · 评估指标", "07 · Evaluation metrics"],
+        ["08 · 阶段目标与止损条件", "08 · Milestones and stop conditions"],
+        ["09 · 时间安排", "09 · Schedule"],
+        ["10 · 可复现要求", "10 · Reproducibility requirements"],
+        ["11 · 投稿计划", "11 · Publication plan"],
+        ["12 · 参考资料", "12 · References"],
+        ["研究目标与范围", "Research objective and scope"],
+        ["本项目研究卫星观测不完整时的下一日山火蔓延预测。给定预测时点之前的火情、天气、地形和植被信息，模型输出 24 小时后的活跃火点概率图。研究重点是观测缺失和观测时间不一致对预测结果的影响。", "This project studies next-day wildfire spread forecasting when satellite observations are incomplete. Given fire, weather, terrain, and vegetation information available before the forecast issue time, the model produces a probability map of active fire 24 hours later. The study focuses on how missing observations and inconsistent observation times affect forecast performance."],
+        ["计划以 WSTS+ 为主数据集。若标签和时间定义能够对齐，再使用 TS-SatFire 做独立验证。方法部分只研究一项改动：根据模态有效性、观测时间间隔和可用的质量字段，对多源特征进行加权融合。", "WSTS+ will be the primary dataset. TS-SatFire will be used for independent validation only if its label and temporal definitions can be aligned with the main task. The method will examine one modification: weighted fusion of multimodal features using modality validity, observation intervals, and available quality fields."],
+        ["计划完成的工作", "Planned work"],
+        ["复现公开基线，并建立事件隔离的跨年份划分；", "Reproduce public baselines and establish an event-disjoint, cross-year split;"],
+        ["实现质量与观测时间感知的融合模块；", "Implement a fusion module that uses observation quality and observation time;"],
+        ["比较完整观测、自然缺失和受控缺失条件下的结果；", "Compare results under complete observations, natural missingness, and controlled missingness;"],
+        ["完成消融实验、事件级统计和失败案例分析。", "Complete ablation studies, event-level statistical analysis, and failure-case analysis."],
+        ["不纳入本项目", "Out of scope"],
+        ["山火发生概率、长期轨迹和完整生命周期预测；", "Wildfire occurrence probability, long-horizon trajectories, and full-lifecycle forecasting;"],
+        ["跨灾种迁移、全球尺度模型和大型基础模型训练；", "Cross-hazard transfer, global-scale models, and training large foundation models;"],
+        ["大规模架构搜索和多套物理模块；", "Large-scale architecture search and multiple physics modules;"],
+        ["缺少数据依据的实时部署或预警系统结论。", "Claims about real-time deployment or warning systems without supporting data."],
+        ["项目周期为 10 个月，计划使用一张约 24GB 显存 GPU 或同等算力。第一个月应完成数据检查和公开基线复现；若发现数据存在无法排除的未来信息泄漏，应先调整题目，不继续增加模型结构。", "The project will run for 10 months and assumes access to one GPU with approximately 24 GB of memory or equivalent compute. Data checks and public-baseline reproduction should be completed in the first month. If future-information leakage cannot be ruled out, the research question should be revised before any additional model components are introduced."],
+        ["研究基础与相关工作", "Research basis and related work"],
+        ["公开数据集", "Public datasets"],
+        ["资源", "Resource"],
+        ["已核验事实", "Verified information"],
+        ["与本项目的关系", "Role in this project"],
+        ["使用时的限制", "Limitations"],
+        ["论文报告 13,607 个时空样本、607 个火灾事件、23 个通道，覆盖美国 2018 至 2021 年；目标是 24 小时后的二值活跃火点图，标签以 VIIRS 为代理。", "The paper reports 13,607 spatiotemporal samples, 607 fire events, and 23 channels from the United States between 2018 and 2021. The target is a binary active-fire map 24 hours later, with VIIRS observations used as proxy labels."],
+        ["论文", "Paper"],
+        ["代码", "Code"],
+        ["用于确定任务、输入通道和公开基线。", "Defines the task, input channels, and public baselines."],
+        ["活跃火点图是代理标签，不等同于真实火线或完整烧毁范围。", "The active-fire map is a proxy label and is not equivalent to the true fire front or the complete burned area."],
+        ["论文和项目卡称其在原 WSTS 上增加四年数据并扩展地理范围；项目卡列出 2016 至 2023 年、1,005 个事件、24,462 张影像。", "The paper and project card state that WSTS+ adds four years of data and expands the geographic coverage of WSTS. The project card lists data from 2016 to 2023, with 1,005 events and 24,462 images."],
+        ["论文记录", "Paper record"],
+        ["项目卡", "Project card"],
+        ["作为主数据集，用于跨年份实验。", "Primary dataset for cross-year experiments."],
+        ["所需 QA、时间戳和传感器质量字段是否公开，仍需在数据审计时确认。", "The data audit must confirm whether the required QA, timestamp, and sensor-quality fields are publicly available."],
+        ["论文报告 179 个事件、3,552 张影像、约 71GB，覆盖 2017 至 2021 年；包含活跃火检测、烧毁区域制图和蔓延预测三项任务。蔓延标签是“下一日新烧毁区域”。", "The paper reports 179 events, 3,552 images, and approximately 71 GB of data from 2017 to 2021. It includes three tasks: active-fire detection, burned-area mapping, and wildfire progression prediction. The progression target is the newly burned area on the following day."],
+        ["标签能够对齐时，用于独立验证或辅助监督。", "Used for independent validation or auxiliary supervision when the label definitions can be aligned."],
+        ["其“新烧毁区域”与 WSTS 的“下一日活跃火点图”不是同一个输出合同，不能直接混合分数。", "Its newly burned area target differs from the WSTS next-day active-fire map. Scores from the two tasks cannot be combined directly."],
+        ["相关方法", "Related methods"],
+        ["工作", "Work"],
+        ["主要内容", "Main approach"],
+        ["发表状态", "Publication status"],
+        ["在 WSTS 上以像素和块遮挡模拟 10% 至 80% 的数据损坏，采用先重建、后预测的两阶段方法，并进行留一年验证。", "Simulates 10% to 80% corruption on WSTS using pixel and block masking, applies a two-stage reconstruction-then-prediction method, and evaluates it with leave-one-year-out validation."],
+        ["这是最直接的对比工作。本项目需要进一步研究观测时间间隔、异步模态和非随机缺失。", "This is the closest comparison. The present project must also examine observation intervals, asynchronous modalities, and non-random missingness."],
+        ["预印本 · 2026", "Preprint · 2026"],
+        ["使用时间戳条件化的异步 Sentinel-1/2 融合进行云去除与任意时刻重建。", "Uses timestamp-conditioned asynchronous Sentinel-1/2 fusion for cloud removal and reconstruction at arbitrary times."],
+        ["说明时间戳驱动的异步融合已有研究。本项目的区别在于山火预测任务和预测时点约束。", "This work shows that timestamp-driven asynchronous fusion has already been studied. The present project differs in its wildfire forecasting task and forecast issue-time constraints."],
+        ["研究遥感多模态缺失，通过重建与对比式融合支持下游任务。", "Studies missing modalities in remote sensing and uses reconstruction and contrastive fusion to support downstream tasks."],
+        ["可用于设计缺失模态基线，避免把通用技术当作山火领域的新方法。", "Can inform a missing-modality baseline and prevents a general technique from being presented as a wildfire-specific method."],
+        ["预印本 · 2023", "Preprint · 2023"],
+        ["面向不完整遥感多模态数据，研究模态可靠性估计、加权融合以及共享与专属表示对齐。", "Studies modality-reliability estimation, weighted fusion, and alignment of shared and modality-specific representations for incomplete multimodal remote-sensing data."],
+        ["可选取其中一个方法进行适配，比较可靠性估计和加权融合的效果。", "One of these methods may be adapted to compare reliability estimation and weighted fusion."],
+        ["拟解决的问题", "Research gap"],
+        ["现有工作已经涉及缺失模态、时间戳融合和山火部分可观测预测，因此本项目不能把这些概念本身作为创新点。论文需要说明：在事件隔离和预测时点约束下，观测年龄与质量信息是否对下一日山火预测有稳定作用。", "Prior work already covers missing modalities, timestamp-based fusion, and wildfire forecasting under partial observability. These concepts alone cannot constitute the contribution. The paper must determine whether observation age and quality information have a consistent effect on next-day wildfire forecasting under event-disjoint evaluation and forecast issue-time constraints."],
+        ["实验设计中需要特别处理三个问题。第一，WSTS 与 TS-SatFire 的标签含义不同。第二，目标日观测和事后重分析数据可能造成未来信息泄漏。第三，随机遮挡只能作为压力测试，不能替代云、烟和卫星过境时间造成的实际缺失。", "The experimental design must address three issues. First, WSTS and TS-SatFire use different label definitions. Second, target-day observations and retrospective reanalysis data may introduce future-information leakage. Third, random masking is only a stress test and cannot represent actual missingness caused by clouds, smoke, or satellite overpass timing."],
+        ["研究问题与假设", "Research question and hypotheses"],
+        ["在事件隔离和跨年份条件下，使用模态有效性、观测时间间隔与缺失模式，能否改善部分可观测条件下的下一日山火蔓延预测，同时保持完整观测条件下的性能？", "Under event-disjoint and cross-year evaluation, can modality validity, observation intervals, and missingness patterns improve next-day wildfire spread forecasting under partial observability while preserving performance under complete observations?"],
+        ["假设", "Hypothesis"],
+        ["计划检验", "Planned test"],
+        ["什么结果会否定它", "Falsifying result"],
+        ["处置", "Action"],
+        ["质量、有效性和观测年龄门控优于简单拼接与 mask-only 基线。", "A gate based on quality, validity, and observation age outperforms simple concatenation and mask-only baselines."],
+        ["在自然缺失可得的切片和预先定义的合成压力测试上，对比相同训练预算的基线；至少 3 个随机种子。", "Compare against baselines with the same training budget on available natural-missingness subsets and predefined synthetic stress tests, using at least three random seeds."],
+        ["收益仅出现在单一缺失率、单一年份或单一随机种子；或完整观测性能明显下降。", "The gain appears only at one missingness rate, in one year, or for one random seed, or performance under complete observations declines materially."],
+        ["简化或删除门控模块。", "Simplify or remove the gating module."],
+        ["显式", "Explicit "],
+        ["编码改善异步观测下的预测。", " encoding improves forecasting under asynchronous observations."],
+        ["固定其余结构，对比 no-time、absolute timestamp、observation-age 三种编码。", "Hold the remaining architecture fixed and compare no-time, absolute-timestamp, and observation-age encodings."],
+        ["去除", "After removing "],
+        ["后结果等价或更好，或收益无法跨年份复现。", ", the result is equivalent or better, or the gain does not reproduce across years."],
+        ["不把时间编码列为论文贡献。", "Do not present temporal encoding as a paper contribution."],
+        ["第一个月完成基线方差估计后，确定性能改善的判定标准。该标准和主评估指标应在运行测试集之前固定。", "After estimating baseline variance in the first month, define the criterion for a meaningful performance improvement. This criterion and the primary metric must be fixed before the test set is evaluated."],
+        ["数据与预测合同", "Data and forecast contract"],
+        ["数据集安排", "Dataset plan"],
+        ["作为主数据集，用于训练、验证和跨年份测试。正式使用前确认下载许可、字段定义和官方划分。", "Used as the primary dataset for training, validation, and cross-year testing. Its download license, field definitions, and official splits must be confirmed before use."],
+        ["仅用于独立验证。若第二个月仍无法对齐标签、空间分辨率和时间定义，则取消这部分实验。", "Used only for independent validation. If the label, spatial-resolution, and temporal definitions cannot be aligned by the second month, this experiment will be removed."],
+        ["预测时点", "Forecast issue time"],
+        ["给定预测时点", "Given forecast issue time "],
+        ["，模型只能使用当时已经可获得的数据，预测", ", the model may use only data available at that time to predict the "],
+        ["的目标。每个输入字段需记录观测时间、可用时间、空间分辨率、缺失含义和预处理版本。", " target. Each input field must record its observation time, availability time, spatial resolution, missingness meaning, and preprocessing version."],
+        ["字段类别", "Field type"],
+        ["允许条件", "Allowed input"],
+        ["泄漏风险", "Leakage risk"],
+        ["审计动作", "Audit action"],
+        ["历史火情图", "Historical fire maps"],
+        ["仅使用时间戳 ≤", "Use only observations with timestamps ≤ "],
+        ["的观测，并保留探测有效性/缺失信息。", ", retaining detection-validity and missingness information."],
+        ["目标日火点混入输入；预处理窗口跨过签发时点。", "Target-day fire observations enter the input, or the preprocessing window extends beyond the issue time."],
+        ["逐样本断言最大输入时间 ≤", "For each sample, assert that the latest input time is ≤ "],
+        ["天气", "Weather"],
+        ["明确区分“签发时可得的天气预报”与“事后观测/重分析”。", "Distinguish forecasts available at issue time from retrospective observations or reanalysis."],
+        ["用目标时段的真实观测天气训练和测试，却声称现实预报。", "The model is trained and tested with observed target-period weather but described as an operational forecast."],
+        ["数据清单写明产品名、发布延迟和预报时效，并比较预报数据与重分析数据的差异。", "Record the product name, release delay, and forecast lead time, and compare forecast data with reanalysis data."],
+        ["静态地形/燃料", "Static terrain and fuel"],
+        ["只要时间版本不晚于事件，并记录空间重采样方法。", "The data version must not postdate the event, and the spatial resampling method must be recorded."],
+        ["使用事后更新的燃料/烧毁产品。", "A fuel or burned-area product updated after the event is used."],
+        ["保存数据版本和获取日期。", "Record the data version and acquisition date."],
+        ["QA、云/烟、模态有效性", "QA, cloud/smoke, and modality validity"],
+        ["只有在真实数据包或可追溯原始产品中存在时使用。", "Use these fields only when they exist in the released dataset or a traceable source product."],
+        ["把从目标标签反推的“质量”作为输入。", "A quality value inferred from the target label is used as an input."],
+        ["第一周核对字段来源；不可得时不使用该字段。", "Verify the field source in the first week; omit the field if it is unavailable."],
+        ["标签合同", "Label contract"],
+        ["数据集", "Dataset"],
+        ["目标语义", "Target definition"],
+        ["本计划中的称呼", "Term used in this plan"],
+        ["可否直接合并", "Directly mergeable"],
+        ["下一日 VIIRS 活跃火点二值图（代理标签）。", "Next-day binary VIIRS active-fire map (proxy label)."],
+        ["next-day active-fire map / 局地蔓延代理", "next-day active-fire map / local spread proxy"],
+        ["否", "No"],
+        ["，除非重新定义共同目标并给出映射误差。", ", unless a common target is redefined and the mapping error is quantified."],
+        ["下一日新烧毁区域。", "Newly burned area on the following day."],
+        ["，只能分别训练/评估或作为迁移实验。", "; the datasets must be trained and evaluated separately or used in a transfer experiment."],
+        ["数据划分与缺失设置", "Data splits and missingness settings"],
+        ["同一火灾事件不得跨训练集、验证集和测试集。", "The same fire event must not appear across the training, validation, and test sets."],
+        ["优先采用按年份前推或 leave-one-year-out；具体划分在主实验前固定。", "Use a forward-by-year or leave-one-year-out design where possible. Fix the exact split before the main experiments."],
+        ["自然缺失只在数据提供有效性或 QA 字段时报告，并单独统计缺失率。", "Report natural missingness only when the dataset includes validity or QA fields, and report the missingness rate separately."],
+        ["受控缺失包括随机像素、空间块、连续时间段和整模态缺失。", "Controlled missingness includes random pixels, spatial blocks, consecutive time intervals, and complete modality dropout."],
+        ["超参数、阈值和早停只使用训练集与验证集确定。", "Determine hyperparameters, thresholds, and early stopping using only the training and validation sets."],
+        ["第一周数据检查", "First-week data checks"],
+        ["确认下载地址、许可、文件完整性与校验和；", "Confirm the download location, license, file integrity, and checksums;"],
+        ["核对事件 ID、年份、样本数、时间戳和 QA 字段；", "Verify event IDs, years, sample counts, timestamps, and QA fields;"],
+        ["检查每个输入字段是否早于预测时点；", "Check that every input field predates the forecast issue time;"],
+        ["统计正类比例、事件长度、缺失率和年度分布；", "Summarize positive-class prevalence, event duration, missingness rates, and yearly distributions;"],
+        ["保存", "Save "],
+        ["与", " and "],
+        ["方法设计", "Method"],
+        ["多模态历史输入", "Historical multimodal inputs"],
+        ["火情 · 天气 · 地形/燃料", "Fire · Weather · Terrain/Fuel"],
+        ["时间戳 · 有效性 · QA", "Timestamp · Validity · QA"],
+        ["轻量模态编码器", "Lightweight modality encoders"],
+        ["共享空间尺度", "Shared spatial scale"],
+        ["保留模态身份", "Preserve modality identity"],
+        ["可靠性门控", "Reliability gate"],
+        ["质量 q · 观测年龄 Δt", "Quality q · Observation age Δt"],
+        ["缺失 mask · 模态 ID", "Missingness mask · Modality ID"],
+        ["时序融合 + 单解码器", "Temporal fusion + single decoder"],
+        ["输出下一日概率图", "Next-day probability map"],
+        ["可选辅助头", "Optional auxiliary head"],
+        ["其中", "Here, "],
+        ["表示数据中可用的质量字段。若数据不提供该字段，则仅使用", " denotes an available quality field. If the dataset does not provide this field, use only "],
+        ["模型组成", "Model components"],
+        ["1. 模态编码", "1. Modality encoding"],
+        ["每类输入由轻量编码器映射到共同空间尺度，编码器沿用公开基线。", "A lightweight encoder maps each input type to a common spatial scale. The encoders follow the public baseline."],
+        ["2. 可靠性估计", "2. Reliability estimation"],
+        ["使用质量字段、有效性 mask 和观测年龄估计各模态权重。", "Estimate modality weights from quality fields, validity masks, and observation age."],
+        ["3. 时序融合", "3. Temporal fusion"],
+        ["从 ConvLSTM、时序卷积或公开基线中选择一种结构。", "Select one structure from ConvLSTM, temporal convolution, or the public baseline."],
+        ["4. 单任务解码", "4. Single-task decoding"],
+        ["模型输出下一日概率图，损失函数按类别不平衡情况确定。", "The model outputs a next-day probability map. The loss function is selected according to the level of class imbalance."],
+        ["质量与观测年龄门控是必做模块。辅助监督仅在 TS-SatFire 标签核对完成后考虑。物理一致性项和大型预训练模型不纳入本周期。", "The quality- and observation-age gate is the required module. Auxiliary supervision will be considered only after the TS-SatFire labels have been audited. Physics-consistency terms and large pretrained models are outside the scope of this project."],
+        ["实验设计", "Experimental design"],
+        ["对比基线", "Baselines"],
+        ["层级", "Category"],
+        ["基线", "Baseline"],
+        ["作用", "Purpose"],
+        ["实施要求", "Implementation requirement"],
+        ["规则基线", "Rule-based baselines"],
+        ["No-fire、Persistence、固定形态学膨胀", "No-fire, persistence, and fixed morphological dilation"],
+        ["检验学习模型是否超过全负预测和火情延续假设。", "Tests whether the learned models outperform all-negative prediction and a fire-persistence assumption."],
+        ["参数只在验证集确定。", "Select parameters only on the validation set."],
+        ["领域启发", "Domain-informed baseline"],
+        ["条件允许时加入风向驱动椭圆膨胀", "Wind-driven elliptical dilation, if the required fields are available"],
+        ["提供简单的方向性蔓延对照。", "Provides a simple directional-spread comparison."],
+        ["需核对气象方向和坐标转换。", "Weather direction and coordinate transformations must be verified."],
+        ["公开学习基线", "Public learned baseline"],
+        ["WSTS/WSTS+ 官方或作者公开的最强可复现模型", "The strongest reproducible WSTS/WSTS+ model released by the authors"],
+        ["核对数据处理和训练流程。", "Checks the data-processing and training pipeline."],
+        ["记录代码版本、环境、预处理和训练预算。", "Record the code version, environment, preprocessing, and training budget."],
+        ["最小神经基线", "Minimal neural baselines"],
+        ["检验可靠性门控是否超过常用缺失处理方法。", "Tests whether the reliability gate improves on standard missing-data methods."],
+        ["尽量同 backbone、同参数量级、同训练预算。", "Use the same backbone, a comparable parameter count, and the same training budget where possible."],
+        ["最近邻", "Closest related method"],
+        ["可复现时加入 reconstruction→prediction 的部分可观测方法", "Reconstruction-to-prediction method for partial observability, if reproducible"],
+        ["与山火部分可观测预测的直接相关工作比较。", "Provides a direct comparison with prior work on wildfire forecasting under partial observability."],
+        ["代码不可得或实验条件不一致时，只作定性讨论。", "Use qualitative discussion only if the code is unavailable or the experimental conditions are incompatible."],
+        ["主实验", "Main experiments"],
+        ["E1 · 标准完整观测", "E1 · Standard complete-observation setting"],
+        ["比较公开基线与拟议方法在固定划分下的性能，并检查完整观测条件下是否退化。", "Compare the public baselines and proposed method on a fixed split, and check for degradation under complete observations."],
+        ["E2 · 缺失与异步压力测试", "E2 · Missingness and asynchrony stress tests"],
+        ["分别评估自然缺失和四类受控缺失，绘制性能随缺失强度变化的曲线。", "Evaluate natural missingness and four controlled missingness types separately, and plot performance against missingness severity."],
+        ["E3 · 跨年份/事件泛化", "E3 · Cross-year and cross-event generalization"],
+        ["进行至少一个时间外测试，并按事件大小、持续时间和正类比例分层报告。", "Conduct at least one out-of-time test and report results by event size, duration, and positive-class prevalence."],
+        ["E4 · 消融与失败分析", "E4 · Ablation and failure analysis"],
+        ["依次移除", "Remove "],
+        ["、mask、门控；展示典型真阳性、漏检和错误扩散案例。", ", the mask, and the gate in turn. Show representative true positives, missed detections, and error-propagation cases."],
+        ["实验一致性", "Experimental consistency"],
+        ["学习模型至少运行 3 个固定随机种子，并保存每次运行的预测结果。", "Run each learned model with at least three fixed random seeds and save the predictions from every run."],
+        ["同类模型使用一致的数据增强、训练轮数/早停、输入历史长度和调参预算。", "Use the same data augmentation, training duration or early stopping, input-history length, and tuning budget for comparable models."],
+        ["主结论只使用预先指定的指标和测试划分。", "Base the main conclusions only on prespecified metrics and test splits."],
+        ["只有数据、划分、预处理和指标一致时，才进行数值对比。", "Make numerical comparisons only when the data, split, preprocessing, and metric definitions are consistent."],
+        ["评估指标", "Evaluation metrics"],
+        ["山火蔓延标签中正类像素较少，因此主指标采用 Average Precision（AP/AUPRC），不以 Accuracy 作为主要结果。", "Positive pixels are sparse in the wildfire-spread labels. Average Precision (AP/AUPRC) is therefore the primary metric, while accuracy is not used as a main result."],
+        ["指标", "Metric"],
+        ["报告方式", "Reporting"],
+        ["备注", "Notes"],
+        ["主指标", "Primary metric"],
+        ["报告像素汇总值和事件级宏平均，并给出 95% 事件 bootstrap 区间。", "Report the pooled pixel value, the event-level macro average, and a 95% event-bootstrap interval."],
+        ["用于主结果比较。", "Used for the main comparison."],
+        ["空间重叠", "Spatial overlap"],
+        ["阈值在验证集确定，同时给出 PR 曲线。", "Choose the threshold on the validation set and also report the precision-recall curve."],
+        ["用于评价空间重叠。", "Measures spatial overlap."],
+        ["概率质量", "Probability quality"],
+        ["模型输出需要解释为概率时报告。", "Report these metrics when model outputs are interpreted as probabilities."],
+        ["ECE binning 方案需预先固定。", "The ECE binning scheme must be fixed in advance."],
+        ["分层结果", "Stratified results"],
+        ["最差年份、缺失强度曲线、事件规模分层", "Worst year, missingness-severity curve, and event-size strata"],
+        ["报告均值、分布和样本量。", "Report means, distributions, and sample sizes."],
+        ["用于判断结果是否由少数事件或年份驱动。", "Used to determine whether the result is driven by a small number of events or years."],
+        ["统计单位", "Statistical unit"],
+        ["置信区间以火灾事件为重采样单位，跨年份实验同时报告各年度结果。事件数量不足时，应直接报告较宽的置信区间，不使用像素级检验替代事件级统计。", "Use the fire event as the resampling unit for confidence intervals, and report individual-year results in cross-year experiments. When the number of events is insufficient, report the resulting wide interval rather than substituting a pixel-level test for event-level statistics."],
+        ["阶段目标与止损条件", "Milestones and stop conditions"],
+        ["第 1 个月", "Month 1"],
+        ["目标：", "Target:"],
+        ["公开基线可以运行；完成事件、年份、标签和时间字段核对。", "Run the public baseline and complete checks of events, years, labels, and temporal fields."],
+        ["未完成时：", "If not completed:"],
+        ["暂停模型开发。若主数据不可获得或标签无法解释，则调整题目。", "Pause model development. Revise the research question if the primary dataset is unavailable or the labels cannot be interpreted."],
+        ["第 3 个月", "Month 3"],
+        ["门控模块在预先指定的缺失条件下，跨 3 个种子呈一致方向；完整观测性能没有明显下降。", "The gating module shows a consistent direction across three seeds under prespecified missingness conditions, without a material decline under complete observations."],
+        ["简化模块并复查一次。结果仍不稳定时，停止该方法方向。", "Simplify the module and repeat the check once. Stop this method direction if the result remains unstable."],
+        ["第 5 个月", "Month 5"],
+        ["至少在一个时间外年份或第二种 backbone 上保持相同结果方向，并完成事件级置信区间与失败案例分析。", "Maintain the same result direction in at least one out-of-time year or on a second backbone, and complete event-level confidence intervals and failure-case analysis."],
+        ["重新评估论文是否仍有独立的评估贡献；若没有，则降低投稿目标。", "Reassess whether the paper retains an independent evaluation contribution. If not, lower the publication target."],
+        ["第 7 个月", "Month 7"],
+        ["固定方法、数据划分、主表和主图，之后只处理错误修复、复现实验和论文写作。", "Freeze the method, data split, main tables, and main figures. After this point, restrict work to error correction, reproduction, and paper writing."],
+        ["缩小实验范围，不再增加新模块。", "Reduce the experimental scope and add no new modules."],
+        ["投稿前应确认结果在多个随机种子和关键数据切片上保持一致，事件级统计不由少数大事件主导，且所有输入满足预测时点约束。", "Before submission, confirm that the result is consistent across random seeds and key data subsets, that event-level statistics are not dominated by a few large events, and that all inputs satisfy the forecast issue-time constraint."],
+        ["时间安排", "Schedule"],
+        ["第 1 个月：数据检查与基线复现", "Month 1: Data checks and baseline reproduction"],
+        ["下载并校验数据，建立 manifest，核对事件隔离和输入时间，复现 no-fire、persistence 与公开学习基线。", "Download and verify the data, build the manifest, check event separation and input times, and reproduce the no-fire, persistence, and public learned baselines."],
+        ["第 2 至 3 个月：核心模块", "Months 2–3: Core module"],
+        ["实现 concat + mask 和 observation-age gate，完成小规模验证、3 个固定随机种子及第一组缺失强度实验。", "Implement concat + mask and the observation-age gate, then complete small-scale validation, three fixed random seeds, and the first missingness-severity experiment."],
+        ["第 4 至 5 个月：主实验与跨年份验证", "Months 4–5: Main experiments and cross-year validation"],
+        ["完成 E1 至 E3、事件 bootstrap、跨年份实验和第二种 backbone，并检查不同事件规模和缺失条件下的结果。", "Complete E1–E3, event bootstrap, cross-year experiments, and a second backbone. Examine results across event sizes and missingness conditions."],
+        ["第 6 个月：外部验证与补充实验", "Month 6: External validation and supplementary experiments"],
+        ["在标签核对通过后加入 TS-SatFire 外部验证；若无法对齐，则用于补充随机种子、第二种划分或数据质量分析。", "Add external validation on TS-SatFire after the label audit. If the datasets cannot be aligned, use this month for additional random seeds, a second split, or data-quality analysis."],
+        ["第 7 个月：消融与方法固定", "Month 7: Ablation and method freeze"],
+        ["完成 E4、计算成本和预测时点敏感性实验，生成主表和主图，固定方法与数据划分。", "Complete E4, computational-cost analysis, and forecast issue-time sensitivity experiments. Generate the main tables and figures, then freeze the method and data split."],
+        ["第 8 至 9 个月：论文写作与内部审阅", "Months 8–9: Paper writing and internal review"],
+        ["完成论文初稿，核对引用和实验数字，根据内部审阅补充必要实验，并整理代码与复现说明。", "Complete the first manuscript draft, verify citations and experimental values, run necessary experiments identified during internal review, and organize the code and reproduction instructions."],
+        ["第 10 个月：投稿准备", "Month 10: Submission preparation"],
+        ["完成最终复现、匿名仓库、格式调整和投稿材料，不再增加新的研究模块。", "Complete final reproduction, prepare the anonymous repository, format the paper, and assemble the submission materials. No new research modules will be added."],
+        ["延长后的时间主要用于跨年份验证、第二种 backbone、外部数据集、更多随机种子和论文复现，不扩大主研究问题。", "The extended schedule is used for cross-year validation, a second backbone, an external dataset, additional random seeds, and paper reproduction. It does not expand the main research question."],
+        ["可复现要求", "Reproducibility requirements"],
+        ["数据划分、训练配置、随机种子、环境版本和评估脚本均需保存在仓库中。论文表格由统一评估脚本生成，避免手工整理造成差错。", "Store the data split, training configurations, random seeds, environment versions, and evaluation scripts in the repository. Generate paper tables with a single evaluation script to avoid manual transcription errors."],
+        ["交付物", "Deliverables"],
+        ["完成标准", "Completion standard"],
+        ["检查方式", "Verification"],
+        ["数据审计报告", "Data audit report"],
+        ["每个字段有来源、时间语义、缺失含义、空间/时间分辨率和许可。", "Each field has a documented source, temporal meaning, missingness definition, spatial and temporal resolution, and license."],
+        ["随机抽取 20 个样本，对照原文件与可视化结果。", "Randomly sample 20 cases and compare the source files with their visualizations."],
+        ["基线复现记录", "Baseline reproduction record"],
+        ["规则基线和至少一个公开学习基线可从新环境重跑。", "The rule-based baselines and at least one public learned baseline can be rerun in a clean environment."],
+        ["在新环境中执行固定命令，保存日志。", "Run a fixed command in a clean environment and save the log."],
+        ["实验注册表", "Experiment registry"],
+        ["每次运行有唯一 ID、commit、配置、seed、硬件和结果路径。", "Each run has a unique ID, commit, configuration, seed, hardware record, and result path."],
+        ["结果 CSV 可以定位模型 checkpoint 与预测文件。", "The result CSV identifies the model checkpoint and prediction file."],
+        ["评估包", "Evaluation package"],
+        ["同一脚本生成 AP、事件宏平均、空间指标、bootstrap 区间和曲线。", "One script generates AP, event-level macro averages, spatial metrics, bootstrap intervals, and curves."],
+        ["固定小样本测试集有已知答案的单元测试。", "A fixed small test set has unit tests with known outputs."],
+        ["论文与补充材料", "Paper and supplementary material"],
+        ["所有数字能够追溯到结果文件，外部事实均有来源。", "Every reported value can be traced to a result file, and every external factual claim has a source."],
+        ["投稿前核对论文数字和引用链接。", "Verify all reported values and citation links before submission."],
+        ["在数据许可允许的情况下，公开训练与评估代码、配置和划分 manifest；不重新分发受限原始数据。", "Release the training and evaluation code, configurations, and split manifest where permitted by the data licenses. Do not redistribute restricted source data."],
+        ["投稿计划", "Publication plan"],
+        ["候选", "Venue"],
+        ["适配条件", "Fit"],
+        ["已核验信息", "Verified information"],
+        ["当前决策", "Current decision"],
+        ["适合以多模态时序融合和视觉预测为主要贡献的论文。", "Suitable if the main contribution is multimodal temporal fusion and visual forecasting."],
+        ["IEEE 官方页列会议时间为 2027-07-13 至 07-17、地点厦门，并写明更多信息待发布。", "The official IEEE page lists the conference for 13–17 July 2027 in Xiamen and states that further details are forthcoming."],
+        ["官方会议页", "Official conference page"],
+        ["主目标", "Primary target"],
+        ["截稿日尚未公布。", "The submission deadline has not yet been announced."],
+        ["适合以时空数据挖掘、评估方法和跨年份泛化为主要贡献的论文。", "Suitable if the main contribution is spatiotemporal data mining, evaluation methodology, and cross-year generalization."],
+        ["该会议涉及数据挖掘与知识管理方向；2027 年截稿日尚未确认，需以官方征稿通知为准。", "The conference covers data mining and knowledge management. Its 2027 submission deadline has not yet been confirmed and must be checked against the official call for papers."],
+        ["备选", "Alternative"],
+        ["适合遥感信号处理和时空学习方向。", "Suitable for a remote-sensing signal-processing and spatiotemporal-learning framing."],
+        ["官方 CFP 含 Remote Sensing & Signal Processing，Full Paper 截止日为 2026-09-16。", "The official call for papers includes Remote Sensing & Signal Processing and lists 16 September 2026 as the full-paper deadline."],
+        ["官方 CFP", "Official CFP"],
+        ["时间不足", "Insufficient time"],
+        ["不作为本项目的主要投稿时间线。", "Not part of the primary submission timeline for this project."],
+        ["投稿规则", "Submission rules"],
+        ["以提交当年的会议官方 CFP 为准；征稿范围、稿件类型和截稿日可能变化。", "Use the official conference call for papers for the year of submission. Scope, paper types, and deadlines may change."],
+        ["Full / Regular、Short、Demo 和 Workshop 的审稿要求与论文篇幅不同，具体稿件类型需根据官方 CFP 逐项核验。", "Full or Regular, Short, Demo, and Workshop papers differ in review requirements and length; the exact paper type must be checked against the official call for papers."],
+        ["第 5 至 6 个月根据实际贡献选择投稿会议，并按官方截止日期安排写作。", "Select the venue in months 5–6 based on the actual contribution, then schedule the writing around the official deadline."],
+        ["若结果仅支持单数据集上的有限改进，则调整投稿目标。", "If the evidence supports only a limited improvement on one dataset, revise the publication target."],
+        ["参考资料", "References"],
+        ["正文中的数据集、论文和会议信息均链接至原始来源。预印本已单独标注，投稿前需更新其发表状态。", "Dataset, paper, and conference information in the text links to primary sources. Preprints are marked separately, and their publication status must be updated before submission."],
+        ["同行评审", "Peer reviewed"],
+        ["预印本", "Preprint"],
+        ["预印本 · AGFlow", "Preprint · AGFlow"],
+        ["官方目录", "Official list"],
+        ["卫星山火预测研究计划书 · 导师修订版 · 事实核验日期 2026-07-30", "Satellite Wildfire Forecasting Research Plan · Revised Version · Sources Verified 2026-07-30"],
+        ["本文件不包含实验结果；所有外部链接和会议信息应在正式投稿前再次核验。", "This document contains no experimental results. All external links and conference information should be verified again before submission."]
+      ]);
+
+      const root = document.documentElement;
+      const sidebar = document.getElementById("sidebar");
+      const navToggle = document.getElementById("navToggle");
+      const themeToggle = document.getElementById("themeToggle");
+      const languageToggle = document.getElementById("languageToggle");
+      const fontUp = document.getElementById("fontUp");
+      const fontDown = document.getElementById("fontDown");
+      const searchBox = document.getElementById("searchBox");
+      const progressBar = document.getElementById("progressBar");
+      const sections = [...document.querySelectorAll(".searchable")];
+      const tocLinks = [...document.querySelectorAll(".toc a")];
+      const printButton = document.querySelector('button[onclick="window.print()"]');
+      const flowDiagram = document.querySelector(".flow[role='img']");
+      const descriptionMeta = document.querySelector('meta[name="description"]');
+
+      const punctuationToEnglish = value => value
+        .replaceAll("。", ".")
+        .replaceAll("；", ";")
+        .replaceAll("，", ",")
+        .replaceAll("：", ":")
+        .replaceAll("（", "(")
+        .replaceAll("）", ")")
+        .replaceAll("“", "\"")
+        .replaceAll("”", "\"")
+        .replaceAll("、", ", ");
+
+      const textBindings = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let textNode;
+      while ((textNode = walker.nextNode())) {
+        const parent = textNode.parentElement;
+        if (!parent || parent.closest("script, style")) continue;
+        const zh = textNode.nodeValue;
+        const trimmed = zh.trim();
+        const leading = zh.match(/^\s*/)?.[0] || "";
+        const trailing = zh.match(/\s*$/)?.[0] || "";
+        const structuralLeading = leading.includes("\n") ? leading : "";
+        const structuralTrailing = trailing.includes("\n") ? trailing : "";
+        const translated = translations.get(trimmed);
+        const en = translated === undefined
+          ? punctuationToEnglish(zh)
+          : `${structuralLeading}${translated}${structuralTrailing}`;
+        if (en !== zh) textBindings.push({ node: textNode, zh, en });
+      }
+
+      const attributeBindings = [
+        { node: navToggle, name: "aria-label", zh: "打开目录", en: "Open table of contents" },
+        { node: fontDown, name: "aria-label", zh: "缩小字号", en: "Decrease font size" },
+        { node: fontUp, name: "aria-label", zh: "放大字号", en: "Increase font size" },
+        { node: themeToggle, name: "aria-label", zh: "切换明暗主题", en: "Toggle light and dark theme" },
+        { node: printButton, name: "aria-label", zh: "打印或导出 PDF", en: "Print or export as PDF" },
+        { node: searchBox, name: "placeholder", zh: "搜索计划书内容…", en: "Search this research plan…" },
+        { node: searchBox, name: "aria-label", zh: "搜索计划书", en: "Search research plan" },
+        {
+          node: flowDiagram,
+          name: "aria-label",
+          zh: "最小模型流程：多模态输入，经模态编码、可靠性门控和时序融合，输出下一日蔓延图",
+          en: "Minimum model pipeline: multimodal inputs pass through modality encoders, reliability gating, and temporal fusion to produce a next-day spread map"
+        }
+      ];
+
+      const titleZh = document.title;
+      const titleEn = translations.get(titleZh) || titleZh;
+      const descriptionZh = descriptionMeta?.getAttribute("content") || "";
+      const descriptionEn = "A 10-month research plan for reliable next-day wildfire spread forecasting under asynchronous and missing satellite observations.";
+
+      function filterSections() {
+        const query = searchBox.value.trim().toLowerCase();
+        sections.forEach(section => {
+          section.hidden = Boolean(query) && !section.textContent.toLowerCase().includes(query);
+        });
+      }
+
+      function setLanguage(language) {
+        const lang = language === "en" ? "en" : "zh";
+        textBindings.forEach(binding => {
+          binding.node.nodeValue = lang === "en" ? binding.en : binding.zh;
+        });
+        attributeBindings.forEach(binding => {
+          if (binding.node) binding.node.setAttribute(binding.name, lang === "en" ? binding.en : binding.zh);
+        });
+        root.lang = lang === "en" ? "en" : "zh-CN";
+        root.dataset.language = lang;
+        document.title = lang === "en" ? titleEn : titleZh;
+        if (descriptionMeta) descriptionMeta.setAttribute("content", lang === "en" ? descriptionEn : descriptionZh);
+        languageToggle.textContent = lang === "en" ? "中文" : "English";
+        languageToggle.setAttribute("aria-label", lang === "en" ? "切换到中文" : "Switch to English");
+        localStorage.setItem("wildfire-plan-language", lang);
+        filterSections();
+      }
+
+      const savedTheme = localStorage.getItem("wildfire-plan-theme");
+      if (savedTheme) root.dataset.theme = savedTheme;
+      else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        root.dataset.theme = "dark";
+      }
+
+      navToggle?.addEventListener("click", () => sidebar.classList.toggle("open"));
+      tocLinks.forEach(link => link.addEventListener("click", () => sidebar.classList.remove("open")));
+      languageToggle.addEventListener("click", () => {
+        setLanguage(root.dataset.language === "en" ? "zh" : "en");
+      });
+
+      themeToggle.addEventListener("click", () => {
+        const next = root.dataset.theme === "dark" ? "light" : "dark";
+        root.dataset.theme = next;
+        localStorage.setItem("wildfire-plan-theme", next);
+      });
+
+      let scale = Number(localStorage.getItem("wildfire-plan-font-scale") || 1);
+      const applyScale = () => {
+        scale = Math.max(.86, Math.min(1.24, scale));
+        root.style.setProperty("--font-scale", scale);
+        localStorage.setItem("wildfire-plan-font-scale", String(scale));
+      };
+      applyScale();
+      fontUp?.addEventListener("click", () => { scale += .06; applyScale(); });
+      fontDown?.addEventListener("click", () => { scale -= .06; applyScale(); });
+
+      searchBox.addEventListener("input", filterSections);
+
+      const updateProgress = () => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        const ratio = max > 0 ? window.scrollY / max : 0;
+        progressBar.style.width = `${Math.min(100, Math.max(0, ratio * 100))}%`;
+      };
+      window.addEventListener("scroll", updateProgress, { passive: true });
+      updateProgress();
+
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries
+          .filter(entry => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        tocLinks.forEach(link => {
+          link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`);
+        });
+      }, { rootMargin: "-20% 0px -70% 0px", threshold: [0, .1, .5] });
+      sections.forEach(section => observer.observe(section));
+
+      setLanguage(localStorage.getItem("wildfire-plan-language") || "zh");
+    })();
+  </script>
+</body>
+</html>
