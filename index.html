@@ -581,7 +581,7 @@
         <div class="meta-item"><b>研究周期：</b>10 个月</div>
         <div class="meta-item"><b>论文目标：</b>国际同行评审会议 Full / Regular Paper</div>
         <div class="meta-item"><b>主数据集：</b>WSTS+</div>
-        <div class="meta-item"><b>资料核验日期：</b>2026-07-30</div>
+        <div class="meta-item"><b>资料核验日期：</b>2026-08-07</div>
       </div>
     </div>
   </section>
@@ -616,9 +616,9 @@
       <section class="section searchable" id="s1">
         <div class="section-kicker">01</div>
         <h2>研究目标与范围</h2>
-        <p>本项目研究卫星观测不完整时的下一日山火蔓延预测。给定预测时点之前的火情、天气、地形和植被信息，模型输出 24 小时后的活跃火点概率图。研究重点是观测缺失和观测时间不一致对预测结果的影响。</p>
+        <p>本项目研究卫星观测不完整时的下一日山火蔓延预测。给定过去若干自然日的火情、天气、地形和植被信息，模型输出下一 UTC 自然日窗口内的 VIIRS 活跃火点概率图。该目标是 active-fire proxy，不等同于真实燃烧概率、精确 <code>t+24h</code> 火线位置或最终烧毁范围。</p>
 
-        <p>计划以 WSTS+ 为主数据集。若标签和时间定义能够对齐，再使用 TS-SatFire 做独立验证。方法部分只研究一项改动：根据模态有效性、观测时间间隔和可用的质量字段，对多源特征进行加权融合。</p>
+        <p>计划仍以 WSTS+ 为主数据集，并保留质量与观测年龄感知的轻量融合模块。可追溯的自然缺失只在有效性、覆盖或 QA 字段能够可靠恢复时报告；其余缺失实验采用预先定义的受控 corruption。TS-SatFire 作为不同标签合同下的跨数据集压力测试，结果单独报告。</p>
 
         <div class="grid-2">
           <div class="card">
@@ -626,7 +626,7 @@
             <ul>
               <li>复现公开基线，并建立事件隔离的跨年份划分；</li>
               <li>实现质量与观测时间感知的融合模块；</li>
-              <li>比较完整观测、自然缺失和受控缺失条件下的结果；</li>
+              <li>区分完整观测、可识别的自然缺失和受控缺失三类评测；</li>
               <li>完成消融实验、事件级统计和失败案例分析。</li>
             </ul>
           </div>
@@ -641,7 +641,7 @@
           </div>
         </div>
 
-        <p>项目周期为 10 个月，计划使用一张约 24GB 显存 GPU 或同等算力。第一个月应完成数据检查和公开基线复现；若发现数据存在无法排除的未来信息泄漏，应先调整题目，不继续增加模型结构。</p>
+        <p>项目周期保持 10 个月，计划使用一张约 24GB 显存 GPU 或同等算力。前 14 天完成字段级数据闸门；第一个月同时完成公开基线复现。若时间戳、QA 或目标有效性无法恢复，研究继续使用原 backbone 和门控思路，但把相应结论限制为受控缺失条件，不扩大为自然缺失或运行式部署结论。</p>
       </section>
 
       <section class="section searchable" id="s2">
@@ -667,7 +667,7 @@
             <tbody>
               <tr>
                 <td><strong>WildfireSpreadTS</strong><br><span class="badge peer">NeurIPS 2023</span></td>
-                <td>论文报告 13,607 个时空样本、607 个火灾事件、23 个通道，覆盖美国 2018 至 2021 年；目标是 24 小时后的二值活跃火点图，标签以 VIIRS 为代理。<a href="https://proceedings.neurips.cc/paper_files/paper/2023/file/ebd545176bdaa9cd5d45954947bd74b7-Paper-Datasets_and_Benchmarks.pdf" target="_blank" rel="noopener">论文</a> · <a href="https://github.com/SebastianGer/WildfireSpreadTS" target="_blank" rel="noopener">代码</a></td>
+                <td>论文报告 13,607 个时空样本、607 个火灾事件、23 个通道，覆盖美国 2018 至 2021 年；目标是下一自然日窗口的二值 VIIRS 活跃火点图。<a href="https://proceedings.neurips.cc/paper_files/paper/2023/file/ebd545176bdaa9cd5d45954947bd74b7-Paper-Datasets_and_Benchmarks.pdf" target="_blank" rel="noopener">论文</a> · <a href="https://github.com/SebastianGer/WildfireSpreadTS" target="_blank" rel="noopener">代码</a></td>
                 <td>用于确定任务、输入通道和公开基线。</td>
                 <td>活跃火点图是代理标签，不等同于真实火线或完整烧毁范围。</td>
               </tr>
@@ -675,13 +675,13 @@
                 <td><strong>WSTS+</strong><br><span class="badge peer">WACV 2026</span></td>
                 <td>论文和项目卡称其在原 WSTS 上增加四年数据并扩展地理范围；项目卡列出 2016 至 2023 年、1,005 个事件、24,462 张影像。<a href="https://arxiv.org/abs/2502.12003" target="_blank" rel="noopener">论文记录</a> · <a href="https://huggingface.co/saadlahrichi/WSTSPlus" target="_blank" rel="noopener">项目卡</a></td>
                 <td>作为主数据集，用于跨年份实验。</td>
-                <td>所需 QA、时间戳和传感器质量字段是否公开，仍需在数据审计时确认。</td>
+                <td>公开版本未充分保留逐模态 acquisition/availability time、原始 QA 和明确 coverage mask；标准 loader 还会把缺失值转为 0。核心字段必须在 Phase 0 审计或由源产品恢复。</td>
               </tr>
               <tr>
                 <td><strong>TS-SatFire</strong><br><span class="badge peer">Scientific Data 2025</span></td>
-                <td>论文报告 179 个事件、3,552 张影像、约 71GB，覆盖 2017 至 2021 年；包含活跃火检测、烧毁区域制图和蔓延预测三项任务。蔓延标签是“下一日新烧毁区域”。<a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">论文</a> · <a href="https://github.com/zhaoyutim/TS-SatFire" target="_blank" rel="noopener">代码</a></td>
-                <td>标签能够对齐时，用于独立验证或辅助监督。</td>
-                <td>其“新烧毁区域”与 WSTS 的“下一日活跃火点图”不是同一个输出合同，不能直接混合分数。</td>
+                <td>数据集总计 179 个事件、3,552 张影像、约 71GB；其中 progression 任务实际使用 162 个事件。其标签是累计 active-fire/NIFC burned-area proxy 的次日增量。<a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">论文</a> · <a href="https://github.com/zhaoyutim/TS-SatFire" target="_blank" rel="noopener">代码</a></td>
+                <td>作为不同 proxy label 下的跨数据集压力测试。</td>
+                <td>与 WSTS 的下一日 active-fire map 不是同一输出合同，不能直接混合指标或称为同任务外部验证。</td>
               </tr>
             </tbody>
           </table>
@@ -706,21 +706,33 @@
                 <td><span class="badge preprint">预印本 · 2026</span></td>
               </tr>
               <tr>
-                <td><a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">AGFlow</a></td>
-                <td>使用时间戳条件化的异步 Sentinel-1/2 融合进行云去除与任意时刻重建。</td>
-                <td>说明时间戳驱动的异步融合已有研究。本项目的区别在于山火预测任务和预测时点约束。</td>
-                <td><span class="badge preprint">预印本 · 2026</span></td>
+                <td><a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">FireEx</a></td>
+                <td>以 fuel、weather 和 generalist 三个专家的固定平均进行下一日增量式山火蔓延预测。</td>
+                <td>这是最直接的 modality-aware wildfire prior；本项目的差异是显式缺失、观测年龄、QA 与动态可靠性。</td>
+                <td><span class="badge peer">Remote Sensing 2026</span></td>
               </tr>
               <tr>
-                <td><a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">Incomplete Multimodal Learning for Remote Sensing Data Fusion</a></td>
+                <td><a href="https://doi.org/10.1016/j.rse.2025.115120" target="_blank" rel="noopener">AnytimeFormer</a></td>
+                <td>使用时间感知注意力融合不规则、异步 SAR/光学时间序列，并重建任意目标时刻反射率。</td>
+                <td>说明 timestamp-aware asynchronous fusion 已有正式发表工作；本项目不以时间戳融合本身作为创新。</td>
+                <td><span class="badge peer">RSE 2026</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://openaccess.thecvf.com/content/CVPR2026W/MORSE/html/Fallah_Asynchronous_Remote_Sensing_Time-Series_Fusion_for_Cloud_Removal_and_Anytime_CVPRW_2026_paper.html" target="_blank" rel="noopener">AGFlow</a></td>
+                <td>使用时间戳条件化的异步 Sentinel-1/2 融合进行云去除与任意时刻重建。</td>
+                <td>说明时间戳驱动的异步融合已有研究。本项目的区别在于山火预测任务和预测时点约束。</td>
+                <td><span class="badge peer">CVPR Workshops 2026</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://doi.org/10.1109/TGRS.2024.3387837" target="_blank" rel="noopener">Incomplete Multimodal Learning for Remote Sensing Data Fusion</a></td>
                 <td>研究遥感多模态缺失，通过重建与对比式融合支持下游任务。</td>
                 <td>可用于设计缺失模态基线，避免把通用技术当作山火领域的新方法。</td>
-                <td><span class="badge preprint">预印本 · 2023</span></td>
+                <td><span class="badge peer">IEEE TGRS 2024</span></td>
               </tr>
               <tr>
                 <td><a href="https://arxiv.org/abs/2603.02505" target="_blank" rel="noopener">SGMA</a> / <a href="https://arxiv.org/abs/2601.17342" target="_blank" rel="noopener">STARS</a></td>
-                <td>面向不完整遥感多模态数据，研究模态可靠性估计、加权融合以及共享与专属表示对齐。</td>
-                <td>可选取其中一个方法进行适配，比较可靠性估计和加权融合的效果。</td>
+                <td>SGMA 研究语义原型驱动的可靠性加权；STARS 研究共享/专属表示的双向翻译与对齐，两者机制不同。</td>
+                <td>优先适配 SGMA 或 MAGIC 作为可靠性融合对照；STARS 仅作为表示对齐相关工作。</td>
                 <td><span class="badge preprint">预印本 · 2026</span></td>
               </tr>
             </tbody>
@@ -728,9 +740,9 @@
         </div>
 
         <h3>拟解决的问题</h3>
-        <p>现有工作已经涉及缺失模态、时间戳融合和山火部分可观测预测，因此本项目不能把这些概念本身作为创新点。论文需要说明：在事件隔离和预测时点约束下，观测年龄与质量信息是否对下一日山火预测有稳定作用。</p>
+        <p>现有工作已经涉及缺失模态、时间戳融合、模态感知山火预测和山火部分可观测预测，因此本项目定位为 <strong>New Setting + empirical methodology</strong>，不能把 gate、mask 或 <code>Δt</code> 本身作为创新点。论文需要说明：在事件隔离、时间外测试和明确的数据可用性合同下，观测年龄与质量信息是否对下一日 active-fire proxy 预测有稳定作用。</p>
 
-        <p>实验设计中需要特别处理三个问题。第一，WSTS 与 TS-SatFire 的标签含义不同。第二，目标日观测和事后重分析数据可能造成未来信息泄漏。第三，随机遮挡只能作为压力测试，不能替代云、烟和卫星过境时间造成的实际缺失。</p>
+        <p>实验设计中需要特别处理四个问题。第一，WSTS 与 TS-SatFire 的标签含义不同。第二，最终事件边界、目标日观测、事后更新的天气与复合产品可能造成 future-informed leakage。第三，随机遮挡只能作为 MCAR sanity check，不能替代云、烟和卫星过境造成的结构化缺失。第四，目标日无有效观测不能自动记为 no-fire。</p>
       </section>
 
       <section class="section searchable" id="s3">
@@ -738,7 +750,7 @@
         <h2>研究问题与假设</h2>
 
         <div class="rq">
-          在事件隔离和跨年份条件下，使用模态有效性、观测时间间隔与缺失模式，能否改善部分可观测条件下的下一日山火蔓延预测，同时保持完整观测条件下的性能？
+          在事件隔离和严格时间外评测下，显式使用模态有效性、观测年龄与可获得的 QA 信息，能否比普通拼接、填充和均匀融合更可靠地预测下一自然日的 active-fire proxy，同时保持完整观测条件下的性能？
         </div>
 
         <div class="table-wrap">
@@ -753,16 +765,22 @@
             </thead>
             <tbody>
               <tr>
-                <td><span class="badge hypothesis">H1</span><br>质量、有效性和观测年龄门控优于简单拼接与 mask-only 基线。</td>
-                <td>在自然缺失可得的切片和预先定义的合成压力测试上，对比相同训练预算的基线；至少 3 个随机种子。</td>
-                <td>收益仅出现在单一缺失率、单一年份或单一随机种子；或完整观测性能明显下降。</td>
+                <td><span class="badge hypothesis">H1</span><br>质量、有效性和观测年龄门控在预注册缺失条件下优于 concat + mask 等强基线。</td>
+                <td>使用相同 backbone、训练预算和 corruption masks，比较 paired event-macro AP；主结果采用 5 个 matched seeds。</td>
+                <td>配对改善的 95% 置信区间不为正，或只出现在单一缺失率/年份。</td>
                 <td>简化或删除门控模块。</td>
               </tr>
               <tr>
-                <td><span class="badge hypothesis">H2</span><br>显式 <code>Δt</code> 编码改善异步观测下的预测。</td>
-                <td>固定其余结构，对比 no-time、absolute timestamp、observation-age 三种编码。</td>
-                <td>去除 <code>Δt</code> 后结果等价或更好，或收益无法跨年份复现。</td>
-                <td>不把时间编码列为论文贡献。</td>
+                <td><span class="badge hypothesis">H2</span><br>门控方法在完整观测条件下满足预注册 non-inferiority margin。</td>
+                <td>相对同 backbone 完整观测基线计算 paired event-macro AP 差值；margin 仅由训练/验证 pilot 确定。</td>
+                <td>完整观测性能下降超过 margin。</td>
+                <td>降低门控复杂度，或仅在缺失触发时启用。</td>
+              </tr>
+              <tr>
+                <td><span class="badge hypothesis">H3</span><br>真实 <code>age/QA</code> 提供超过缺失模式本身的信息。</td>
+                <td>比较 mask-only、age-only、QA-only、QA + age，并在 year × missing-rate 分层内打乱 age/QA。</td>
+                <td>真实元数据不优于 shuffled negative control，或无法在 2022–2023 future holdout 复现。</td>
+                <td>删除机制主张，保留受控缺失 benchmark 结论。</td>
               </tr>
             </tbody>
           </table>
@@ -783,13 +801,13 @@
           </div>
           <div class="card">
             <h4>TS-SatFire</h4>
-            <p>仅用于独立验证。若第二个月仍无法对齐标签、空间分辨率和时间定义，则取消这部分实验。</p>
+            <p>仅作为不同 proxy label 下的跨数据集压力测试，单独训练、评估和解释；不与 WSTS+ 分数合并。</p>
           </div>
         </div>
 
         <h3>预测时点</h3>
         <div class="callout danger">
-          给定预测时点 <code>t</code>，模型只能使用当时已经可获得的数据，预测 <code>t+24h</code> 的目标。每个输入字段需记录观测时间、可用时间、空间分辨率、缺失含义和预处理版本。
+          主 benchmark 合同是：使用过去自然日窗口中的 WSTS+ 多模态输入，预测下一 UTC 自然日窗口内的 VIIRS active-fire proxy。它不是统一签发时刻下精确 <code>t+24h</code> 的运行式预测。每个字段仍需记录观测时间、可用时间、空间分辨率、缺失含义和预处理版本，以识别可安全使用的变量。
         </div>
 
         <div class="table-wrap">
@@ -827,6 +845,12 @@
                 <td>把从目标标签反推的“质量”作为输入。</td>
                 <td>第一周核对字段来源；不可得时不使用该字段。</td>
               </tr>
+              <tr>
+                <td>事件窗口与目标有效性</td>
+                <td>benchmark 可保留官方 ROI；运行式结论不得依赖完整事件事后边界。target validity 仅用于 loss/evaluation。</td>
+                <td>用最终 GlobFire/MTBS 边界定义部署窗口；把云烟或无覆盖的目标像素记为 no-fire。</td>
+                <td>记录 ROI provenance；能恢复 target validity 时将无效像素标为 unknown，否则只声称 detection-proxy 预测。</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -845,14 +869,14 @@
             <tbody>
               <tr>
                 <td>WSTS / WSTS+</td>
-                <td>下一日 VIIRS 活跃火点二值图（代理标签）。</td>
-                <td>next-day active-fire map / 局地蔓延代理</td>
+                <td>下一 UTC 自然日窗口的 VIIRS 活跃火点二值图（代理标签）。</td>
+                <td>next-calendar-day active-fire proxy</td>
                 <td><strong>否</strong>，除非重新定义共同目标并给出映射误差。</td>
               </tr>
               <tr>
                 <td>TS-SatFire</td>
-                <td>下一日新烧毁区域。</td>
-                <td>newly-burned-area progression</td>
+                <td>累计 active-fire/NIFC burned-area proxy 的次日增量。</td>
+                <td>cross-label progression stress test</td>
                 <td><strong>否</strong>，只能分别训练/评估或作为迁移实验。</td>
               </tr>
             </tbody>
@@ -862,19 +886,20 @@
         <h3>数据划分与缺失设置</h3>
         <ul>
           <li>同一火灾事件不得跨训练集、验证集和测试集。</li>
-          <li>优先采用按年份前推或 leave-one-year-out；具体划分在主实验前固定。</li>
+          <li>保留 WSTS+ 官方四折结果用于文献可比性；确认性划分固定为 2016–2020 train、2021 validation、2022–2023 untouched test。</li>
           <li>自然缺失只在数据提供有效性或 QA 字段时报告，并单独统计缺失率。</li>
-          <li>受控缺失包括随机像素、空间块、连续时间段和整模态缺失。</li>
+          <li>随机像素仅作为 MCAR sanity check；主要受控缺失匹配真实缺失比例、连通块形状、连续时长和跨模态共缺失。</li>
           <li>超参数、阈值和早停只使用训练集与验证集确定。</li>
         </ul>
 
-        <h3>第一周数据检查</h3>
+        <h3>前 14 天 Phase 0 数据闸门</h3>
         <ul class="checklist">
           <li>确认下载地址、许可、文件完整性与校验和；</li>
-          <li>核对事件 ID、年份、样本数、时间戳和 QA 字段；</li>
-          <li>检查每个输入字段是否早于预测时点；</li>
+          <li>核对事件 ID、年份、样本数以及 <code>observation_time / availability_time / validity / QA / target_validity</code>；</li>
+          <li>审计事件 ROI、GRIDMET 产品版本与 VNP13A1 等复合产品的时间 lineage；</li>
+          <li>抽样复算 GFS 风向，并验证 WSTS+ 八年 HDF5 转换；</li>
           <li>统计正类比例、事件长度、缺失率和年度分布；</li>
-          <li>保存 <code>data_manifest.csv</code> 与 <code>split_manifest.csv</code>。</li>
+          <li>保存 <code>data_manifest.csv</code>、<code>split_manifest.csv</code> 与明确的 continue/pivot 决策。</li>
         </ul>
       </section>
 
@@ -893,10 +918,10 @@
         </div>
 
         <div class="formula">
-          z<sub>t</sub> = Σ<sub>m</sub> α<sub>m,t</sub> · E<sub>m</sub>(x<sub>m,t</sub>), &nbsp;
-          α<sub>m,t</sub> = softmax<sub>m</sub>(g([q<sub>m,t</sub>, Δt<sub>m,t</sub>, mask<sub>m,t</sub>, id<sub>m</sub>]))
+          ℓ<sub>m,t,p</sub> = g(E<sub>m</sub>(x), q, log(1+age), id<sub>m</sub>), &nbsp;
+          α<sub>m,t,p</sub> = valid<sub>m,t,p</sub> exp(ℓ<sub>m,t,p</sub>) / Σ valid · exp(ℓ)
         </div>
-        <p class="small">其中 <code>q</code> 表示数据中可用的质量字段。若数据不提供该字段，则仅使用 <code>Δt + mask + modality ID</code>。</p>
+        <p class="small">缺失项必须被硬置零并在有效项内重新归一化；某位置完全无有效动态观测时使用 learned null token。<code>q</code> 仅在来源可追溯时使用；静态地形和土地覆盖不与动态观测共享同一个竞争权重单纯形。</p>
 
         <h3>模型组成</h3>
         <div class="grid-4">
@@ -906,7 +931,7 @@
           </div>
           <div class="card">
             <h4>2. 可靠性估计</h4>
-            <p>使用质量字段、有效性 mask 和观测年龄估计各模态权重。</p>
+            <p>使用可追溯质量字段、有效性 mask 和观测年龄估计空间相关的模态权重，并比较 scalar、patch 与 pixel gate。</p>
           </div>
           <div class="card">
             <h4>3. 时序融合</h4>
@@ -918,7 +943,7 @@
           </div>
         </div>
 
-        <p>质量与观测年龄门控是必做模块。辅助监督仅在 TS-SatFire 标签核对完成后考虑。物理一致性项和大型预训练模型不纳入本周期。</p>
+        <p>门控结构保持为必做模块；若真实 QA 或 acquisition time 不可恢复，则退化为 validity/mask-conditioned gate，并把 observation-age 与自然缺失结论移出主贡献。辅助监督、物理一致性项和大型预训练模型不纳入本周期。</p>
       </section>
 
       <section class="section searchable" id="s6">
@@ -939,7 +964,7 @@
             <tbody>
               <tr>
                 <td>规则基线</td>
-                <td>No-fire、Persistence、固定形态学膨胀</td>
+                <td>No-fire、全历史/最新探测 Persistence、固定形态学膨胀</td>
                 <td>检验学习模型是否超过全负预测和火情延续假设。</td>
                 <td>参数只在验证集确定。</td>
               </tr>
@@ -951,19 +976,19 @@
               </tr>
               <tr>
                 <td>公开学习基线</td>
-                <td>WSTS/WSTS+ 官方或作者公开的最强可复现模型</td>
+                <td>Logistic Regression；Res18-U-Net (T=1/T=5)；UTAE(Res18, T=5)</td>
                 <td>核对数据处理和训练流程。</td>
                 <td>记录代码版本、环境、预处理和训练预算。</td>
               </tr>
               <tr>
                 <td>最小神经基线</td>
-                <td>Simple concat、concat + mask、modality dropout</td>
+                <td>Zero/mean fill + mask、concat + mask、modality dropout、LOCF、nearest-time + age、uniform late fusion</td>
                 <td>检验可靠性门控是否超过常用缺失处理方法。</td>
                 <td>尽量同 backbone、同参数量级、同训练预算。</td>
               </tr>
               <tr>
                 <td>最近邻</td>
-                <td>可复现时加入 reconstruction→prediction 的部分可观测方法</td>
+                <td>Reconstruction→prediction、FireEx 固定专家平均、SGMA/MAGIC 式可靠性融合</td>
                 <td>与山火部分可观测预测的直接相关工作比较。</td>
                 <td>代码不可得或实验条件不一致时，只作定性讨论。</td>
               </tr>
@@ -979,21 +1004,21 @@
           </div>
           <div class="card">
             <h4>E2 · 缺失与异步压力测试</h4>
-            <p>分别评估自然缺失和四类受控缺失，绘制性能随缺失强度变化的曲线。</p>
+            <p>分别评估完整观测、可识别的自然缺失和匹配真实结构的受控缺失；IID 随机像素只作 MCAR sanity check。</p>
           </div>
           <div class="card">
             <h4>E3 · 跨年份/事件泛化</h4>
-            <p>进行至少一个时间外测试，并按事件大小、持续时间和正类比例分层报告。</p>
+            <p>官方四折用于文献比较；确认性结果使用冻结的 2016–2020 / 2021 / 2022–2023 forward split，并按年份和事件属性分层报告。</p>
           </div>
           <div class="card">
             <h4>E4 · 消融与失败分析</h4>
-            <p>依次移除 <code>q</code>、<code>Δt</code>、mask、门控；展示典型真阳性、漏检和错误扩散案例。</p>
+            <p>比较 mask-only、age-only、QA-only、QA + age 与 shuffled age/QA negative control；展示真阳性、漏检、误报和错误扩散案例。</p>
           </div>
         </div>
 
         <h3>实验一致性</h3>
         <ul>
-          <li>学习模型至少运行 3 个固定随机种子，并保存每次运行的预测结果。</li>
+          <li>Pilot 使用 3 个固定种子；主比较使用 5 个 matched seed pairs，并保存逐样本预测。</li>
           <li>同类模型使用一致的数据增强、训练轮数/早停、输入历史长度和调参预算。</li>
           <li>主结论只使用预先指定的指标和测试划分。</li>
           <li>只有数据、划分、预处理和指标一致时，才进行数值对比。</li>
@@ -1020,20 +1045,20 @@
               <tr>
                 <td><strong>主指标</strong></td>
                 <td>Average Precision / AUPRC</td>
-                <td>报告像素汇总值和事件级宏平均，并给出 95% 事件 bootstrap 区间。</td>
-                <td>用于主结果比较。</td>
+                <td>主效应报告 paired Δ event-macro AP；同时给 pooled AP、正类 prevalence 与 persistence AP。</td>
+                <td>跨年份解释相对同年基线的改善，不直接比较不同 prevalence 下的 raw AP。</td>
               </tr>
               <tr>
                 <td>空间重叠</td>
-                <td>IoU、F1、Precision、Recall</td>
-                <td>阈值在验证集确定，同时给出 PR 曲线。</td>
-                <td>用于评价空间重叠。</td>
+                <td>IoU、F1、Precision、Recall、FSS</td>
+                <td>阈值只在验证集冻结；FSS 报告 0、1、2、4 pixel 邻域。</td>
+                <td>同时评价像素重叠和空间位移容忍尺度。</td>
               </tr>
               <tr>
                 <td>概率质量</td>
-                <td>Brier score、ECE</td>
-                <td>模型输出需要解释为概率时报告。</td>
-                <td>ECE binning 方案需预先固定。</td>
+                <td>Brier score/skill、ECE、reliability diagram</td>
+                <td>Brier skill 相对同年 climatology 或 persistence；校准仅在验证集拟合。</td>
+                <td>ECE 仅作诊断，使用等频分箱、bootstrap band 和火区分层。</td>
               </tr>
               <tr>
                 <td>分层结果</td>
@@ -1046,7 +1071,7 @@
         </div>
 
         <h3>统计单位</h3>
-        <p>置信区间以火灾事件为重采样单位，跨年份实验同时报告各年度结果。事件数量不足时，应直接报告较宽的置信区间，不使用像素级检验替代事件级统计。</p>
+        <p>采用 paired、year-stratified、cluster-preserving event bootstrap，整场火灾连同全部日期和像素共同重采样，至少 10,000 次。模型差值必须在相同重采样事件和 matched seeds 上计算；同时报告 equal-event 与 pixel-weighted estimand。</p>
       </section>
 
       <section class="section searchable" id="s8">
@@ -1054,17 +1079,17 @@
         <h2>阶段目标与止损条件</h2>
 
         <div class="gate">
-          <div class="gate-time">第 1 个月</div>
+          <div class="gate-time">第 14 天</div>
           <div>
-            <strong>目标：</strong>公开基线可以运行；完成事件、年份、标签和时间字段核对。
-            <br><strong>未完成时：</strong>暂停模型开发。若主数据不可获得或标签无法解释，则调整题目。
+            <strong>目标：</strong>完成 acquisition/availability time、validity、QA、target validity、ROI 和产品 lineage 审计，形成字段 manifest 与继续/降级决策。
+            <br><strong>未完成时：</strong>不取消原方法路线；把主实验限定为受控缺失，并删除自然缺失与 operational 主张。
           </div>
         </div>
 
         <div class="gate">
           <div class="gate-time">第 3 个月</div>
           <div>
-            <strong>目标：</strong>门控模块在预先指定的缺失条件下，跨 3 个种子呈一致方向；完整观测性能没有明显下降。
+            <strong>目标：</strong>门控模块在预先指定的缺失条件下，3-seed pilot 优于 concat + mask；完整观测满足预注册 non-inferiority margin。
             <br><strong>未完成时：</strong>简化模块并复查一次。结果仍不稳定时，停止该方法方向。
           </div>
         </div>
@@ -1072,7 +1097,7 @@
         <div class="gate">
           <div class="gate-time">第 5 个月</div>
           <div>
-            <strong>目标：</strong>至少在一个时间外年份或第二种 backbone 上保持相同结果方向，并完成事件级置信区间与失败案例分析。
+            <strong>目标：</strong>在冻结的 2022–2023 future holdout 保持正向效果，并在第二种 backbone 上重复主要趋势，完成配对事件级置信区间与失败分析。
             <br><strong>未完成时：</strong>重新评估论文是否仍有独立的评估贡献；若没有，则降低投稿目标。
           </div>
         </div>
@@ -1085,7 +1110,7 @@
           </div>
         </div>
 
-        <p>投稿前应确认结果在多个随机种子和关键数据切片上保持一致，事件级统计不由少数大事件主导，且所有输入满足预测时点约束。</p>
+        <p>投稿前应确认结果在 5 个 matched seeds 和关键数据切片上保持一致，事件级统计不由少数大事件主导，所有测试阈值与校准均由 validation 冻结，并对可用性合同的限制做准确表述。</p>
       </section>
 
       <section class="section searchable" id="s9">
@@ -1094,20 +1119,20 @@
 
         <div class="timeline">
           <div class="timeline-item">
-            <strong>第 1 个月：数据检查与基线复现</strong>
-            <p>下载并校验数据，建立 manifest，核对事件隔离和输入时间，复现 no-fire、persistence 与公开学习基线。</p>
+            <strong>第 1 个月：Phase 0 数据闸门与基线复现</strong>
+            <p>前 14 天完成字段、ROI、产品 lineage、GFS 风向与八年转换审计；同时建立 manifest，复现 no-fire、persistence、Res18-U-Net 与 UTAE 基线。</p>
           </div>
           <div class="timeline-item">
             <strong>第 2 至 3 个月：核心模块</strong>
-            <p>实现 concat + mask 和 observation-age gate，完成小规模验证、3 个固定随机种子及第一组缺失强度实验。</p>
+            <p>实现 concat + mask、LOCF、uniform fusion 与硬屏蔽 observation-age/validity gate，完成 3-seed pilot 和第一组 matched corruption 实验。</p>
           </div>
           <div class="timeline-item">
             <strong>第 4 至 5 个月：主实验与跨年份验证</strong>
-            <p>完成 E1 至 E3、事件 bootstrap、跨年份实验和第二种 backbone，并检查不同事件规模和缺失条件下的结果。</p>
+            <p>完成 E1 至 E3、官方四折对比、冻结的 future holdout、第二种 backbone 和 5 个 matched seeds，并执行 10,000 次配对事件 bootstrap。</p>
           </div>
           <div class="timeline-item">
-            <strong>第 6 个月：外部验证与补充实验</strong>
-            <p>在标签核对通过后加入 TS-SatFire 外部验证；若无法对齐，则用于补充随机种子、第二种划分或数据质量分析。</p>
+            <strong>第 6 个月：跨标签压力测试与补充实验</strong>
+            <p>在 TS-SatFire 上单独训练和评估 progression proxy，不与 WSTS+ 分数合并；若实现成本过高，则优先完成负控制、校准和数据质量分析。</p>
           </div>
           <div class="timeline-item">
             <strong>第 7 个月：消融与方法固定</strong>
@@ -1123,7 +1148,7 @@
           </div>
         </div>
 
-        <p>延长后的时间主要用于跨年份验证、第二种 backbone、外部数据集、更多随机种子和论文复现，不扩大主研究问题。</p>
+        <p>时间仍围绕原研究问题分配：数据闸门只决定证据强度，不改变 WSTS+ 主数据集、轻量门控方法或十个月论文周期。</p>
       </section>
 
       <section class="section searchable" id="s10">
@@ -1233,10 +1258,14 @@
           <li><span class="source-title">Lahrichi, Bova, Johnson, Malof. Improved Wildfire Spread Prediction with Time-Series Data and WSTS+ Benchmark.</span> WACV, 2026. <span class="badge peer">同行评审</span> <a href="https://arxiv.org/abs/2502.12003" target="_blank" rel="noopener">论文记录</a> · <a href="https://huggingface.co/saadlahrichi/WSTSPlus" target="_blank" rel="noopener">项目卡</a></li>
           <li><span class="source-title">Zhao, Gerard, Ban. TS-SatFire: A Multi-Task Satellite Image Time-Series Dataset for Wildfire Detection and Prediction.</span> Scientific Data, 2025. <span class="badge peer">同行评审</span> <a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">论文</a></li>
           <li><span class="source-title">Yang, Zafari, Duan, Swindlehurst. Robust Wildfire Forecasting under Partial Observability: From Reconstruction to Prediction.</span> 2026. <span class="badge preprint">预印本</span> <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">arXiv</a></li>
-          <li><span class="source-title">Fallah et al. Asynchronous Remote Sensing Time-Series Fusion for Cloud Removal and Anytime Reconstruction.</span> 2026. <span class="badge preprint">预印本 · AGFlow</span> <a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">arXiv</a></li>
-          <li><span class="source-title">Chen, Zhao, Bruzzone. Incomplete Multimodal Learning for Remote Sensing Data Fusion.</span> 2023. <span class="badge preprint">预印本</span> <a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">arXiv</a></li>
+          <li><span class="source-title">Andrianarivony, Akhloufi. A Modality-Aware Ensemble-of-Experts Model for Wildfire Spread Prediction.</span> Remote Sensing, 2026. <span class="badge peer">同行评审</span> <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">DOI</a></li>
+          <li><span class="source-title">Tang et al. AnytimeFormer: Fusing Irregular and Asynchronous SAR-Optical Time Series to Reconstruct Reflectance at Any Given Time.</span> Remote Sensing of Environment, 2026. <span class="badge peer">同行评审</span> <a href="https://doi.org/10.1016/j.rse.2025.115120" target="_blank" rel="noopener">DOI</a></li>
+          <li><span class="source-title">Fallah et al. Asynchronous Remote Sensing Time-Series Fusion for Cloud Removal and Anytime Reconstruction.</span> CVPR Workshops, 2026. <span class="badge peer">同行评审</span> <a href="https://openaccess.thecvf.com/content/CVPR2026W/MORSE/html/Fallah_Asynchronous_Remote_Sensing_Time-Series_Fusion_for_Cloud_Removal_and_Anytime_CVPRW_2026_paper.html" target="_blank" rel="noopener">论文</a></li>
+          <li><span class="source-title">Chen, Zhao, Bruzzone. A Novel Approach to Incomplete Multimodal Learning for Remote Sensing Data Fusion.</span> IEEE TGRS, 2024. <span class="badge peer">同行评审</span> <a href="https://doi.org/10.1109/TGRS.2024.3387837" target="_blank" rel="noopener">DOI</a></li>
           <li><span class="source-title">Wen, Liao, Xiao, Wang. SGMA: Semantic-Guided Modality-Aware Segmentation for Remote Sensing with Incomplete Multimodal Data.</span> 2026. <span class="badge preprint">预印本</span> <a href="https://arxiv.org/abs/2603.02505" target="_blank" rel="noopener">arXiv</a></li>
           <li><span class="source-title">Wang et al. STARS: Shared-specific Translation and Alignment for Missing-modality Remote Sensing Semantic Segmentation.</span> 2026. <span class="badge preprint">预印本</span> <a href="https://arxiv.org/abs/2601.17342" target="_blank" rel="noopener">arXiv</a></li>
+          <li><span class="source-title">WildfireSpreadTS dataset-creation repository.</span> <span class="badge verified">官方代码</span> <a href="https://github.com/SebastianGer/WildfireSpreadTSCreateDataset" target="_blank" rel="noopener">数据生成代码</a></li>
+          <li><span class="source-title">Google Earth Engine Data Catalog.</span> <span class="badge verified">官方目录</span> <a href="https://developers.google.com/earth-engine/datasets/catalog/IDAHO_EPSCOR_GRIDMET" target="_blank" rel="noopener">GRIDMET</a> · <a href="https://developers.google.com/earth-engine/datasets/catalog/NASA_VIIRS_002_VNP13A1" target="_blank" rel="noopener">VNP13A1</a></li>
           <li><span class="source-title">IEEE Circuits and Systems Society. 2027 IEEE International Conference on Multimedia &amp; Expo.</span> <span class="badge verified">官方会议页</span> <a href="https://ieee-cas.org/event/conference/2027-ieee-international-conference-multimedia-expo-icme" target="_blank" rel="noopener">ICME 2027</a></li>
           <li><span class="source-title">IEEE ICASSP 2027. Call for Papers.</span> <span class="badge verified">官方 CFP</span> <a href="https://2027.ieeeicassp.org/call-for-papers/" target="_blank" rel="noopener">ICASSP 2027</a></li>
         </ol>
@@ -1246,7 +1275,7 @@
   </div>
 
   <footer class="footer">
-    <p>卫星山火预测研究计划书 · 导师修订版 · 事实核验日期 2026-07-30</p>
+    <p>卫星山火预测研究计划书 · 最小必要修订版 · 事实核验日期 2026-08-07</p>
     <p>本文件不包含实验结果；所有外部链接和会议信息应在正式投稿前再次核验。</p>
   </footer>
 
@@ -1278,8 +1307,6 @@
         ["11 · 投稿计划", "11 · Publication plan"],
         ["12 · 参考资料", "12 · References"],
         ["研究目标与范围", "Research objective and scope"],
-        ["本项目研究卫星观测不完整时的下一日山火蔓延预测。给定预测时点之前的火情、天气、地形和植被信息，模型输出 24 小时后的活跃火点概率图。研究重点是观测缺失和观测时间不一致对预测结果的影响。", "This project studies next-day wildfire spread forecasting when satellite observations are incomplete. Given fire, weather, terrain, and vegetation information available before the forecast issue time, the model produces a probability map of active fire 24 hours later. The study focuses on how missing observations and inconsistent observation times affect forecast performance."],
-        ["计划以 WSTS+ 为主数据集。若标签和时间定义能够对齐，再使用 TS-SatFire 做独立验证。方法部分只研究一项改动：根据模态有效性、观测时间间隔和可用的质量字段，对多源特征进行加权融合。", "WSTS+ will be the primary dataset. TS-SatFire will be used for independent validation only if its label and temporal definitions can be aligned with the main task. The method will examine one modification: weighted fusion of multimodal features using modality validity, observation intervals, and available quality fields."],
         ["计划完成的工作", "Planned work"],
         ["复现公开基线，并建立事件隔离的跨年份划分；", "Reproduce public baselines and establish an event-disjoint, cross-year split;"],
         ["实现质量与观测时间感知的融合模块；", "Implement a fusion module that uses observation quality and observation time;"],
@@ -1300,7 +1327,6 @@
         ["已核验事实", "Verified information"],
         ["与本项目的关系", "Role in this project"],
         ["使用时的限制", "Limitations"],
-        ["论文报告 13,607 个时空样本、607 个火灾事件、23 个通道，覆盖美国 2018 至 2021 年；目标是 24 小时后的二值活跃火点图，标签以 VIIRS 为代理。", "The paper reports 13,607 spatiotemporal samples, 607 fire events, and 23 channels from the United States between 2018 and 2021. The target is a binary active-fire map 24 hours later, with VIIRS observations used as proxy labels."],
         ["论文", "Paper"],
         ["代码", "Code"],
         ["用于确定任务、输入通道和公开基线。", "Defines the task, input channels, and public baselines."],
@@ -1311,7 +1337,6 @@
         ["作为主数据集，用于跨年份实验。", "Primary dataset for cross-year experiments."],
         ["所需 QA、时间戳和传感器质量字段是否公开，仍需在数据审计时确认。", "The data audit must confirm whether the required QA, timestamp, and sensor-quality fields are publicly available."],
         ["论文报告 179 个事件、3,552 张影像、约 71GB，覆盖 2017 至 2021 年；包含活跃火检测、烧毁区域制图和蔓延预测三项任务。蔓延标签是“下一日新烧毁区域”。", "The paper reports 179 events, 3,552 images, and approximately 71 GB of data from 2017 to 2021. It includes three tasks: active-fire detection, burned-area mapping, and wildfire progression prediction. The progression target is the newly burned area on the following day."],
-        ["标签能够对齐时，用于独立验证或辅助监督。", "Used for independent validation or auxiliary supervision when the label definitions can be aligned."],
         ["其“新烧毁区域”与 WSTS 的“下一日活跃火点图”不是同一个输出合同，不能直接混合分数。", "Its newly burned area target differs from the WSTS next-day active-fire map. Scores from the two tasks cannot be combined directly."],
         ["相关方法", "Related methods"],
         ["工作", "Work"],
@@ -1337,20 +1362,16 @@
         ["什么结果会否定它", "Falsifying result"],
         ["处置", "Action"],
         ["质量、有效性和观测年龄门控优于简单拼接与 mask-only 基线。", "A gate based on quality, validity, and observation age outperforms simple concatenation and mask-only baselines."],
-        ["在自然缺失可得的切片和预先定义的合成压力测试上，对比相同训练预算的基线；至少 3 个随机种子。", "Compare against baselines with the same training budget on available natural-missingness subsets and predefined synthetic stress tests, using at least three random seeds."],
         ["收益仅出现在单一缺失率、单一年份或单一随机种子；或完整观测性能明显下降。", "The gain appears only at one missingness rate, in one year, or for one random seed, or performance under complete observations declines materially."],
         ["简化或删除门控模块。", "Simplify or remove the gating module."],
         ["显式", "Explicit "],
         ["编码改善异步观测下的预测。", " encoding improves forecasting under asynchronous observations."],
-        ["固定其余结构，对比 no-time、absolute timestamp、observation-age 三种编码。", "Hold the remaining architecture fixed and compare no-time, absolute-timestamp, and observation-age encodings."],
         ["去除", "After removing "],
         ["后结果等价或更好，或收益无法跨年份复现。", ", the result is equivalent or better, or the gain does not reproduce across years."],
-        ["不把时间编码列为论文贡献。", "Do not present temporal encoding as a paper contribution."],
         ["第一个月完成基线方差估计后，确定性能改善的判定标准。该标准和主评估指标应在运行测试集之前固定。", "After estimating baseline variance in the first month, define the criterion for a meaningful performance improvement. This criterion and the primary metric must be fixed before the test set is evaluated."],
         ["数据与预测合同", "Data and forecast contract"],
         ["数据集安排", "Dataset plan"],
         ["作为主数据集，用于训练、验证和跨年份测试。正式使用前确认下载许可、字段定义和官方划分。", "Used as the primary dataset for training, validation, and cross-year testing. Its download license, field definitions, and official splits must be confirmed before use."],
-        ["仅用于独立验证。若第二个月仍无法对齐标签、空间分辨率和时间定义，则取消这部分实验。", "Used only for independent validation. If the label, spatial-resolution, and temporal definitions cannot be aligned by the second month, this experiment will be removed."],
         ["预测时点", "Forecast issue time"],
         ["给定预测时点", "Given forecast issue time "],
         ["，模型只能使用当时已经可获得的数据，预测", ", the model may use only data available at that time to predict the "],
@@ -1389,7 +1410,6 @@
         ["，只能分别训练/评估或作为迁移实验。", "; the datasets must be trained and evaluated separately or used in a transfer experiment."],
         ["数据划分与缺失设置", "Data splits and missingness settings"],
         ["同一火灾事件不得跨训练集、验证集和测试集。", "The same fire event must not appear across the training, validation, and test sets."],
-        ["优先采用按年份前推或 leave-one-year-out；具体划分在主实验前固定。", "Use a forward-by-year or leave-one-year-out design where possible. Fix the exact split before the main experiments."],
         ["自然缺失只在数据提供有效性或 QA 字段时报告，并单独统计缺失率。", "Report natural missingness only when the dataset includes validity or QA fields, and report the missingness rate separately."],
         ["受控缺失包括随机像素、空间块、连续时间段和整模态缺失。", "Controlled missingness includes random pixels, spatial blocks, consecutive time intervals, and complete modality dropout."],
         ["超参数、阈值和早停只使用训练集与验证集确定。", "Determine hyperparameters, thresholds, and early stopping using only the training and validation sets."],
@@ -1454,14 +1474,11 @@
         ["E1 · 标准完整观测", "E1 · Standard complete-observation setting"],
         ["比较公开基线与拟议方法在固定划分下的性能，并检查完整观测条件下是否退化。", "Compare the public baselines and proposed method on a fixed split, and check for degradation under complete observations."],
         ["E2 · 缺失与异步压力测试", "E2 · Missingness and asynchrony stress tests"],
-        ["分别评估自然缺失和四类受控缺失，绘制性能随缺失强度变化的曲线。", "Evaluate natural missingness and four controlled missingness types separately, and plot performance against missingness severity."],
         ["E3 · 跨年份/事件泛化", "E3 · Cross-year and cross-event generalization"],
-        ["进行至少一个时间外测试，并按事件大小、持续时间和正类比例分层报告。", "Conduct at least one out-of-time test and report results by event size, duration, and positive-class prevalence."],
         ["E4 · 消融与失败分析", "E4 · Ablation and failure analysis"],
         ["依次移除", "Remove "],
         ["、mask、门控；展示典型真阳性、漏检和错误扩散案例。", ", the mask, and the gate in turn. Show representative true positives, missed detections, and error-propagation cases."],
         ["实验一致性", "Experimental consistency"],
-        ["学习模型至少运行 3 个固定随机种子，并保存每次运行的预测结果。", "Run each learned model with at least three fixed random seeds and save the predictions from every run."],
         ["同类模型使用一致的数据增强、训练轮数/早停、输入历史长度和调参预算。", "Use the same data augmentation, training duration or early stopping, input-history length, and tuning budget for comparable models."],
         ["主结论只使用预先指定的指标和测试划分。", "Base the main conclusions only on prespecified metrics and test splits."],
         ["只有数据、划分、预处理和指标一致时，才进行数值对比。", "Make numerical comparisons only when the data, split, preprocessing, and metric definitions are consistent."],
@@ -1471,7 +1488,6 @@
         ["报告方式", "Reporting"],
         ["备注", "Notes"],
         ["主指标", "Primary metric"],
-        ["报告像素汇总值和事件级宏平均，并给出 95% 事件 bootstrap 区间。", "Report the pooled pixel value, the event-level macro average, and a 95% event-bootstrap interval."],
         ["用于主结果比较。", "Used for the main comparison."],
         ["空间重叠", "Spatial overlap"],
         ["阈值在验证集确定，同时给出 PR 曲线。", "Choose the threshold on the validation set and also report the precision-recall curve."],
@@ -1484,18 +1500,14 @@
         ["报告均值、分布和样本量。", "Report means, distributions, and sample sizes."],
         ["用于判断结果是否由少数事件或年份驱动。", "Used to determine whether the result is driven by a small number of events or years."],
         ["统计单位", "Statistical unit"],
-        ["置信区间以火灾事件为重采样单位，跨年份实验同时报告各年度结果。事件数量不足时，应直接报告较宽的置信区间，不使用像素级检验替代事件级统计。", "Use the fire event as the resampling unit for confidence intervals, and report individual-year results in cross-year experiments. When the number of events is insufficient, report the resulting wide interval rather than substituting a pixel-level test for event-level statistics."],
         ["阶段目标与止损条件", "Milestones and stop conditions"],
         ["第 1 个月", "Month 1"],
         ["目标：", "Target:"],
-        ["公开基线可以运行；完成事件、年份、标签和时间字段核对。", "Run the public baseline and complete checks of events, years, labels, and temporal fields."],
         ["未完成时：", "If not completed:"],
         ["暂停模型开发。若主数据不可获得或标签无法解释，则调整题目。", "Pause model development. Revise the research question if the primary dataset is unavailable or the labels cannot be interpreted."],
         ["第 3 个月", "Month 3"],
-        ["门控模块在预先指定的缺失条件下，跨 3 个种子呈一致方向；完整观测性能没有明显下降。", "The gating module shows a consistent direction across three seeds under prespecified missingness conditions, without a material decline under complete observations."],
         ["简化模块并复查一次。结果仍不稳定时，停止该方法方向。", "Simplify the module and repeat the check once. Stop this method direction if the result remains unstable."],
         ["第 5 个月", "Month 5"],
-        ["至少在一个时间外年份或第二种 backbone 上保持相同结果方向，并完成事件级置信区间与失败案例分析。", "Maintain the same result direction in at least one out-of-time year or on a second backbone, and complete event-level confidence intervals and failure-case analysis."],
         ["重新评估论文是否仍有独立的评估贡献；若没有，则降低投稿目标。", "Reassess whether the paper retains an independent evaluation contribution. If not, lower the publication target."],
         ["第 7 个月", "Month 7"],
         ["固定方法、数据划分、主表和主图，之后只处理错误修复、复现实验和论文写作。", "Freeze the method, data split, main tables, and main figures. After this point, restrict work to error correction, reproduction, and paper writing."],
@@ -1503,12 +1515,9 @@
         ["投稿前应确认结果在多个随机种子和关键数据切片上保持一致，事件级统计不由少数大事件主导，且所有输入满足预测时点约束。", "Before submission, confirm that the result is consistent across random seeds and key data subsets, that event-level statistics are not dominated by a few large events, and that all inputs satisfy the forecast issue-time constraint."],
         ["时间安排", "Schedule"],
         ["第 1 个月：数据检查与基线复现", "Month 1: Data checks and baseline reproduction"],
-        ["下载并校验数据，建立 manifest，核对事件隔离和输入时间，复现 no-fire、persistence 与公开学习基线。", "Download and verify the data, build the manifest, check event separation and input times, and reproduce the no-fire, persistence, and public learned baselines."],
         ["第 2 至 3 个月：核心模块", "Months 2–3: Core module"],
-        ["实现 concat + mask 和 observation-age gate，完成小规模验证、3 个固定随机种子及第一组缺失强度实验。", "Implement concat + mask and the observation-age gate, then complete small-scale validation, three fixed random seeds, and the first missingness-severity experiment."],
         ["第 4 至 5 个月：主实验与跨年份验证", "Months 4–5: Main experiments and cross-year validation"],
         ["完成 E1 至 E3、事件 bootstrap、跨年份实验和第二种 backbone，并检查不同事件规模和缺失条件下的结果。", "Complete E1–E3, event bootstrap, cross-year experiments, and a second backbone. Examine results across event sizes and missingness conditions."],
-        ["第 6 个月：外部验证与补充实验", "Month 6: External validation and supplementary experiments"],
         ["在标签核对通过后加入 TS-SatFire 外部验证；若无法对齐，则用于补充随机种子、第二种划分或数据质量分析。", "Add external validation on TS-SatFire after the label audit. If the datasets cannot be aligned, use this month for additional random seeds, a second split, or data-quality analysis."],
         ["第 7 个月：消融与方法固定", "Month 7: Ablation and method freeze"],
         ["完成 E4、计算成本和预测时点敏感性实验，生成主表和主图，固定方法与数据划分。", "Complete E4, computational-cost analysis, and forecast issue-time sensitivity experiments. Generate the main tables and figures, then freeze the method and data split."],
@@ -1516,7 +1525,6 @@
         ["完成论文初稿，核对引用和实验数字，根据内部审阅补充必要实验，并整理代码与复现说明。", "Complete the first manuscript draft, verify citations and experimental values, run necessary experiments identified during internal review, and organize the code and reproduction instructions."],
         ["第 10 个月：投稿准备", "Month 10: Submission preparation"],
         ["完成最终复现、匿名仓库、格式调整和投稿材料，不再增加新的研究模块。", "Complete final reproduction, prepare the anonymous repository, format the paper, and assemble the submission materials. No new research modules will be added."],
-        ["延长后的时间主要用于跨年份验证、第二种 backbone、外部数据集、更多随机种子和论文复现，不扩大主研究问题。", "The extended schedule is used for cross-year validation, a second backbone, an external dataset, additional random seeds, and paper reproduction. It does not expand the main research question."],
         ["可复现要求", "Reproducibility requirements"],
         ["数据划分、训练配置、随机种子、环境版本和评估脚本均需保存在仓库中。论文表格由统一评估脚本生成，避免手工整理造成差错。", "Store the data split, training configurations, random seeds, environment versions, and evaluation scripts in the repository. Generate paper tables with a single evaluation script to avoid manual transcription errors."],
         ["交付物", "Deliverables"],
@@ -1565,10 +1573,90 @@
         ["正文中的数据集、论文和会议信息均链接至原始来源。预印本已单独标注，投稿前需更新其发表状态。", "Dataset, paper, and conference information in the text links to primary sources. Preprints are marked separately, and their publication status must be updated before submission."],
         ["同行评审", "Peer reviewed"],
         ["预印本", "Preprint"],
-        ["预印本 · AGFlow", "Preprint · AGFlow"],
         ["官方目录", "Official list"],
-        ["卫星山火预测研究计划书 · 导师修订版 · 事实核验日期 2026-07-30", "Satellite Wildfire Forecasting Research Plan · Revised Version · Sources Verified 2026-07-30"],
-        ["本文件不包含实验结果；所有外部链接和会议信息应在正式投稿前再次核验。", "This document contains no experimental results. All external links and conference information should be verified again before submission."]
+        ["本文件不包含实验结果；所有外部链接和会议信息应在正式投稿前再次核验。", "This document contains no experimental results. All external links and conference information should be verified again before submission."],
+        ["本项目研究卫星观测不完整时的下一日山火蔓延预测。给定过去若干自然日的火情、天气、地形和植被信息，模型输出下一 UTC 自然日窗口内的 VIIRS 活跃火点概率图。该目标是 active-fire proxy，不等同于真实燃烧概率、精确", "This project studies next-day wildfire spread forecasting under incomplete satellite observations. Given fire, weather, terrain, and vegetation information from preceding calendar days, the model predicts a VIIRS active-fire probability map for the next UTC calendar-day window. The target is an active-fire proxy, not true burning probability, an exact"],
+        ["火线位置或最终烧毁范围。", "fire-front position, or the final burned extent."],
+        ["计划仍以 WSTS+ 为主数据集，并保留质量与观测年龄感知的轻量融合模块。可追溯的自然缺失只在有效性、覆盖或 QA 字段能够可靠恢复时报告；其余缺失实验采用预先定义的受控 corruption。TS-SatFire 作为不同标签合同下的跨数据集压力测试，结果单独报告。", "WSTS+ remains the primary dataset, and the lightweight quality- and observation-age-aware fusion module is retained. Traceable natural missingness is reported only when validity, coverage, or QA fields can be reliably recovered; all other missingness experiments use prespecified controlled corruption. TS-SatFire is a cross-dataset stress test under a different label contract and is reported separately."],
+        ["区分完整观测、可识别的自然缺失和受控缺失三类评测；", "Separate evaluation into complete observations, identifiable natural missingness, and controlled missingness;"],
+        ["项目周期保持 10 个月，计划使用一张约 24GB 显存 GPU 或同等算力。前 14 天完成字段级数据闸门；第一个月同时完成公开基线复现。若时间戳、QA 或目标有效性无法恢复，研究继续使用原 backbone 和门控思路，但把相应结论限制为受控缺失条件，不扩大为自然缺失或运行式部署结论。", "The project remains a 10-month effort using one GPU with about 24 GB of memory or equivalent compute. A field-level data gate is completed in the first 14 days while public baselines are reproduced in month one. If timestamps, QA, or target validity cannot be recovered, the original backbone and gating approach remain, but the claims are restricted to controlled missingness and do not extend to natural missingness or operational deployment."],
+        ["公开版本未充分保留逐模态 acquisition/availability time、原始 QA 和明确 coverage mask；标准 loader 还会把缺失值转为 0。核心字段必须在 Phase 0 审计或由源产品恢复。", "The public release does not adequately retain per-modality acquisition/availability time, original QA, or an explicit coverage mask; the standard loader also converts missing values to zero. Core fields must be audited in Phase 0 or recovered from source products."],
+        ["作为不同 proxy label 下的跨数据集压力测试。", "Used as a cross-dataset stress test under a different proxy label."],
+        ["与 WSTS 的下一日 active-fire map 不是同一输出合同，不能直接混合指标或称为同任务外部验证。", "It does not share the WSTS next-day active-fire output contract; metrics cannot be pooled and it must not be described as same-task external validation."],
+        ["以 fuel、weather 和 generalist 三个专家的固定平均进行下一日增量式山火蔓延预测。", "Uses a fixed average of fuel, weather, and generalist experts for next-day incremental wildfire spread prediction."],
+        ["这是最直接的 modality-aware wildfire prior；本项目的差异是显式缺失、观测年龄、QA 与动态可靠性。", "This is the closest modality-aware wildfire prior; the project differs through explicit missingness, observation age, QA, and dynamic reliability."],
+        ["使用时间感知注意力融合不规则、异步 SAR/光学时间序列，并重建任意目标时刻反射率。", "Uses time-aware attention to fuse irregular asynchronous SAR/optical time series and reconstruct reflectance at arbitrary target times."],
+        ["说明 timestamp-aware asynchronous fusion 已有正式发表工作；本项目不以时间戳融合本身作为创新。", "Shows that timestamp-aware asynchronous fusion is already peer reviewed; timestamp fusion itself is not claimed as novel here."],
+        ["SGMA 研究语义原型驱动的可靠性加权；STARS 研究共享/专属表示的双向翻译与对齐，两者机制不同。", "SGMA studies semantic-prototype-driven reliability weighting, whereas STARS studies bidirectional translation and alignment of shared and specific representations; their mechanisms differ."],
+        ["优先适配 SGMA 或 MAGIC 作为可靠性融合对照；STARS 仅作为表示对齐相关工作。", "Prefer adapting SGMA or MAGIC as a reliability-fusion control; treat STARS as representation-alignment related work."],
+        ["在事件隔离和严格时间外评测下，显式使用模态有效性、观测年龄与可获得的 QA 信息，能否比普通拼接、填充和均匀融合更可靠地预测下一自然日的 active-fire proxy，同时保持完整观测条件下的性能？", "Under event-disjoint and strict out-of-time evaluation, can explicit modality validity, observation age, and available QA information predict the next-calendar-day active-fire proxy more reliably than ordinary concatenation, filling, and uniform fusion while preserving complete-observation performance?"],
+        ["质量、有效性和观测年龄门控在预注册缺失条件下优于 concat + mask 等强基线。", "A quality-, validity-, and observation-age gate outperforms strong controls such as concatenate plus mask under preregistered missingness conditions."],
+        ["使用相同 backbone、训练预算和 corruption masks，比较 paired event-macro AP；主结果采用 5 个 matched seeds。", "Use the same backbone, training budget, and corruption masks to compare paired event-macro AP; use five matched seeds for the main result."],
+        ["配对改善的 95% 置信区间不为正，或只出现在单一缺失率/年份。", "The 95% confidence interval for the paired gain is not positive, or the gain appears only at one missingness rate or year."],
+        ["门控方法在完整观测条件下满足预注册 non-inferiority margin。", "The gated method meets a preregistered non-inferiority margin under complete observations."],
+        ["相对同 backbone 完整观测基线计算 paired event-macro AP 差值；margin 仅由训练/验证 pilot 确定。", "Compute paired event-macro AP differences against the same-backbone complete-observation baseline; determine the margin only from training/validation pilots."],
+        ["真实", "True "],
+        ["提供超过缺失模式本身的信息。", "provides information beyond the missingness pattern itself."],
+        ["比较 mask-only、age-only、QA-only、QA + age，并在 year × missing-rate 分层内打乱 age/QA。", "Compare mask-only, age-only, QA-only, and QA plus age, and shuffle age/QA within year by missing-rate strata."],
+        ["删除机制主张，保留受控缺失 benchmark 结论。", "Remove the mechanism claim and retain only the controlled-missingness benchmark conclusion."],
+        ["仅作为不同 proxy label 下的跨数据集压力测试，单独训练、评估和解释；不与 WSTS+ 分数合并。", "Use only as a cross-dataset stress test under a different proxy label; train, evaluate, and interpret it separately, without pooling WSTS+ scores."],
+        ["主 benchmark 合同是：使用过去自然日窗口中的 WSTS+ 多模态输入，预测下一 UTC 自然日窗口内的 VIIRS active-fire proxy。它不是统一签发时刻下精确", "The primary benchmark contract uses WSTS+ multimodal inputs from preceding calendar-day windows to predict the VIIRS active-fire proxy in the next UTC calendar-day window. It is not an exact"],
+        ["的运行式预测。每个字段仍需记录观测时间、可用时间、空间分辨率、缺失含义和预处理版本，以识别可安全使用的变量。", "operational forecast from a single issue time. Each field must still record observation time, availability time, spatial resolution, missingness meaning, and preprocessing version so that safely usable variables can be identified."],
+        ["事件窗口与目标有效性", "Event window and target validity"],
+        ["前 14 天 Phase 0 数据闸门", "First 14 days: Phase 0 data gate"],
+        ["保留 WSTS+ 官方四折结果用于文献可比性；确认性划分固定为 2016–2020 train、2021 validation、2022–2023 untouched test。", "Retain the official WSTS+ four-fold results for literature comparability; freeze the confirmatory split as 2016–2020 train, 2021 validation, and 2022–2023 untouched test."],
+        ["随机像素仅作为 MCAR sanity check；主要受控缺失匹配真实缺失比例、连通块形状、连续时长和跨模态共缺失。", "Use random pixels only as an MCAR sanity check; primary controlled missingness matches real missing fractions, component shapes, run lengths, and cross-modal co-missingness."],
+        ["缺失项必须被硬置零并在有效项内重新归一化；某位置完全无有效动态观测时使用 learned null token。", "Missing terms must be hard-zeroed and renormalized over valid terms; use a learned null token when no dynamic observation is valid at a location."],
+        ["仅在来源可追溯时使用；静态地形和土地覆盖不与动态观测共享同一个竞争权重单纯形。", "is used only when its provenance is traceable; static terrain and land cover do not share the same competitive weight simplex as dynamic observations."],
+        ["门控结构保持为必做模块；若真实 QA 或 acquisition time 不可恢复，则退化为 validity/mask-conditioned gate，并把 observation-age 与自然缺失结论移出主贡献。辅助监督、物理一致性项和大型预训练模型不纳入本周期。", "The gating structure remains required. If real QA or acquisition time cannot be recovered, it degrades to a validity/mask-conditioned gate and observation-age and natural-missingness claims leave the main contribution. Auxiliary supervision, physics-consistency terms, and large pretrained models remain out of scope."],
+        ["Pilot 使用 3 个固定种子；主比较使用 5 个 matched seed pairs，并保存逐样本预测。", "Use three fixed seeds for pilots and five matched seed pairs for main comparisons, saving per-sample predictions."],
+        ["采用 paired、year-stratified、cluster-preserving event bootstrap，整场火灾连同全部日期和像素共同重采样，至少 10,000 次。模型差值必须在相同重采样事件和 matched seeds 上计算；同时报告 equal-event 与 pixel-weighted estimand。", "Use a paired, year-stratified, cluster-preserving event bootstrap with at least 10,000 replicates, resampling each fire with all dates and pixels intact. Compute model differences on the same resampled events and matched seeds, and report both equal-event and pixel-weighted estimands."],
+        ["第 14 天", "Day 14"],
+        ["第 1 个月：Phase 0 数据闸门与基线复现", "Month 1: Phase 0 data gate and baseline reproduction"],
+        ["第 6 个月：跨标签压力测试与补充实验", "Month 6: Cross-label stress test and supplementary experiments"],
+        ["时间仍围绕原研究问题分配：数据闸门只决定证据强度，不改变 WSTS+ 主数据集、轻量门控方法或十个月论文周期。", "The schedule remains centered on the original research question: the data gate determines the strength of evidence but does not change WSTS+ as the primary dataset, the lightweight gating method, or the ten-month paper cycle."],
+        ["卫星山火预测研究计划书 · 最小必要修订版 · 事实核验日期 2026-08-07", "Satellite Wildfire Forecasting Research Plan · Minimum Necessary Revision · Sources Verified 2026-08-07"],
+        ["论文报告 13,607 个时空样本、607 个火灾事件、23 个通道，覆盖美国 2018 至 2021 年；目标是下一自然日窗口的二值 VIIRS 活跃火点图。", "The paper reports 13,607 spatiotemporal samples, 607 fire events, and 23 channels from the United States between 2018 and 2021; the target is a binary VIIRS active-fire map for the next calendar-day window."],
+        ["数据集总计 179 个事件、3,552 张影像、约 71GB；其中 progression 任务实际使用 162 个事件。其标签是累计 active-fire/NIFC burned-area proxy 的次日增量。", "The dataset contains 179 events, 3,552 images, and about 71 GB in total; the progression task actually uses 162 events. Its label is the next-day increment of a cumulative active-fire/NIFC burned-area proxy."],
+        ["现有工作已经涉及缺失模态、时间戳融合、模态感知山火预测和山火部分可观测预测，因此本项目定位为", "Prior work already covers missing modalities, timestamp fusion, modality-aware wildfire prediction, and wildfire forecasting under partial observability. This project is therefore positioned as"],
+        ["，不能把 gate、mask 或", "; gate, mask, or"],
+        ["本身作为创新点。论文需要说明：在事件隔离、时间外测试和明确的数据可用性合同下，观测年龄与质量信息是否对下一日 active-fire proxy 预测有稳定作用。", "itself cannot be the novelty. The paper must test whether observation age and quality information have a stable effect on next-day active-fire proxy forecasting under event-disjoint evaluation, out-of-time testing, and an explicit availability contract."],
+        ["实验设计中需要特别处理四个问题。第一，WSTS 与 TS-SatFire 的标签含义不同。第二，最终事件边界、目标日观测、事后更新的天气与复合产品可能造成 future-informed leakage。第三，随机遮挡只能作为 MCAR sanity check，不能替代云、烟和卫星过境造成的结构化缺失。第四，目标日无有效观测不能自动记为 no-fire。", "The experiment must address four issues. First, WSTS and TS-SatFire use different labels. Second, final event boundaries, target-day observations, retrospectively updated weather, and composite products may cause future-informed leakage. Third, random masking is only an MCAR sanity check and cannot replace structured gaps caused by cloud, smoke, and satellite overpasses. Fourth, target-day pixels without valid observations cannot automatically be labelled no-fire."],
+        ["完整观测性能下降超过 margin。", "Complete-observation performance falls beyond the margin."],
+        ["降低门控复杂度，或仅在缺失触发时启用。", "Reduce gating complexity or activate it only when missingness occurs."],
+        ["真实元数据不优于 shuffled negative control，或无法在 2022–2023 future holdout 复现。", "Real metadata does not outperform the shuffled negative control or fails to reproduce on the 2022–2023 future holdout."],
+        ["benchmark 可保留官方 ROI；运行式结论不得依赖完整事件事后边界。target validity 仅用于 loss/evaluation。", "The benchmark may retain the official ROI, but operational claims must not depend on final retrospective event boundaries. Target validity is used only for loss and evaluation."],
+        ["用最终 GlobFire/MTBS 边界定义部署窗口；把云烟或无覆盖的目标像素记为 no-fire。", "Deployment windows are defined from final GlobFire/MTBS boundaries, or target pixels obscured by cloud/smoke or without coverage are labelled no-fire."],
+        ["记录 ROI provenance；能恢复 target validity 时将无效像素标为 unknown，否则只声称 detection-proxy 预测。", "Record ROI provenance; mark invalid target pixels as unknown when target validity can be recovered, otherwise claim only detection-proxy forecasting."],
+        ["下一 UTC 自然日窗口的 VIIRS 活跃火点二值图（代理标签）。", "Binary VIIRS active-fire map in the next UTC calendar-day window (proxy label)."],
+        ["累计 active-fire/NIFC burned-area proxy 的次日增量。", "Next-day increment of a cumulative active-fire/NIFC burned-area proxy."],
+        ["核对事件 ID、年份、样本数以及", "Verify event IDs, years, sample counts, and"],
+        ["审计事件 ROI、GRIDMET 产品版本与 VNP13A1 等复合产品的时间 lineage；", "Audit event ROI, GRIDMET product versions, and the temporal lineage of composite products such as VNP13A1;"],
+        ["抽样复算 GFS 风向，并验证 WSTS+ 八年 HDF5 转换；", "Recompute GFS wind direction on a sample and validate the eight-year WSTS+ HDF5 conversion;"],
+        ["与明确的 continue/pivot 决策。", "and an explicit continue/pivot decision."],
+        ["使用可追溯质量字段、有效性 mask 和观测年龄估计空间相关的模态权重，并比较 scalar、patch 与 pixel gate。", "Use traceable quality fields, validity masks, and observation age to estimate spatially varying modality weights, comparing scalar, patch, and pixel gates."],
+        ["No-fire、全历史/最新探测 Persistence、固定形态学膨胀", "No-fire, full-history/latest-detection persistence, and fixed morphological dilation"],
+        ["Reconstruction→prediction、FireEx 固定专家平均、SGMA/MAGIC 式可靠性融合", "Reconstruction-to-prediction, FireEx fixed expert averaging, and SGMA/MAGIC-style reliability fusion"],
+        ["分别评估完整观测、可识别的自然缺失和匹配真实结构的受控缺失；IID 随机像素只作 MCAR sanity check。", "Evaluate complete observations, identifiable natural missingness, and controlled missingness matched to real structure separately; use IID random pixels only as an MCAR sanity check."],
+        ["官方四折用于文献比较；确认性结果使用冻结的 2016–2020 / 2021 / 2022–2023 forward split，并按年份和事件属性分层报告。", "Use the official four folds for literature comparison; confirmatory results use the frozen 2016–2020 / 2021 / 2022–2023 forward split and are stratified by year and event attributes."],
+        ["比较 mask-only、age-only、QA-only、QA + age 与 shuffled age/QA negative control；展示真阳性、漏检、误报和错误扩散案例。", "Compare mask-only, age-only, QA-only, QA plus age, and shuffled age/QA negative controls; show true positives, misses, false alarms, and error propagation."],
+        ["主效应报告 paired Δ event-macro AP；同时给 pooled AP、正类 prevalence 与 persistence AP。", "Report paired delta event-macro AP as the primary effect, together with pooled AP, positive prevalence, and persistence AP."],
+        ["跨年份解释相对同年基线的改善，不直接比较不同 prevalence 下的 raw AP。", "Interpret cross-year improvement relative to the same-year baseline rather than directly comparing raw AP across different prevalence levels."],
+        ["阈值只在验证集冻结；FSS 报告 0、1、2、4 pixel 邻域。", "Freeze the threshold only on validation data; report FSS at 0-, 1-, 2-, and 4-pixel neighborhoods."],
+        ["同时评价像素重叠和空间位移容忍尺度。", "Evaluate both pixel overlap and tolerance to spatial displacement."],
+        ["Brier skill 相对同年 climatology 或 persistence；校准仅在验证集拟合。", "Compute Brier skill relative to same-year climatology or persistence; fit calibration only on validation data."],
+        ["ECE 仅作诊断，使用等频分箱、bootstrap band 和火区分层。", "Use ECE only as a diagnostic, with equal-mass bins, bootstrap bands, and fire-region stratification."],
+        ["完成 acquisition/availability time、validity、QA、target validity、ROI 和产品 lineage 审计，形成字段 manifest 与继续/降级决策。", "Complete the acquisition/availability time, validity, QA, target-validity, ROI, and product-lineage audit, producing a field manifest and continue/downgrade decision."],
+        ["不取消原方法路线；把主实验限定为受控缺失，并删除自然缺失与 operational 主张。", "Do not cancel the original method route; restrict the main experiment to controlled missingness and remove natural-missingness and operational claims."],
+        ["门控模块在预先指定的缺失条件下，3-seed pilot 优于 concat + mask；完整观测满足预注册 non-inferiority margin。", "Under prespecified missingness, the three-seed gating pilot outperforms concatenate plus mask; complete observations meet the preregistered non-inferiority margin."],
+        ["在冻结的 2022–2023 future holdout 保持正向效果，并在第二种 backbone 上重复主要趋势，完成配对事件级置信区间与失败分析。", "Maintain a positive effect on the frozen 2022–2023 future holdout, reproduce the main trend on a second backbone, and complete paired event-level intervals and failure analysis."],
+        ["投稿前应确认结果在 5 个 matched seeds 和关键数据切片上保持一致，事件级统计不由少数大事件主导，所有测试阈值与校准均由 validation 冻结，并对可用性合同的限制做准确表述。", "Before submission, confirm consistency across five matched seeds and key data slices, ensure event-level statistics are not driven by a few large fires, freeze all test thresholds and calibration on validation data, and state availability-contract limitations accurately."],
+        ["前 14 天完成字段、ROI、产品 lineage、GFS 风向与八年转换审计；同时建立 manifest，复现 no-fire、persistence、Res18-U-Net 与 UTAE 基线。", "In the first 14 days, audit fields, ROI, product lineage, GFS wind direction, and the eight-year conversion; concurrently build manifests and reproduce no-fire, persistence, Res18-U-Net, and UTAE baselines."],
+        ["实现 concat + mask、LOCF、uniform fusion 与硬屏蔽 observation-age/validity gate，完成 3-seed pilot 和第一组 matched corruption 实验。", "Implement concatenate plus mask, LOCF, uniform fusion, and a hard-masked observation-age/validity gate; complete a three-seed pilot and the first matched-corruption experiment."],
+        ["完成 E1 至 E3、官方四折对比、冻结的 future holdout、第二种 backbone 和 5 个 matched seeds，并执行 10,000 次配对事件 bootstrap。", "Complete E1–E3, official-fold comparison, the frozen future holdout, a second backbone, and five matched seeds, then run 10,000 paired event-bootstrap replicates."],
+        ["在 TS-SatFire 上单独训练和评估 progression proxy，不与 WSTS+ 分数合并；若实现成本过高，则优先完成负控制、校准和数据质量分析。", "Train and evaluate the TS-SatFire progression proxy separately without pooling WSTS+ scores; if implementation cost is too high, prioritize negative controls, calibration, and data-quality analysis."],
+        ["官方代码", "Official code"],
+        ["数据生成代码", "Dataset-creation code"]
       ]);
 
       const root = document.documentElement;

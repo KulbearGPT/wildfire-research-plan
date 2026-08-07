@@ -633,8 +633,8 @@
       <div class="hero-pills">
         <div class="hero-pill"><strong>15–20 min</strong><span>guided lecture</span></div>
         <div class="hero-pill"><strong>4</strong><span>foundation blocks</span></div>
-        <div class="hero-pill"><strong>t → t+24h</strong><span>forecast contract</span></div>
-        <div class="hero-pill"><strong>7 papers</strong><span>initial must-read set</span></div>
+        <div class="hero-pill"><strong>next UTC day</strong><span>benchmark contract</span></div>
+        <div class="hero-pill"><strong>10 papers</strong><span>initial must-read set</span></div>
       </div>
     </div>
   </section>
@@ -780,12 +780,12 @@
       <section class="section searchable" id="contract">
         <div class="section-kicker">05 · Task definition</div>
         <h2>The forecast contract comes before the model</h2>
-        <p class="lead">Given only information available by time <code>t</code>, predict a spatial probability map for approximately <code>t+24h</code>.</p>
+        <p class="lead">For the public WSTS/WSTS+ benchmark, use preceding calendar-day windows to predict a VIIRS active-fire proxy in the next UTC calendar-day window.</p>
 
-        <div class="contract" role="img" aria-label="At forecast issue time t, available observations are used to predict a probability map at t plus 24 hours">
-          <div class="contract-side"><strong>Available by t</strong><span>fire history · weather · terrain · fuel · validity · timestamps</span></div>
+        <div class="contract" role="img" aria-label="Preceding daily multimodal windows are used to predict the next UTC calendar-day active-fire proxy">
+          <div class="contract-side"><strong>Preceding daily windows</strong><span>fire history · weather · terrain · fuel · recoverable validity</span></div>
           <div class="contract-arrow">→</div>
-          <div class="contract-side"><strong>Predict t+24h</strong><span>next-day active-fire probability map</span></div>
+          <div class="contract-side"><strong>Predict next UTC day</strong><span>VIIRS active-fire proxy probability map</span></div>
         </div>
 
         <figure class="figure">
@@ -794,9 +794,9 @@
         </figure>
 
         <div class="grid-3">
-          <article class="card primary"><h3>Input admissibility</h3><p>Observation time, availability time, and every preprocessing window must end no later than <code>t</code>.</p></article>
+          <article class="card primary"><h3>Input admissibility</h3><p>Observation and availability times must be audited where recoverable. Without that lineage, describe the work as a retrospective benchmark rather than an operational forecast.</p></article>
           <article class="card accent"><h3>Label semantics</h3><p>WSTS/WSTS+ active-fire maps and TS-SatFire newly burned areas cannot be merged as if they were the same target.</p></article>
-          <article class="card blue"><h3>Split discipline</h3><p>A wildfire event must not cross train, validation, and test sets. Prefer cross-year or leave-one-year-out evaluation.</p></article>
+          <article class="card blue"><h3>Split discipline</h3><p>Retain official folds for comparison, then use a frozen 2016–2020 train, 2021 validation, and 2022–2023 untouched test split.</p></article>
         </div>
 
         <div class="callout accent"><strong>Teaching point:</strong> if the contract is not fixed first, later numerical comparisons have no stable meaning.</div>
@@ -814,11 +814,11 @@
           </article>
           <article class="timeline-item">
             <h3>2023 · WildfireSpreadTS</h3>
-            <p>Introduced multimodal time series with 607 wildfire events, 13,607 images, and 23 channels for 24-hour active-fire forecasting.</p>
+            <p>Introduced multimodal time series with 607 wildfire events, 13,607 images, and 23 channels for next-calendar-day active-fire forecasting.</p>
           </article>
           <article class="timeline-item">
             <h3>2025 · TS-SatFire</h3>
-            <p>A multitask time-series dataset covering active-fire detection, burned-area mapping, and progression prediction. Its spread label is next-day newly burned area.</p>
+            <p>A multitask time-series dataset whose progression task uses 162 events and predicts the next-day increment of a cumulative active-fire/NIFC burned-area proxy.</p>
           </article>
           <article class="timeline-item">
             <h3>2026 · WSTS+</h3>
@@ -832,13 +832,13 @@
             <tbody>
               <tr><td><strong>Next Day Wildfire Spread</strong><br><span class="badge peer">IEEE TGRS 2022</span></td><td>Next-day fire spread proxy</td><td>Task origin and benchmark context</td><td>Single-day formulation; later time-series benchmarks change the input contract.</td></tr>
               <tr><td><strong>WildfireSpreadTS / WSTS</strong><br><span class="badge peer">NeurIPS 2023</span></td><td>Next-day VIIRS active-fire map</td><td>Task definition, channels, and public baselines</td><td>Active-fire detections are proxy labels, not complete fire perimeters.</td></tr>
-              <tr><td><strong>WSTS+</strong><br><span class="badge peer">WACV 2026</span></td><td>Next-day active-fire map</td><td><strong>Primary dataset</strong> for cross-year experiments</td><td>Timestamps, QA, and validity fields still require a file-level audit.</td></tr>
-              <tr><td><strong>TS-SatFire</strong><br><span class="badge peer">Scientific Data 2025</span></td><td>Next-day newly burned area for progression</td><td>Independent validation only after alignment</td><td>Its target is not directly interchangeable with the WSTS active-fire target.</td></tr>
+              <tr><td><strong>WSTS+</strong><br><span class="badge peer">WACV 2026</span></td><td>Next-calendar-day active-fire proxy</td><td><strong>Primary dataset</strong> for cross-year experiments</td><td>The public release does not adequately retain per-modality acquisition/availability time, original QA, or an explicit coverage mask.</td></tr>
+              <tr><td><strong>TS-SatFire</strong><br><span class="badge peer">Scientific Data 2025</span></td><td>Next-day increment of a cumulative burned-area proxy</td><td>Separate cross-label stress test</td><td>Its results must not be pooled with WSTS or described as same-task external validation.</td></tr>
             </tbody>
           </table>
         </div>
 
-        <div class="positioning">Project line: use WSTS+ as the primary dataset. Use TS-SatFire only as an independent test when label meaning, time definition, and spatial resolution can be aligned.</div>
+        <div class="positioning">Project line: keep WSTS+ as the primary dataset. Treat natural missingness as a main result only when validity provenance can be recovered; otherwise retain controlled missingness. Use TS-SatFire only as a separately reported cross-label stress test.</div>
       </section>
 
       <section class="section searchable" id="challenges">
@@ -849,7 +849,7 @@
         <div class="metric-grid">
           <div class="metric"><strong>≈0.1%</strong><span>active-fire pixels reported for WSTS; ordinary accuracy is therefore misleading</span></div>
           <div class="metric"><strong>607</strong><span>WSTS events; event-level resampling is more defensible than pixel-level significance tests</span></div>
-          <div class="metric"><strong>24h</strong><span>the forecast horizon for the next-day active-fire task</span></div>
+          <div class="metric"><strong>UTC day</strong><span>the benchmark target window; it is not a uniform physical 24-hour lead from the last sensor observation</span></div>
         </div>
 
         <div class="figure-pair">
@@ -904,13 +904,13 @@
           <article class="card purple"><h3>Quality fields</h3><p>QA and confidence variables may be used only when their provenance is documented in the data package.</p></article>
         </div>
 
-        <div class="callout warning"><strong>Protocol:</strong> random pixels, blocks, temporal gaps, and missing modalities are controlled stress tests. They do not replace analysis of real cloud, smoke, validity, and revisit patterns.</div>
+        <div class="callout warning"><strong>Protocol:</strong> random pixels are only an MCAR sanity check. Primary controlled corruption should match missing fraction, connected-component shape, temporal run length, and cross-modal co-missingness. Natural-missingness claims require recoverable coverage/QA and target validity.</div>
       </section>
 
       <section class="section searchable" id="closest-work">
         <div class="section-kicker">10 · Direct comparison</div>
-        <h2>Partial-observability wildfire forecasting</h2>
-        <p class="lead">The closest comparison reconstructs corrupted fire observations before next-day forecasting.</p>
+        <h2>Direct wildfire comparisons</h2>
+        <p class="lead">Two direct priors bound the claim: reconstruction-before-forecasting under corrupted observations, and modality-aware expert fusion for next-day spread prediction.</p>
 
         <div class="flow" role="img" aria-label="Corrupted fire observations are reconstructed, passed to a forecasting stage, and used for next-day prediction">
           <div class="flow-node"><div><strong>1 · Corrupted fire maps</strong>Pixel or block masking<br>10–80% corruption</div></div>
@@ -927,7 +927,9 @@
           <article class="card accent"><h3>How this project differs</h3><p>The proposed study does not only reconstruct fire maps. It explicitly tests <code>q</code>, <code>Δt</code>, <code>mask</code>, and modality identity across asynchronous multimodal inputs.</p></article>
         </div>
 
-        <p class="small">Direct source: Yang et al. 2026, <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">Robust Wildfire Forecasting under Partial Observability: From Reconstruction to Prediction</a> <span class="badge preprint">preprint</span>.</p>
+        <div class="callout blue"><strong>Second direct prior:</strong> <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">FireEx</a> already uses fuel, weather, and generalist experts for modality-aware next-day wildfire spread prediction. The present project must therefore add explicit missingness, observation age, QA, and dynamically conditioned reliability rather than claim modality awareness itself.</div>
+
+        <p class="small">Direct sources: Yang et al. 2026, <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">Robust Wildfire Forecasting under Partial Observability</a> <span class="badge preprint">preprint</span>; Andrianarivony and Akhloufi 2026, <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">FireEx</a> <span class="badge peer">peer reviewed</span>.</p>
       </section>
 
       <section class="section searchable" id="adjacent-work">
@@ -936,19 +938,19 @@
         <p class="lead">These studies supply design patterns and comparison methods. They do not establish the final wildfire-forecasting claim.</p>
 
         <div class="figure-pair paper-figures">
-          <figure class="figure"><img src="assets/paper-incomplete-fusion-figure1-original.jpg" alt="Incomplete multimodal remote-sensing framework using optical, SAR, elevation, and map inputs"><figcaption>Masked multimodal pretraining and downstream fusion with optical, SAR, DEM, and map inputs. Original Figure 1 file from the source package of <a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">Chen, Zhao, and Bruzzone (2023)</a>.</figcaption></figure>
-          <figure class="figure"><img src="assets/paper-agflow-figure1-original.png" alt="AGFlow architecture for asynchronous Sentinel-1 and Sentinel-2 time-series fusion"><figcaption>AGFlow uses acquisition dates to align irregular Sentinel-1 and Sentinel-2 sequences for reconstruction at a requested time. Original Figure 1 file from the source package of <a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">Fallah et al. (2026)</a>.</figcaption></figure>
+          <figure class="figure"><img src="assets/paper-incomplete-fusion-figure1-original.jpg" alt="Incomplete multimodal remote-sensing framework using optical, SAR, elevation, and map inputs"><figcaption>Masked multimodal pretraining and downstream fusion with optical, SAR, DEM, and map inputs. Original Figure 1 file from the source package of <a href="https://doi.org/10.1109/TGRS.2024.3387837" target="_blank" rel="noopener">Chen, Zhao, and Bruzzone (TGRS 2024)</a>.</figcaption></figure>
+          <figure class="figure"><img src="assets/paper-agflow-figure1-original.png" alt="AGFlow architecture for asynchronous Sentinel-1 and Sentinel-2 time-series fusion"><figcaption>AGFlow uses acquisition dates to align irregular Sentinel-1 and Sentinel-2 sequences for reconstruction at a requested time. Original Figure 1 file from <a href="https://openaccess.thecvf.com/content/CVPR2026W/MORSE/html/Fallah_Asynchronous_Remote_Sensing_Time-Series_Fusion_for_Cloud_Removal_and_Anytime_CVPRW_2026_paper.html" target="_blank" rel="noopener">Fallah et al. (CVPR Workshops 2026)</a>.</figcaption></figure>
         </div>
         <div class="grid-2">
           <article class="card primary">
             <h3>Incomplete multimodal remote-sensing fusion</h3>
             <p>Studies performance loss when modalities are absent during training or inference, using fusion tokens, masked attention, reconstruction, or contrastive objectives.</p>
-            <p><a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">Chen, Zhao, and Bruzzone 2023</a> <span class="badge preprint">preprint</span></p>
+            <p><a href="https://doi.org/10.1109/TGRS.2024.3387837" target="_blank" rel="noopener">Chen, Zhao, and Bruzzone 2024</a> <span class="badge peer">peer reviewed</span></p>
           </article>
           <article class="card blue">
             <h3>AGFlow</h3>
             <p>Targets Sentinel-1/2 cloud removal and reconstruction at arbitrary times through timestamp-conditioned alignment and asynchronous fusion.</p>
-            <p><a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">Fallah et al. 2026</a> <span class="badge preprint">preprint</span></p>
+            <p><a href="https://openaccess.thecvf.com/content/CVPR2026W/MORSE/html/Fallah_Asynchronous_Remote_Sensing_Time-Series_Fusion_for_Cloud_Removal_and_Anytime_CVPRW_2026_paper.html" target="_blank" rel="noopener">Fallah et al. 2026</a> <span class="badge peer">CVPR Workshops</span></p>
           </article>
         </div>
 
@@ -964,15 +966,15 @@
           <table>
             <thead><tr><th>Dimension</th><th>Existing foundation</th><th>Boundary this project must add</th></tr></thead>
             <tbody>
-              <tr><td><strong>Task</strong></td><td>Public benchmarks already cover next-day active-fire prediction and burned-area progression.</td><td>Fix a <code>t → t+24h</code> contract and state explicitly why active-fire and burned-area labels cannot be merged.</td></tr>
+              <tr><td><strong>Task</strong></td><td>Public benchmarks already cover next-day active-fire prediction and burned-area progression.</td><td>Fix the next-UTC-calendar-day active-fire proxy contract and state explicitly why active-fire and burned-area labels cannot be merged.</td></tr>
               <tr><td><strong>Data</strong></td><td>WSTS/WSTS+ provide multimodal time-series inputs and public baselines.</td><td>Audit timestamps, QA, validity, and sensor or product delay field by field to prevent future-information leakage.</td></tr>
               <tr><td><strong>Method</strong></td><td>U-Net, UTAE, Transformers, and reconstruction-before-forecasting already exist.</td><td>Test a lightweight gate using <code>q</code>, <code>Δt</code>, <code>mask</code>, and modality ID against a matched concatenate-plus-mask control.</td></tr>
-              <tr><td><strong>Evaluation</strong></td><td>Average precision, F1, IoU, and leave-one-year-out protocols are established.</td><td>Report event-level bootstrap uncertainty, missingness curves, natural-missingness slices, cross-year results, and failure cases together.</td></tr>
+              <tr><td><strong>Evaluation</strong></td><td>Average precision, F1, IoU, and leave-one-year-out protocols are established.</td><td>Use a frozen future holdout, paired event bootstrap, FSS, calibration diagnostics, matched corruption masks, and negative controls.</td></tr>
             </tbody>
           </table>
         </div>
 
-        <div class="positioning">One-sentence positioning: under a realistic forecast issue-time constraint, turn observation quality, validity, and age into explicit, testable variables for multimodal wildfire forecasting.</div>
+        <div class="positioning">One-sentence positioning: test whether recoverable observation age, validity, and quality metadata improve next-calendar-day active-fire proxy forecasting under controlled and identifiable natural missingness.</div>
       </section>
 
       <section class="section searchable" id="roadmap">
@@ -983,15 +985,15 @@
         <div class="timeline">
           <article class="timeline-item">
             <h3>Step 1 · Establish the data contract</h3>
-            <p>Read Huot, WSTS, WSTS+, and TS-SatFire. Record only input fields, observation times, label semantics, and split rules. Produce the first draft of <code>data_manifest.csv</code>.</p>
+            <p>Read Huot, WSTS, WSTS+, and TS-SatFire. Audit observation time, availability time, validity, QA, target validity, ROI provenance, and split rules. Produce <code>data_manifest.csv</code> and an explicit continue/pivot decision by day 14.</p>
           </article>
           <article class="timeline-item">
             <h3>Step 2 · Reproduce the baseline ladder</h3>
-            <p>Run no-fire, persistence, concatenate-plus-mask, and one public learned model. Fix the split, history length, seeds, and training budget.</p>
+            <p>Run no-fire, two persistence variants, Res18-U-Net, UTAE(Res18), concatenate-plus-mask, LOCF, and uniform fusion. Fix the split, history length, seeds, corruption masks, and training budget.</p>
           </article>
           <article class="timeline-item">
             <h3>Step 3 · Add missingness and asynchrony</h3>
-            <p>Read the partial-observability, AGFlow, and incomplete-multimodal papers. Adapt only one or two reproducible comparison methods.</p>
+            <p>Read the partial-observability, FireEx, AnytimeFormer/AGFlow, and incomplete-multimodal papers. Adapt reconstruction-first plus one reliability-fusion control; keep the comparison budget fixed.</p>
           </article>
           <article class="timeline-item">
             <h3>Step 4 · Fix the writing boundary</h3>
@@ -999,7 +1001,7 @@
           </article>
         </div>
 
-        <div class="callout"><strong>Initial must-read set:</strong> Huot 2022; Gerard 2023; Lahrichi 2026; Zhao 2025; Yang 2026; Fallah 2026; Chen 2023.</div>
+        <div class="callout"><strong>Initial must-read set:</strong> Huot 2022; Gerard 2023; Lahrichi 2026; Zhao 2025; Yang 2026; Andrianarivony 2026; Tang 2026; Fallah 2026; Chen 2024; Roberts &amp; Lean 2008.</div>
       </section>
 
       <section class="section closing searchable" id="summary">
@@ -1009,10 +1011,10 @@
           <p class="lead">The project is valuable only if the claim stays narrower than the ideas it builds upon.</p>
           <div class="closing-grid">
             <div class="closing-item"><strong>Not:</strong> reintroducing wildfire prediction, missing modalities, or asynchronous fusion.</div>
-            <div class="closing-item"><strong>Instead:</strong> testing whether <code>q</code>, <code>Δt</code>, and <code>mask</code> improve next-day forecasting under partial observability.</div>
-            <div class="closing-item"><strong>Required:</strong> event-disjoint splits, cross-year tests, controlled and natural missingness, and failure-case analysis.</div>
+            <div class="closing-item"><strong>Instead:</strong> testing whether recoverable <code>q</code>, observation age, and validity improve next-calendar-day active-fire proxy forecasting.</div>
+            <div class="closing-item"><strong>Required:</strong> official-fold comparability, a frozen future holdout, matched controlled missingness, negative controls, and paired event-level inference.</div>
           </div>
-          <p style="margin-top:20px;color:#d7efe1"><strong>Next section:</strong> Research questions and hypotheses H1/H2.</p>
+          <p style="margin-top:20px;color:#d7efe1"><strong>Next section:</strong> Research questions and hypotheses H1/H2/H3.</p>
         </div>
       </section>
 
@@ -1030,8 +1032,11 @@
           <li><span class="source-title">Lahrichi et al. Improved Wildfire Spread Prediction with Time-Series Data and the WSTS+ Benchmark.</span> <em>WACV</em>, 2026. <a href="https://arxiv.org/abs/2502.12003" target="_blank" rel="noopener">Paper record</a> · <a href="https://huggingface.co/saadlahrichi/WSTSPlus" target="_blank" rel="noopener">Dataset card</a>.</li>
           <li><span class="source-title">Zhao, Gerard, and Ban. TS-SatFire: A Multi-Task Satellite Image Time-Series Dataset for Wildfire Detection and Prediction.</span> <em>Scientific Data</em>, 2025. <a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">Article</a>.</li>
           <li><span class="source-title">Yang et al. Robust Wildfire Forecasting under Partial Observability: From Reconstruction to Prediction.</span> 2026. <span class="badge preprint">preprint</span> <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">arXiv</a>.</li>
-          <li><span class="source-title">Fallah et al. Asynchronous Remote Sensing Time-Series Fusion for Cloud Removal and Anytime Reconstruction.</span> 2026. <span class="badge preprint">preprint · AGFlow</span> <a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">arXiv</a>.</li>
-          <li><span class="source-title">Chen, Zhao, and Bruzzone. Incomplete Multimodal Learning for Remote Sensing Data Fusion.</span> 2023. <span class="badge preprint">preprint</span> <a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">arXiv</a>.</li>
+          <li><span class="source-title">Andrianarivony and Akhloufi. A Modality-Aware Ensemble-of-Experts Model for Wildfire Spread Prediction.</span> <em>Remote Sensing</em>, 2026. <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">DOI</a>.</li>
+          <li><span class="source-title">Tang et al. AnytimeFormer: Fusing Irregular and Asynchronous SAR-Optical Time Series to Reconstruct Reflectance at Any Given Time.</span> <em>Remote Sensing of Environment</em>, 2026. <a href="https://doi.org/10.1016/j.rse.2025.115120" target="_blank" rel="noopener">DOI</a>.</li>
+          <li><span class="source-title">Fallah et al. Asynchronous Remote Sensing Time-Series Fusion for Cloud Removal and Anytime Reconstruction.</span> <em>CVPR Workshops</em>, 2026. <a href="https://openaccess.thecvf.com/content/CVPR2026W/MORSE/html/Fallah_Asynchronous_Remote_Sensing_Time-Series_Fusion_for_Cloud_Removal_and_Anytime_CVPRW_2026_paper.html" target="_blank" rel="noopener">Paper</a>.</li>
+          <li><span class="source-title">Chen, Zhao, and Bruzzone. A Novel Approach to Incomplete Multimodal Learning for Remote Sensing Data Fusion.</span> <em>IEEE TGRS</em>, 2024. <a href="https://doi.org/10.1109/TGRS.2024.3387837" target="_blank" rel="noopener">DOI</a>.</li>
+          <li><span class="source-title">Roberts and Lean. Scale-Selective Verification of Rainfall Accumulations from High-Resolution Forecasts of Convective Events.</span> <em>Monthly Weather Review</em>, 2008. <a href="https://doi.org/10.1175/2007MWR2123.1" target="_blank" rel="noopener">DOI</a>.</li>
           <li><span class="source-title">NOAA/NESDIS. Visible Infrared Imaging Radiometer Suite and Wildland Fire Data Portal.</span> <a href="https://www.nesdis.noaa.gov/our-satellites/currently-flying/joint-polar-satellite-system/visible-infrared-imaging-radiometer-suite-viirs" target="_blank" rel="noopener">VIIRS</a> · <a href="https://www.nesdis.noaa.gov/data-products-research-services/wildland-fire-data-portal" target="_blank" rel="noopener">Fire Data Portal</a>.</li>
         </ol>
 
@@ -1042,7 +1047,7 @@
 
   <footer class="footer">
     <p>Wildfire Forecasting · Research Foundations and Related Work · English Courseware</p>
-    <p>Adapted from the supplied 16-slide Chinese courseware and the supervisor-revised research-plan website. Source status last reviewed 30 July 2026.</p>
+    <p>Adapted from the supplied Chinese courseware and the minimum-necessary-revision research plan. Source status last reviewed 7 August 2026.</p>
   </footer>
 
   <script>
