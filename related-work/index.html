@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="English courseware on research foundations and related work for reliable next-day wildfire spread forecasting under asynchronous and missing satellite observations.">
+  <title>Wildfire Forecasting · Research Foundations and Related Work</title>
+  <style>
+    :root {
+      --bg: #f4f7f3;
+      --panel: #ffffff;
+      --panel-soft: #f7faf6;
+      --text: #17231d;
+      --muted: #5c6b62;
+      --line: #d9e3dc;
+      --primary: #176b47;
+      --primary-2: #0e4f34;
+      --primary-soft: #e7f4ec;
+      --accent: #c35a19;
+      --accent-soft: #fff1e7;
+      --blue: #24658a;
+      --blue-soft: #e8f3f8;
+      --purple: #6850a5;
+      --purple-soft: #f0ecfa;
+      --warning: #7a5a06;
+      --warning-soft: #fff6d8;
+      --shadow: 0 12px 34px rgba(29, 58, 40, 0.09);
+      --radius: 16px;
+      --sidebar: 292px;
+      --max: 1460px;
+      --font-scale: 1;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f1713;
+      --panel: #15221b;
+      --panel-soft: #192820;
+      --text: #e8f0eb;
+      --muted: #aab8af;
+      --line: #2b3b31;
+      --primary: #58c58d;
+      --primary-2: #84d9aa;
+      --primary-soft: #183829;
+      --accent: #f09a5d;
+      --accent-soft: #3b261c;
+      --blue: #79bce3;
+      --blue-soft: #183241;
+      --purple: #b8a7eb;
+      --purple-soft: #2b2540;
+      --warning: #f0cf72;
+      --warning-soft: #382f18;
+      --shadow: 0 12px 34px rgba(0, 0, 0, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 82px; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(39, 138, 86, .10), transparent 30rem),
+        radial-gradient(circle at 95% 15%, rgba(195, 90, 25, .07), transparent 24rem),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-size: calc(16px * var(--font-scale));
+      line-height: 1.72;
+    }
+
+    a { color: var(--primary); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--accent); }
+    button, input { font: inherit; }
+    code {
+      padding: .08em .35em;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--primary-2);
+      background: var(--panel-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 62px;
+      padding: 9px max(18px, calc((100vw - var(--max)) / 2));
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .brand {
+      min-width: 0;
+      margin-right: auto;
+      font-weight: 740;
+      letter-spacing: .01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .progress-track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 3px;
+    }
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+    .tool-button, .plan-link {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 7px 10px;
+      color: var(--text);
+      background: var(--panel);
+      cursor: pointer;
+      text-decoration: none;
+      line-height: 1.35;
+    }
+    .tool-button:hover, .plan-link:hover { border-color: var(--primary); color: var(--primary-2); }
+    .mobile-only { display: none; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      color: #f5fff8;
+      background:
+        radial-gradient(circle at 86% 20%, rgba(242, 176, 131, .22), transparent 24rem),
+        linear-gradient(128deg, #052f20 0%, #075137 58%, #0b6b48 100%);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(90deg, transparent 35%, #000);
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 72px 24px 62px;
+    }
+    .eyebrow {
+      margin-bottom: 14px;
+      color: #b9e8cc;
+      font-size: .79rem;
+      font-weight: 780;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(2.15rem, 4.8vw, 4.35rem);
+      line-height: 1.1;
+      letter-spacing: -.04em;
+    }
+    .subtitle {
+      max-width: 760px;
+      margin: 19px 0 0;
+      color: #d8f1e2;
+      font-size: clamp(1rem, 1.65vw, 1.24rem);
+    }
+    .hero-pills {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(135px, 1fr));
+      gap: 11px;
+      max-width: 870px;
+      margin-top: 31px;
+    }
+    .hero-pill {
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 11px;
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(6px);
+    }
+    .hero-pill strong { display: block; font-size: 1.15rem; }
+    .hero-pill span { color: #ccebd8; font-size: .79rem; }
+
+    .truth-banner {
+      position: relative;
+      z-index: 3;
+      max-width: 1180px;
+      margin: -23px auto 25px;
+      padding: 17px 20px;
+      border: 1px solid #e0b795;
+      border-left: 6px solid var(--accent);
+      border-radius: 13px;
+      color: #3f291b;
+      background: #fff5ec;
+      box-shadow: var(--shadow);
+    }
+    [data-theme="dark"] .truth-banner { color: #f6dfcd; background: #33251c; }
+    .truth-banner strong { color: var(--accent); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      gap: 27px;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 22px 70px;
+    }
+    .sidebar {
+      position: sticky;
+      top: 82px;
+      align-self: start;
+      max-height: calc(100vh - 100px);
+      overflow: auto;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .search {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--panel-soft);
+      outline: none;
+    }
+    .search:focus { border-color: var(--primary); }
+    .toc-title {
+      margin: 7px 0 8px;
+      color: var(--muted);
+      font-size: .74rem;
+      font-weight: 780;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .toc { list-style: none; margin: 0; padding: 0; }
+    .toc a {
+      display: block;
+      margin: 2px 0;
+      padding: 7px 9px;
+      border-radius: 7px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .85rem;
+      line-height: 1.32;
+    }
+    .toc a:hover, .toc a.active { color: var(--primary-2); background: var(--primary-soft); }
+    .lecture-card {
+      margin-top: 14px;
+      padding: 13px;
+      border-radius: 10px;
+      color: var(--primary-2);
+      background: var(--primary-soft);
+      font-size: .82rem;
+      line-height: 1.48;
+    }
+
+    main { min-width: 0; }
+    .section {
+      margin-bottom: 24px;
+      padding: clamp(21px, 3vw, 36px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .section[hidden] { display: none; }
+    .section-kicker {
+      margin-bottom: 5px;
+      color: var(--primary);
+      font-size: .75rem;
+      font-weight: 790;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 2.6vw, 2.12rem);
+      line-height: 1.28;
+      letter-spacing: -.02em;
+    }
+    h3 { margin: 27px 0 10px; font-size: 1.15rem; line-height: 1.42; }
+    h4 { margin: 18px 0 7px; font-size: 1rem; }
+    p { margin: 10px 0; }
+    ul, ol { padding-left: 1.35rem; }
+    li + li { margin-top: 5px; }
+    .lead { margin: 0 0 20px; color: var(--muted); font-size: 1.04rem; }
+    .small { color: var(--muted); font-size: .84rem; }
+
+    .grid-2, .grid-3, .grid-4, .metric-grid {
+      display: grid;
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-soft);
+    }
+    .card h3, .card h4 { margin-top: 0; }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+    .card.primary { border-top: 4px solid var(--primary); background: linear-gradient(180deg, var(--primary-soft), var(--panel-soft)); }
+    .card.accent { border-top: 4px solid var(--accent); }
+    .card.blue { border-top: 4px solid var(--blue); }
+    .card.purple { border-top: 4px solid var(--purple); }
+
+    .number {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      margin-bottom: 10px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--primary);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+    .metric {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-soft);
+    }
+    .metric strong {
+      display: block;
+      color: var(--accent);
+      font-size: 1.9rem;
+      line-height: 1.1;
+    }
+    .metric span { color: var(--muted); font-size: .84rem; }
+
+    .badge {
+      display: inline-block;
+      margin: 2px 4px 2px 0;
+      padding: 2px 8px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: .71rem;
+      font-weight: 740;
+      line-height: 1.55;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .verified { color: var(--primary-2); border-color: #9bc9ad; background: var(--primary-soft); }
+    .peer { color: var(--blue); border-color: #a9cbdc; background: var(--blue-soft); }
+    .preprint { color: var(--purple); border-color: #c1b6df; background: var(--purple-soft); }
+    .concept { color: var(--accent); border-color: #e5b793; background: var(--accent-soft); }
+
+    .callout {
+      margin: 18px 0;
+      padding: 15px 17px;
+      border-left: 5px solid var(--primary);
+      border-radius: 0 10px 10px 0;
+      background: var(--primary-soft);
+    }
+    .callout.warning { border-left-color: var(--warning); background: var(--warning-soft); }
+    .callout.accent { border-left-color: var(--accent); background: var(--accent-soft); }
+    .callout.blue { border-left-color: var(--blue); background: var(--blue-soft); }
+    .callout strong { color: var(--primary-2); }
+
+    .figure {
+      margin: 18px 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--panel-soft);
+    }
+    .figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      background: #fff;
+    }
+    .figure.cover img { height: auto; object-fit: contain; }
+    .figure figcaption {
+      padding: 10px 13px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      font-size: .79rem;
+      line-height: 1.5;
+    }
+    .figure-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .figure-pair .figure { margin: 8px 0 16px; }
+    .figure-pair.paper-figures { align-items: start; }
+
+    .table-wrap {
+      width: 100%;
+      margin: 15px 0;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+    }
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      background: var(--panel);
+    }
+    th, td {
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--primary-2);
+      background: var(--panel-soft);
+      font-size: .82rem;
+      line-height: 1.4;
+    }
+    td { font-size: .87rem; line-height: 1.55; }
+    tr:last-child td { border-bottom: 0; }
+
+    .contract {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      margin: 18px 0;
+      padding: 20px;
+      border: 2px solid var(--primary);
+      border-radius: 13px;
+      background: var(--primary-soft);
+    }
+    .contract-side { text-align: center; }
+    .contract-side strong { display: block; color: var(--primary-2); font-size: 1.35rem; }
+    .contract-arrow { color: var(--accent); font-size: 2rem; font-weight: 800; }
+
+    .timeline {
+      position: relative;
+      margin: 17px 0;
+      padding-left: 29px;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 9px;
+      width: 2px;
+      background: var(--line);
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel-soft);
+    }
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      top: 20px;
+      left: -26px;
+      width: 12px;
+      height: 12px;
+      border: 3px solid var(--panel);
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+    .timeline-item h3 { margin: 0 0 4px; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      align-items: stretch;
+      gap: 9px;
+      margin: 20px 0;
+    }
+    .flow-node {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 104px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel-soft);
+      text-align: center;
+      font-size: .84rem;
+    }
+    .flow-node strong { display: block; color: var(--primary-2); }
+    .flow-arrow { align-self: center; color: var(--accent); font-size: 1.35rem; font-weight: 800; }
+
+    .positioning {
+      padding: 24px;
+      border: 2px solid var(--primary);
+      border-radius: 14px;
+      color: var(--primary-2);
+      background: linear-gradient(135deg, var(--primary-soft), var(--panel));
+      font-size: 1.12rem;
+      font-weight: 690;
+    }
+    .source-list { padding-left: 1.25rem; }
+    .source-list li { margin-bottom: 12px; }
+    .source-title { font-weight: 700; }
+
+    .closing {
+      position: relative;
+      overflow: hidden;
+      min-height: 370px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 88% 15%, rgba(242, 176, 131, .22), transparent 25rem),
+        linear-gradient(135deg, #052f20, #075137 70%, #0b6b48);
+    }
+    .closing::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+      background-size: 38px 38px;
+      mask-image: linear-gradient(90deg, transparent 30%, #000);
+      z-index: 1;
+    }
+    .closing-content { position: relative; z-index: 2; max-width: 760px; }
+    .closing h2 { color: #fff; }
+    .closing .lead { color: #d7efe1; }
+    .closing-grid { display: grid; gap: 10px; margin-top: 18px; }
+    .closing-item {
+      padding: 13px 15px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 10px;
+      background: rgba(255,255,255,.08);
+    }
+    .closing-item strong { display: inline-block; min-width: 88px; color: #f2b083; }
+
+    .footer {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 24px 50px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .82rem;
+    }
+
+    @media (max-width: 1100px) {
+      .hero-pills { grid-template-columns: repeat(2, 1fr); }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        z-index: 70;
+        top: 67px;
+        left: 12px;
+        width: min(340px, calc(100vw - 24px));
+        max-height: calc(100vh - 82px);
+        transform: translateX(-115%);
+        transition: transform .2s ease;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-only { display: inline-block; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); text-align: center; }
+    }
+
+    @media (max-width: 760px) {
+      .hero-inner { padding: 54px 18px 50px; }
+      .hero-pills, .grid-2, .grid-3, .grid-4, .metric-grid, .figure-pair { grid-template-columns: 1fr; }
+      .layout { padding: 0 12px 50px; }
+      .section { padding: 20px 17px; }
+      .truth-banner { margin-left: 12px; margin-right: 12px; }
+      .hide-mobile { display: none; }
+      .contract { grid-template-columns: 1fr; }
+      .contract-arrow { transform: rotate(90deg); text-align: center; }
+    }
+
+    @media print {
+      :root { --bg: #fff; --panel: #fff; --panel-soft: #fafafa; --text: #111; --muted: #444; --line: #ccc; }
+      body { font-size: 10.5pt; background: #fff; }
+      .topbar, .sidebar { display: none !important; }
+      .hero { color: #111; background: #fff; border-bottom: 2px solid #176b47; }
+      .hero::after { display: none; }
+      .hero h1, .subtitle, .eyebrow, .hero-pill span { color: #111; }
+      .hero-pill { border: 1px solid #bbb; background: #fff; }
+      .truth-banner { margin: 15px 0; box-shadow: none; }
+      .layout { display: block; max-width: none; padding: 0; }
+      .section { break-inside: avoid; margin: 12px 0; padding: 16px; box-shadow: none; }
+      .closing { min-height: 0; color: #111; background: #fff; }
+      .closing::before { display: none; }
+      .closing h2, .closing .lead, .closing-item strong { color: #111; }
+      .closing-item { border-color: #bbb; background: #fff; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; }
+      a { color: #111; text-decoration: none; }
+      .footer { padding: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <button class="tool-button mobile-only" id="navToggle" aria-label="Open contents">☰</button>
+    <div class="brand">Wildfire Forecasting · Related Work Courseware</div>
+    <button class="tool-button hide-mobile" id="fontDown" aria-label="Decrease font size">A−</button>
+    <button class="tool-button hide-mobile" id="fontUp" aria-label="Increase font size">A+</button>
+    <button class="tool-button" id="themeToggle" aria-label="Toggle light and dark theme">◐</button>
+    <button class="tool-button hide-mobile" onclick="window.print()" aria-label="Print or export as PDF">Print / PDF</button>
+    <a class="plan-link hide-mobile" href="https://kulbeargpt.github.io/wildfire-research-plan/" target="_blank" rel="noopener">Research plan ↗</a>
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">02 · Research foundations and related work</div>
+      <h1>Reliable Next-Day Wildfire Spread Forecasting</h1>
+      <p class="subtitle">How physical drivers, satellite observation limits, benchmark contracts, baselines, and missing-data research define the scope of the project.</p>
+      <div class="hero-pills">
+        <div class="hero-pill"><strong>15–20 min</strong><span>guided lecture</span></div>
+        <div class="hero-pill"><strong>4</strong><span>foundation blocks</span></div>
+        <div class="hero-pill"><strong>t → t+24h</strong><span>forecast contract</span></div>
+        <div class="hero-pill"><strong>7 papers</strong><span>initial must-read set</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="truth-banner">
+    <strong>Purpose of this chapter:</strong> related work should constrain the research claim, not simply accumulate citations. The lecture moves from why the problem is difficult to what existing methods already cover, then ends with a narrow, testable project boundary.
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <input class="search" id="searchInput" type="search" placeholder="Search the courseware" aria-label="Search the courseware">
+      <div class="toc-title">Contents</div>
+      <nav aria-label="Courseware contents">
+        <ul class="toc">
+          <li><a href="#overview">01 · Why related work matters</a></li>
+          <li><a href="#drivers">02 · Drivers of fire spread</a></li>
+          <li><a href="#physical-models">03 · Physical models</a></li>
+          <li><a href="#observations">04 · Satellite observations</a></li>
+          <li><a href="#contract">05 · Forecast contract</a></li>
+          <li><a href="#datasets">06 · Dataset lineage</a></li>
+          <li><a href="#challenges">07 · Benchmark challenges</a></li>
+          <li><a href="#baselines">08 · Baseline families</a></li>
+          <li><a href="#missingness">09 · Missing and asynchronous data</a></li>
+          <li><a href="#closest-work">10 · Closest wildfire work</a></li>
+          <li><a href="#adjacent-work">11 · Adjacent techniques</a></li>
+          <li><a href="#gap">12 · Research gap matrix</a></li>
+          <li><a href="#roadmap">13 · Reading and execution</a></li>
+          <li><a href="#summary">14 · Research positioning</a></li>
+          <li><a href="#references">15 · References</a></li>
+        </ul>
+      </nav>
+      <div class="lecture-card"><strong>Lecture route</strong><br>Problem → evidence → boundary → action. Spend most of the time on the forecast contract, dataset labels, and the first implementation steps.</div>
+    </aside>
+
+    <main>
+      <section class="section searchable" id="overview">
+        <div class="section-kicker">01 · Framing</div>
+        <h2>Why this chapter exists</h2>
+        <p class="lead">Before proposing a model, the student must understand which scientific assumptions, labels, baselines, and evaluation choices already define the task.</p>
+
+        <div class="grid-4">
+          <article class="card primary">
+            <div class="number">1</div>
+            <h3>Physical foundations</h3>
+            <p>Fire history, fuels, weather, and terrain jointly drive spread. Machine-learning inputs are rasterized proxies for those processes.</p>
+          </article>
+          <article class="card blue">
+            <div class="number">2</div>
+            <h3>Dataset lineage</h3>
+            <p>Next Day Wildfire Spread, WSTS, WSTS+, and TS-SatFire do not all use the same target label.</p>
+          </article>
+          <article class="card purple">
+            <div class="number">3</div>
+            <h3>Method lineage</h3>
+            <p>Rules, U-Net variants, temporal models, Transformers, and reconstruction-before-forecasting are all relevant comparisons.</p>
+          </article>
+          <article class="card accent">
+            <div class="number">4</div>
+            <h3>Research boundary</h3>
+            <p>The real question is whether validity, quality, and observation age remain useful under a strict forecast-time contract.</p>
+          </article>
+        </div>
+
+        <figure class="figure cover">
+          <img src="assets/paper-ts-satfire-figure1-original.png" alt="TS-SatFire dataset inputs and its active-fire, burned-area, and progression tasks">
+          <figcaption>TS-SatFire dataset components and three task definitions. Full-resolution Figure 1 supplied by the journal for <a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">Zhao, Gerard, and Ban (2025)</a>.</figcaption>
+        </figure>
+      </section>
+
+      <section class="section searchable" id="drivers">
+        <div class="section-kicker">02 · Physical foundations</div>
+        <h2>From a moving fire front to raster features</h2>
+        <p class="lead">Fire spread is a coupled physical process. Public datasets expose only partial, rasterized representations of that process.</p>
+
+        <div class="grid-2">
+          <figure class="figure cover">
+            <img src="assets/paper-wstsplus-problem-original.png" alt="WSTS+ next-day wildfire prediction task with fire, topography, weather, and vegetation inputs">
+            <figcaption>The WSTS+ task uses one or five preceding days of fire, topographic, weather, and vegetation features to predict the next-day fire extent. Original Figure 1 file from the source package of <a href="https://arxiv.org/abs/2502.12003" target="_blank" rel="noopener">Lahrichi et al. (2026)</a>.</figcaption>
+          </figure>
+          <div class="grid-2">
+            <article class="card primary"><h3>Fire history</h3><p>The current active-fire or burned-area pattern conditions where spread can occur next.</p></article>
+            <article class="card accent"><h3>Fuel and vegetation</h3><p>Fuel type, amount, structure, and moisture influence combustibility.</p></article>
+            <article class="card blue"><h3>Weather and wind</h3><p>Wind speed and direction, humidity, and temperature affect rate and direction of spread.</p></article>
+            <article class="card purple"><h3>Terrain</h3><p>Slope, aspect, and elevation affect fireline movement and local airflow.</p></article>
+          </div>
+        </div>
+
+        <div class="callout"><strong>Core interpretation:</strong> a data-driven model learns statistical relationships among proxy variables. It is not learning the complete set of fire-behavior equations.</div>
+      </section>
+
+      <section class="section searchable" id="physical-models">
+        <div class="section-kicker">03 · Mechanistic background</div>
+        <h2>Classical fire-behavior models</h2>
+        <p class="lead">Physical and semi-empirical simulators provide useful intuition and baselines, but they are not equivalent to the WSTS/WSTS+ next-day prediction task.</p>
+
+        <div class="grid-3">
+          <article class="card">
+            <figure class="figure"><img src="assets/rothermel-1972.jpg" alt="Cover of Rothermel's 1972 fire spread model report"><figcaption>USDA Forest Service, 1972.</figcaption></figure>
+            <h3><a href="https://research.fs.usda.gov/treesearch/32533" target="_blank" rel="noopener">Rothermel · 1972</a></h3>
+            <p>A mathematical model for rate of spread and fireline intensity in wildland fuels, with fuel and environmental parameters at its core.</p>
+          </article>
+          <article class="card">
+            <figure class="figure"><img src="assets/farsite-1998.jpg" alt="FARSITE report and fire growth diagrams"><figcaption>USDA Forest Service, 1998.</figcaption></figure>
+            <h3><a href="https://research.fs.usda.gov/treesearch/4617" target="_blank" rel="noopener">FARSITE · 1998</a></h3>
+            <p>A two-dimensional fire-growth simulator integrating surface fire, crown fire, spotting, acceleration, and fuel-moisture components.</p>
+          </article>
+          <article class="card">
+            <figure class="figure"><img src="assets/wrf-fire-2011.jpg" alt="First page of the WRF 3.3 and SFIRE 2011 paper"><figcaption>Geoscientific Model Development, 2011.</figcaption></figure>
+            <h3><a href="https://gmd.copernicus.org/articles/4/591/2011/index.html" target="_blank" rel="noopener">WRF-Fire / SFIRE · 2011</a></h3>
+            <p>The fire model receives surface winds and returns heat flux to the atmosphere, creating two-way fire–atmosphere coupling.</p>
+          </article>
+        </div>
+
+        <div class="callout blue"><strong>Use in this project:</strong> interpret variables and failure cases, and motivate rule-based or physics-informed baselines. Do not present these simulators as direct substitutes for the main WSTS/WSTS+ prediction framework.</div>
+      </section>
+
+      <section class="section searchable" id="observations">
+        <div class="section-kicker">04 · Remote-sensing foundations</div>
+        <h2>Satellite observations are not ground truth</h2>
+        <p class="lead">Active-fire detections, burned-area products, smoke, cloud, and acquisition time have different semantics.</p>
+
+        <div class="figure-pair">
+          <figure class="figure">
+            <img src="assets/viirs-active-fire.jpg" alt="Satellite view of wildfire smoke over the western United States">
+            <figcaption>Satellite wildfire view used in the courseware. NOAA/NESDIS provides operational fire and smoke products from instruments including VIIRS.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="assets/smoke-hotspots.jpg" alt="Satellite image with smoke and active fire signatures marked">
+            <figcaption>Smoke may obscure the surface while infrared signatures indicate actively burning areas. Image from the supplied courseware.</figcaption>
+          </figure>
+        </div>
+
+        <div class="grid-4">
+          <article class="card primary"><h3>Active fire</h3><p>A thermal anomaly detected by a sensor at a particular acquisition time.</p></article>
+          <article class="card blue"><h3>Burned area</h3><p>The area already burned over a defined interval; its time meaning differs from active-fire detection.</p></article>
+          <article class="card accent"><h3>Smoke and cloud</h3><p>Obscuration can create missing, noisy, or low-confidence observations.</p></article>
+          <article class="card purple"><h3>Overpass time</h3><p>Observations labelled with the same date may still have different within-day acquisition times.</p></article>
+        </div>
+
+        <div class="callout warning"><strong>Reading requirement:</strong> the student should be able to distinguish an active-fire proxy from a burned-area label before comparing any two papers.</div>
+      </section>
+
+      <section class="section searchable" id="contract">
+        <div class="section-kicker">05 · Task definition</div>
+        <h2>The forecast contract comes before the model</h2>
+        <p class="lead">Given only information available by time <code>t</code>, predict a spatial probability map for approximately <code>t+24h</code>.</p>
+
+        <div class="contract" role="img" aria-label="At forecast issue time t, available observations are used to predict a probability map at t plus 24 hours">
+          <div class="contract-side"><strong>Available by t</strong><span>fire history · weather · terrain · fuel · validity · timestamps</span></div>
+          <div class="contract-arrow">→</div>
+          <div class="contract-side"><strong>Predict t+24h</strong><span>next-day active-fire probability map</span></div>
+        </div>
+
+        <figure class="figure">
+          <img src="assets/forecast-contract.jpg" alt="WildfireSpreadTS input variables and next-day active fire target">
+          <figcaption>Adapted/cropped in the supplied courseware from the WildfireSpreadTS paper, NeurIPS Datasets and Benchmarks 2023.</figcaption>
+        </figure>
+
+        <div class="grid-3">
+          <article class="card primary"><h3>Input admissibility</h3><p>Observation time, availability time, and every preprocessing window must end no later than <code>t</code>.</p></article>
+          <article class="card accent"><h3>Label semantics</h3><p>WSTS/WSTS+ active-fire maps and TS-SatFire newly burned areas cannot be merged as if they were the same target.</p></article>
+          <article class="card blue"><h3>Split discipline</h3><p>A wildfire event must not cross train, validation, and test sets. Prefer cross-year or leave-one-year-out evaluation.</p></article>
+        </div>
+
+        <div class="callout accent"><strong>Teaching point:</strong> if the contract is not fixed first, later numerical comparisons have no stable meaning.</div>
+      </section>
+
+      <section class="section searchable" id="datasets">
+        <div class="section-kicker">06 · Public benchmarks</div>
+        <h2>Dataset lineage: inspect the target, not just the name</h2>
+        <p class="lead">The datasets form a useful research lineage, but they are not interchangeable.</p>
+
+        <div class="timeline">
+          <article class="timeline-item">
+            <h3>2022 · Next Day Wildfire Spread</h3>
+            <p>Established a machine-learning benchmark for one-day-ahead wildfire spread prediction from remote-sensing variables in the United States.</p>
+          </article>
+          <article class="timeline-item">
+            <h3>2023 · WildfireSpreadTS</h3>
+            <p>Introduced multimodal time series with 607 wildfire events, 13,607 images, and 23 channels for 24-hour active-fire forecasting.</p>
+          </article>
+          <article class="timeline-item">
+            <h3>2025 · TS-SatFire</h3>
+            <p>A multitask time-series dataset covering active-fire detection, burned-area mapping, and progression prediction. Its spread label is next-day newly burned area.</p>
+          </article>
+          <article class="timeline-item">
+            <h3>2026 · WSTS+</h3>
+            <p>Extends the WSTS benchmark across more years and geographic coverage. The project card lists 2016–2023, 1,005 events, and 24,462 images.</p>
+          </article>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Dataset</th><th>Main target</th><th>Role in this project</th><th>Important limit</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Next Day Wildfire Spread</strong><br><span class="badge peer">IEEE TGRS 2022</span></td><td>Next-day fire spread proxy</td><td>Task origin and benchmark context</td><td>Single-day formulation; later time-series benchmarks change the input contract.</td></tr>
+              <tr><td><strong>WildfireSpreadTS / WSTS</strong><br><span class="badge peer">NeurIPS 2023</span></td><td>Next-day VIIRS active-fire map</td><td>Task definition, channels, and public baselines</td><td>Active-fire detections are proxy labels, not complete fire perimeters.</td></tr>
+              <tr><td><strong>WSTS+</strong><br><span class="badge peer">WACV 2026</span></td><td>Next-day active-fire map</td><td><strong>Primary dataset</strong> for cross-year experiments</td><td>Timestamps, QA, and validity fields still require a file-level audit.</td></tr>
+              <tr><td><strong>TS-SatFire</strong><br><span class="badge peer">Scientific Data 2025</span></td><td>Next-day newly burned area for progression</td><td>Independent validation only after alignment</td><td>Its target is not directly interchangeable with the WSTS active-fire target.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="positioning">Project line: use WSTS+ as the primary dataset. Use TS-SatFire only as an independent test when label meaning, time definition, and spatial resolution can be aligned.</div>
+      </section>
+
+      <section class="section searchable" id="challenges">
+        <div class="section-kicker">07 · Benchmark behaviour</div>
+        <h2>Sparse labels, noisy observations, and heterogeneous events</h2>
+        <p class="lead">Class imbalance and observation quality often dominate benchmark behaviour more than architecture size.</p>
+
+        <div class="metric-grid">
+          <div class="metric"><strong>≈0.1%</strong><span>active-fire pixels reported for WSTS; ordinary accuracy is therefore misleading</span></div>
+          <div class="metric"><strong>607</strong><span>WSTS events; event-level resampling is more defensible than pixel-level significance tests</span></div>
+          <div class="metric"><strong>24h</strong><span>the forecast horizon for the next-day active-fire task</span></div>
+        </div>
+
+        <div class="figure-pair">
+          <figure class="figure"><img src="assets/event-distributions.jpg" alt="Histograms showing wildfire event duration and number of active days"><figcaption>Event duration and active-day distributions are long-tailed. Figure adapted/cropped in the supplied courseware from Gerard et al. 2023.</figcaption></figure>
+          <figure class="figure"><img src="assets/active-fire-grid.png" alt="Sparse active-fire labels across multiple image tiles"><figcaption>Positive pixels occupy a very small fraction of the raster. Figure adapted/cropped in the supplied courseware from Gerard et al. 2023.</figcaption></figure>
+        </div>
+
+        <ul>
+          <li>Many daily samples contain no active-fire detections or very few positive pixels.</li>
+          <li>Event duration and the number of active days have long-tailed distributions.</li>
+          <li>Smoke, cloud, detection confidence, and spatial resampling introduce label noise.</li>
+          <li>A single large event or one unusual year may dominate a pooled result.</li>
+        </ul>
+
+        <div class="callout"><strong>Evaluation consequence:</strong> use average precision as the primary metric, report event-level aggregation and uncertainty, and show cross-year results rather than relying on one pooled score.</div>
+      </section>
+
+      <section class="section searchable" id="baselines">
+        <div class="section-kicker">08 · Method lineage</div>
+        <h2>A credible method starts from matched baselines</h2>
+        <p class="lead">Every comparison should use the same event split, input channels, history length, forecast horizon, and training budget.</p>
+
+        <figure class="figure">
+          <img src="assets/paper-wstsplus-utae-original.png" alt="WSTS+ UTAE architecture with temporal fusion and a U-Net decoder">
+          <figcaption>The UTAE baseline used for WSTS+ combines temporal fusion with a U-Net-style encoder–decoder. Original Figure 8 file from the source package of <a href="https://arxiv.org/abs/2502.12003" target="_blank" rel="noopener">Lahrichi et al. (2026)</a>.</figcaption>
+        </figure>
+
+        <div class="grid-3">
+          <article class="card accent"><h3>Rule baselines</h3><p><strong>No-fire · persistence · morphological dilation</strong></p><p>Test whether the model exceeds simple assumptions about fire continuation.</p></article>
+          <article class="card primary"><h3>Spatial CNNs</h3><p><strong>U-Net · Res-UNet</strong></p><p>Provide the minimum reproducible learned baseline.</p></article>
+          <article class="card blue"><h3>Temporal models</h3><p><strong>UTAE · ConvLSTM · temporal stacks</strong></p><p>Test whether additional history truly helps.</p></article>
+          <article class="card purple"><h3>Transformers</h3><p><strong>SegFormer · Swin-Unet</strong></p><p>Offer a strong representation comparison under a controlled budget.</p></article>
+          <article class="card accent"><h3>Partial observability</h3><p><strong>Reconstruction → forecasting</strong></p><p>The closest baseline family for corrupted fire observations.</p></article>
+          <article class="card primary"><h3>Project control</h3><p><strong>Concatenate + mask</strong></p><p>The essential comparison for testing whether observation age adds value beyond availability.</p></article>
+        </div>
+      </section>
+
+      <section class="section searchable" id="missingness">
+        <div class="section-kicker">09 · Observation mechanisms</div>
+        <h2>Missingness is not just a random mask</h2>
+        <p class="lead">Cloud, smoke, sensor artefacts, product latency, and acquisition schedules create structured missingness and temporal misalignment.</p>
+
+        <figure class="figure">
+          <img src="assets/paper-partial-observability-flowchart-original.png" alt="Two-stage wildfire forecasting framework with corrupted observations, reconstruction, and next-day prediction">
+          <figcaption>A controlled partial-observability benchmark: corrupted fire maps are reconstructed before spatiotemporal forecasting. Original vector Figure 1 rendered from the source package of <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">Yang et al. (2026)</a>. This setup is a stress test, not a model of every natural observation gap.</figcaption>
+        </figure>
+
+        <div class="grid-4">
+          <article class="card primary"><h3>Natural missingness</h3><p>Cloud, smoke, and sensor artefacts can affect both input availability and label quality.</p></article>
+          <article class="card blue"><h3>Asynchrony</h3><p>Satellite products, weather forecasts, and fire detections are not guaranteed to align in time.</p></article>
+          <article class="card accent"><h3>Observation age</h3><p>The latest valid observation becomes less current as the interval to forecast issue time grows.</p></article>
+          <article class="card purple"><h3>Quality fields</h3><p>QA and confidence variables may be used only when their provenance is documented in the data package.</p></article>
+        </div>
+
+        <div class="callout warning"><strong>Protocol:</strong> random pixels, blocks, temporal gaps, and missing modalities are controlled stress tests. They do not replace analysis of real cloud, smoke, validity, and revisit patterns.</div>
+      </section>
+
+      <section class="section searchable" id="closest-work">
+        <div class="section-kicker">10 · Direct comparison</div>
+        <h2>Partial-observability wildfire forecasting</h2>
+        <p class="lead">The closest comparison reconstructs corrupted fire observations before next-day forecasting.</p>
+
+        <div class="flow" role="img" aria-label="Corrupted fire observations are reconstructed, passed to a forecasting stage, and used for next-day prediction">
+          <div class="flow-node"><div><strong>1 · Corrupted fire maps</strong>Pixel or block masking<br>10–80% corruption</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div><strong>2 · Reconstruction</strong>MaskUNet · MaskCVAE<br>MaskViT · MaskD3PM</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div><strong>3 · Forecasting</strong>Model wildfire dynamics<br>on reconstructed sequences</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><div><strong>4 · Next day</strong>Recover performance toward<br>the clean-input setting</div></div>
+        </div>
+
+        <div class="grid-2">
+          <article class="card primary"><h3>What to borrow</h3><ul><li>Corruption protocol</li><li>Leave-one-year-out evaluation</li><li>Missingness-intensity curves</li><li>A strong reconstruction-first baseline</li></ul></article>
+          <article class="card accent"><h3>How this project differs</h3><p>The proposed study does not only reconstruct fire maps. It explicitly tests <code>q</code>, <code>Δt</code>, <code>mask</code>, and modality identity across asynchronous multimodal inputs.</p></article>
+        </div>
+
+        <p class="small">Direct source: Yang et al. 2026, <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">Robust Wildfire Forecasting under Partial Observability: From Reconstruction to Prediction</a> <span class="badge preprint">preprint</span>.</p>
+      </section>
+
+      <section class="section searchable" id="adjacent-work">
+        <div class="section-kicker">11 · Related techniques</div>
+        <h2>Incomplete multimodal learning and asynchronous fusion</h2>
+        <p class="lead">These studies supply design patterns and comparison methods. They do not establish the final wildfire-forecasting claim.</p>
+
+        <div class="figure-pair paper-figures">
+          <figure class="figure"><img src="assets/paper-incomplete-fusion-figure1-original.jpg" alt="Incomplete multimodal remote-sensing framework using optical, SAR, elevation, and map inputs"><figcaption>Masked multimodal pretraining and downstream fusion with optical, SAR, DEM, and map inputs. Original Figure 1 file from the source package of <a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">Chen, Zhao, and Bruzzone (2023)</a>.</figcaption></figure>
+          <figure class="figure"><img src="assets/paper-agflow-figure1-original.png" alt="AGFlow architecture for asynchronous Sentinel-1 and Sentinel-2 time-series fusion"><figcaption>AGFlow uses acquisition dates to align irregular Sentinel-1 and Sentinel-2 sequences for reconstruction at a requested time. Original Figure 1 file from the source package of <a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">Fallah et al. (2026)</a>.</figcaption></figure>
+        </div>
+        <div class="grid-2">
+          <article class="card primary">
+            <h3>Incomplete multimodal remote-sensing fusion</h3>
+            <p>Studies performance loss when modalities are absent during training or inference, using fusion tokens, masked attention, reconstruction, or contrastive objectives.</p>
+            <p><a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">Chen, Zhao, and Bruzzone 2023</a> <span class="badge preprint">preprint</span></p>
+          </article>
+          <article class="card blue">
+            <h3>AGFlow</h3>
+            <p>Targets Sentinel-1/2 cloud removal and reconstruction at arbitrary times through timestamp-conditioned alignment and asynchronous fusion.</p>
+            <p><a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">Fallah et al. 2026</a> <span class="badge preprint">preprint</span></p>
+          </article>
+        </div>
+
+        <div class="callout blue"><strong>Writing rule:</strong> place these papers under “related techniques,” not “direct wildfire baselines.” Their tasks and labels differ from next-day wildfire spread forecasting.</div>
+      </section>
+
+      <section class="section searchable" id="gap">
+        <div class="section-kicker">12 · Novelty boundary</div>
+        <h2>Research gap matrix</h2>
+        <p class="lead">Existing work covers the component ideas. The contribution must be tied to a strict forecast-time setting and tested as a narrow hypothesis.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Dimension</th><th>Existing foundation</th><th>Boundary this project must add</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Task</strong></td><td>Public benchmarks already cover next-day active-fire prediction and burned-area progression.</td><td>Fix a <code>t → t+24h</code> contract and state explicitly why active-fire and burned-area labels cannot be merged.</td></tr>
+              <tr><td><strong>Data</strong></td><td>WSTS/WSTS+ provide multimodal time-series inputs and public baselines.</td><td>Audit timestamps, QA, validity, and sensor or product delay field by field to prevent future-information leakage.</td></tr>
+              <tr><td><strong>Method</strong></td><td>U-Net, UTAE, Transformers, and reconstruction-before-forecasting already exist.</td><td>Test a lightweight gate using <code>q</code>, <code>Δt</code>, <code>mask</code>, and modality ID against a matched concatenate-plus-mask control.</td></tr>
+              <tr><td><strong>Evaluation</strong></td><td>Average precision, F1, IoU, and leave-one-year-out protocols are established.</td><td>Report event-level bootstrap uncertainty, missingness curves, natural-missingness slices, cross-year results, and failure cases together.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="positioning">One-sentence positioning: under a realistic forecast issue-time constraint, turn observation quality, validity, and age into explicit, testable variables for multimodal wildfire forecasting.</div>
+      </section>
+
+      <section class="section searchable" id="roadmap">
+        <div class="section-kicker">13 · Student route</div>
+        <h2>Turn related work into an implementation checklist</h2>
+        <p class="lead">Read the task-defining papers before adapting methods. Each reading block should produce a concrete project artefact.</p>
+
+        <div class="timeline">
+          <article class="timeline-item">
+            <h3>Step 1 · Establish the data contract</h3>
+            <p>Read Huot, WSTS, WSTS+, and TS-SatFire. Record only input fields, observation times, label semantics, and split rules. Produce the first draft of <code>data_manifest.csv</code>.</p>
+          </article>
+          <article class="timeline-item">
+            <h3>Step 2 · Reproduce the baseline ladder</h3>
+            <p>Run no-fire, persistence, concatenate-plus-mask, and one public learned model. Fix the split, history length, seeds, and training budget.</p>
+          </article>
+          <article class="timeline-item">
+            <h3>Step 3 · Add missingness and asynchrony</h3>
+            <p>Read the partial-observability, AGFlow, and incomplete-multimodal papers. Adapt only one or two reproducible comparison methods.</p>
+          </article>
+          <article class="timeline-item">
+            <h3>Step 4 · Fix the writing boundary</h3>
+            <p>End the related-work section with the exact project distinction: quality and observation-age fusion under a forecast issue-time constraint.</p>
+          </article>
+        </div>
+
+        <div class="callout"><strong>Initial must-read set:</strong> Huot 2022; Gerard 2023; Lahrichi 2026; Zhao 2025; Yang 2026; Fallah 2026; Chen 2023.</div>
+      </section>
+
+      <section class="section closing searchable" id="summary">
+        <div class="closing-content">
+          <div class="section-kicker" style="color:#b9e8cc">14 · Summary</div>
+          <h2>Related-work-driven research positioning</h2>
+          <p class="lead">The project is valuable only if the claim stays narrower than the ideas it builds upon.</p>
+          <div class="closing-grid">
+            <div class="closing-item"><strong>Not:</strong> reintroducing wildfire prediction, missing modalities, or asynchronous fusion.</div>
+            <div class="closing-item"><strong>Instead:</strong> testing whether <code>q</code>, <code>Δt</code>, and <code>mask</code> improve next-day forecasting under partial observability.</div>
+            <div class="closing-item"><strong>Required:</strong> event-disjoint splits, cross-year tests, controlled and natural missingness, and failure-case analysis.</div>
+          </div>
+          <p style="margin-top:20px;color:#d7efe1"><strong>Next section:</strong> Research questions and hypotheses H1/H2.</p>
+        </div>
+      </section>
+
+      <section class="section searchable" id="references">
+        <div class="section-kicker">15 · Primary sources</div>
+        <h2>References used in this courseware</h2>
+        <p class="lead">Peer-reviewed papers, official research reports, dataset pages, and clearly labelled preprints.</p>
+
+        <ol class="source-list">
+          <li><span class="source-title">Rothermel, R. C. A Mathematical Model for Predicting Fire Spread in Wildland Fuels.</span> USDA Forest Service, 1972. <a href="https://research.fs.usda.gov/treesearch/32533" target="_blank" rel="noopener">Official record</a>.</li>
+          <li><span class="source-title">Finney, M. A. FARSITE: Fire Area Simulator—Model Development and Evaluation.</span> USDA Forest Service, 1998. <a href="https://research.fs.usda.gov/treesearch/4617" target="_blank" rel="noopener">Official record</a>.</li>
+          <li><span class="source-title">Mandel, Beezley, and Kochanski. Coupled Atmosphere–Wildland Fire Modeling with WRF 3.3 and SFIRE 2011.</span> <em>Geoscientific Model Development</em>, 2011. <a href="https://gmd.copernicus.org/articles/4/591/2011/index.html" target="_blank" rel="noopener">Article</a>.</li>
+          <li><span class="source-title">Huot et al. Next Day Wildfire Spread: A Machine Learning Data Set to Predict Wildfire Spreading from Remote-Sensing Data.</span> <em>IEEE TGRS</em>, 2022. <a href="https://doi.org/10.1109/TGRS.2022.3192974" target="_blank" rel="noopener">DOI</a>.</li>
+          <li><span class="source-title">Gerard, Zhao, and Sullivan. WildfireSpreadTS: A Dataset of Multi-Modal Time Series for Wildfire Spread Prediction.</span> <em>NeurIPS Datasets and Benchmarks</em>, 2023. <a href="https://proceedings.neurips.cc/paper_files/paper/2023/file/ebd545176bdaa9cd5d45954947bd74b7-Paper-Datasets_and_Benchmarks.pdf" target="_blank" rel="noopener">Paper</a>.</li>
+          <li><span class="source-title">Lahrichi et al. Improved Wildfire Spread Prediction with Time-Series Data and the WSTS+ Benchmark.</span> <em>WACV</em>, 2026. <a href="https://arxiv.org/abs/2502.12003" target="_blank" rel="noopener">Paper record</a> · <a href="https://huggingface.co/saadlahrichi/WSTSPlus" target="_blank" rel="noopener">Dataset card</a>.</li>
+          <li><span class="source-title">Zhao, Gerard, and Ban. TS-SatFire: A Multi-Task Satellite Image Time-Series Dataset for Wildfire Detection and Prediction.</span> <em>Scientific Data</em>, 2025. <a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">Article</a>.</li>
+          <li><span class="source-title">Yang et al. Robust Wildfire Forecasting under Partial Observability: From Reconstruction to Prediction.</span> 2026. <span class="badge preprint">preprint</span> <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">arXiv</a>.</li>
+          <li><span class="source-title">Fallah et al. Asynchronous Remote Sensing Time-Series Fusion for Cloud Removal and Anytime Reconstruction.</span> 2026. <span class="badge preprint">preprint · AGFlow</span> <a href="https://arxiv.org/abs/2605.27726" target="_blank" rel="noopener">arXiv</a>.</li>
+          <li><span class="source-title">Chen, Zhao, and Bruzzone. Incomplete Multimodal Learning for Remote Sensing Data Fusion.</span> 2023. <span class="badge preprint">preprint</span> <a href="https://arxiv.org/abs/2304.11381" target="_blank" rel="noopener">arXiv</a>.</li>
+          <li><span class="source-title">NOAA/NESDIS. Visible Infrared Imaging Radiometer Suite and Wildland Fire Data Portal.</span> <a href="https://www.nesdis.noaa.gov/our-satellites/currently-flying/joint-polar-satellite-system/visible-infrared-imaging-radiometer-suite-viirs" target="_blank" rel="noopener">VIIRS</a> · <a href="https://www.nesdis.noaa.gov/data-products-research-services/wildland-fire-data-portal" target="_blank" rel="noopener">Fire Data Portal</a>.</li>
+        </ol>
+
+        <div class="callout warning"><strong>Before formal writing:</strong> update the publication status of preprints and recheck dataset access, licences, field definitions, and links.</div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>Wildfire Forecasting · Research Foundations and Related Work · English Courseware</p>
+    <p>Adapted from the supplied 16-slide Chinese courseware and the supervisor-revised research-plan website. Source status last reviewed 30 July 2026.</p>
+  </footer>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const body = document.body;
+      const sections = [...document.querySelectorAll('.searchable')];
+      const links = [...document.querySelectorAll('.toc a')];
+      const sidebar = document.getElementById('sidebar');
+      const searchInput = document.getElementById('searchInput');
+      const progressBar = document.getElementById('progressBar');
+      let scale = Number(localStorage.getItem('course-font-scale') || 1);
+
+      const applyScale = () => {
+        scale = Math.max(.88, Math.min(1.22, scale));
+        root.style.setProperty('--font-scale', scale.toFixed(2));
+        localStorage.setItem('course-font-scale', scale.toFixed(2));
+      };
+
+      const savedTheme = localStorage.getItem('course-theme');
+      if (savedTheme) root.dataset.theme = savedTheme;
+      applyScale();
+
+      document.getElementById('fontDown').addEventListener('click', () => { scale -= .06; applyScale(); });
+      document.getElementById('fontUp').addEventListener('click', () => { scale += .06; applyScale(); });
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('course-theme', root.dataset.theme);
+      });
+      document.getElementById('navToggle').addEventListener('click', () => sidebar.classList.toggle('open'));
+
+      links.forEach(link => link.addEventListener('click', () => sidebar.classList.remove('open')));
+
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        sections.forEach(section => {
+          section.hidden = query && !section.textContent.toLowerCase().includes(query);
+        });
+      });
+
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries
+          .filter(entry => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        links.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${visible.target.id}`));
+      }, { rootMargin: '-18% 0px -68% 0px', threshold: [0, .15, .5] });
+      sections.forEach(section => observer.observe(section));
+
+      const updateProgress = () => {
+        const max = body.scrollHeight - window.innerHeight;
+        const pct = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+        progressBar.style.width = `${pct}%`;
+      };
+      updateProgress();
+      window.addEventListener('scroll', updateProgress, { passive: true });
+      window.addEventListener('resize', updateProgress);
+    })();
+  </script>
+</body>
+</html>
