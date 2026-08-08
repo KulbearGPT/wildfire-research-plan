@@ -1,9 +1,12 @@
 import csv
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import h5py
 import numpy as np
+import pandas as pd
+import pytest
 
 from wildfire_phase0 import cli
 
@@ -39,6 +42,22 @@ def _write_string_event(path: Path, year: int, fire_name: str) -> None:
         data.attrs["lnglat"] = [-120.5, 54.1]
 
 
+def _write_data_group(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with h5py.File(path, "w") as handle:
+        handle.create_group("data")
+
+
+def _write_zero_sized_event(path: Path, year: int, fire_name: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with h5py.File(path, "w") as handle:
+        data = handle.create_dataset("data", shape=(0, 23, 4, 4), dtype=np.float32)
+        data.attrs["year"] = year
+        data.attrs["fire_name"] = fire_name
+        data.attrs["img_dates"] = []
+        data.attrs["lnglat"] = [-120.5, 54.1]
+
+
 def _run_audit(data_root: Path, output_root: Path) -> int:
     return cli.main([
         "audit",
@@ -47,6 +66,14 @@ def _run_audit(data_root: Path, output_root: Path) -> int:
         "--output-root",
         str(output_root),
     ])
+
+
+def _seed_old_generation(output_root: Path) -> dict[str, str]:
+    output_root.mkdir(parents=True)
+    old_contents = {name: f"old:{name}\n" for name in _ARTIFACT_NAMES}
+    for name, content in old_contents.items():
+        (output_root / name).write_text(content, encoding="utf-8")
+    return old_contents
 
 
 def test_audit_writes_controlled_gate_artifacts_for_a_valid_event(tmp_path: Path) -> None:
@@ -138,4 +165,89 @@ def test_audit_reports_string_typed_hdf5_payload_as_blocked(tmp_path: Path) -> N
     report = (output_root / "phase0_report.md").read_text(encoding="utf-8")
     assert "TypeError" in report
     assert "isnan" in report
+    assert not list(output_root.glob("*.tmp"))
+
+
+@pytest.mark.parametrize(
+    ("writer", "exact_error"),
+    [
+        (_write_data_group, "ValueError: data object must be an HDF5 dataset"),
+        (
+            lambda path: _write_zero_sized_event(path, 2021, "demo_fire"),
+            "ValueError: data shape dimensions must be strictly positive",
+        ),
+    ],
+)
+def test_audit_blocks_non_dataset_or_zero_sized_data_with_complete_artifacts(
+    tmp_path: Path,
+    writer: Callable[[Path], None],
+    exact_error: str,
+) -> None:
+    """Skipping object/extent checks would crash before a complete blocked generation."""
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    event_path = data_root / "2021" / "demo_fire.hdf5"
+    writer(event_path)
+
+    assert _run_audit(data_root, output_root) == 2
+    assert {path.name for path in output_root.iterdir()} == set(_ARTIFACT_NAMES)
+    assert exact_error in (output_root / "phase0_report.md").read_text(encoding="utf-8")
+    decision = json.loads((output_root / "contract_decision.json").read_text(encoding="utf-8"))
+    assert any(exact_error in note for note in decision["notes"])
+    assert not list(output_root.glob("*.tmp"))
+
+
+def test_audit_render_failure_preserves_existing_complete_generation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Replacing any final before report rendering would corrupt the old generation."""
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    old_contents = _seed_old_generation(output_root)
+
+    def fail_render(*args: object, **kwargs: object) -> str:
+        raise RuntimeError("render failed")
+
+    monkeypatch.setattr(cli, "render_phase0_report", fail_render)
+
+    with pytest.raises(RuntimeError, match="render failed"):
+        _run_audit(data_root, output_root)
+
+    assert {
+        name: (output_root / name).read_text(encoding="utf-8")
+        for name in _ARTIFACT_NAMES
+    } == old_contents
+    assert not list(output_root.glob("*.tmp"))
+
+
+def test_audit_serialization_failure_preserves_existing_complete_generation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Replacing one final before all serializers finish would mix generations."""
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    old_contents = _seed_old_generation(output_root)
+    original_to_csv = pd.DataFrame.to_csv
+    calls = 0
+
+    def fail_second_csv(self: pd.DataFrame, *args: object, **kwargs: object) -> object:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("serialization failed")
+        return original_to_csv(self, *args, **kwargs)
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", fail_second_csv)
+
+    with pytest.raises(RuntimeError, match="serialization failed"):
+        _run_audit(data_root, output_root)
+
+    assert {
+        name: (output_root / name).read_text(encoding="utf-8")
+        for name in _ARTIFACT_NAMES
+    } == old_contents
     assert not list(output_root.glob("*.tmp"))

@@ -43,22 +43,48 @@ def zero_target_false_alarm_rate(y_true: object, y_score: object, threshold: flo
     return float(np.mean(scores >= threshold))
 
 
-def event_macro_ap(records: pd.DataFrame) -> float:
-    """Average defined AP values after concatenating all rows for each event."""
+def _validated_event_arrays(records: pd.DataFrame) -> list[tuple[np.ndarray, np.ndarray]]:
     missing_columns = _REQUIRED_COLUMNS.difference(records.columns)
     if missing_columns:
         raise ValueError(f"records missing required columns: {sorted(missing_columns)}")
     if records["event_id"].isna().any():
         raise ValueError("event_id values must not be missing")
 
-    event_scores: list[float] = []
+    events: list[tuple[np.ndarray, np.ndarray]] = []
     for _, event_records in records.groupby("event_id", sort=False):
         target = np.concatenate([np.asarray(values).ravel() for values in event_records["y_true"]])
         scores = np.concatenate([np.asarray(values).ravel() for values in event_records["y_score"]])
+        events.append(_validated_arrays(target, scores))
+    return events
+
+
+def event_macro_ap(records: pd.DataFrame) -> float:
+    """Average per-event AP, returning NaN when any event AP is undefined."""
+    event_scores: list[float] = []
+    for target, scores in _validated_event_arrays(records):
         value, has_positive = average_precision_safe(target, scores)
-        if has_positive:
-            event_scores.append(value)
+        if not has_positive:
+            return float("nan")
+        event_scores.append(value)
 
     if not event_scores:
         return float("nan")
     return float(np.mean(event_scores))
+
+
+def zero_target_event_false_alarm_rate(records: pd.DataFrame, threshold: float) -> float:
+    """Aggregate false alarms across complete events that contain no positive targets."""
+    if not np.isfinite(threshold):
+        raise ValueError("threshold must be finite")
+
+    zero_event_arrays = [
+        (target, scores)
+        for target, scores in _validated_event_arrays(records)
+        if not np.any(target == 1)
+    ]
+    if not zero_event_arrays:
+        return float("nan")
+
+    target = np.concatenate([arrays[0] for arrays in zero_event_arrays])
+    scores = np.concatenate([arrays[1] for arrays in zero_event_arrays])
+    return zero_target_false_alarm_rate(target, scores, threshold)

@@ -5,6 +5,7 @@ import pytest
 from wildfire_phase0.metrics import (
     average_precision_safe,
     event_macro_ap,
+    zero_target_event_false_alarm_rate,
     zero_target_false_alarm_rate,
 )
 
@@ -73,7 +74,7 @@ def test_event_macro_ap_concatenates_days_within_each_event_equally() -> None:
     assert event_macro_ap(records) == (1.0 + 0.5) / 2
 
 
-def test_event_macro_ap_excludes_zero_positive_event_without_mutating_records() -> None:
+def test_event_macro_ap_returns_nan_when_any_event_has_zero_positives_without_mutation() -> None:
     records = pd.DataFrame({
         "event_id": ["zero", "valid"],
         "y_true": [np.array([0, 0]), np.array([1, 0])],
@@ -81,7 +82,7 @@ def test_event_macro_ap_excludes_zero_positive_event_without_mutating_records() 
     })
     original = records.copy(deep=True)
 
-    assert event_macro_ap(records) == 1.0
+    assert np.isnan(event_macro_ap(records))
     assert records.equals(original)
 
 
@@ -98,3 +99,41 @@ def test_event_macro_ap_returns_nan_when_every_event_has_zero_positives() -> Non
 def test_event_macro_ap_requires_all_columns() -> None:
     with pytest.raises(ValueError, match="event_id"):
         event_macro_ap(pd.DataFrame({"y_true": [np.array([0])], "y_score": [np.array([0.0])]}))
+
+
+def test_zero_target_event_false_alarm_rate_aggregates_entire_zero_positive_events() -> None:
+    records = pd.DataFrame({
+        "event_id": ["zero_a", "valid", "zero_b", "zero_a"],
+        "y_true": [
+            np.array([0, 0]),
+            np.array([1, 0]),
+            np.array([0]),
+            np.array([0, 0]),
+        ],
+        "y_score": [
+            np.array([0.6, 0.1]),
+            np.array([0.9, 0.8]),
+            np.array([0.7]),
+            np.array([0.5, 0.2]),
+        ],
+    })
+
+    assert zero_target_event_false_alarm_rate(records, 0.5) == pytest.approx(3 / 5)
+
+
+def test_zero_target_event_false_alarm_rate_returns_nan_without_zero_positive_event() -> None:
+    records = pd.DataFrame({
+        "event_id": ["alpha", "bravo"],
+        "y_true": [np.array([1, 0]), np.array([0, 1])],
+        "y_score": [np.array([0.9, 0.1]), np.array([0.2, 0.8])],
+    })
+
+    assert np.isnan(zero_target_event_false_alarm_rate(records, 0.5))
+
+
+def test_zero_target_event_false_alarm_rate_uses_record_validation() -> None:
+    with pytest.raises(ValueError, match="event_id"):
+        zero_target_event_false_alarm_rate(
+            pd.DataFrame({"y_true": [np.array([0])], "y_score": [np.array([0.1])]}),
+            0.5,
+        )

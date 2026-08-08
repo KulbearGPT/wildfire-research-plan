@@ -22,6 +22,8 @@ def persistence(history: np.ndarray, mode: Literal["latest", "all"]) -> np.ndarr
     """Predict fire from the latest frame or the union of all history frames."""
     if history.ndim != 3 or history.shape[0] == 0:
         raise ValueError("history must be a non-empty three-dimensional array")
+    if not np.all((history == 0) | (history == 1)):
+        raise ValueError("history must contain only binary values")
     if mode == "latest":
         return history[-1].copy()
     if mode == "all":

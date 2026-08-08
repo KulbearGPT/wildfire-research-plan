@@ -39,3 +39,11 @@ def test_persistence_rejects_non_3d_or_empty_time_history(history: np.ndarray) -
 def test_persistence_rejects_unknown_mode() -> None:
     with pytest.raises(ValueError, match="mode"):
         persistence(np.zeros((1, 2, 2), dtype=np.uint8), "earliest")  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("mode", ["latest", "all"])
+def test_persistence_rejects_non_binary_history(mode: str) -> None:
+    history = np.array([[[0.0, 1.0], [2.0, np.nan]]])
+
+    with pytest.raises(ValueError, match="binary"):
+        persistence(history, mode)  # type: ignore[arg-type]

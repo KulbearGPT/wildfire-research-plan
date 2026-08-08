@@ -53,24 +53,12 @@ def _remove_temps(paths: Sequence[Path]) -> None:
             temp_path.unlink()
 
 
-def _write_text_atomic(path: Path, content: str) -> None:
-    temp_path = _temp_path(path)
-    try:
-        temp_path.write_text(content, encoding="utf-8", newline="\n")
-        temp_path.replace(path)
-    finally:
-        if temp_path.exists():
-            temp_path.unlink()
+def _write_text_temp(path: Path, content: str) -> None:
+    _temp_path(path).write_text(content, encoding="utf-8", newline="\n")
 
 
-def _write_frame_atomic(path: Path, frame: pd.DataFrame) -> None:
-    temp_path = _temp_path(path)
-    try:
-        frame.to_csv(temp_path, index=False, encoding="utf-8", lineterminator="\n")
-        temp_path.replace(path)
-    finally:
-        if temp_path.exists():
-            temp_path.unlink()
+def _write_frame_temp(path: Path, frame: pd.DataFrame) -> None:
+    frame.to_csv(_temp_path(path), index=False, encoding="utf-8", lineterminator="\n")
 
 
 def _inventory_frame(inventory: Sequence[EventInventory]) -> pd.DataFrame:
@@ -129,22 +117,22 @@ def run_audit(data_root: Path, output_root: Path) -> int:
         decision = _blocked_decision(decision, error)
 
     try:
-        _write_frame_atomic(artifacts["inventory.csv"], _inventory_frame(inventory))
-        _write_frame_atomic(artifacts["split_manifest.csv"], split_manifest)
-        _write_text_atomic(
+        report = render_phase0_report(
+            inventory,
+            split_manifest,
+            decision,
+            invalid_file_error,
+            _reproducible_commands(Path(data_root), output_root),
+        )
+        _write_frame_temp(artifacts["inventory.csv"], _inventory_frame(inventory))
+        _write_frame_temp(artifacts["split_manifest.csv"], split_manifest)
+        _write_text_temp(
             artifacts["contract_decision.json"],
             json.dumps(asdict(decision), indent=2, sort_keys=True) + "\n",
         )
-        _write_text_atomic(
-            artifacts["phase0_report.md"],
-            render_phase0_report(
-                inventory,
-                split_manifest,
-                decision,
-                invalid_file_error,
-                _reproducible_commands(Path(data_root), output_root),
-            ),
-        )
+        _write_text_temp(artifacts["phase0_report.md"], report)
+        for path in artifacts.values():
+            _temp_path(path).replace(path)
     finally:
         _remove_temps(tuple(artifacts.values()))
 

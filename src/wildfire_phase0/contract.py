@@ -28,11 +28,13 @@ _MISSING_VALUES = {
 }
 _TRACEABLE_VALUES = {"traceable", "static"}
 _AVAILABILITY_BLOCKERS = {"unavailable", "historical_version_not_retained"}
+_REQUIRED_TRACEABLE_FIELDS_BY_MODALITY = {"active_fire": _FIELD_COLUMNS}
 _PUBLIC_COLUMNS = (
     *_REQUIRED_COLUMNS,
     "source_url",
     "audit_note",
 )
+_PUBLIC_IDENTITY_COLUMNS = (*_REQUIRED_COLUMNS, "source_url")
 _PUBLIC_CONTRACT_RECORDS = {
     (
         "active_fire",
@@ -110,6 +112,7 @@ _PUBLIC_CONTRACT_RECORDS = {
         "Annual product may include post-event information",
     ),
 }
+_PUBLIC_CONTRACT_IDENTITIES = {record[:-1] for record in _PUBLIC_CONTRACT_RECORDS}
 
 
 @dataclass(frozen=True)
@@ -129,12 +132,26 @@ def _validate_columns(frame: pd.DataFrame) -> None:
 def _is_public_registry(frame: pd.DataFrame) -> bool:
     if set(frame.columns) != set(_PUBLIC_COLUMNS) or len(frame) != len(_PUBLIC_CONTRACT_RECORDS):
         return False
-    records = set(frame.loc[:, _PUBLIC_COLUMNS].itertuples(index=False, name=None))
-    return records == _PUBLIC_CONTRACT_RECORDS
+    identities = set(frame.loc[:, _PUBLIC_IDENTITY_COLUMNS].itertuples(index=False, name=None))
+    return identities == _PUBLIC_CONTRACT_IDENTITIES
 
 
 def _is_traceable_value(value: object) -> bool:
     return isinstance(value, str) and value in {*_TRACEABLE_VALUES, "not_applicable"}
+
+
+def _is_required_traceable_value(value: object) -> bool:
+    return isinstance(value, str) and value in _TRACEABLE_VALUES
+
+
+def _required_modalities_are_traceable(frame: pd.DataFrame) -> bool:
+    return all(
+        frame.loc[frame["modality"].eq(modality), fields]
+        .map(_is_required_traceable_value)
+        .to_numpy()
+        .all()
+        for modality, fields in _REQUIRED_TRACEABLE_FIELDS_BY_MODALITY.items()
+    )
 
 
 def audit_contract(frame: pd.DataFrame) -> ContractDecision:
@@ -168,7 +185,8 @@ def audit_contract(frame: pd.DataFrame) -> ContractDecision:
     if frame["target_validity"].eq("unavailable").any():
         operational_blockers.append("target_validity")
 
-    is_natural = frame.loc[:, _FIELD_COLUMNS].map(_is_traceable_value).to_numpy().all()
+    generally_traceable = frame.loc[:, _FIELD_COLUMNS].map(_is_traceable_value).to_numpy().all()
+    is_natural = generally_traceable and _required_modalities_are_traceable(frame)
     if is_natural:
         return ContractDecision(
             status="continue_natural",

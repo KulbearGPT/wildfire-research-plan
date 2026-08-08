@@ -35,11 +35,17 @@ def inspect_hdf5(path: Path, data_root: Path) -> EventInventory:
         if "data" not in handle:
             raise ValueError("missing data dataset")
         data = handle["data"]
+        if not isinstance(data, h5py.Dataset):
+            raise ValueError("data object must be an HDF5 dataset")
+        if len(data.shape) != 4:
+            raise ValueError("data shape must be (days, 23, height, width)")
+        if any(dimension <= 0 for dimension in data.shape):
+            raise ValueError("data shape dimensions must be strictly positive")
+        if data.shape[1] != 23:
+            raise ValueError("data shape must be (days, 23, height, width)")
         missing_attributes = [name for name in _REQUIRED_ATTRIBUTES if name not in data.attrs]
         if missing_attributes:
             raise ValueError(f"missing required attribute: {missing_attributes[0]}")
-        if len(data.shape) != 4 or data.shape[1] != 23:
-            raise ValueError("data shape must be (days, 23, height, width)")
 
         year = int(data.attrs["year"])
         fire_name = _decode_utf8(data.attrs["fire_name"])

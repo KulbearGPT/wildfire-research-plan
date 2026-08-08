@@ -35,7 +35,15 @@ def render_phase0_report(
         ((str(split), int(count)) for split, count in split_manifest["split"].value_counts().items()),
         key=lambda item: item[0],
     )
-    total_nan_fraction = sum(item.nan_fraction for item in inventory)
+    pixel_counts = [item.n_days * item.n_channels * item.height * item.width for item in inventory]
+    total_pixels = sum(pixel_counts)
+    dataset_nan_fraction = (
+        sum(item.nan_fraction * count for item, count in zip(inventory, pixel_counts))
+        / total_pixels
+        if total_pixels
+        else 0.0
+    )
+    maximum_event_nan_fraction = max((item.nan_fraction for item in inventory), default=0.0)
     error_text = invalid_file_error if invalid_file_error is not None else "none"
 
     if decision.status == "continue_controlled":
@@ -70,7 +78,8 @@ def render_phase0_report(
         "## NaN summary",
         "",
         f"Events scanned: {len(inventory)}",
-        f"Sum of event NaN fractions: {total_nan_fraction:.12g}",
+        f"Pixel-weighted dataset NaN fraction: {dataset_nan_fraction:.12g}",
+        f"Maximum event NaN fraction: {maximum_event_nan_fraction:.12g}",
         "",
         "## Contract audit",
         "",

@@ -32,6 +32,16 @@ def test_traceable_contract_allows_natural_missingness() -> None:
     assert audit_contract(frame).status == "continue_natural"
 
 
+def test_not_applicable_active_fire_fields_prevent_natural_missingness() -> None:
+    frame = pd.DataFrame([
+        {"modality": "active_fire", "observation_time": "not_applicable",
+         "availability_time": "not_applicable", "qa": "not_applicable",
+         "coverage": "not_applicable", "target_validity": "not_applicable"},
+    ])
+
+    assert audit_contract(frame).status == "continue_controlled"
+
+
 @pytest.mark.parametrize("untraceable_value", [None, 7, "unexpected"])
 def test_applicable_untraceable_value_prevents_natural_missingness(
     untraceable_value: object,
@@ -105,3 +115,21 @@ def test_committed_public_registry_reports_event_roi_provenance_blocker() -> Non
     decision = audit_contract(frame)
 
     assert "event_roi_provenance" in decision.operational_blockers
+
+
+def test_public_registry_note_edit_preserves_event_roi_provenance_blocker() -> None:
+    frame = load_contract(Path("configs/wstsplus_field_contract.csv"))
+    frame.loc[frame["modality"] == "active_fire", "audit_note"] = "Clarified prose only."
+
+    decision = audit_contract(frame)
+
+    assert "event_roi_provenance" in decision.operational_blockers
+
+
+def test_public_registry_source_edit_does_not_match_public_fingerprint() -> None:
+    frame = load_contract(Path("configs/wstsplus_field_contract.csv"))
+    frame.loc[frame["modality"] == "active_fire", "source_url"] = "https://example.invalid"
+
+    decision = audit_contract(frame)
+
+    assert "event_roi_provenance" not in decision.operational_blockers
