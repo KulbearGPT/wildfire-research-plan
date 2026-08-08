@@ -28,6 +28,17 @@ def _write_event(path: Path, year: int, fire_name: str) -> None:
         data.attrs["lnglat"] = [-120.5, 54.1]
 
 
+def _write_string_event(path: Path, year: int, fire_name: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    values = np.full((2, 23, 4, 4), b"x", dtype="S1")
+    with h5py.File(path, "w") as handle:
+        data = handle.create_dataset("data", data=values)
+        data.attrs["year"] = year
+        data.attrs["fire_name"] = fire_name
+        data.attrs["img_dates"] = [f"{year}-08-01", f"{year}-08-02"]
+        data.attrs["lnglat"] = [-120.5, 54.1]
+
+
 def _run_audit(data_root: Path, output_root: Path) -> int:
     return cli.main([
         "audit",
@@ -114,3 +125,17 @@ def test_audit_blocks_with_artifacts_when_an_event_is_outside_the_frozen_protoco
     assert "event year must be within the 2016-2023 protocol" in (
         output_root / "phase0_report.md"
     ).read_text(encoding="utf-8")
+
+
+def test_audit_reports_string_typed_hdf5_payload_as_blocked(tmp_path: Path) -> None:
+    """Removing TypeError handling for invalid HDF5 payloads must fail this test."""
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_string_event(data_root / "2021" / "string_fire.hdf5", 2021, "string_fire")
+
+    assert _run_audit(data_root, output_root) == 2
+    assert {path.name for path in output_root.iterdir()} == set(_ARTIFACT_NAMES)
+    report = (output_root / "phase0_report.md").read_text(encoding="utf-8")
+    assert "TypeError" in report
+    assert "isnan" in report
+    assert not list(output_root.glob("*.tmp"))

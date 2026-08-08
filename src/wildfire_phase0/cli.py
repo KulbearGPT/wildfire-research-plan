@@ -124,7 +124,7 @@ def run_audit(data_root: Path, output_root: Path) -> int:
     try:
         inventory = inventory_dataset(Path(data_root))
         split_manifest = build_forward_split(inventory)
-    except (FileNotFoundError, OSError, ValueError) as error:
+    except (FileNotFoundError, OSError, TypeError, ValueError) as error:
         invalid_file_error = f"{type(error).__name__}: {error}"
         decision = _blocked_decision(decision, error)
 
