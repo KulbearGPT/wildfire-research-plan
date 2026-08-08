@@ -1,1 +1,10 @@
 .worktrees/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.egg-info/
+data/
+artifacts/phase0/*.csv
+artifacts/phase0/*.json
+artifacts/phase0/*.md
