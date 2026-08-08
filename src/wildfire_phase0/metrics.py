@@ -43,13 +43,16 @@ def zero_target_false_alarm_rate(y_true: object, y_score: object, threshold: flo
     return float(np.mean(scores >= threshold))
 
 
-def _validated_event_arrays(records: pd.DataFrame) -> list[tuple[np.ndarray, np.ndarray]]:
+def _validate_records(records: pd.DataFrame) -> None:
     missing_columns = _REQUIRED_COLUMNS.difference(records.columns)
     if missing_columns:
         raise ValueError(f"records missing required columns: {sorted(missing_columns)}")
     if records["event_id"].isna().any():
         raise ValueError("event_id values must not be missing")
 
+
+def _validated_event_arrays(records: pd.DataFrame) -> list[tuple[np.ndarray, np.ndarray]]:
+    _validate_records(records)
     events: list[tuple[np.ndarray, np.ndarray]] = []
     for _, event_records in records.groupby("event_id", sort=False):
         target = np.concatenate([np.asarray(values).ravel() for values in event_records["y_true"]])
@@ -73,18 +76,22 @@ def event_macro_ap(records: pd.DataFrame) -> float:
 
 
 def zero_target_event_false_alarm_rate(records: pd.DataFrame, threshold: float) -> float:
-    """Aggregate false alarms across complete events that contain no positive targets."""
+    """Aggregate false alarms across rows/days that contain no positive targets."""
     if not np.isfinite(threshold):
         raise ValueError("threshold must be finite")
 
-    zero_event_arrays = [
-        (target, scores)
-        for target, scores in _validated_event_arrays(records)
-        if not np.any(target == 1)
+    _validate_records(records)
+    zero_row_arrays = [
+        arrays
+        for arrays in (
+            _validated_arrays(y_true, y_score)
+            for y_true, y_score in zip(records["y_true"], records["y_score"])
+        )
+        if not np.any(arrays[0] == 1)
     ]
-    if not zero_event_arrays:
+    if not zero_row_arrays:
         return float("nan")
 
-    target = np.concatenate([arrays[0] for arrays in zero_event_arrays])
-    scores = np.concatenate([arrays[1] for arrays in zero_event_arrays])
+    target = np.concatenate([arrays[0] for arrays in zero_row_arrays])
+    scores = np.concatenate([arrays[1] for arrays in zero_row_arrays])
     return zero_target_false_alarm_rate(target, scores, threshold)

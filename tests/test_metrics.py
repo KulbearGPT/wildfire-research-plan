@@ -101,7 +101,7 @@ def test_event_macro_ap_requires_all_columns() -> None:
         event_macro_ap(pd.DataFrame({"y_true": [np.array([0])], "y_score": [np.array([0.0])]}))
 
 
-def test_zero_target_event_false_alarm_rate_aggregates_entire_zero_positive_events() -> None:
+def test_zero_target_event_false_alarm_rate_aggregates_zero_positive_rows() -> None:
     records = pd.DataFrame({
         "event_id": ["zero_a", "valid", "zero_b", "zero_a"],
         "y_true": [
@@ -119,6 +119,27 @@ def test_zero_target_event_false_alarm_rate_aggregates_entire_zero_positive_even
     })
 
     assert zero_target_event_false_alarm_rate(records, 0.5) == pytest.approx(3 / 5)
+
+
+def test_zero_target_event_false_alarm_rate_selects_zero_day_from_mixed_event() -> None:
+    records = pd.DataFrame({
+        "event_id": ["alpha", "alpha"],
+        "y_true": [np.array([0, 0]), np.array([1, 0])],
+        "y_score": [np.array([0.6, 0.1]), np.array([0.9, 0.8])],
+    })
+
+    assert zero_target_event_false_alarm_rate(records, 0.5) == 0.5
+
+
+def test_zero_target_event_false_alarm_rate_validates_each_row_before_aggregation() -> None:
+    records = pd.DataFrame({
+        "event_id": ["alpha", "alpha"],
+        "y_true": [np.array([0, 0]), np.array([0])],
+        "y_score": [np.array([0.6]), np.array([0.1, 0.2])],
+    })
+
+    with pytest.raises(ValueError, match="matching non-empty lengths"):
+        zero_target_event_false_alarm_rate(records, 0.5)
 
 
 def test_zero_target_event_false_alarm_rate_returns_nan_without_zero_positive_event() -> None:

@@ -15,20 +15,23 @@ _REQUIRED_COLUMNS = (
     "target_validity",
 )
 _FIELD_COLUMNS = _REQUIRED_COLUMNS[1:]
-_MISSING_VALUES = {
-    "unavailable",
-    "filtered_not_retained",
-    "nan_unknown_cause",
-    "positive_pixel_hour_only",
-    "daily_aggregate_only",
-    "daily_nominal_date_only",
-    "composite_nominal_date_only",
-    "annual_nominal_date_only",
-    "historical_version_not_retained",
-}
 _TRACEABLE_VALUES = {"traceable", "static"}
 _AVAILABILITY_BLOCKERS = {"unavailable", "historical_version_not_retained"}
-_REQUIRED_TRACEABLE_FIELDS_BY_MODALITY = {"active_fire": _FIELD_COLUMNS}
+_APPLICABILITY_EXPECTATIONS = {
+    "active_fire": ("traceable", "traceable", "traceable", "traceable", "traceable"),
+    "viirs_reflectance": (
+        "traceable", "traceable", "traceable", "traceable", "not_applicable",
+    ),
+    "ndvi_evi": ("traceable", "traceable", "traceable", "traceable", "not_applicable"),
+    "gridmet": ("traceable", "traceable", "not_applicable", "traceable", "not_applicable"),
+    "gfs_forecast": (
+        "traceable", "traceable", "not_applicable", "traceable", "not_applicable",
+    ),
+    "terrain": ("static", "static", "not_applicable", "traceable", "not_applicable"),
+    "land_cover": (
+        "traceable", "traceable", "not_applicable", "traceable", "not_applicable",
+    ),
+}
 _PUBLIC_COLUMNS = (
     *_REQUIRED_COLUMNS,
     "source_url",
@@ -136,21 +139,22 @@ def _is_public_registry(frame: pd.DataFrame) -> bool:
     return identities == _PUBLIC_CONTRACT_IDENTITIES
 
 
-def _is_traceable_value(value: object) -> bool:
-    return isinstance(value, str) and value in {*_TRACEABLE_VALUES, "not_applicable"}
+def _row_mismatches(row: pd.Series) -> tuple[str, ...]:
+    expected = _APPLICABILITY_EXPECTATIONS.get(row["modality"])
+    if expected is not None:
+        return tuple(
+            field
+            for field, expected_value in zip(_FIELD_COLUMNS, expected)
+            if row[field] != expected_value
+        )
 
-
-def _is_required_traceable_value(value: object) -> bool:
-    return isinstance(value, str) and value in _TRACEABLE_VALUES
-
-
-def _required_modalities_are_traceable(frame: pd.DataFrame) -> bool:
-    return all(
-        frame.loc[frame["modality"].eq(modality), fields]
-        .map(_is_required_traceable_value)
-        .to_numpy()
-        .all()
-        for modality, fields in _REQUIRED_TRACEABLE_FIELDS_BY_MODALITY.items()
+    if all(row[field] == "not_applicable" for field in _FIELD_COLUMNS):
+        return _FIELD_COLUMNS
+    generic_values = {*_TRACEABLE_VALUES, "not_applicable"}
+    return tuple(
+        field
+        for field in _FIELD_COLUMNS
+        if not isinstance(row[field], str) or row[field] not in generic_values
     )
 
 
@@ -172,21 +176,36 @@ def audit_contract(frame: pd.DataFrame) -> ContractDecision:
             notes=("Required active_fire modality is absent.",),
         )
 
+    row_mismatches = [
+        (str(row["modality"]), _row_mismatches(row))
+        for _, row in frame.iterrows()
+    ]
     missing_required = tuple(
-        column
-        for column in _FIELD_COLUMNS
-        if frame[column].isin(_MISSING_VALUES).any()
+        field
+        for field in _FIELD_COLUMNS
+        if any(field in mismatches for _, mismatches in row_mismatches)
+    )
+    active_fire_mismatches = frozenset(
+        field
+        for modality, mismatches in row_mismatches
+        if modality == "active_fire"
+        for field in mismatches
     )
     operational_blockers: list[str] = []
-    if frame["availability_time"].isin(_AVAILABILITY_BLOCKERS).any():
+    if (
+        frame["availability_time"].isin(_AVAILABILITY_BLOCKERS).any()
+        or "availability_time" in active_fire_mismatches
+    ):
         operational_blockers.append("availability_time")
     if _is_public_registry(frame):
         operational_blockers.append("event_roi_provenance")
-    if frame["target_validity"].eq("unavailable").any():
+    if (
+        frame["target_validity"].eq("unavailable").any()
+        or "target_validity" in active_fire_mismatches
+    ):
         operational_blockers.append("target_validity")
 
-    generally_traceable = frame.loc[:, _FIELD_COLUMNS].map(_is_traceable_value).to_numpy().all()
-    is_natural = generally_traceable and _required_modalities_are_traceable(frame)
+    is_natural = not missing_required
     if is_natural:
         return ContractDecision(
             status="continue_natural",

@@ -251,3 +251,65 @@ def test_audit_serialization_failure_preserves_existing_complete_generation(
         for name in _ARTIFACT_NAMES
     } == old_contents
     assert not list(output_root.glob("*.tmp"))
+
+
+def test_audit_publish_failure_rolls_back_every_existing_final(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A mid-publication replacement failure must not expose a mixed generation."""
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    old_contents = _seed_old_generation(output_root)
+    original_replace = Path.replace
+    publish_calls = 0
+
+    def fail_second_publish(source: Path, target: Path) -> Path:
+        nonlocal publish_calls
+        if source.name.endswith(".tmp") and Path(target).name in _ARTIFACT_NAMES:
+            publish_calls += 1
+            if publish_calls == 2:
+                raise OSError("injected publish failure")
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", fail_second_publish)
+
+    with pytest.raises(OSError, match="injected publish failure"):
+        _run_audit(data_root, output_root)
+
+    assert publish_calls == 2
+    assert {
+        name: (output_root / name).read_text(encoding="utf-8")
+        for name in _ARTIFACT_NAMES
+    } == old_contents
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
+def test_audit_publish_failure_removes_finals_without_predecessors(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    original_replace = Path.replace
+    publish_calls = 0
+
+    def fail_second_publish(source: Path, target: Path) -> Path:
+        nonlocal publish_calls
+        if source.name.endswith(".tmp") and Path(target).name in _ARTIFACT_NAMES:
+            publish_calls += 1
+            if publish_calls == 2:
+                raise OSError("injected publish failure")
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", fail_second_publish)
+
+    with pytest.raises(OSError, match="injected publish failure"):
+        _run_audit(data_root, output_root)
+
+    assert not any((output_root / name).exists() for name in _ARTIFACT_NAMES)
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))

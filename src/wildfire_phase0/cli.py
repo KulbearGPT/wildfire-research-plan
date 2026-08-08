@@ -5,6 +5,7 @@ import json
 from collections.abc import Sequence
 from dataclasses import asdict, replace
 from pathlib import Path
+from shutil import copy2
 
 import pandas as pd
 
@@ -46,11 +47,22 @@ def _temp_path(path: Path) -> Path:
     return path.with_name(f"{path.name}.tmp")
 
 
+def _backup_path(path: Path) -> Path:
+    return path.with_name(f"{path.name}.bak")
+
+
 def _remove_temps(paths: Sequence[Path]) -> None:
     for path in paths:
         temp_path = _temp_path(path)
         if temp_path.exists():
             temp_path.unlink()
+
+
+def _remove_backups(paths: Sequence[Path]) -> None:
+    for path in paths:
+        backup_path = _backup_path(path)
+        if backup_path.exists():
+            backup_path.unlink()
 
 
 def _write_text_temp(path: Path, content: str) -> None:
@@ -59,6 +71,32 @@ def _write_text_temp(path: Path, content: str) -> None:
 
 def _write_frame_temp(path: Path, frame: pd.DataFrame) -> None:
     frame.to_csv(_temp_path(path), index=False, encoding="utf-8", lineterminator="\n")
+
+
+def _publish_staged_artifacts(paths: Sequence[Path]) -> None:
+    preexisting = frozenset(path for path in paths if path.exists())
+    try:
+        for path in paths:
+            if path in preexisting:
+                copy2(path, _backup_path(path))
+        for path in paths:
+            _temp_path(path).replace(path)
+    except OSError:
+        rollback_succeeded = False
+        try:
+            for path in paths:
+                backup_path = _backup_path(path)
+                if backup_path.exists():
+                    copy2(backup_path, path)
+                elif path not in preexisting and path.exists():
+                    path.unlink()
+            rollback_succeeded = True
+        finally:
+            if rollback_succeeded:
+                _remove_backups(paths)
+        raise
+    else:
+        _remove_backups(paths)
 
 
 def _inventory_frame(inventory: Sequence[EventInventory]) -> pd.DataFrame:
@@ -103,6 +141,7 @@ def run_audit(data_root: Path, output_root: Path) -> int:
     output_root.mkdir(parents=True, exist_ok=True)
     artifacts = _artifact_paths(output_root)
     _remove_temps(tuple(artifacts.values()))
+    _remove_backups(tuple(artifacts.values()))
 
     contract = load_contract(_default_contract_path())
     decision = audit_contract(contract)
@@ -131,8 +170,7 @@ def run_audit(data_root: Path, output_root: Path) -> int:
             json.dumps(asdict(decision), indent=2, sort_keys=True) + "\n",
         )
         _write_text_temp(artifacts["phase0_report.md"], report)
-        for path in artifacts.values():
-            _temp_path(path).replace(path)
+        _publish_staged_artifacts(tuple(artifacts.values()))
     finally:
         _remove_temps(tuple(artifacts.values()))
 
