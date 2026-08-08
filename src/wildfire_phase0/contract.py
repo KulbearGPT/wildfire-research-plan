@@ -28,6 +28,88 @@ _MISSING_VALUES = {
 }
 _TRACEABLE_VALUES = {"traceable", "static"}
 _AVAILABILITY_BLOCKERS = {"unavailable", "historical_version_not_retained"}
+_PUBLIC_COLUMNS = (
+    *_REQUIRED_COLUMNS,
+    "source_url",
+    "audit_note",
+)
+_PUBLIC_CONTRACT_RECORDS = {
+    (
+        "active_fire",
+        "positive_pixel_hour_only",
+        "unavailable",
+        "filtered_not_retained",
+        "unavailable",
+        "unavailable",
+        "https://github.com/SebastianGer/WildfireSpreadTS",
+        "Only positive pixels retain within-day detection hour; "
+        "no-detection and no-valid-observation are conflated",
+    ),
+    (
+        "viirs_reflectance",
+        "daily_aggregate_only",
+        "unavailable",
+        "unavailable",
+        "nan_unknown_cause",
+        "not_applicable",
+        "https://proceedings.neurips.cc/paper_files/paper/2023/file/"
+        "ebd545176bdaa9cd5d45954947bd74b7-Paper-Datasets_and_Benchmarks.pdf",
+        "Daily median discards per-acquisition time and original QA",
+    ),
+    (
+        "ndvi_evi",
+        "composite_nominal_date_only",
+        "unavailable",
+        "unavailable",
+        "nan_unknown_cause",
+        "not_applicable",
+        "https://developers.google.com/earth-engine/datasets/catalog/"
+        "NASA_VIIRS_002_VNP13A1",
+        "Composite product requires source-period lineage",
+    ),
+    (
+        "gridmet",
+        "daily_nominal_date_only",
+        "historical_version_not_retained",
+        "not_applicable",
+        "nan_unknown_cause",
+        "not_applicable",
+        "https://developers.google.com/earth-engine/datasets/catalog/"
+        "IDAHO_EPSCOR_GRIDMET",
+        "Retrospective file does not retain issue-time product version",
+    ),
+    (
+        "gfs_forecast",
+        "daily_aggregate_only",
+        "unavailable",
+        "not_applicable",
+        "nan_unknown_cause",
+        "not_applicable",
+        "https://github.com/SebastianGer/WildfireSpreadTSCreateDataset",
+        "Wind direction and product timing require audit",
+    ),
+    (
+        "terrain",
+        "static",
+        "static",
+        "not_applicable",
+        "traceable",
+        "not_applicable",
+        "https://github.com/SebastianGer/WildfireSpreadTSCreateDataset",
+        "Static covariate; record version and resampling",
+    ),
+    (
+        "land_cover",
+        "annual_nominal_date_only",
+        "unavailable",
+        "not_applicable",
+        "traceable",
+        "not_applicable",
+        "https://developers.google.com/earth-engine/datasets/catalog/"
+        "MODIS_061_MCD12Q1",
+        "Annual product may include post-event information",
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -42,6 +124,17 @@ def _validate_columns(frame: pd.DataFrame) -> None:
     for column in _REQUIRED_COLUMNS:
         if column not in frame.columns:
             raise ValueError(f"missing required column: {column}")
+
+
+def _is_public_registry(frame: pd.DataFrame) -> bool:
+    if set(frame.columns) != set(_PUBLIC_COLUMNS) or len(frame) != len(_PUBLIC_CONTRACT_RECORDS):
+        return False
+    records = set(frame.loc[:, _PUBLIC_COLUMNS].itertuples(index=False, name=None))
+    return records == _PUBLIC_CONTRACT_RECORDS
+
+
+def _is_traceable_value(value: object) -> bool:
+    return isinstance(value, str) and value in {*_TRACEABLE_VALUES, "not_applicable"}
 
 
 def audit_contract(frame: pd.DataFrame) -> ContractDecision:
@@ -70,16 +163,12 @@ def audit_contract(frame: pd.DataFrame) -> ContractDecision:
     operational_blockers: list[str] = []
     if frame["availability_time"].isin(_AVAILABILITY_BLOCKERS).any():
         operational_blockers.append("availability_time")
-    if set(frame["modality"]) == {
-        "active_fire", "viirs_reflectance", "ndvi_evi", "gridmet",
-        "gfs_forecast", "terrain", "land_cover",
-    }:
+    if _is_public_registry(frame):
         operational_blockers.append("event_roi_provenance")
     if frame["target_validity"].eq("unavailable").any():
         operational_blockers.append("target_validity")
 
-    natural_values = frame.loc[:, _FIELD_COLUMNS].stack()
-    is_natural = natural_values[natural_values.ne("not_applicable")].isin(_TRACEABLE_VALUES).all()
+    is_natural = frame.loc[:, _FIELD_COLUMNS].map(_is_traceable_value).to_numpy().all()
     if is_natural:
         return ContractDecision(
             status="continue_natural",

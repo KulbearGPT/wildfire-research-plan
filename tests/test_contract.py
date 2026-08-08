@@ -32,6 +32,42 @@ def test_traceable_contract_allows_natural_missingness() -> None:
     assert audit_contract(frame).status == "continue_natural"
 
 
+@pytest.mark.parametrize("untraceable_value", [None, 7, "unexpected"])
+def test_applicable_untraceable_value_prevents_natural_missingness(
+    untraceable_value: object,
+) -> None:
+    frame = pd.DataFrame([
+        {"modality": "active_fire", "observation_time": untraceable_value,
+         "availability_time": "traceable", "qa": "traceable",
+         "coverage": "traceable", "target_validity": "traceable"},
+    ])
+
+    assert audit_contract(frame).status == "continue_controlled"
+
+
+def test_custom_traceable_registry_does_not_report_public_roi_blocker() -> None:
+    modalities = [
+        "active_fire",
+        "viirs_reflectance",
+        "ndvi_evi",
+        "gridmet",
+        "gfs_forecast",
+        "terrain",
+        "land_cover",
+    ]
+    frame = pd.DataFrame([
+        {"modality": modality, "observation_time": "traceable",
+         "availability_time": "traceable", "qa": "traceable",
+         "coverage": "traceable", "target_validity": "traceable"}
+        for modality in modalities
+    ])
+
+    decision = audit_contract(frame)
+
+    assert decision.status == "continue_natural"
+    assert "event_roi_provenance" not in decision.operational_blockers
+
+
 def test_empty_contract_is_blocked() -> None:
     frame = pd.DataFrame(columns=[
         "modality", "observation_time", "availability_time", "qa", "coverage", "target_validity",
@@ -61,3 +97,11 @@ def test_load_contract_returns_seven_expected_modalities() -> None:
         "terrain",
         "viirs_reflectance",
     ]
+
+
+def test_committed_public_registry_reports_event_roi_provenance_blocker() -> None:
+    frame = load_contract(Path("configs/wstsplus_field_contract.csv"))
+
+    decision = audit_contract(frame)
+
+    assert "event_roi_provenance" in decision.operational_blockers
