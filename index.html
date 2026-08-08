@@ -587,7 +587,7 @@
   </section>
 
   <div class="truth-banner">
-    本文件为研究计划，不含实验结果。文中的性能判断均为待检验假设；数据集、相关论文和会议信息附有来源。
+    本文件以研究计划为主，并包含 Phase 0 数据审计结果。模型性能判断仍为待检验假设；数据集、相关论文和会议信息附有来源。
   </div>
 
   <div class="layout">
@@ -901,6 +901,17 @@
           <li>统计正类比例、事件长度、缺失率和年度分布；</li>
           <li>保存 <code>data_manifest.csv</code>、<code>split_manifest.csv</code> 与明确的 continue/pivot 决策。</li>
         </ul>
+
+        <div class="callout warning">
+          <strong>Phase 0 实测结论（2026-08-07）</strong>
+          <p>完整八年审计覆盖 999 个有效事件：2016--2020 训练集 653 个、2021 验证集 156 个、2022--2023 untouched test 190 个。像素加权 NaN 比例为 1.6668%，单事件最大 NaN 比例为 27.6664%。</p>
+          <ul>
+            <li>原始 WSTS 的 2018--2021 年共有 607 个有效事件；WSTS+ 新增年份压缩包有 397 个事件目录，其中 5 个 2022 目录为空，最终新增 392 个有效事件。</li>
+            <li>2018--2021 的 607 个事件均可从 GeoTIFF 恢复有限经纬度；新增年份仅 1/392 个事件保留有限 ROI 坐标。</li>
+            <li>公开字段仍缺少 <code>observation_time</code>、<code>availability_time</code>、<code>qa</code>、<code>coverage</code> 与 <code>target_validity</code>。</li>
+          </ul>
+          <p><strong>决策：<code>continue_controlled</code>。</strong> 保留 WSTS+、冻结的跨年份划分、原 backbone 和轻量门控路线；主结论限定为预先定义的受控缺失，不主张已刻画自然缺失或具备运行式部署能力。</p>
+        </div>
       </section>
 
       <section class="section searchable" id="s5">
@@ -1276,7 +1287,7 @@
 
   <footer class="footer">
     <p>卫星山火预测研究计划书 · 最小必要修订版 · 事实核验日期 2026-08-07</p>
-    <p>本文件不包含实验结果；所有外部链接和会议信息应在正式投稿前再次核验。</p>
+    <p>本文件包含 Phase 0 数据审计结果，但尚不包含模型性能结果；所有外部链接和会议信息应在正式投稿前再次核验。</p>
   </footer>
 
   <script>
@@ -1292,7 +1303,7 @@
         ["国际同行评审会议 Full / Regular Paper", "Full / Regular Paper at an international peer-reviewed conference"],
         ["主数据集：", "Primary dataset:"],
         ["资料核验日期：", "Sources verified:"],
-        ["本文件为研究计划，不含实验结果。文中的性能判断均为待检验假设；数据集、相关论文和会议信息附有来源。", "This document is a research plan and contains no experimental results. All statements about expected performance are hypotheses to be tested. Sources are provided for datasets, related work, and conference information."],
+        ["本文件以研究计划为主，并包含 Phase 0 数据审计结果。模型性能判断仍为待检验假设；数据集、相关论文和会议信息附有来源。", "This document is primarily a research plan and includes Phase 0 data-audit results. Model-performance statements remain hypotheses to be tested. Sources are provided for datasets, related work, and conference information."],
         ["目录", "Contents"],
         ["01 · 研究目标与范围", "01 · Research objective and scope"],
         ["02 · 研究基础与相关工作", "02 · Research basis and related work"],
@@ -1574,7 +1585,7 @@
         ["同行评审", "Peer reviewed"],
         ["预印本", "Preprint"],
         ["官方目录", "Official list"],
-        ["本文件不包含实验结果；所有外部链接和会议信息应在正式投稿前再次核验。", "This document contains no experimental results. All external links and conference information should be verified again before submission."],
+        ["本文件包含 Phase 0 数据审计结果，但尚不包含模型性能结果；所有外部链接和会议信息应在正式投稿前再次核验。", "This document includes Phase 0 data-audit results but not model-performance results. All external links and conference information should be verified again before submission."],
         ["本项目研究卫星观测不完整时的下一日山火蔓延预测。给定过去若干自然日的火情、天气、地形和植被信息，模型输出下一 UTC 自然日窗口内的 VIIRS 活跃火点概率图。该目标是 active-fire proxy，不等同于真实燃烧概率、精确", "This project studies next-day wildfire spread forecasting under incomplete satellite observations. Given fire, weather, terrain, and vegetation information from preceding calendar days, the model predicts a VIIRS active-fire probability map for the next UTC calendar-day window. The target is an active-fire proxy, not true burning probability, an exact"],
         ["火线位置或最终烧毁范围。", "fire-front position, or the final burned extent."],
         ["计划仍以 WSTS+ 为主数据集，并保留质量与观测年龄感知的轻量融合模块。可追溯的自然缺失只在有效性、覆盖或 QA 字段能够可靠恢复时报告；其余缺失实验采用预先定义的受控 corruption。TS-SatFire 作为不同标签合同下的跨数据集压力测试，结果单独报告。", "WSTS+ remains the primary dataset, and the lightweight quality- and observation-age-aware fusion module is retained. Traceable natural missingness is reported only when validity, coverage, or QA fields can be reliably recovered; all other missingness experiments use prespecified controlled corruption. TS-SatFire is a cross-dataset stress test under a different label contract and is reported separately."],
@@ -1655,6 +1666,14 @@
         ["实现 concat + mask、LOCF、uniform fusion 与硬屏蔽 observation-age/validity gate，完成 3-seed pilot 和第一组 matched corruption 实验。", "Implement concatenate plus mask, LOCF, uniform fusion, and a hard-masked observation-age/validity gate; complete a three-seed pilot and the first matched-corruption experiment."],
         ["完成 E1 至 E3、官方四折对比、冻结的 future holdout、第二种 backbone 和 5 个 matched seeds，并执行 10,000 次配对事件 bootstrap。", "Complete E1–E3, official-fold comparison, the frozen future holdout, a second backbone, and five matched seeds, then run 10,000 paired event-bootstrap replicates."],
         ["在 TS-SatFire 上单独训练和评估 progression proxy，不与 WSTS+ 分数合并；若实现成本过高，则优先完成负控制、校准和数据质量分析。", "Train and evaluate the TS-SatFire progression proxy separately without pooling WSTS+ scores; if implementation cost is too high, prioritize negative controls, calibration, and data-quality analysis."],
+        ["Phase 0 实测结论（2026-08-07）", "Phase 0 measured result (2026-08-07)"],
+        ["完整八年审计覆盖 999 个有效事件：2016--2020 训练集 653 个、2021 验证集 156 个、2022--2023 untouched test 190 个。像素加权 NaN 比例为 1.6668%，单事件最大 NaN 比例为 27.6664%。", "The full eight-year audit covers 999 valid events: 653 in the 2016--2020 training set, 156 in the 2021 validation set, and 190 in the untouched 2022--2023 test set. The pixel-weighted NaN fraction is 1.6668%, and the maximum single-event NaN fraction is 27.6664%."],
+        ["原始 WSTS 的 2018--2021 年共有 607 个有效事件；WSTS+ 新增年份压缩包有 397 个事件目录，其中 5 个 2022 目录为空，最终新增 392 个有效事件。", "The original WSTS years 2018--2021 contain 607 valid events. The WSTS+ added-year archive contains 397 event directories, of which five 2022 directories are empty, leaving 392 valid added-year events."],
+        ["2018--2021 的 607 个事件均可从 GeoTIFF 恢复有限经纬度；新增年份仅 1/392 个事件保留有限 ROI 坐标。", "Finite longitude and latitude can be recovered from GeoTIFF metadata for all 607 events from 2018--2021; only 1 of 392 valid added-year events retains finite ROI coordinates."],
+        ["公开字段仍缺少", "The public fields still lack"],
+        ["与", "and"],
+        ["决策：", "Decision:"],
+        ["。 保留 WSTS+、冻结的跨年份划分、原 backbone 和轻量门控路线；主结论限定为预先定义的受控缺失，不主张已刻画自然缺失或具备运行式部署能力。", ". Retain WSTS+, the frozen cross-year split, the original backbone, and the lightweight gating route. Restrict the main claims to prespecified controlled missingness; do not claim that natural missingness is characterized or that the system is ready for operational deployment."],
         ["官方代码", "Official code"],
         ["数据生成代码", "Dataset-creation code"]
       ]);
