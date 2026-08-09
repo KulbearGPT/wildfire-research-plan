@@ -20,7 +20,7 @@ The command writes four derived artifacts under the requested output root:
 - `contract_decision.json` is the machine-readable contract decision.
 - `phase0_report.md` is the human-readable gate report and command record.
 
-## Full eight-year audit result (2026-08-07)
+## Full eight-year audit result (2026-08-08)
 
 The verified source archives were converted to event-level HDF5 before the
 audit. The original WSTS archive contributed 607 valid events from 2018--2021.
@@ -33,6 +33,38 @@ valid added-year events. The final audit therefore covers 999 valid events.
 | train | 2016--2020 | 653 |
 | validation | 2021 | 156 |
 | test | 2022--2023 | 190 |
+
+The added-year conversion had treated source values that were already integer
+detection hours as HHMM values and divided them by 100 a second time, zeroing
+the active-fire target channel. Active-fire repair version `1` restored the
+four affected years. An independent verifier opened all 392 repaired files,
+and a separate all-year invariant scan validated all 999 active files before
+the audit was rerun.
+
+### Corrected target counts by year
+
+| year | events | target days | zero-target days | positive target pixels |
+| --- | ---: | ---: | ---: | ---: |
+| 2016 | 92 | 2,102 | 886 | 303,648 |
+| 2017 | 110 | 2,490 | 1,481 | 177,972 |
+| 2018 | 176 | 3,597 | 1,373 | 381,935 |
+| 2019 | 74 | 1,351 | 642 | 45,021 |
+| 2020 | 201 | 4,091 | 1,615 | 670,920 |
+| 2021 | 156 | 3,961 | 1,332 | 768,324 |
+| 2022 | 122 | 3,424 | 2,158 | 105,377 |
+| 2023 | 68 | 2,442 | 1,297 | 167,952 |
+
+### Corrected target counts by frozen split
+
+| split | events | target days | zero-target days | positive target pixels |
+| --- | ---: | ---: | ---: | ---: |
+| train | 653 | 13,631 | 5,997 | 1,579,496 |
+| validation | 156 | 3,961 | 1,332 | 768,324 |
+| test | 190 | 5,866 | 3,455 | 273,329 |
+
+The target-integrity gate now rejects any present benchmark year or frozen
+split with zero positive target pixels. All eight years and all three splits
+pass that strengthened gate in the fresh report.
 
 The pixel-weighted dataset NaN fraction is `0.0166683592232`, and the maximum
 single-event NaN fraction is `0.276663755051`. All 607 original WSTS events
@@ -55,7 +87,9 @@ committed to the repository.
 ## Active-fire repair operator workflow
 
 The added-year source GeoTIFFs encode positive active-fire pixels as detection
-hours, but those labels were incorrectly zeroed in the current HDF5 conversion.
+hours, but the original conversion double-converted those hour values and
+incorrectly zeroed the HDF5 targets. Repair version `1` records the detected
+source encoding and stores finite integer hours in `[0, 23]`.
 The repair command writes only to the caller-supplied staging root. It does not
 activate staged files and does not delete, overwrite, rename, or otherwise
 modify an active HDF5 year directory.
@@ -121,6 +155,9 @@ python -m wildfire_phase0.cli audit `
   --output-root artifacts\phase0
 ```
 
-Until Task 5 performs those explicit activation and corrected-audit steps, the
-published active-fire label counts remain pending and the currently active data
-must not be treated as repaired.
+Task 5 completed those explicit activation and corrected-audit steps on
+2026-08-08. The independently verified replacements are now active, the
+pre-repair year directories remain in a local recoverable backup, and the
+generated audit artifacts remain local and ignored. The repair changes the
+label evidence only: the approved research route and frozen temporal split are
+unchanged. Model experiments must use the repaired active data.

@@ -903,12 +903,15 @@
         </ul>
 
         <div class="callout warning">
-          <strong>Phase 0 实测结论（2026-08-07）</strong>
+          <strong>Phase 0 实测结论（2026-08-08）</strong>
           <p>完整八年审计覆盖 999 个有效事件：2016--2020 训练集 653 个、2021 验证集 156 个、2022--2023 untouched test 190 个。像素加权 NaN 比例为 1.6668%，单事件最大 NaN 比例为 27.6664%。</p>
-          <p>标签修复状态：新增年份的源 GeoTIFF 活跃火点标签以小时值编码，但现有 HDF5 的对应标签被错误归零。上述已发布计数仍待 Task 5 激活修复数据并完成更正审计后确认。</p>
+          <p>标签修复结论：新增年份的源 GeoTIFF 正值已经是整数探测小时，原转换却按 HHMM 再除以 100，导致 HDF5 目标错误归零。active-fire repair version 1 已恢复并激活 392 个文件；独立验证器随后核验全部修复文件，另一次结构检查覆盖全部 999 个活动文件。</p>
+          <p>更正后的目标计数（事件 / 目标日 / 零目标日 / 正目标像素），按年份：2016 为 92 / 2,102 / 886 / 303,648；2017 为 110 / 2,490 / 1,481 / 177,972；2018 为 176 / 3,597 / 1,373 / 381,935；2019 为 74 / 1,351 / 642 / 45,021；2020 为 201 / 4,091 / 1,615 / 670,920；2021 为 156 / 3,961 / 1,332 / 768,324；2022 为 122 / 3,424 / 2,158 / 105,377；2023 为 68 / 2,442 / 1,297 / 167,952。</p>
+          <p>按冻结划分：train 为 653 / 13,631 / 5,997 / 1,579,496；validation 为 156 / 3,961 / 1,332 / 768,324；test 为 190 / 5,866 / 3,455 / 273,329。</p>
           <ul>
             <li>原始 WSTS 的 2018--2021 年共有 607 个有效事件；WSTS+ 新增年份压缩包有 397 个事件目录，其中 5 个 2022 目录为空，最终新增 392 个有效事件。</li>
             <li>2018--2021 的 607 个事件均可从 GeoTIFF 恢复有限经纬度；新增年份仅 1/392 个事件保留有限 ROI 坐标。</li>
+            <li>加强后的目标完整性闸门要求每个现有 benchmark 年份和每个冻结划分都包含非零正目标像素；八个年份和三个划分均通过。</li>
             <li>公开字段仍缺少 <code>observation_time</code>、<code>availability_time</code>、<code>qa</code>、<code>coverage</code> 与 <code>target_validity</code>。</li>
           </ul>
           <p><strong>决策：<code>continue_controlled</code>。</strong> 保留 WSTS+、冻结的跨年份划分、原 backbone 和轻量门控路线；主结论限定为预先定义的受控缺失，不主张已刻画自然缺失或具备运行式部署能力。</p>
@@ -1667,11 +1670,14 @@
         ["实现 concat + mask、LOCF、uniform fusion 与硬屏蔽 observation-age/validity gate，完成 3-seed pilot 和第一组 matched corruption 实验。", "Implement concatenate plus mask, LOCF, uniform fusion, and a hard-masked observation-age/validity gate; complete a three-seed pilot and the first matched-corruption experiment."],
         ["完成 E1 至 E3、官方四折对比、冻结的 future holdout、第二种 backbone 和 5 个 matched seeds，并执行 10,000 次配对事件 bootstrap。", "Complete E1–E3, official-fold comparison, the frozen future holdout, a second backbone, and five matched seeds, then run 10,000 paired event-bootstrap replicates."],
         ["在 TS-SatFire 上单独训练和评估 progression proxy，不与 WSTS+ 分数合并；若实现成本过高，则优先完成负控制、校准和数据质量分析。", "Train and evaluate the TS-SatFire progression proxy separately without pooling WSTS+ scores; if implementation cost is too high, prioritize negative controls, calibration, and data-quality analysis."],
-        ["Phase 0 实测结论（2026-08-07）", "Phase 0 measured result (2026-08-07)"],
+        ["Phase 0 实测结论（2026-08-08）", "Phase 0 measured result (2026-08-08)"],
         ["完整八年审计覆盖 999 个有效事件：2016--2020 训练集 653 个、2021 验证集 156 个、2022--2023 untouched test 190 个。像素加权 NaN 比例为 1.6668%，单事件最大 NaN 比例为 27.6664%。", "The full eight-year audit covers 999 valid events: 653 in the 2016--2020 training set, 156 in the 2021 validation set, and 190 in the untouched 2022--2023 test set. The pixel-weighted NaN fraction is 1.6668%, and the maximum single-event NaN fraction is 27.6664%."],
-        ["标签修复状态：新增年份的源 GeoTIFF 活跃火点标签以小时值编码，但现有 HDF5 的对应标签被错误归零。上述已发布计数仍待 Task 5 激活修复数据并完成更正审计后确认。", "Label-repair status: the added-year source GeoTIFF active-fire labels encode hour values, but the corresponding labels in the current HDF5 files were incorrectly zeroed. The published counts above remain pending until Task 5 activates the repaired data and completes a corrected audit."],
+        ["标签修复结论：新增年份的源 GeoTIFF 正值已经是整数探测小时，原转换却按 HHMM 再除以 100，导致 HDF5 目标错误归零。active-fire repair version 1 已恢复并激活 392 个文件；独立验证器随后核验全部修复文件，另一次结构检查覆盖全部 999 个活动文件。", "Label-repair result: positive values in the added-year source GeoTIFFs were already integer detection hours, but the original conversion divided them by 100 again as if they were HHMM, incorrectly zeroing the HDF5 targets. Active-fire repair version 1 restored and activated 392 files; an independent verifier then checked every repaired file, and a separate structural scan covered all 999 active files."],
+        ["更正后的目标计数（事件 / 目标日 / 零目标日 / 正目标像素），按年份：2016 为 92 / 2,102 / 886 / 303,648；2017 为 110 / 2,490 / 1,481 / 177,972；2018 为 176 / 3,597 / 1,373 / 381,935；2019 为 74 / 1,351 / 642 / 45,021；2020 为 201 / 4,091 / 1,615 / 670,920；2021 为 156 / 3,961 / 1,332 / 768,324；2022 为 122 / 3,424 / 2,158 / 105,377；2023 为 68 / 2,442 / 1,297 / 167,952。", "Corrected target counts (events / target days / zero-target days / positive target pixels) by year: 2016 is 92 / 2,102 / 886 / 303,648; 2017 is 110 / 2,490 / 1,481 / 177,972; 2018 is 176 / 3,597 / 1,373 / 381,935; 2019 is 74 / 1,351 / 642 / 45,021; 2020 is 201 / 4,091 / 1,615 / 670,920; 2021 is 156 / 3,961 / 1,332 / 768,324; 2022 is 122 / 3,424 / 2,158 / 105,377; 2023 is 68 / 2,442 / 1,297 / 167,952."],
+        ["按冻结划分：train 为 653 / 13,631 / 5,997 / 1,579,496；validation 为 156 / 3,961 / 1,332 / 768,324；test 为 190 / 5,866 / 3,455 / 273,329。", "By frozen split: train is 653 / 13,631 / 5,997 / 1,579,496; validation is 156 / 3,961 / 1,332 / 768,324; test is 190 / 5,866 / 3,455 / 273,329."],
         ["原始 WSTS 的 2018--2021 年共有 607 个有效事件；WSTS+ 新增年份压缩包有 397 个事件目录，其中 5 个 2022 目录为空，最终新增 392 个有效事件。", "The original WSTS years 2018--2021 contain 607 valid events. The WSTS+ added-year archive contains 397 event directories, of which five 2022 directories are empty, leaving 392 valid added-year events."],
         ["2018--2021 的 607 个事件均可从 GeoTIFF 恢复有限经纬度；新增年份仅 1/392 个事件保留有限 ROI 坐标。", "Finite longitude and latitude can be recovered from GeoTIFF metadata for all 607 events from 2018--2021; only 1 of 392 valid added-year events retains finite ROI coordinates."],
+        ["加强后的目标完整性闸门要求每个现有 benchmark 年份和每个冻结划分都包含非零正目标像素；八个年份和三个划分均通过。", "The strengthened target-integrity gate requires nonzero positive target pixels in every present benchmark year and every frozen split; all eight years and all three splits pass."],
         ["公开字段仍缺少", "The public fields still lack"],
         ["与", "and"],
         ["决策：", "Decision:"],
