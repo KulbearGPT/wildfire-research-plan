@@ -767,6 +767,13 @@ python -m wildfire_phase0.cli repair-active-fire `
 Document these hard preconditions before activation:
 
 - decision status `ready`;
+- exactly these five sorted empty-source exclusions, checked by a deterministic
+  order-sensitive comparison command before activation:
+  `2022/fire_CA4186812327820220730`,
+  `2022/fire_ID4570411652620220904`,
+  `2022/fire_OR4513211711020220825`,
+  `2022/fire_WA4687912083320220803`, and
+  `2022/fire_WA4796412068520220909`;
 - 392 staged HDF5 files;
 - zero errors and zero `.tmp` files;
 - exact four-year label counts from Global Constraints;
@@ -876,7 +883,9 @@ $expectedExclusions = @(
 )
 if ($decision.status -ne 'ready') { throw "repair decision is not ready" }
 if (@(Get-ChildItem -LiteralPath $stagingRoot -Recurse -File -Filter '*.tmp').Count -ne 0) { throw "staging contains temp files" }
-if (Compare-Object $expectedExclusions @($decision.excluded_empty_source_directories)) { throw "empty-source exclusions differ" }
+$actualExclusions = @($decision.excluded_empty_source_directories)
+$exclusionDiff = Compare-Object -ReferenceObject $expectedExclusions -DifferenceObject $actualExclusions -SyncWindow 0
+if ($actualExclusions.Count -ne $expectedExclusions.Count -or $null -ne $exclusionDiff) { throw "empty-source exclusions differ" }
 ```
 
 If any check fails, leave active data untouched and fix the implementation in a

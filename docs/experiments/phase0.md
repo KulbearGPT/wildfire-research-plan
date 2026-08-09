@@ -120,6 +120,15 @@ python -m wildfire_phase0.verify_repair `
 Activation is blocked until every hard precondition below is satisfied:
 
 - `active_fire_repair_decision.json` has decision status `ready`.
+- Its sorted `excluded_empty_source_directories` value contains exactly these
+  five IDs and no others:
+
+  - `2022/fire_CA4186812327820220730`
+  - `2022/fire_ID4570411652620220904`
+  - `2022/fire_OR4513211711020220825`
+  - `2022/fire_WA4687912083320220803`
+  - `2022/fire_WA4796412068520220909`
+
 - The staging root contains exactly 392 staged HDF5 files, zero recorded
   errors, and zero `.tmp` files.
 - Every staged `data` dataset uses LZF compression with shuffle enabled.
@@ -135,6 +144,25 @@ Activation is blocked until every hard precondition below is satisfied:
 - The four active year paths, their four staged replacements, and the exact
   backup root `hdf5-active-fire-bug-backup` are individually resolved and
   checked to be on the same volume.
+
+Compare the decision exclusions in deterministic sorted order before any
+activation rename:
+
+```powershell
+$decision = Get-Content -LiteralPath (Join-Path $repairStagingRoot 'active_fire_repair_decision.json') -Raw | ConvertFrom-Json
+$expectedExclusions = @(
+  '2022/fire_CA4186812327820220730',
+  '2022/fire_ID4570411652620220904',
+  '2022/fire_OR4513211711020220825',
+  '2022/fire_WA4687912083320220803',
+  '2022/fire_WA4796412068520220909'
+)
+$actualExclusions = @($decision.excluded_empty_source_directories)
+$exclusionDiff = Compare-Object -ReferenceObject $expectedExclusions -DifferenceObject $actualExclusions -SyncWindow 0
+if ($actualExclusions.Count -ne $expectedExclusions.Count -or $null -ne $exclusionDiff) {
+  throw 'empty-source exclusions differ from the frozen activation precondition'
+}
+```
 
 Activation is a separate, explicit same-volume directory rename for each of
 the four years: rename each active year into

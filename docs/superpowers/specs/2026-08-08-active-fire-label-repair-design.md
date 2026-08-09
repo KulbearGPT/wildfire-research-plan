@@ -189,6 +189,15 @@ and these exact next-day target counts derived independently from source TIFFs:
 | 2022 | 122 | 3,424 | 2,158 | 105,377 |
 | 2023 | 68 | 2,442 | 1,297 | 167,952 |
 
+The repair decision must also contain exactly these five sorted nonblocking
+exclusions and no others: `2022/fire_CA4186812327820220730`,
+`2022/fire_ID4570411652620220904`,
+`2022/fire_OR4513211711020220825`,
+`2022/fire_WA4687912083320220803`, and
+`2022/fire_WA4796412068520220909`. The operator workflow must compare the
+actual and expected arrays with an order-sensitive deterministic command and
+block activation on any missing, extra, duplicated, or reordered value.
+
 After activation:
 
 1. Validate all 999 HDF5 files and the four exact added-year label totals.
