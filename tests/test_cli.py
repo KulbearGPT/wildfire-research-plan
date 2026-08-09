@@ -597,6 +597,29 @@ def test_repair_active_fire_cli_returns_two_with_complete_error_evidence(
     assert not list(staging_root.rglob("*.tmp"))
 
 
+def test_repair_active_fire_cli_returns_two_for_missing_inputs_with_evidence(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "missing-tiff"
+    hdf5_root = tmp_path / "missing-hdf5"
+    staging_root = tmp_path / "staging"
+
+    exit_code = _run_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    assert exit_code == 2
+    manifest_path = staging_root / "active_fire_repair_manifest.csv"
+    decision_path = staging_root / "active_fire_repair_decision.json"
+    assert manifest_path.is_file()
+    decision = json.loads(decision_path.read_text(encoding="utf-8"))
+    assert decision["status"] == "blocked"
+    assert decision["errors"] == [
+        "ValueError: HDF5 root must be an existing directory",
+        "ValueError: source TIFF root must be an existing directory",
+    ]
+
+
 def test_repair_active_fire_cli_returns_two_with_deterministic_invalid_year_evidence(
     tmp_path: Path,
 ) -> None:

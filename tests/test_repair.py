@@ -453,6 +453,112 @@ def test_stage_active_fire_repair_blocks_invalid_requested_years_with_evidence(
     assert not list(staging_root.rglob("*.tmp"))
 
 
+def test_stage_active_fire_repair_blocks_empty_requested_years_with_evidence(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    source_tiff_root.mkdir()
+    hdf5_root.mkdir()
+
+    decision = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, ()
+    )
+
+    assert decision.status == "blocked"
+    assert decision.errors == ("ValueError: years must not be empty",)
+    assert (staging_root / "active_fire_repair_manifest.csv").is_file()
+    assert (staging_root / "active_fire_repair_decision.json").is_file()
+
+
+@pytest.mark.parametrize(
+    ("missing", "exact_error"),
+    (
+        ("source", "ValueError: source TIFF root must be an existing directory"),
+        ("hdf5", "ValueError: HDF5 root must be an existing directory"),
+    ),
+)
+def test_stage_active_fire_repair_blocks_missing_input_root_with_evidence(
+    tmp_path: Path, missing: str, exact_error: str
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    if missing != "source":
+        (source_tiff_root / "2016").mkdir(parents=True)
+    if missing != "hdf5":
+        (hdf5_root / "2016").mkdir(parents=True)
+
+    decision = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    assert decision.status == "blocked"
+    assert decision.errors == (exact_error,)
+    assert (staging_root / "active_fire_repair_manifest.csv").is_file()
+    assert (staging_root / "active_fire_repair_decision.json").is_file()
+
+
+def test_stage_active_fire_repair_blocks_empty_existing_roots_with_evidence(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    source_tiff_root.mkdir()
+    hdf5_root.mkdir()
+
+    decision = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    assert decision.status == "blocked"
+    assert decision.errors == (
+        "ValueError: HDF5 year directory does not exist: 2016",
+        "ValueError: source TIFF year directory does not exist: 2016",
+    )
+
+
+def test_stage_active_fire_repair_blocks_any_missing_requested_year(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+
+    decision = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016, 2017)
+    )
+
+    assert decision.status == "blocked"
+    assert decision.errors == (
+        "ValueError: HDF5 year directory does not exist: 2017",
+        "ValueError: source TIFF year directory does not exist: 2017",
+    )
+
+
+def test_stage_active_fire_repair_blocks_year_without_matched_nonempty_event(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    (source_tiff_root / "2016").mkdir(parents=True)
+    (hdf5_root / "2016").mkdir(parents=True)
+
+    decision = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    assert decision.status == "blocked"
+    assert decision.errors == (
+        "ValueError: requested year has no matched nonempty events: 2016",
+    )
+
+
 @pytest.mark.parametrize(
     "relation",
     ("equal-inputs", "staging-under-source", "staging-above-source", "source-under-hdf5"),

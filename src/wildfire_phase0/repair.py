@@ -499,6 +499,18 @@ def stage_active_fire_repair(
             staging_root, staging_root / str(year), "staging root"
         )
     staging_root.mkdir(parents=True, exist_ok=True)
+    if not requested_years:
+        decision = RepairDecision(
+            status="blocked",
+            requested_years=(),
+            files_expected=0,
+            files_staged=0,
+            files_verified=0,
+            excluded_empty_source_directories=(),
+            errors=("ValueError: years must not be empty",),
+        )
+        _write_repair_evidence(staging_root, (), decision)
+        return decision
     if (
         len(set(requested_years)) != len(requested_years)
         or any(not isinstance(year, int) or not 2016 <= year <= 2023 for year in requested_years)
@@ -515,6 +527,25 @@ def stage_active_fire_repair(
         _write_repair_evidence(staging_root, (), decision)
         return decision
     sorted_years = tuple(sorted(requested_years))
+    root_errors = []
+    if not source_tiff_root.is_dir():
+        root_errors.append(
+            "ValueError: source TIFF root must be an existing directory"
+        )
+    if not hdf5_root.is_dir():
+        root_errors.append("ValueError: HDF5 root must be an existing directory")
+    if root_errors:
+        decision = RepairDecision(
+            status="blocked",
+            requested_years=sorted_years,
+            files_expected=0,
+            files_staged=0,
+            files_verified=0,
+            excluded_empty_source_directories=(),
+            errors=tuple(sorted(root_errors)),
+        )
+        _write_repair_evidence(staging_root, (), decision)
+        return decision
 
     records: list[RepairRecord] = []
     errors: list[str] = []
@@ -523,8 +554,18 @@ def stage_active_fire_repair(
     for year in sorted_years:
         source_year = source_tiff_root / str(year)
         hdf5_year = hdf5_root / str(year)
+        source_year_exists = source_year.is_dir()
+        hdf5_year_exists = hdf5_year.is_dir()
+        if not source_year_exists:
+            errors.append(
+                f"ValueError: source TIFF year directory does not exist: {year}"
+            )
+        if not hdf5_year_exists:
+            errors.append(
+                f"ValueError: HDF5 year directory does not exist: {year}"
+            )
         source_events: dict[str, Path] = {}
-        if source_year.is_dir():
+        if source_year_exists:
             for event_dir in sorted(
                 (path for path in source_year.iterdir() if path.is_dir()),
                 key=lambda path: path.name,
@@ -538,6 +579,12 @@ def stage_active_fire_repair(
             for path in sorted(hdf5_year.glob("*.hdf5"), key=lambda path: path.name)
         }
         files_expected += len(hdf5_events)
+        if source_year_exists and hdf5_year_exists and not (
+            source_events.keys() & hdf5_events.keys()
+        ):
+            errors.append(
+                f"ValueError: requested year has no matched nonempty events: {year}"
+            )
 
         for fire_name in sorted(source_events.keys() - hdf5_events.keys()):
             errors.append(
