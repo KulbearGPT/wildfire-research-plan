@@ -541,6 +541,49 @@ def test_audit_publish_failure_rolls_back_every_existing_final(
     assert not list(output_root.glob("*.bak"))
 
 
+def test_audit_synchronous_base_exception_rolls_back_every_existing_final(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A catchable synchronous interruption must not expose a mixed generation."""
+
+    class SynchronousInterruption(BaseException):
+        pass
+
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    _seed_old_generation(output_root)
+    old_bytes = {
+        name: (output_root / name).read_bytes() for name in _ARTIFACT_NAMES
+    }
+    original_replace = Path.replace
+    publish_calls = 0
+
+    def interrupt_second_publish(source: Path, target: Path) -> Path:
+        nonlocal publish_calls
+        if source.name.endswith(".tmp") and Path(target).name in _ARTIFACT_NAMES:
+            publish_calls += 1
+            if publish_calls == 2:
+                raise SynchronousInterruption("injected synchronous interruption")
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", interrupt_second_publish)
+
+    with pytest.raises(
+        SynchronousInterruption, match="injected synchronous interruption"
+    ):
+        _run_audit(data_root, output_root)
+
+    assert publish_calls == 2
+    assert {
+        name: (output_root / name).read_bytes()
+        for name in _ARTIFACT_NAMES
+    } == old_bytes
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
 def test_audit_backup_copy_failure_preserves_existing_finals(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

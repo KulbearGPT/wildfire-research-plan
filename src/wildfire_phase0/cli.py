@@ -94,7 +94,7 @@ def _publish_staged_artifacts(
                 backups[path] = backup
         for path in paths:
             temp_paths[path].replace(path)
-    except OSError:
+    except BaseException:
         rollback_succeeded = False
         try:
             for path in paths:
