@@ -20,6 +20,11 @@ from wildfire_phase0.path_safety import (
 )
 from wildfire_phase0.report import render_phase0_report
 from wildfire_phase0.repair import stage_active_fire_repair
+from wildfire_phase0.rule_eval import (
+    evaluate_rule_dataset,
+    render_rule_report,
+    summarize_rule_metrics,
+)
 from wildfire_phase0.schema import EventInventory
 from wildfire_phase0.splits import build_forward_split
 from wildfire_phase0.target_gate import target_integrity_errors
@@ -30,6 +35,11 @@ _ARTIFACT_NAMES = (
     "split_manifest.csv",
     "contract_decision.json",
     "phase0_report.md",
+)
+_RULE_ARTIFACT_NAMES = (
+    "rule_event_metrics.csv",
+    "rule_summary.csv",
+    "rule_report.md",
 )
 _INVENTORY_COLUMNS = (
     "year",
@@ -53,8 +63,10 @@ def _default_contract_path() -> Path:
     return Path(__file__).resolve().parents[2] / "configs" / "wstsplus_field_contract.csv"
 
 
-def _artifact_paths(output_root: Path) -> dict[str, Path]:
-    return {name: output_root / name for name in _ARTIFACT_NAMES}
+def _artifact_paths(
+    output_root: Path, names: Sequence[str] = _ARTIFACT_NAMES
+) -> dict[str, Path]:
+    return {name: output_root / name for name in names}
 
 
 def _remove_paths(paths: Sequence[Path]) -> None:
@@ -208,12 +220,59 @@ def run_audit(data_root: Path, output_root: Path) -> int:
     return 0 if decision.status in {"continue_natural", "continue_controlled"} else 2
 
 
+def run_rule_evaluation(
+    data_root: Path, split_manifest: Path, output_root: Path
+) -> int:
+    """Evaluate the fixed rules and atomically publish one artifact generation."""
+    data_root = canonical_root(Path(data_root), "data root", must_exist=True)
+    output_root = canonical_root(Path(output_root), "output root")
+    require_pairwise_disjoint_roots(
+        {"data root": data_root, "output root": output_root}
+    )
+    artifacts = {
+        name: require_contained_path(output_root, path, "output root")
+        for name, path in _artifact_paths(
+            output_root, _RULE_ARTIFACT_NAMES
+        ).items()
+    }
+
+    try:
+        manifest = pd.read_csv(split_manifest)
+        event_metrics = evaluate_rule_dataset(data_root, manifest)
+        summary = summarize_rule_metrics(event_metrics)
+        report = render_rule_report(summary)
+    except (FileNotFoundError, OSError, TypeError, ValueError):
+        return 2
+
+    output_root.mkdir(parents=True, exist_ok=True)
+    temp_paths: dict[Path, Path] = {}
+    try:
+        for path in artifacts.values():
+            temp_paths[path] = _owned_sidecar(path, ".tmp")
+        _write_frame_temp(
+            temp_paths[artifacts["rule_event_metrics.csv"]], event_metrics
+        )
+        _write_frame_temp(temp_paths[artifacts["rule_summary.csv"]], summary)
+        _write_text_temp(temp_paths[artifacts["rule_report.md"]], report)
+        _publish_staged_artifacts(tuple(artifacts.values()), temp_paths)
+    finally:
+        _remove_paths(tuple(temp_paths.values()))
+    return 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate the Phase 0 WSTS+ data gate artifacts.")
     subparsers = parser.add_subparsers(dest="command", required=True)
     audit = subparsers.add_parser("audit", help="Inventory WSTS+ files and write the gate artifacts.")
     audit.add_argument("--data-root", type=Path, required=True)
     audit.add_argument("--output-root", type=Path, required=True)
+    rules = subparsers.add_parser(
+        "evaluate-rules",
+        help="Evaluate fixed T=1 rule baselines and write summary artifacts.",
+    )
+    rules.add_argument("--data-root", type=Path, required=True)
+    rules.add_argument("--split-manifest", type=Path, required=True)
+    rules.add_argument("--output-root", type=Path, required=True)
     repair = subparsers.add_parser(
         "repair-active-fire",
         help="Stage active-fire label repairs and write repair evidence.",
@@ -230,6 +289,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
     if arguments.command == "audit":
         return run_audit(arguments.data_root, arguments.output_root)
+    if arguments.command == "evaluate-rules":
+        return run_rule_evaluation(
+            arguments.data_root,
+            arguments.split_manifest,
+            arguments.output_root,
+        )
     if arguments.command == "repair-active-fire":
         decision = stage_active_fire_repair(
             arguments.source_tiff_root,

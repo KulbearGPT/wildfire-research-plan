@@ -38,6 +38,21 @@ _EVENT_COLUMNS = [
     "zero_target_pixels",
     "zero_target_predicted_positive_pixels",
 ]
+_SUMMARY_COLUMNS = [
+    "split",
+    "baseline",
+    "events",
+    "event_ap_defined",
+    "event_ap_undefined",
+    "event_macro_ap",
+    "pooled_ap",
+    "positive_prevalence",
+    "target_days",
+    "zero_target_days",
+    "zero_target_day_far",
+    "positive_target_pixels",
+    "total_pixels",
+]
 _MANIFEST_COLUMNS = ("event_id", "year", "fire_name", "path", "split")
 _REQUIRED_ATTRIBUTES = ("year", "fire_name", "img_dates", "lnglat")
 _SPLITS = {"train", "validation", "test"}
@@ -315,3 +330,118 @@ def evaluate_rule_dataset(
     return result.sort_values(
         ["split", "year", "fire_name", "baseline"], kind="stable"
     ).reset_index(drop=True)
+
+
+def summarize_rule_metrics(event_metrics: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate event metrics for each frozen split and fixed rule baseline."""
+    missing_columns = set(_EVENT_COLUMNS).difference(event_metrics.columns)
+    if missing_columns:
+        raise ValueError(
+            f"event metrics missing required columns: {sorted(missing_columns)}"
+        )
+    if event_metrics.empty:
+        raise ValueError("event metrics must contain at least one row")
+
+    records = []
+    grouped = event_metrics.groupby(["split", "baseline"], sort=True)
+    for (split, baseline), group in grouped:
+        defined = group["event_ap_defined"] == True  # noqa: E712
+        counts = BinaryScoreCounts(
+            tp=int(group["tp"].sum()),
+            fp=int(group["fp"].sum()),
+            fn=int(group["fn"].sum()),
+            tn=int(group["tn"].sum()),
+        )
+        total_pixels = int(group["total_pixels"].sum())
+        positive_target_pixels = int(group["positive_target_pixels"].sum())
+        zero_target_pixels = int(group["zero_target_pixels"].sum())
+        zero_target_predicted = int(
+            group["zero_target_predicted_positive_pixels"].sum()
+        )
+        defined_count = int(defined.sum())
+        records.append(
+            {
+                "split": split,
+                "baseline": baseline,
+                "events": len(group),
+                "event_ap_defined": defined_count,
+                "event_ap_undefined": len(group) - defined_count,
+                "event_macro_ap": (
+                    float(group.loc[defined, "event_ap"].mean())
+                    if defined_count
+                    else float("nan")
+                ),
+                "pooled_ap": binary_average_precision(counts),
+                "positive_prevalence": (
+                    positive_target_pixels / total_pixels
+                    if total_pixels
+                    else float("nan")
+                ),
+                "target_days": int(group["target_days"].sum()),
+                "zero_target_days": int(group["zero_target_days"].sum()),
+                "zero_target_day_far": (
+                    zero_target_predicted / zero_target_pixels
+                    if zero_target_pixels
+                    else float("nan")
+                ),
+                "positive_target_pixels": positive_target_pixels,
+                "total_pixels": total_pixels,
+            }
+        )
+    return pd.DataFrame(records, columns=_SUMMARY_COLUMNS)
+
+
+def _format_summary_value(column: str, value: object) -> str:
+    if pd.isna(value):
+        return "undefined"
+    if column in {
+        "events",
+        "event_ap_defined",
+        "event_ap_undefined",
+        "target_days",
+        "zero_target_days",
+        "positive_target_pixels",
+        "total_pixels",
+    }:
+        return str(int(value))
+    if isinstance(value, (float, np.floating)):
+        return f"{float(value):.12g}"
+    return str(value)
+
+
+def render_rule_report(summary: pd.DataFrame) -> str:
+    """Render a deterministic Markdown report for fixed rule evaluation."""
+    missing_columns = set(_SUMMARY_COLUMNS).difference(summary.columns)
+    if missing_columns:
+        raise ValueError(f"rule summary missing required columns: {sorted(missing_columns)}")
+    ordered = summary.sort_values(["split", "baseline"], kind="stable")
+    header = "| " + " | ".join(_SUMMARY_COLUMNS) + " |"
+    separator = "| " + " | ".join("---" for _ in _SUMMARY_COLUMNS) + " |"
+    rows = [
+        "| "
+        + " | ".join(
+            _format_summary_value(column, value)
+            for column, value in zip(_SUMMARY_COLUMNS, values)
+        )
+        + " |"
+        for values in ordered[_SUMMARY_COLUMNS].itertuples(index=False, name=None)
+    ]
+    return "\n".join(
+        [
+            "# Fixed Rule Baseline Evaluation",
+            "",
+            "This report evaluates fixed T=1 rules with next-day target semantics.",
+            "The frozen split definition is 2016--2020 train, 2021 validation, "
+            "and 2022--2023 test.",
+            "No threshold or model tuning was performed.",
+            "Event-macro AP includes only defined events; event_ap_undefined "
+            "records each undefined event AP from zero-positive events.",
+            "Warning: Raw AP is prevalence-dependent; compare it together with "
+            "positive_prevalence.",
+            "",
+            header,
+            separator,
+            *rows,
+            "",
+        ]
+    )

@@ -86,6 +86,25 @@ The generated CSV, JSON, and Markdown artifacts remain local derived data under
 `artifacts/phase0/`; they can be regenerated with the command above and are not
 committed to the repository.
 
+## Fixed rule baseline evaluation
+
+Evaluate the prespecified no-fire and latest-mask persistence rules at fixed
+`T=1` against the next-day target using the frozen audit split manifest:
+
+```powershell
+python -m wildfire_phase0.cli evaluate-rules `
+  --data-root "$wstsDataRoot" `
+  --split-manifest artifacts\phase0\split_manifest.csv `
+  --output-root artifacts\phase0
+```
+
+The command reads the HDF5 inputs without modifying them and publishes
+`rule_event_metrics.csv`, `rule_summary.csv`, and `rule_report.md` together as
+one artifact generation. It performs no threshold or model tuning. The report
+retains counts of events whose AP is undefined and warns that raw AP depends on
+positive prevalence. These rule-baseline artifacts are reproducible, ignored
+local derivatives and are not committed to the repository.
+
 ## Active-fire repair operator workflow
 
 The added-year source GeoTIFFs encode positive active-fire pixels as detection

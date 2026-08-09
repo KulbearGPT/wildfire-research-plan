@@ -7,7 +7,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from wildfire_phase0.rule_eval import evaluate_rule_dataset, evaluate_rule_event
+from wildfire_phase0.metrics import BinaryScoreCounts, binary_average_precision
+from wildfire_phase0.rule_eval import (
+    evaluate_rule_dataset,
+    evaluate_rule_event,
+    render_rule_report,
+    summarize_rule_metrics,
+)
 
 
 def _write_active_event(path: Path, masks: np.ndarray) -> None:
@@ -60,6 +66,167 @@ def _make_directory_alias(alias: Path, target: Path) -> None:
 
 def _empty_manifest() -> pd.DataFrame:
     return pd.DataFrame(columns=["event_id", "year", "fire_name", "path", "split"])
+
+
+def _summary_event_frame() -> pd.DataFrame:
+    shared = {
+        "year": 2022,
+        "fire_name": "fire_a",
+        "path": "2022/fire_a.hdf5",
+        "split": "test",
+        "target_days": 1,
+    }
+    return pd.DataFrame(
+        [
+            {
+                **shared,
+                "event_id": "2022:fire_a",
+                "baseline": "persistence_latest",
+                "zero_target_days": 0,
+                "positive_target_pixels": 2,
+                "total_pixels": 8,
+                "tp": 2,
+                "fp": 1,
+                "fn": 0,
+                "tn": 5,
+                "event_ap": 2 / 3,
+                "event_ap_defined": True,
+                "zero_target_pixels": 0,
+                "zero_target_predicted_positive_pixels": 0,
+            },
+            {
+                **shared,
+                "event_id": "2022:fire_b",
+                "fire_name": "fire_b",
+                "path": "2022/fire_b.hdf5",
+                "baseline": "persistence_latest",
+                "zero_target_days": 1,
+                "positive_target_pixels": 0,
+                "total_pixels": 4,
+                "tp": 0,
+                "fp": 1,
+                "fn": 0,
+                "tn": 3,
+                "event_ap": np.nan,
+                "event_ap_defined": False,
+                "zero_target_pixels": 4,
+                "zero_target_predicted_positive_pixels": 1,
+            },
+            {
+                **shared,
+                "event_id": "2022:fire_a",
+                "baseline": "no_fire",
+                "zero_target_days": 0,
+                "positive_target_pixels": 2,
+                "total_pixels": 8,
+                "tp": 0,
+                "fp": 0,
+                "fn": 2,
+                "tn": 6,
+                "event_ap": 1 / 4,
+                "event_ap_defined": True,
+                "zero_target_pixels": 0,
+                "zero_target_predicted_positive_pixels": 0,
+            },
+            {
+                **shared,
+                "event_id": "2022:fire_b",
+                "fire_name": "fire_b",
+                "path": "2022/fire_b.hdf5",
+                "baseline": "no_fire",
+                "zero_target_days": 1,
+                "positive_target_pixels": 0,
+                "total_pixels": 4,
+                "tp": 0,
+                "fp": 0,
+                "fn": 0,
+                "tn": 4,
+                "event_ap": np.nan,
+                "event_ap_defined": False,
+                "zero_target_pixels": 4,
+                "zero_target_predicted_positive_pixels": 0,
+            },
+        ]
+    )
+
+
+def test_summary_aggregates_defined_and_undefined_events_without_dropping_rows() -> None:
+    summary = summarize_rule_metrics(_summary_event_frame())
+
+    assert summary[["split", "baseline"]].values.tolist() == [
+        ["test", "no_fire"],
+        ["test", "persistence_latest"],
+    ]
+    indexed = summary.set_index(["split", "baseline"])
+    persistence = indexed.loc[("test", "persistence_latest")]
+    assert persistence["events"] == 2
+    assert persistence["event_ap_defined"] == 1
+    assert persistence["event_ap_undefined"] == 1
+    assert persistence["event_macro_ap"] == pytest.approx(2 / 3)
+    assert persistence["pooled_ap"] == pytest.approx(
+        binary_average_precision(BinaryScoreCounts(tp=2, fp=2, fn=0, tn=8))
+    )
+    assert persistence["positive_prevalence"] == pytest.approx(2 / 12)
+    assert persistence["target_days"] == 2
+    assert persistence["zero_target_days"] == 1
+    assert persistence["zero_target_day_far"] == pytest.approx(1 / 4)
+    assert persistence["positive_target_pixels"] == 2
+    assert persistence["total_pixels"] == 12
+
+    no_fire = indexed.loc[("test", "no_fire")]
+    assert no_fire["events"] == 2
+    assert no_fire["event_ap_defined"] == 1
+    assert no_fire["event_ap_undefined"] == 1
+    assert no_fire["event_macro_ap"] == pytest.approx(1 / 4)
+    assert no_fire["pooled_ap"] == pytest.approx(
+        binary_average_precision(BinaryScoreCounts(tp=0, fp=0, fn=2, tn=10))
+    )
+    assert no_fire["positive_prevalence"] == pytest.approx(2 / 12)
+    assert no_fire["zero_target_day_far"] == 0
+
+
+def test_summary_returns_nan_far_when_no_zero_target_pixels() -> None:
+    frame = _summary_event_frame().loc[lambda rows: rows["event_id"] == "2022:fire_a"]
+
+    summary = summarize_rule_metrics(frame)
+
+    assert summary["zero_target_day_far"].isna().all()
+
+
+def test_summary_rejects_empty_frame_with_exact_message() -> None:
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(_summary_event_frame().iloc[0:0])
+
+    assert str(error.value) == "event metrics must contain at least one row"
+
+
+def test_summary_rejects_malformed_frame_with_exact_message() -> None:
+    malformed = _summary_event_frame().drop(columns="zero_target_pixels")
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "event metrics missing required columns: ['zero_target_pixels']"
+    )
+
+
+def test_rule_report_is_deterministic_and_states_prespecified_evaluation() -> None:
+    summary = summarize_rule_metrics(_summary_event_frame())
+
+    first = render_rule_report(summary)
+    second = render_rule_report(summary)
+
+    assert first == second
+    assert first.endswith("\n")
+    assert "fixed T=1 rules" in first
+    assert "next-day target" in first
+    assert "frozen split" in first
+    assert "No threshold or model tuning" in first
+    assert "undefined event AP" in first
+    assert "Raw AP is prevalence-dependent" in first
+    for column in summary.columns:
+        assert column in first
 
 
 def test_event_evaluation_uses_next_day_and_latest_persistence(

@@ -21,6 +21,11 @@ _ARTIFACT_NAMES = (
     "contract_decision.json",
     "phase0_report.md",
 )
+_RULE_ARTIFACT_NAMES = (
+    "rule_event_metrics.csv",
+    "rule_summary.csv",
+    "rule_report.md",
+)
 
 
 def _make_directory_alias(alias: Path, target: Path) -> None:
@@ -163,6 +168,227 @@ def _run_audit(data_root: Path, output_root: Path) -> int:
         "--output-root",
         str(output_root),
     ])
+
+
+def _write_rule_fixture(data_root: Path, manifest_path: Path) -> list[Path]:
+    specifications = [
+        (2022, "zulu_fire", "test"),
+        (2020, "bravo_fire", "train"),
+        (2021, "alpha_fire", "validation"),
+    ]
+    paths = []
+    rows = []
+    for year, fire_name, split in specifications:
+        path = data_root / str(year) / f"{fire_name}.hdf5"
+        _write_event(path, year, fire_name)
+        paths.append(path)
+        rows.append(
+            {
+                "event_id": f"{year}:{fire_name}",
+                "year": year,
+                "fire_name": fire_name,
+                "path": path.relative_to(data_root).as_posix(),
+                "split": split,
+            }
+        )
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows).to_csv(manifest_path, index=False, lineterminator="\n")
+    return paths
+
+
+def _run_rules(data_root: Path, manifest_path: Path, output_root: Path) -> int:
+    return cli.main(
+        [
+            "evaluate-rules",
+            "--data-root",
+            str(data_root),
+            "--split-manifest",
+            str(manifest_path),
+            "--output-root",
+            str(output_root),
+        ]
+    )
+
+
+def _seed_old_rule_generation(output_root: Path) -> dict[str, bytes]:
+    output_root.mkdir(parents=True)
+    old_bytes = {name: f"old:{name}\n".encode() for name in _RULE_ARTIFACT_NAMES}
+    for name, content in old_bytes.items():
+        (output_root / name).write_bytes(content)
+    return old_bytes
+
+
+def test_evaluate_rules_writes_exact_deterministic_read_only_artifacts(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    manifest_path = tmp_path / "split_manifest.csv"
+    output_root = tmp_path / "rule-artifacts"
+    source_paths = _write_rule_fixture(data_root, manifest_path)
+    source_bytes = {path: path.read_bytes() for path in source_paths}
+
+    assert _run_rules(data_root, manifest_path, output_root) == 0
+    first_generation = {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    }
+    assert {path.name for path in output_root.iterdir()} == set(_RULE_ARTIFACT_NAMES)
+    assert _run_rules(data_root, manifest_path, output_root) == 0
+    assert {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    } == first_generation
+    assert {path: path.read_bytes() for path in source_paths} == source_bytes
+
+    with (output_root / "rule_event_metrics.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        event_rows = list(csv.DictReader(handle))
+    assert [
+        (row["split"], row["year"], row["fire_name"], row["baseline"])
+        for row in event_rows
+    ] == [
+        ("test", "2022", "zulu_fire", "no_fire"),
+        ("test", "2022", "zulu_fire", "persistence_latest"),
+        ("train", "2020", "bravo_fire", "no_fire"),
+        ("train", "2020", "bravo_fire", "persistence_latest"),
+        ("validation", "2021", "alpha_fire", "no_fire"),
+        ("validation", "2021", "alpha_fire", "persistence_latest"),
+    ]
+    with (output_root / "rule_summary.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        summary_rows = list(csv.DictReader(handle))
+    assert [(row["split"], row["baseline"]) for row in summary_rows] == [
+        ("test", "no_fire"),
+        ("test", "persistence_latest"),
+        ("train", "no_fire"),
+        ("train", "persistence_latest"),
+        ("validation", "no_fire"),
+        ("validation", "persistence_latest"),
+    ]
+    report = (output_root / "rule_report.md").read_text(encoding="utf-8")
+    assert "fixed T=1 rules" in report
+    assert "next-day target" in report
+    assert "No threshold or model tuning" in report
+    assert "Raw AP is prevalence-dependent" in report
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
+def test_evaluate_rules_preserves_unknown_sidecars(tmp_path: Path) -> None:
+    data_root = tmp_path / "data"
+    manifest_path = tmp_path / "split_manifest.csv"
+    output_root = tmp_path / "rule-artifacts"
+    _write_rule_fixture(data_root, manifest_path)
+    output_root.mkdir()
+    unknown = output_root / "rule_summary.csv.tmp"
+    unknown.write_bytes(b"unowned-sidecar")
+
+    assert _run_rules(data_root, manifest_path, output_root) == 0
+
+    assert unknown.read_bytes() == b"unowned-sidecar"
+
+
+def test_evaluate_rules_validation_failure_returns_two_without_mixed_generation(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    manifest_path = tmp_path / "split_manifest.csv"
+    output_root = tmp_path / "rule-artifacts"
+    _write_rule_fixture(data_root, manifest_path)
+    manifest = pd.read_csv(manifest_path)
+    manifest.loc[manifest["year"] == 2021, "split"] = "test"
+    manifest.to_csv(manifest_path, index=False, lineterminator="\n")
+    old_bytes = _seed_old_rule_generation(output_root)
+
+    assert _run_rules(data_root, manifest_path, output_root) == 2
+
+    assert {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    } == old_bytes
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
+def test_evaluate_rules_publish_error_bubbles_and_rolls_back_entire_generation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data_root = tmp_path / "data"
+    manifest_path = tmp_path / "split_manifest.csv"
+    output_root = tmp_path / "rule-artifacts"
+    _write_rule_fixture(data_root, manifest_path)
+    old_bytes = _seed_old_rule_generation(output_root)
+    original_replace = Path.replace
+    publish_calls = 0
+
+    def fail_second_publish(source: Path, target: Path) -> Path:
+        nonlocal publish_calls
+        if source.name.endswith(".tmp") and Path(target).name in _RULE_ARTIFACT_NAMES:
+            publish_calls += 1
+            if publish_calls == 2:
+                raise OSError("injected rule publish failure")
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", fail_second_publish)
+
+    with pytest.raises(OSError, match="injected rule publish failure"):
+        _run_rules(data_root, manifest_path, output_root)
+
+    assert publish_calls == 2
+    assert {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    } == old_bytes
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
+@pytest.mark.parametrize("relation", ("equal", "output-under-data", "output-above-data"))
+def test_evaluate_rules_rejects_non_disjoint_roots_before_mutation(
+    tmp_path: Path,
+    relation: str,
+) -> None:
+    data_root = tmp_path / "data"
+    manifest_path = tmp_path / "split_manifest.csv"
+    output_root = tmp_path / "rule-artifacts"
+    _write_rule_fixture(data_root, manifest_path)
+    if relation == "equal":
+        output_root = data_root
+    elif relation == "output-under-data":
+        output_root = data_root / "artifacts"
+    else:
+        output_root = tmp_path / "shared"
+        moved_data_root = output_root / "data"
+        output_root.mkdir()
+        data_root.rename(moved_data_root)
+        data_root = moved_data_root
+        manifest = pd.read_csv(manifest_path)
+        manifest.to_csv(manifest_path, index=False, lineterminator="\n")
+
+    with pytest.raises(ValueError, match="pairwise disjoint"):
+        _run_rules(data_root, manifest_path, output_root)
+
+    assert not any((output_root / name).exists() for name in _RULE_ARTIFACT_NAMES)
+
+
+def test_evaluate_rules_rejects_artifact_symlink_escape_without_touching_target(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    manifest_path = tmp_path / "split_manifest.csv"
+    output_root = tmp_path / "rule-artifacts"
+    _write_rule_fixture(data_root, manifest_path)
+    output_root.mkdir()
+    external = tmp_path / "external.csv"
+    external.write_bytes(b"external")
+    try:
+        (output_root / "rule_summary.csv").symlink_to(external)
+    except OSError as error:
+        pytest.skip(f"file symlinks are unavailable: {error}")
+
+    with pytest.raises(ValueError, match="outside designated output root"):
+        _run_rules(data_root, manifest_path, output_root)
+
+    assert external.read_bytes() == b"external"
 
 
 def _seed_old_generation(output_root: Path) -> dict[str, str]:
