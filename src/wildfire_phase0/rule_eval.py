@@ -1,7 +1,8 @@
 """Read-only, streaming evaluation of fixed wildfire rule baselines."""
 
 from datetime import date
-from pathlib import Path
+from numbers import Integral
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 import h5py
@@ -42,12 +43,22 @@ _REQUIRED_ATTRIBUTES = ("year", "fire_name", "img_dates", "lnglat")
 _SPLITS = {"train", "validation", "test"}
 
 
-def _decode_utf8(value: Any) -> str:
-    return value.decode("utf-8") if isinstance(value, bytes) else str(value)
+def _decode_utf8_attribute(value: Any, name: str) -> str:
+    if isinstance(value, bytes):
+        try:
+            return value.decode("utf-8")
+        except UnicodeDecodeError as error:
+            raise ValueError(f"{name} attribute must contain UTF-8 text") from error
+    if isinstance(value, str):
+        return value
+    raise ValueError(f"{name} attribute must contain UTF-8 text")
 
 
 def _validate_dates(value: Any, n_days: int) -> None:
-    dates = tuple(_decode_utf8(item) for item in np.asarray(value).reshape(-1))
+    dates = tuple(
+        _decode_utf8_attribute(item, "img_dates")
+        for item in np.asarray(value).reshape(-1)
+    )
     if len(dates) != n_days:
         raise ValueError("dates count must equal n_days")
     try:
@@ -56,6 +67,17 @@ def _validate_dates(value: Any, n_days: int) -> None:
         raise ValueError("image dates must use ISO format") from error
     if any(left >= right for left, right in zip(parsed, parsed[1:])):
         raise ValueError("dates must be strictly increasing")
+
+
+def _validate_lnglat(value: Any) -> None:
+    coordinates = np.asarray(value)
+    numeric = np.issubdtype(coordinates.dtype, np.integer) or np.issubdtype(
+        coordinates.dtype, np.floating
+    )
+    if coordinates.shape != (2,) or not numeric:
+        raise ValueError("lnglat attribute must be a numeric pair")
+    if np.any(np.isinf(coordinates)):
+        raise ValueError("lnglat attribute must not contain infinities")
 
 
 def _active_mask(values: object) -> np.ndarray:
@@ -99,8 +121,13 @@ def evaluate_rule_event(path: Path, data_root: Path, split: str) -> pd.DataFrame
         if missing_attributes:
             raise ValueError(f"missing required attribute: {missing_attributes[0]}")
 
-        year = int(data.attrs["year"])
-        fire_name = _decode_utf8(data.attrs["fire_name"])
+        stored_year = data.attrs["year"]
+        if isinstance(stored_year, (bool, np.bool_)) or not isinstance(
+            stored_year, Integral
+        ):
+            raise ValueError("year attribute must be a non-boolean integer scalar")
+        year = int(stored_year)
+        fire_name = _decode_utf8_attribute(data.attrs["fire_name"], "fire_name")
         try:
             folder_year = int(event_path.parent.name)
         except ValueError as error:
@@ -110,6 +137,7 @@ def evaluate_rule_event(path: Path, data_root: Path, split: str) -> pd.DataFrame
         if event_path.stem != fire_name:
             raise ValueError("filename stem must match fire_name")
         _validate_dates(data.attrs["img_dates"], n_days)
+        _validate_lnglat(data.attrs["lnglat"])
 
         counts = {baseline: BinaryScoreCounts() for baseline in _BASELINES}
         zero_target_predicted = {baseline: 0 for baseline in _BASELINES}
@@ -172,16 +200,20 @@ def evaluate_rule_event(path: Path, data_root: Path, split: str) -> pd.DataFrame
 
 
 def _event_paths(data_root: Path) -> list[Path]:
-    return sorted(
-        (
-            path
-            for year_directory in data_root.iterdir()
-            if year_directory.is_dir() and year_directory.name.isdigit()
-            for path in year_directory.glob("*.hdf5")
-            if path.is_file()
-        ),
-        key=lambda path: (path.parent.name, path.name),
-    )
+    event_paths = []
+    for year_entry in data_root.iterdir():
+        if not year_entry.name.isdigit():
+            continue
+        year_directory = require_contained_path(data_root, year_entry, "data root")
+        if not year_directory.is_dir():
+            continue
+        for candidate_entry in year_directory.glob("*.hdf5"):
+            candidate = require_contained_path(
+                data_root, candidate_entry, "data root"
+            )
+            if candidate.is_file():
+                event_paths.append(candidate)
+    return sorted(event_paths, key=lambda path: (path.parent.name, path.name))
 
 
 def _frozen_split(year: int) -> str:
@@ -194,6 +226,21 @@ def _frozen_split(year: int) -> str:
     raise ValueError("event year must be within the 2016-2023 frozen split")
 
 
+def _validate_manifest_path(value: str) -> None:
+    posix_path = PurePosixPath(value)
+    windows_path = PureWindowsPath(value)
+    if (
+        not value
+        or "\\" in value
+        or posix_path.is_absolute()
+        or windows_path.is_absolute()
+        or bool(windows_path.drive)
+        or posix_path.as_posix() != value
+        or any(part in {"", ".", ".."} for part in value.split("/"))
+    ):
+        raise ValueError("manifest path must be a canonical POSIX relative path")
+
+
 def _validate_manifest(
     data_root: Path, split_manifest: pd.DataFrame
 ) -> tuple[list[dict[str, object]], dict[str, Path]]:
@@ -204,6 +251,18 @@ def _validate_manifest(
         )
     if split_manifest[list(_MANIFEST_COLUMNS)].isna().any().any():
         raise ValueError("split manifest values must not be missing")
+    records = split_manifest.to_dict("records")
+    for row in records:
+        manifest_year = row["year"]
+        if isinstance(manifest_year, (bool, np.bool_)) or not isinstance(
+            manifest_year, Integral
+        ):
+            raise ValueError("manifest year must be a non-boolean integer scalar")
+        for column in ("event_id", "fire_name", "path", "split"):
+            if not isinstance(row[column], str):
+                raise ValueError(f"manifest {column} must be a string")
+        _validate_manifest_path(row["path"])
+
     duplicate_identity = (
         split_manifest.duplicated(subset=["event_id"]).any()
         or split_manifest.duplicated(subset=["path"]).any()
@@ -216,7 +275,6 @@ def _validate_manifest(
     paths_by_relative = {
         path.relative_to(data_root).as_posix(): path for path in event_paths
     }
-    records = split_manifest.to_dict("records")
     manifest_paths = {row["path"] for row in records}
     if manifest_paths != set(paths_by_relative):
         raise ValueError("split manifest paths must exactly match dataset event paths")
