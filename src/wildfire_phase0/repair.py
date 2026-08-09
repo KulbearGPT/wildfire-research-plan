@@ -648,6 +648,22 @@ def _valid_transaction_id(value: object) -> bool:
     )
 
 
+def _reserved_transaction_invocation_id(name: str) -> str | None:
+    for prefix, suffix in (
+        (f".{_MANIFEST_NAME}.", ".tmp"),
+        (f".{_DECISION_NAME}.", ".tmp"),
+        (f".{_MANIFEST_NAME}.", ".bak"),
+        (f".{_DECISION_NAME}.", ".bak"),
+        (_TRANSACTION_PREFIX, ".txn.tmp"),
+        (_TRANSACTION_PREFIX, _TRANSACTION_SUFFIX),
+    ):
+        if name.startswith(prefix) and name.endswith(suffix):
+            invocation_id = name[len(prefix) : -len(suffix)]
+            if _valid_transaction_id(invocation_id):
+                return invocation_id
+    return None
+
+
 def _valid_digest(value: object) -> bool:
     return (
         isinstance(value, str)
@@ -728,6 +744,14 @@ def _recover_transaction(transaction: _EvidenceTransaction) -> None:
 
 
 def _recover_interrupted_evidence(staging_root: Path) -> None:
+    reserved_invocation_ids = {
+        invocation_id
+        for path in staging_root.iterdir()
+        if (
+            invocation_id := _reserved_transaction_invocation_id(path.name)
+        )
+        is not None
+    }
     journals = tuple(
         sorted(
             staging_root.glob(f"{_TRANSACTION_PREFIX}*{_TRANSACTION_SUFFIX}"),
@@ -740,8 +764,10 @@ def _recover_interrupted_evidence(staging_root: Path) -> None:
             key=lambda path: path.name,
         )
     )
-    if len(journals) + len(journal_temps) > 1:
+    if len(journals) + len(journal_temps) > 1 or len(reserved_invocation_ids) > 1:
         raise ValueError("multiple interrupted repair evidence transactions found")
+    if not journals and not journal_temps and reserved_invocation_ids:
+        raise ValueError("incomplete interrupted repair evidence transaction found")
     if journals:
         journal = require_contained_path(staging_root, journals[0], "staging root")
         _recover_transaction(_load_transaction(staging_root, journal))

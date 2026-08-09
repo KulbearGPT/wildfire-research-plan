@@ -480,6 +480,68 @@ def test_repair_evidence_publish_failure_rolls_back_committed_pair(
     assert not list(staging_root.glob(".active_fire_repair_evidence.*.txn.json"))
 
 
+def test_repair_evidence_fails_closed_on_interruption_before_journal_creation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class SimulatedCrash(BaseException):
+        pass
+
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+    stage_active_fire_repair(source_tiff_root, hdf5_root, staging_root, (2016,))
+    evidence_paths = (
+        staging_root / "active_fire_repair_manifest.csv",
+        staging_root / "active_fire_repair_decision.json",
+    )
+    evidence_bytes = {path: path.read_bytes() for path in evidence_paths}
+    unknown_sidecar = staging_root / "active_fire_repair_decision.json.bak"
+    unknown_sidecar.write_bytes(b"unknown-legacy-sidecar")
+    original_open = Path.open
+
+    def crash_before_journal_creation(path: Path, *args: object, **kwargs: object):
+        mode = args[0] if args else kwargs.get("mode", "r")
+        if path.name.endswith(".txn.tmp") and mode == "xb":
+            raise SimulatedCrash()
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", crash_before_journal_creation)
+
+    with pytest.raises(SimulatedCrash):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    manifest_temps = list(
+        staging_root.glob(".active_fire_repair_manifest.csv.*.tmp")
+    )
+    assert len(manifest_temps) == 1
+    invocation_id = manifest_temps[0].name.removeprefix(
+        ".active_fire_repair_manifest.csv."
+    ).removesuffix(".tmp")
+    early_sidecars = (
+        manifest_temps[0],
+        staging_root / f".active_fire_repair_decision.json.{invocation_id}.tmp",
+        staging_root / f".active_fire_repair_manifest.csv.{invocation_id}.bak",
+        staging_root / f".active_fire_repair_decision.json.{invocation_id}.bak",
+    )
+    early_sidecar_bytes = {path: path.read_bytes() for path in early_sidecars}
+    assert not list(staging_root.glob(".active_fire_repair_evidence.*.txn.tmp"))
+    assert not list(staging_root.glob(".active_fire_repair_evidence.*.txn.json"))
+
+    monkeypatch.setattr(Path, "open", original_open)
+    with pytest.raises(ValueError, match="interrupted repair evidence transaction"):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    assert {path: path.read_bytes() for path in early_sidecars} == early_sidecar_bytes
+    assert {path: path.read_bytes() for path in evidence_paths} == evidence_bytes
+    assert unknown_sidecar.read_bytes() == b"unknown-legacy-sidecar"
+
+
 def test_repair_evidence_recovers_interruption_before_journal_promotion(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -537,6 +599,73 @@ def test_repair_evidence_recovers_interruption_before_journal_promotion(
     assert recovered.status == "ready"
     assert verify_repair_evidence(staging_root) == recovered
     assert not any(path.exists() for path in invocation_sidecars)
+    assert unknown_sidecar.read_bytes() == b"unknown-legacy-sidecar"
+
+
+def test_repair_evidence_fails_closed_on_journal_and_other_invocation_orphan(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class SimulatedCrash(BaseException):
+        pass
+
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+    stage_active_fire_repair(source_tiff_root, hdf5_root, staging_root, (2016,))
+    unknown_sidecar = staging_root / "active_fire_repair_decision.json.bak"
+    unknown_sidecar.write_bytes(b"unknown-legacy-sidecar")
+    original_replace = Path.replace
+
+    def crash_before_journal_promotion(source: Path, target: Path) -> Path:
+        if source.name.endswith(".txn.tmp") and Path(target).name.endswith(
+            ".txn.json"
+        ):
+            raise SimulatedCrash()
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", crash_before_journal_promotion)
+    with pytest.raises(SimulatedCrash):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+    monkeypatch.setattr(Path, "replace", original_replace)
+
+    journal_temps = list(
+        staging_root.glob(".active_fire_repair_evidence.*.txn.tmp")
+    )
+    assert len(journal_temps) == 1
+    journal_invocation_id = journal_temps[0].name.removeprefix(
+        ".active_fire_repair_evidence."
+    ).removesuffix(".txn.tmp")
+    journal_sidecars = (
+        staging_root
+        / f".active_fire_repair_manifest.csv.{journal_invocation_id}.tmp",
+        staging_root
+        / f".active_fire_repair_decision.json.{journal_invocation_id}.tmp",
+        staging_root
+        / f".active_fire_repair_manifest.csv.{journal_invocation_id}.bak",
+        staging_root
+        / f".active_fire_repair_decision.json.{journal_invocation_id}.bak",
+        journal_temps[0],
+    )
+    orphan_invocation_id = "0" * 32
+    assert orphan_invocation_id != journal_invocation_id
+    orphan_sidecar = (
+        staging_root
+        / f".active_fire_repair_manifest.csv.{orphan_invocation_id}.tmp"
+    )
+    orphan_sidecar.write_bytes(b"other-invocation-orphan")
+    owned_sidecars = journal_sidecars + (orphan_sidecar,)
+    owned_sidecar_bytes = {path: path.read_bytes() for path in owned_sidecars}
+
+    with pytest.raises(ValueError, match="multiple interrupted repair evidence"):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    assert {path: path.read_bytes() for path in owned_sidecars} == owned_sidecar_bytes
     assert unknown_sidecar.read_bytes() == b"unknown-legacy-sidecar"
 
 
