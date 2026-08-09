@@ -63,10 +63,28 @@ def validate_inventory_row(row: Mapping[str, object]) -> EventInventory:
         raise ValueError("target counts must be nonnegative")
     if zero_target_days > target_days:
         raise ValueError("zero_target_days must not exceed target_days")
-    if positive_target_pixels == 0 and (
-        active_fire_min_positive is not None or active_fire_max_positive is not None
-    ):
-        raise ValueError("positive active-fire extrema must be None for zero-positive events")
+    extrema_present = (
+        active_fire_min_positive is not None,
+        active_fire_max_positive is not None,
+    )
+    if extrema_present[0] != extrema_present[1]:
+        raise ValueError("positive active-fire extrema must both be present or both be None")
+    if active_fire_min_positive is not None and active_fire_max_positive is not None:
+        if not (
+            active_fire_min_positive.is_integer()
+            and active_fire_max_positive.is_integer()
+            and 1
+            <= active_fire_min_positive
+            <= active_fire_max_positive
+            <= 23
+        ):
+            raise ValueError(
+                "positive active-fire extrema must be ordered integer hours within 1-23"
+            )
+    elif positive_target_pixels > 0:
+        raise ValueError(
+            "positive active-fire extrema are required when positive_target_pixels is positive"
+        )
 
     parsed_dates = tuple(date.fromisoformat(value) for value in dates)
     if any(left >= right for left, right in zip(parsed_dates, parsed_dates[1:])):

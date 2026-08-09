@@ -67,6 +67,8 @@ def inspect_hdf5(path: Path, data_root: Path) -> EventInventory:
             day = np.asarray(data[day_index])
             nan_count += int(np.isnan(day).sum())
             active = day[22]
+            if np.any(np.isinf(active)):
+                raise ValueError("stored active-fire values must be finite or NaN")
             finite_active = active[np.isfinite(active)]
             if np.any(finite_active < 0) or np.any(
                 finite_active != np.floor(finite_active)

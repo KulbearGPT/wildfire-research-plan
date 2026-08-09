@@ -43,6 +43,8 @@ def test_inspect_hdf5_reads_official_layout(tmp_path: Path) -> None:
         (24, "within 0-23 hours"),
         (-1, "nonnegative integer hours"),
         (1.5, "nonnegative integer hours"),
+        (np.inf, "finite or NaN"),
+        (-np.inf, "finite or NaN"),
     ],
 )
 def test_inspect_hdf5_rejects_invalid_stored_active_fire_values(
@@ -57,6 +59,24 @@ def test_inspect_hdf5_rejects_invalid_stored_active_fire_values(
 
     with pytest.raises(ValueError, match=message):
         inspect_hdf5(path, tmp_path)
+
+
+def test_inspect_hdf5_accepts_positive_active_fire_only_on_day_zero(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "2021" / "demo_fire.hdf5"
+    _write_event(path)
+    with h5py.File(path, "r+") as handle:
+        handle["data"][1, 22, 0, 0] = 0
+        handle["data"][0, 22, 0, 0] = 7
+
+    item = inspect_hdf5(path, tmp_path)
+
+    assert item.target_days == 2
+    assert item.zero_target_days == 2
+    assert item.positive_target_pixels == 0
+    assert item.active_fire_min_positive == 7
+    assert item.active_fire_max_positive == 7
 
 
 def test_inventory_dataset_is_deterministic(tmp_path: Path) -> None:
