@@ -335,6 +335,37 @@ def test_summary_rejects_zero_target_extent_mismatch_with_exact_message() -> Non
     )
 
 
+def test_summary_rejects_positive_pixels_below_positive_days_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "target_days"] = 2
+    malformed.loc[0, ["tp", "positive_target_pixels"]] = 1
+    malformed.loc[0, "tn"] = 6
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "positive_target_pixels must satisfy target_days - zero_target_days <= "
+        "positive_target_pixels <= total_pixels - zero_target_pixels"
+    )
+
+
+def test_summary_rejects_positive_pixels_above_nonzero_extent_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, ["target_days", "total_pixels"]] = [2, 8]
+    malformed.loc[0, ["zero_target_days", "zero_target_pixels"]] = [1, 4]
+    malformed.loc[0, ["tp", "fp", "fn", "tn"]] = [2, 1, 3, 2]
+    malformed.loc[0, "positive_target_pixels"] = 5
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "positive_target_pixels must satisfy target_days - zero_target_days <= "
+        "positive_target_pixels <= total_pixels - zero_target_pixels"
+    )
+
+
 def test_summary_rejects_zero_target_prediction_mismatch_with_exact_message() -> None:
     malformed = _summary_event_frame()
     malformed.loc[1, "zero_target_predicted_positive_pixels"] = 5

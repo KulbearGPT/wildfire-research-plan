@@ -427,6 +427,21 @@ def _validate_event_metrics_for_summary(event_metrics: pd.DataFrame) -> None:
         raise ValueError(
             "event_ap_defined must equal whether positive_target_pixels is positive"
         )
+    positive_target_pixels = event_metrics["positive_target_pixels"]
+    if (
+        (
+            positive_target_pixels
+            < event_metrics["target_days"] - event_metrics["zero_target_days"]
+        )
+        | (
+            positive_target_pixels
+            > event_metrics["total_pixels"] - event_metrics["zero_target_pixels"]
+        )
+    ).any():
+        raise ValueError(
+            "positive_target_pixels must satisfy target_days - zero_target_days <= "
+            "positive_target_pixels <= total_pixels - zero_target_pixels"
+        )
     for defined, value in zip(
         event_metrics["event_ap_defined"], event_metrics["event_ap"]
     ):
