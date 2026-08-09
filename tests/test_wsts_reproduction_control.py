@@ -70,24 +70,18 @@ def test_verify_inventory_accepts_exact_frozen_direct_file_counts(tmp_path: Path
 
 
 @pytest.mark.parametrize(
-    ("counts", "extra_year", "message"),
+    ("counts", "message"),
     [
-        ({2018: 175, 2019: 74, 2020: 201, 2021: 156}, None, "2018"),
-        ({2018: 177, 2019: 74, 2020: 201, 2021: 156}, None, "2018"),
-        (FROZEN_COUNTS, 2022, "2022"),
+        ({2018: 175, 2019: 74, 2020: 201, 2021: 156}, "2018"),
+        ({2018: 177, 2019: 74, 2020: 201, 2021: 156}, "2018"),
     ],
 )
-def test_verify_inventory_rejects_missing_extra_or_wrong_year_hdf5(
+def test_verify_inventory_rejects_missing_or_wrong_year_hdf5(
     tmp_path: Path,
     counts: dict[int, int],
-    extra_year: int | None,
     message: str,
 ) -> None:
     _write_inventory(tmp_path, counts)
-    if extra_year is not None:
-        wrong_year = tmp_path / str(extra_year)
-        wrong_year.mkdir()
-        (wrong_year / "event.hdf5").touch()
 
     with pytest.raises(ValueError, match=message):
         verify_inventory(tmp_path)

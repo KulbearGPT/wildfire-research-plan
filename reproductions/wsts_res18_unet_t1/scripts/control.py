@@ -36,11 +36,23 @@ ENVIRONMENT_KEYS = {
 CommandRunner: TypeAlias = Callable[[list[str]], subprocess.CompletedProcess[str]]
 
 
-def verify_inventory(data_root: Path) -> dict[str, int]:
-    """Require exactly the four official WSTS year inventories."""
+def verify_inventory(
+    data_root: Path, selected_years: Sequence[int] | None = None
+) -> dict[str, int]:
+    """Verify the four selected WSTS years without rejecting unselected siblings."""
     root = data_root.resolve()
     if not root.is_dir():
         raise ValueError(f"data root is not a directory: {root}")
+
+    selected = (
+        tuple(FROZEN_YEAR_COUNTS)
+        if selected_years is None
+        else tuple(selected_years)
+    )
+    if len(selected) != len(FROZEN_YEAR_COUNTS) or set(selected) != set(FROZEN_YEAR_COUNTS):
+        raise ValueError(
+            "selected years must contain exactly 2018, 2019, 2020, and 2021"
+        )
 
     counts: dict[str, int] = {}
     for year, expected_count in FROZEN_YEAR_COUNTS.items():
@@ -55,22 +67,6 @@ def verify_inventory(data_root: Path) -> dict[str, int]:
                 f"year {year} has {count} direct .hdf5 files; expected {expected_count}"
             )
         counts[str(year)] = count
-
-    allowed_years = {str(year) for year in FROZEN_YEAR_COUNTS}
-    extra_years = sorted(
-        path.name
-        for path in root.iterdir()
-        if path.is_dir()
-        and path.name not in allowed_years
-        and any(
-            child.is_file() and child.suffix == ".hdf5" for child in path.resolve().iterdir()
-        )
-    )
-    if extra_years:
-        raise ValueError(
-            "calibration must not select additional year directories with .hdf5 files: "
-            + ", ".join(extra_years)
-        )
 
     counts["total"] = sum(counts.values())
     return counts
