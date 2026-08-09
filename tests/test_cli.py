@@ -1,6 +1,8 @@
 import csv
 import json
+import os
 import shutil
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -19,6 +21,23 @@ _ARTIFACT_NAMES = (
     "contract_decision.json",
     "phase0_report.md",
 )
+
+
+def _make_directory_alias(alias: Path, target: Path) -> None:
+    try:
+        alias.symlink_to(target, target_is_directory=True)
+        return
+    except OSError as symlink_error:
+        if os.name != "nt":
+            pytest.skip(f"directory aliases are unavailable: {symlink_error}")
+    completed = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(alias), str(target)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        pytest.skip(f"directory aliases are unavailable: {completed.stderr}")
 
 
 def _write_event(
@@ -235,7 +254,7 @@ def test_audit_blocks_all_zero_benchmark_year_and_split_with_complete_artifacts(
 
 
 def test_audit_blocks_on_invalid_event_and_leaves_final_artifacts(tmp_path: Path) -> None:
-    """Removing invalid-file reporting or temp cleanup must fail this test."""
+    """Unknown sidecars must survive while blocked evidence is published."""
     data_root = tmp_path / "data"
     output_root = tmp_path / "artifacts"
     invalid_path = data_root / "2021" / "demo_fire.hdf5"
@@ -243,13 +262,78 @@ def test_audit_blocks_on_invalid_event_and_leaves_final_artifacts(tmp_path: Path
     with h5py.File(invalid_path, "w"):
         pass
     output_root.mkdir(parents=True)
+    stale_sidecars = {}
     for name in _ARTIFACT_NAMES:
-        (output_root / f"{name}.tmp").write_text("stale", encoding="utf-8")
+        path = output_root / f"{name}.tmp"
+        path.write_text(f"stale:{name}", encoding="utf-8")
+        stale_sidecars[path] = f"stale:{name}"
 
     assert _run_audit(data_root, output_root) == 2
-    assert {path.name for path in output_root.iterdir()} == set(_ARTIFACT_NAMES)
+    assert {path.name for path in output_root.iterdir()} == {
+        *_ARTIFACT_NAMES,
+        *(f"{name}.tmp" for name in _ARTIFACT_NAMES),
+    }
     assert "missing data dataset" in (output_root / "phase0_report.md").read_text(encoding="utf-8")
     assert json.loads((output_root / "contract_decision.json").read_text(encoding="utf-8"))["status"] == "blocked"
+    assert {path: path.read_text(encoding="utf-8") for path in stale_sidecars} == stale_sidecars
+
+
+@pytest.mark.parametrize("relation", ("equal", "output-under-data", "output-above-data"))
+def test_audit_rejects_non_disjoint_roots_before_mutation(
+    tmp_path: Path, relation: str
+) -> None:
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    if relation == "equal":
+        output_root = data_root
+    elif relation == "output-under-data":
+        output_root = data_root / "artifacts"
+    else:
+        output_root = tmp_path / "shared"
+        data_root = output_root / "data"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    marker = output_root / "keep.txt"
+    if output_root.exists():
+        marker.write_bytes(b"keep")
+
+    with pytest.raises(ValueError, match="pairwise disjoint"):
+        _run_audit(data_root, output_root)
+
+    assert not any((output_root / name).exists() for name in _ARTIFACT_NAMES)
+    if marker.exists():
+        assert marker.read_bytes() == b"keep"
+
+
+def test_audit_rejects_resolved_root_alias_before_mutation(tmp_path: Path) -> None:
+    data_root = tmp_path / "data"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    output_alias = tmp_path / "output-alias"
+    _make_directory_alias(output_alias, data_root)
+
+    with pytest.raises(ValueError, match="pairwise disjoint"):
+        _run_audit(data_root, output_alias)
+
+    assert not any((data_root / name).exists() for name in _ARTIFACT_NAMES)
+
+
+def test_audit_rejects_artifact_symlink_escape_without_touching_target(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    output_root.mkdir()
+    external = tmp_path / "external.csv"
+    external.write_bytes(b"external")
+    try:
+        (output_root / "inventory.csv").symlink_to(external)
+    except OSError as error:
+        pytest.skip(f"file symlinks are unavailable: {error}")
+
+    with pytest.raises(ValueError, match="outside designated output root"):
+        _run_audit(data_root, output_root)
+
+    assert external.read_bytes() == b"external"
 
 
 def test_audit_blocks_with_artifacts_when_an_event_is_outside_the_frozen_protocol(

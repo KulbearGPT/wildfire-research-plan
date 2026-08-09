@@ -2,7 +2,9 @@
 
 import argparse
 import json
-from collections.abc import Sequence
+import os
+import tempfile
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, replace
 from pathlib import Path
 from shutil import copy2
@@ -11,6 +13,11 @@ import pandas as pd
 
 from wildfire_phase0.contract import ContractDecision, audit_contract, load_contract
 from wildfire_phase0.inventory import inventory_dataset
+from wildfire_phase0.path_safety import (
+    canonical_root,
+    require_contained_path,
+    require_pairwise_disjoint_roots,
+)
 from wildfire_phase0.report import render_phase0_report
 from wildfire_phase0.repair import stage_active_fire_repair
 from wildfire_phase0.schema import EventInventory
@@ -50,60 +57,57 @@ def _artifact_paths(output_root: Path) -> dict[str, Path]:
     return {name: output_root / name for name in _ARTIFACT_NAMES}
 
 
-def _temp_path(path: Path) -> Path:
-    return path.with_name(f"{path.name}.tmp")
-
-
-def _backup_path(path: Path) -> Path:
-    return path.with_name(f"{path.name}.bak")
-
-
-def _remove_temps(paths: Sequence[Path]) -> None:
+def _remove_paths(paths: Sequence[Path]) -> None:
     for path in paths:
-        temp_path = _temp_path(path)
-        if temp_path.exists():
-            temp_path.unlink()
+        if path.exists():
+            path.unlink()
 
 
-def _remove_backups(paths: Sequence[Path]) -> None:
-    for path in paths:
-        backup_path = _backup_path(path)
-        if backup_path.exists():
-            backup_path.unlink()
+def _owned_sidecar(path: Path, suffix: str) -> Path:
+    file_descriptor, sidecar_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=suffix, dir=path.parent
+    )
+    os.close(file_descriptor)
+    return Path(sidecar_name)
 
 
 def _write_text_temp(path: Path, content: str) -> None:
-    _temp_path(path).write_text(content, encoding="utf-8", newline="\n")
+    path.write_text(content, encoding="utf-8", newline="\n")
 
 
 def _write_frame_temp(path: Path, frame: pd.DataFrame) -> None:
-    frame.to_csv(_temp_path(path), index=False, encoding="utf-8", lineterminator="\n")
+    frame.to_csv(path, index=False, encoding="utf-8", lineterminator="\n")
 
 
-def _publish_staged_artifacts(paths: Sequence[Path]) -> None:
+def _publish_staged_artifacts(
+    paths: Sequence[Path], temp_paths: Mapping[Path, Path]
+) -> None:
     preexisting = frozenset(path for path in paths if path.exists())
+    backups: dict[Path, Path] = {}
     try:
         for path in paths:
             if path in preexisting:
-                copy2(path, _backup_path(path))
+                backup = _owned_sidecar(path, ".bak")
+                backups[path] = backup
+                copy2(path, backup)
         for path in paths:
-            _temp_path(path).replace(path)
+            temp_paths[path].replace(path)
     except OSError:
         rollback_succeeded = False
         try:
             for path in paths:
-                backup_path = _backup_path(path)
-                if backup_path.exists():
-                    copy2(backup_path, path)
+                backup = backups.get(path)
+                if backup is not None and backup.exists():
+                    copy2(backup, path)
                 elif path not in preexisting and path.exists():
                     path.unlink()
             rollback_succeeded = True
         finally:
             if rollback_succeeded:
-                _remove_backups(paths)
+                _remove_paths(tuple(backups.values()))
         raise
     else:
-        _remove_backups(paths)
+        _remove_paths(tuple(backups.values()))
 
 
 def _inventory_frame(inventory: Sequence[EventInventory]) -> pd.DataFrame:
@@ -149,11 +153,18 @@ def _reproducible_commands(data_root: Path, output_root: Path) -> tuple[str, ...
 
 def run_audit(data_root: Path, output_root: Path) -> int:
     """Run the read-only audit and write the four derived gate artifacts."""
-    output_root = Path(output_root)
+    data_root = canonical_root(Path(data_root), "data root")
+    output_root = canonical_root(Path(output_root), "output root")
+    require_pairwise_disjoint_roots(
+        {"data root": data_root, "output root": output_root}
+    )
+    artifacts = {
+        name: require_contained_path(
+            output_root, path, "output root"
+        )
+        for name, path in _artifact_paths(output_root).items()
+    }
     output_root.mkdir(parents=True, exist_ok=True)
-    artifacts = _artifact_paths(output_root)
-    _remove_temps(tuple(artifacts.values()))
-    _remove_backups(tuple(artifacts.values()))
 
     contract = load_contract(_default_contract_path())
     decision = audit_contract(contract)
@@ -161,7 +172,7 @@ def run_audit(data_root: Path, output_root: Path) -> int:
     invalid_file_error: str | None = None
     split_manifest = build_forward_split([])
     try:
-        inventory = inventory_dataset(Path(data_root))
+        inventory = inventory_dataset(data_root)
         split_manifest = build_forward_split(inventory)
         target_errors = target_integrity_errors(inventory, split_manifest)
         if target_errors:
@@ -170,24 +181,27 @@ def run_audit(data_root: Path, output_root: Path) -> int:
         invalid_file_error = f"{type(error).__name__}: {error}"
         decision = _blocked_decision(decision, error)
 
+    temp_paths: dict[Path, Path] = {}
     try:
         report = render_phase0_report(
             inventory,
             split_manifest,
             decision,
             invalid_file_error,
-            _reproducible_commands(Path(data_root), output_root),
+            _reproducible_commands(data_root, output_root),
         )
-        _write_frame_temp(artifacts["inventory.csv"], _inventory_frame(inventory))
-        _write_frame_temp(artifacts["split_manifest.csv"], split_manifest)
+        for path in artifacts.values():
+            temp_paths[path] = _owned_sidecar(path, ".tmp")
+        _write_frame_temp(temp_paths[artifacts["inventory.csv"]], _inventory_frame(inventory))
+        _write_frame_temp(temp_paths[artifacts["split_manifest.csv"]], split_manifest)
         _write_text_temp(
-            artifacts["contract_decision.json"],
+            temp_paths[artifacts["contract_decision.json"]],
             json.dumps(asdict(decision), indent=2, sort_keys=True) + "\n",
         )
-        _write_text_temp(artifacts["phase0_report.md"], report)
-        _publish_staged_artifacts(tuple(artifacts.values()))
+        _write_text_temp(temp_paths[artifacts["phase0_report.md"]], report)
+        _publish_staged_artifacts(tuple(artifacts.values()), temp_paths)
     finally:
-        _remove_temps(tuple(artifacts.values()))
+        _remove_paths(tuple(temp_paths.values()))
 
     return 0 if decision.status in {"continue_natural", "continue_controlled"} else 2
 

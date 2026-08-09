@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import shutil
-from collections.abc import Sequence
+import tempfile
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, fields, replace
 from hashlib import sha256
 from pathlib import Path
@@ -12,6 +14,12 @@ from typing import Literal
 import h5py
 import numpy as np
 import tifffile
+
+from wildfire_phase0.path_safety import (
+    canonical_root,
+    require_contained_path,
+    require_pairwise_disjoint_roots,
+)
 
 
 ActiveFireEncoding = Literal["hour", "hhmm", "no_positive_values"]
@@ -246,11 +254,13 @@ def stage_event(
     staging_hdf5: Path,
     source_root: Path,
 ) -> RepairRecord:
-    source_event_dir = Path(source_event_dir)
-    source_hdf5 = Path(source_hdf5)
-    staging_hdf5 = Path(staging_hdf5)
-    source_root = Path(source_root)
-    temp_path = staging_hdf5.with_name(f"{staging_hdf5.name}.tmp")
+    source_root = canonical_root(Path(source_root), "source TIFF root", must_exist=True)
+    source_event_dir = require_contained_path(
+        source_root, Path(source_event_dir), "source TIFF root"
+    )
+    source_hdf5 = Path(source_hdf5).resolve(strict=False)
+    staging_hdf5 = Path(staging_hdf5).resolve(strict=False)
+    temp_path: Path | None = None
     try:
         tiff_paths = sorted(source_event_dir.glob("*.tif"), key=lambda path: path.name)
         if not tiff_paths:
@@ -304,6 +314,13 @@ def stage_event(
             )
 
         staging_hdf5.parent.mkdir(parents=True, exist_ok=True)
+        file_descriptor, temp_name = tempfile.mkstemp(
+            prefix=f".{staging_hdf5.name}.",
+            suffix=".tmp",
+            dir=staging_hdf5.parent,
+        )
+        os.close(file_descriptor)
+        temp_path = Path(temp_name)
         shutil.copy2(source_hdf5, temp_path)
         normalized, source_encoding = _normalized_active_fire(tiff_paths, height, width)
         with h5py.File(temp_path, "r+") as handle:
@@ -324,7 +341,7 @@ def stage_event(
         temp_path.replace(staging_hdf5)
         return replace(record, staged_hdf5=staging_hdf5.as_posix())
     finally:
-        if temp_path.exists():
+        if temp_path is not None and temp_path.exists():
             temp_path.unlink()
 
 
@@ -352,44 +369,48 @@ def _error_record(
     )
 
 
-def _evidence_temp(path: Path) -> Path:
-    return path.with_name(f"{path.name}.tmp")
-
-
-def _evidence_backup(path: Path) -> Path:
-    return path.with_name(f"{path.name}.bak")
-
-
 def _remove_paths(paths: Sequence[Path]) -> None:
     for path in paths:
         if path.exists():
             path.unlink()
 
 
-def _publish_evidence(paths: Sequence[Path]) -> None:
+def _owned_sidecar(path: Path, suffix: str) -> Path:
+    file_descriptor, sidecar_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=suffix, dir=path.parent
+    )
+    os.close(file_descriptor)
+    return Path(sidecar_name)
+
+
+def _publish_evidence(
+    paths: Sequence[Path], temp_paths: Mapping[Path, Path]
+) -> None:
     preexisting = frozenset(path for path in paths if path.exists())
-    backups = tuple(_evidence_backup(path) for path in paths)
+    backups: dict[Path, Path] = {}
     try:
         for path in preexisting:
-            shutil.copy2(path, _evidence_backup(path))
+            backup = _owned_sidecar(path, ".bak")
+            backups[path] = backup
+            shutil.copy2(path, backup)
         for path in paths:
-            _evidence_temp(path).replace(path)
+            temp_paths[path].replace(path)
     except OSError:
         rollback_succeeded = False
         try:
             for path in paths:
-                backup = _evidence_backup(path)
-                if backup.exists():
+                backup = backups.get(path)
+                if backup is not None and backup.exists():
                     shutil.copy2(backup, path)
                 elif path not in preexisting and path.exists():
                     path.unlink()
             rollback_succeeded = True
         finally:
             if rollback_succeeded:
-                _remove_paths(backups)
+                _remove_paths(tuple(backups.values()))
         raise
     else:
-        _remove_paths(backups)
+        _remove_paths(tuple(backups.values()))
 
 
 def _write_repair_evidence(
@@ -397,26 +418,34 @@ def _write_repair_evidence(
     records: Sequence[RepairRecord],
     decision: RepairDecision,
 ) -> None:
-    manifest = staging_root / "active_fire_repair_manifest.csv"
-    decision_path = staging_root / "active_fire_repair_decision.json"
+    manifest = require_contained_path(
+        staging_root,
+        staging_root / "active_fire_repair_manifest.csv",
+        "staging root",
+    )
+    decision_path = require_contained_path(
+        staging_root,
+        staging_root / "active_fire_repair_decision.json",
+        "staging root",
+    )
     paths = (manifest, decision_path)
-    temp_paths = tuple(_evidence_temp(path) for path in paths)
-    backup_paths = tuple(_evidence_backup(path) for path in paths)
-    _remove_paths((*temp_paths, *backup_paths))
+    temp_paths: dict[Path, Path] = {}
     try:
-        with _evidence_temp(manifest).open("w", newline="", encoding="utf-8") as handle:
+        for path in paths:
+            temp_paths[path] = _owned_sidecar(path, ".tmp")
+        with temp_paths[manifest].open("w", newline="", encoding="utf-8") as handle:
             field_names = [field.name for field in fields(RepairRecord)]
             writer = csv.DictWriter(handle, fieldnames=field_names, lineterminator="\n")
             writer.writeheader()
             writer.writerows(asdict(record) for record in records)
-        _evidence_temp(decision_path).write_text(
+        temp_paths[decision_path].write_text(
             json.dumps(asdict(decision), indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
             newline="\n",
         )
-        _publish_evidence(paths)
+        _publish_evidence(paths, temp_paths)
     finally:
-        _remove_paths(temp_paths)
+        _remove_paths(tuple(temp_paths.values()))
 
 
 def stage_active_fire_repair(
@@ -426,7 +455,49 @@ def stage_active_fire_repair(
     years: Sequence[int],
 ) -> RepairDecision:
     requested_years = tuple(years)
-    staging_root = Path(staging_root)
+    source_tiff_root = canonical_root(Path(source_tiff_root), "source TIFF root")
+    hdf5_root = canonical_root(Path(hdf5_root), "HDF5 root")
+    staging_root = canonical_root(Path(staging_root), "staging root")
+    require_pairwise_disjoint_roots(
+        {
+            "source TIFF root": source_tiff_root,
+            "HDF5 root": hdf5_root,
+            "staging root": staging_root,
+        }
+    )
+    require_contained_path(
+        staging_root,
+        staging_root / "active_fire_repair_manifest.csv",
+        "staging root",
+    )
+    require_contained_path(
+        staging_root,
+        staging_root / "active_fire_repair_decision.json",
+        "staging root",
+    )
+    for year in requested_years:
+        source_year = require_contained_path(
+            source_tiff_root, source_tiff_root / str(year), "source TIFF root"
+        )
+        if source_year.is_dir():
+            for event_entry in source_year.iterdir():
+                event_path = require_contained_path(
+                    source_tiff_root, event_entry, "source TIFF root"
+                )
+                if event_path.is_dir():
+                    for tiff_path in event_path.glob("*.tif"):
+                        require_contained_path(
+                            source_tiff_root, tiff_path, "source TIFF root"
+                        )
+        hdf5_year = require_contained_path(
+            hdf5_root, hdf5_root / str(year), "HDF5 root"
+        )
+        if hdf5_year.is_dir():
+            for hdf5_path in hdf5_year.glob("*.hdf5"):
+                require_contained_path(hdf5_root, hdf5_path, "HDF5 root")
+        require_contained_path(
+            staging_root, staging_root / str(year), "staging root"
+        )
     staging_root.mkdir(parents=True, exist_ok=True)
     if (
         len(set(requested_years)) != len(requested_years)
@@ -444,8 +515,6 @@ def stage_active_fire_repair(
         _write_repair_evidence(staging_root, (), decision)
         return decision
     sorted_years = tuple(sorted(requested_years))
-    source_tiff_root = Path(source_tiff_root)
-    hdf5_root = Path(hdf5_root)
 
     records: list[RepairRecord] = []
     errors: list[str] = []
@@ -493,7 +562,11 @@ def stage_active_fire_repair(
         for fire_name in sorted(source_events.keys() & hdf5_events.keys()):
             source_event = source_events[fire_name]
             source_hdf5 = hdf5_events[fire_name]
-            staged_hdf5 = staging_root / str(year) / source_hdf5.name
+            staged_hdf5 = require_contained_path(
+                staging_root,
+                staging_root / str(year) / source_hdf5.name,
+                "staging root",
+            )
             try:
                 record = stage_event(
                     source_event,

@@ -1,6 +1,8 @@
 import csv
 import hashlib
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import h5py
@@ -19,6 +21,23 @@ from wildfire_phase0.repair import (
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _make_directory_alias(alias: Path, target: Path) -> None:
+    try:
+        alias.symlink_to(target, target_is_directory=True)
+        return
+    except OSError as symlink_error:
+        if os.name != "nt":
+            pytest.skip(f"directory aliases are unavailable: {symlink_error}")
+    completed = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(alias), str(target)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        pytest.skip(f"directory aliases are unavailable: {completed.stderr}")
 
 
 def _write_tiff_event(
@@ -135,6 +154,23 @@ def test_stage_event_repairs_only_active_channel_and_preserves_source(
         assert staged["data"][:, 22, 0, 0].tolist() == [0.0, 6.0, 22.0]
         assert staged["data"].attrs["active_fire_source_encoding"] == "hour"
         assert staged["data"].attrs["active_fire_stored_encoding"] == "hour"
+
+
+def test_stage_event_preserves_unknown_preexisting_temp_file(tmp_path: Path) -> None:
+    source_root = tmp_path / "tiff"
+    event_dir = source_root / "2016" / "fire_a"
+    source_hdf5 = tmp_path / "hdf5" / "2016" / "fire_a.hdf5"
+    staging_hdf5 = tmp_path / "staging" / "2016" / "fire_a.hdf5"
+    _write_tiff_event(event_dir, [0.0, 6.0])
+    _write_hdf5_event(source_hdf5, [0.0, 0.0])
+    collision = staging_hdf5.with_name("fire_a.hdf5.tmp")
+    collision.parent.mkdir(parents=True)
+    collision.write_bytes(b"belongs-to-another-process")
+
+    record = stage_event(event_dir, source_hdf5, staging_hdf5, source_root)
+
+    assert record.status == "repaired"
+    assert collision.read_bytes() == b"belongs-to-another-process"
 
 
 def test_stage_event_rejects_date_mismatch_without_final_or_temp(tmp_path: Path) -> None:
@@ -329,6 +365,28 @@ def test_stage_active_fire_repair_stages_all_events_and_writes_evidence(
     assert decision_path.read_bytes().endswith(b"\n")
 
 
+def test_repair_evidence_preserves_unknown_preexisting_sidecars(tmp_path: Path) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+    staging_root.mkdir()
+    unknown_sidecars = {
+        staging_root / "active_fire_repair_manifest.csv.tmp": b"unknown-temp",
+        staging_root / "active_fire_repair_decision.json.bak": b"unknown-backup",
+    }
+    for path, content in unknown_sidecars.items():
+        path.write_bytes(content)
+
+    decision = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    assert decision.status == "ready"
+    assert {path: path.read_bytes() for path in unknown_sidecars} == unknown_sidecars
+
+
 def test_stage_active_fire_repair_retry_verifies_existing_files(tmp_path: Path) -> None:
     source_tiff_root = tmp_path / "tiff"
     hdf5_root = tmp_path / "hdf5"
@@ -393,3 +451,100 @@ def test_stage_active_fire_repair_blocks_invalid_requested_years_with_evidence(
     assert (staging_root / "active_fire_repair_manifest.csv").is_file()
     assert (staging_root / "active_fire_repair_decision.json").is_file()
     assert not list(staging_root.rglob("*.tmp"))
+
+
+@pytest.mark.parametrize(
+    "relation",
+    ("equal-inputs", "staging-under-source", "staging-above-source", "source-under-hdf5"),
+)
+def test_stage_active_fire_repair_rejects_non_disjoint_roots_before_mutation(
+    tmp_path: Path, relation: str
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    if relation == "equal-inputs":
+        hdf5_root = source_tiff_root
+    elif relation == "staging-under-source":
+        staging_root = source_tiff_root / "staging"
+    elif relation == "staging-above-source":
+        staging_root = tmp_path / "shared"
+        source_tiff_root = staging_root / "tiff"
+    else:
+        source_tiff_root = hdf5_root / "tiff"
+    source_tiff_root.mkdir(parents=True)
+    hdf5_root.mkdir(parents=True, exist_ok=True)
+    marker = staging_root / "keep.txt"
+    if staging_root.exists():
+        marker.write_bytes(b"keep")
+
+    with pytest.raises(ValueError, match="pairwise disjoint"):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    assert not (staging_root / "active_fire_repair_manifest.csv").exists()
+    assert not (staging_root / "active_fire_repair_decision.json").exists()
+    if marker.exists():
+        assert marker.read_bytes() == b"keep"
+
+
+def test_stage_active_fire_repair_rejects_resolved_root_alias_before_mutation(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    source_tiff_root.mkdir()
+    staging_alias = tmp_path / "staging-alias"
+    _make_directory_alias(staging_alias, source_tiff_root)
+    hdf5_root = tmp_path / "hdf5"
+    hdf5_root.mkdir()
+
+    with pytest.raises(ValueError, match="pairwise disjoint"):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_alias, (2016,)
+        )
+
+    assert not (source_tiff_root / "active_fire_repair_manifest.csv").exists()
+
+
+def test_stage_active_fire_repair_rejects_staging_year_alias_escape(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    escaped_root = tmp_path / "escaped"
+    source_tiff_root.mkdir()
+    hdf5_root.mkdir()
+    staging_root.mkdir()
+    escaped_root.mkdir()
+    _make_directory_alias(staging_root / "2016", escaped_root)
+
+    with pytest.raises(ValueError, match="outside designated staging root"):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    assert not any(escaped_root.iterdir())
+    assert not (staging_root / "active_fire_repair_manifest.csv").exists()
+
+
+def test_stage_active_fire_repair_rejects_source_event_alias_before_mutation(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    source_year = source_tiff_root / "2016"
+    source_year.mkdir(parents=True)
+    escaped_event = tmp_path / "escaped" / "fire_a"
+    _write_tiff_event(escaped_event, [0.0, 6.0], dates=("2016-01-01", "2016-01-02"))
+    _make_directory_alias(source_year / "fire_a", escaped_event)
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+
+    with pytest.raises(ValueError, match="outside designated source TIFF root"):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    assert not staging_root.exists()
