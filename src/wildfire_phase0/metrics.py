@@ -1,11 +1,53 @@
 """Safe event-level metrics for wildfire predictions."""
 
+from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score
 
 
 _REQUIRED_COLUMNS = {"event_id", "y_true", "y_score"}
+
+
+@dataclass(frozen=True)
+class BinaryScoreCounts:
+    """Confusion-matrix cells for binary target and binary prediction scores."""
+
+    tp: int = 0
+    fp: int = 0
+    fn: int = 0
+    tn: int = 0
+
+    def __post_init__(self) -> None:
+        if any(value < 0 for value in (self.tp, self.fp, self.fn, self.tn)):
+            raise ValueError("binary score counts must be nonnegative")
+
+    def __add__(self, other: "BinaryScoreCounts") -> "BinaryScoreCounts":
+        if not isinstance(other, BinaryScoreCounts):
+            return NotImplemented
+        return BinaryScoreCounts(
+            self.tp + other.tp,
+            self.fp + other.fp,
+            self.fn + other.fn,
+            self.tn + other.tn,
+        )
+
+    @property
+    def total(self) -> int:
+        return self.tp + self.fp + self.fn + self.tn
+
+    @property
+    def positives(self) -> int:
+        return self.tp + self.fn
+
+    @property
+    def predicted_positives(self) -> int:
+        return self.tp + self.fp
+
+    @property
+    def prevalence(self) -> float:
+        return self.positives / self.total if self.total else float("nan")
 
 
 def _validated_arrays(y_true: object, y_score: object) -> tuple[np.ndarray, np.ndarray]:
@@ -23,6 +65,44 @@ def _validated_arrays(y_true: object, y_score: object) -> tuple[np.ndarray, np.n
     if not np.all(np.isfinite(scores)):
         raise ValueError("y_score must contain finite values")
     return target, scores
+
+
+def binary_score_counts(y_true: object, y_score: object) -> BinaryScoreCounts:
+    """Return confusion-matrix counts without retaining individual pixels."""
+    target, scores = _validated_arrays(y_true, y_score)
+    if not np.all((scores == 0) | (scores == 1)):
+        raise ValueError("y_score must be binary")
+
+    target_is_one = target == 1
+    score_is_one = scores == 1
+    return BinaryScoreCounts(
+        tp=int(np.count_nonzero(target_is_one & score_is_one)),
+        fp=int(np.count_nonzero(~target_is_one & score_is_one)),
+        fn=int(np.count_nonzero(target_is_one & ~score_is_one)),
+        tn=int(np.count_nonzero(~target_is_one & ~score_is_one)),
+    )
+
+
+def binary_average_precision(counts: BinaryScoreCounts) -> float:
+    """Return non-interpolated AP for a binary-valued score distribution."""
+    if counts.total == 0:
+        raise ValueError("binary score counts must not be empty")
+    if counts.positives == 0:
+        return float("nan")
+    recall_at_one = counts.tp / counts.positives
+    precision_at_one = (
+        counts.tp / counts.predicted_positives if counts.predicted_positives else 0.0
+    )
+    return recall_at_one * precision_at_one + (1.0 - recall_at_one) * counts.prevalence
+
+
+def binary_false_alarm_rate(counts: BinaryScoreCounts) -> float:
+    """Return the positive-score rate for a zero-positive target subset."""
+    if counts.total == 0:
+        raise ValueError("binary score counts must not be empty")
+    if counts.positives:
+        raise ValueError("false-alarm rate requires a zero-positive target")
+    return counts.fp / counts.total
 
 
 def average_precision_safe(y_true: object, y_score: object) -> tuple[float, bool]:

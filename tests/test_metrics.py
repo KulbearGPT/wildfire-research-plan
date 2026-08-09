@@ -3,11 +3,71 @@ import pandas as pd
 import pytest
 
 from wildfire_phase0.metrics import (
+    BinaryScoreCounts,
     average_precision_safe,
+    binary_average_precision,
+    binary_false_alarm_rate,
+    binary_score_counts,
     event_macro_ap,
     zero_target_event_false_alarm_rate,
     zero_target_false_alarm_rate,
 )
+from sklearn.metrics import average_precision_score
+
+
+def test_binary_counts_add_without_retaining_pixels() -> None:
+    first = binary_score_counts([1, 0], [1, 1])
+    second = binary_score_counts([1, 0], [0, 0])
+
+    assert first + second == BinaryScoreCounts(tp=1, fp=1, fn=1, tn=1)
+    assert (first + second).total == 4
+    assert (first + second).positives == 2
+
+
+@pytest.mark.parametrize("seed", range(10))
+def test_binary_average_precision_matches_sklearn(seed: int) -> None:
+    rng = np.random.default_rng(seed)
+    target = rng.integers(0, 2, size=1000, dtype=np.uint8)
+    scores = rng.integers(0, 2, size=1000, dtype=np.uint8)
+
+    counts = binary_score_counts(target, scores)
+
+    assert binary_average_precision(counts) == pytest.approx(
+        average_precision_score(target, scores)
+    )
+
+
+def test_binary_average_precision_is_nan_without_positive_target() -> None:
+    counts = binary_score_counts([0, 0], [1, 0])
+
+    assert np.isnan(binary_average_precision(counts))
+    assert binary_false_alarm_rate(counts) == 0.5
+
+
+@pytest.mark.parametrize(
+    ("y_true", "y_score"),
+    [
+        ([0, 1], [0, 2]),
+        ([0, 2], [0, 1]),
+        ([0], [0, 1]),
+        ([], []),
+    ],
+)
+def test_binary_score_counts_rejects_invalid_inputs(
+    y_true: object, y_score: object
+) -> None:
+    with pytest.raises(ValueError):
+        binary_score_counts(y_true, y_score)
+
+
+def test_binary_score_counts_rejects_negative_dataclass_counts() -> None:
+    with pytest.raises(ValueError, match="nonnegative"):
+        BinaryScoreCounts(tp=-1)
+
+
+def test_binary_false_alarm_rate_rejects_positive_targets() -> None:
+    with pytest.raises(ValueError, match="zero-positive"):
+        binary_false_alarm_rate(BinaryScoreCounts(tp=1, tn=1))
 
 
 def test_average_precision_safe_marks_zero_positive_target() -> None:
