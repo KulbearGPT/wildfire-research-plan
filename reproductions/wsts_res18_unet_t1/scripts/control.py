@@ -68,6 +68,24 @@ def verify_inventory(
             )
         counts[str(year)] = count
 
+    if selected_years is None:
+        allowed_years = {str(year) for year in FROZEN_YEAR_COUNTS}
+        extra_years = sorted(
+            path.name
+            for path in root.iterdir()
+            if path.is_dir()
+            and path.name not in allowed_years
+            and any(
+                child.is_file() and child.suffix == ".hdf5"
+                for child in path.resolve().iterdir()
+            )
+        )
+        if extra_years:
+            raise ValueError(
+                "default inventory must not include additional year directories "
+                "with .hdf5 files: " + ", ".join(extra_years)
+            )
+
     counts["total"] = sum(counts.values())
     return counts
 

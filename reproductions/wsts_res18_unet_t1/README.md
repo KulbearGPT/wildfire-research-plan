@@ -20,8 +20,12 @@ store all local clones, runs, logs, and learned artifacts under ignored paths.
 
 The bootstrap script always targets the dedicated prefix
 `D:\WildFire Project\.conda-envs\wsts-res18-t1`; it never activates an
-environment or invokes the current Python. It checks out the commit from
-`upstream.lock.json` in detached mode, rejects local upstream changes, installs
+environment or invokes the current Python. The prefix is not configurable.
+Before the first pip command it rejects the target if it is active or is the
+Conda base prefix, then requires the target `python.exe` to report that same
+resolved `sys.prefix` and exactly Python 3.10.4. It checks out the commit from
+`upstream.lock.json` in detached mode, rejects local upstream changes and a
+non-official `origin` URL, installs
 the authors' pinned requirements with the CUDA 11.8 PyTorch 2.0.0 wheels, pins
 `setuptools==80.9.0` because Lightning Fabric 2.0.1 still imports the removed
 `pkg_resources` compatibility module, and applies the bounded Windows-only
@@ -38,6 +42,15 @@ with the gate evidence:
 ```powershell
 $run = 'artifacts/reproductions/wsts-res18-t1/fold2-smoke-001'
 powershell -ExecutionPolicy Bypass -File reproductions/wsts_res18_unet_t1/scripts/bootstrap.ps1 -RunDirectory $run
+```
+
+The isolation and checkout guards can be exercised without installing,
+fetching, or changing either location:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File reproductions/wsts_res18_unet_t1/scripts/bootstrap.ps1 -ValidateEnvironmentOnly
+powershell -ExecutionPolicy Bypass -File reproductions/wsts_res18_unet_t1/scripts/bootstrap.ps1 -ValidateCheckoutOnly
+powershell -ExecutionPolicy Bypass -File reproductions/wsts_res18_unet_t1/scripts/bootstrap.ps1 -ValidateRuntimeOnly
 ```
 
 Then run exactly one seeded training-loader batch in the isolated prefix:
