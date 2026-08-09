@@ -7,6 +7,7 @@ import h5py
 import numpy as np
 import pandas as pd
 import pytest
+import tifffile
 
 from wildfire_phase0 import cli
 
@@ -56,6 +57,57 @@ def _write_zero_sized_event(path: Path, year: int, fire_name: str) -> None:
         data.attrs["fire_name"] = fire_name
         data.attrs["img_dates"] = []
         data.attrs["lnglat"] = [-120.5, 54.1]
+
+
+def _write_repair_event(
+    source_tiff_root: Path,
+    hdf5_root: Path,
+    year: int,
+    fire_name: str,
+    active_values: tuple[float, ...] = (0.0, 6.0),
+) -> Path:
+    event_dir = source_tiff_root / str(year) / fire_name
+    event_dir.mkdir(parents=True)
+    dates = tuple(f"{year}-01-{index + 1:02d}" for index in range(len(active_values)))
+    values = np.zeros((len(active_values), 23, 4, 4), dtype=np.float32)
+    for index, (date, active) in enumerate(zip(dates, active_values)):
+        image = np.zeros((4, 4, 23), dtype=np.float32)
+        image[..., 0] = index + 1
+        image[0, 0, 22] = active
+        tifffile.imwrite(event_dir / f"{date}.tif", image, photometric="minisblack")
+        values[index, 0] = index + 1
+    hdf5_path = hdf5_root / str(year) / f"{fire_name}.hdf5"
+    hdf5_path.parent.mkdir(parents=True)
+    with h5py.File(hdf5_path, "w") as handle:
+        data = handle.create_dataset(
+            "data", data=values, chunks=(1, 23, 4, 4), compression="lzf", shuffle=True
+        )
+        data.attrs["year"] = year
+        data.attrs["fire_name"] = fire_name
+        data.attrs["img_dates"] = dates
+        data.attrs["lnglat"] = [float("nan"), float("nan")]
+    return hdf5_path
+
+
+def _run_repair(
+    source_tiff_root: Path,
+    hdf5_root: Path,
+    staging_root: Path,
+    years: tuple[int, ...],
+) -> int:
+    return cli.main(
+        [
+            "repair-active-fire",
+            "--source-tiff-root",
+            str(source_tiff_root),
+            "--hdf5-root",
+            str(hdf5_root),
+            "--staging-root",
+            str(staging_root),
+            "--years",
+            *(str(year) for year in years),
+        ]
+    )
 
 
 def _run_audit(data_root: Path, output_root: Path) -> int:
@@ -313,3 +365,50 @@ def test_audit_publish_failure_removes_finals_without_predecessors(
     assert not any((output_root / name).exists() for name in _ARTIFACT_NAMES)
     assert not list(output_root.glob("*.tmp"))
     assert not list(output_root.glob("*.bak"))
+
+
+def test_repair_active_fire_cli_returns_zero_and_preserves_sources(tmp_path: Path) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    source_paths = [
+        _write_repair_event(source_tiff_root, hdf5_root, year, f"fire_{year}")
+        for year in (2016, 2022)
+    ]
+    source_hashes = {path: path.read_bytes() for path in source_paths}
+
+    exit_code = _run_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016, 2022)
+    )
+
+    assert exit_code == 0
+    assert {path: path.read_bytes() for path in source_paths} == source_hashes
+    assert (staging_root / "active_fire_repair_manifest.csv").is_file()
+    decision_path = staging_root / "active_fire_repair_decision.json"
+    assert json.loads(decision_path.read_text(encoding="utf-8"))["status"] == "ready"
+    assert not list(staging_root.rglob("*.tmp"))
+
+
+def test_repair_active_fire_cli_returns_two_with_complete_error_evidence(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    source_path = _write_repair_event(
+        source_tiff_root, hdf5_root, 2016, "hdf5_only"
+    )
+    for path in (source_tiff_root / "2016" / "hdf5_only").glob("*.tif"):
+        path.unlink()
+    source_bytes = source_path.read_bytes()
+
+    exit_code = _run_repair(source_tiff_root, hdf5_root, staging_root, (2016,))
+
+    assert exit_code == 2
+    assert source_path.read_bytes() == source_bytes
+    assert (staging_root / "active_fire_repair_manifest.csv").is_file()
+    decision_path = staging_root / "active_fire_repair_decision.json"
+    decision = json.loads(decision_path.read_text(encoding="utf-8"))
+    assert decision["status"] == "blocked"
+    assert decision["errors"]
+    assert not list(staging_root.rglob("*.tmp"))

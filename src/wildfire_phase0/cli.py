@@ -12,6 +12,7 @@ import pandas as pd
 from wildfire_phase0.contract import ContractDecision, audit_contract, load_contract
 from wildfire_phase0.inventory import inventory_dataset
 from wildfire_phase0.report import render_phase0_report
+from wildfire_phase0.repair import stage_active_fire_repair
 from wildfire_phase0.schema import EventInventory
 from wildfire_phase0.splits import build_forward_split
 
@@ -183,6 +184,14 @@ def _parser() -> argparse.ArgumentParser:
     audit = subparsers.add_parser("audit", help="Inventory WSTS+ files and write the gate artifacts.")
     audit.add_argument("--data-root", type=Path, required=True)
     audit.add_argument("--output-root", type=Path, required=True)
+    repair = subparsers.add_parser(
+        "repair-active-fire",
+        help="Stage active-fire label repairs and write repair evidence.",
+    )
+    repair.add_argument("--source-tiff-root", type=Path, required=True)
+    repair.add_argument("--hdf5-root", type=Path, required=True)
+    repair.add_argument("--staging-root", type=Path, required=True)
+    repair.add_argument("--years", type=int, nargs="+", required=True)
     return parser
 
 
@@ -191,6 +200,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
     if arguments.command == "audit":
         return run_audit(arguments.data_root, arguments.output_root)
+    if arguments.command == "repair-active-fire":
+        decision = stage_active_fire_repair(
+            arguments.source_tiff_root,
+            arguments.hdf5_root,
+            arguments.staging_root,
+            arguments.years,
+        )
+        return 0 if decision.status == "ready" else 2
     raise AssertionError(f"unexpected command: {arguments.command}")
 
 
