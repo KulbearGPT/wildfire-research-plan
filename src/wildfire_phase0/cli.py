@@ -84,12 +84,14 @@ def _publish_staged_artifacts(
 ) -> None:
     preexisting = frozenset(path for path in paths if path.exists())
     backups: dict[Path, Path] = {}
+    reserved_backups: list[Path] = []
     try:
         for path in paths:
             if path in preexisting:
                 backup = _owned_sidecar(path, ".bak")
-                backups[path] = backup
+                reserved_backups.append(backup)
                 copy2(path, backup)
+                backups[path] = backup
         for path in paths:
             temp_paths[path].replace(path)
     except OSError:
@@ -104,10 +106,10 @@ def _publish_staged_artifacts(
             rollback_succeeded = True
         finally:
             if rollback_succeeded:
-                _remove_paths(tuple(backups.values()))
+                _remove_paths(reserved_backups)
         raise
     else:
-        _remove_paths(tuple(backups.values()))
+        _remove_paths(reserved_backups)
 
 
 def _inventory_frame(inventory: Sequence[EventInventory]) -> pd.DataFrame:

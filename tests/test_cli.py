@@ -541,6 +541,48 @@ def test_audit_publish_failure_rolls_back_every_existing_final(
     assert not list(output_root.glob("*.bak"))
 
 
+def test_audit_backup_copy_failure_preserves_existing_finals(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An incomplete backup must never be used to restore an existing final."""
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    _seed_old_generation(output_root)
+    old_bytes = {
+        name: (output_root / name).read_bytes() for name in _ARTIFACT_NAMES
+    }
+    original_copy2 = cli.copy2
+    backup_copies = 0
+
+    def fail_first_backup_copy(
+        source: Path, destination: Path, *args: object, **kwargs: object
+    ) -> Path:
+        nonlocal backup_copies
+        if (
+            Path(source).name in _ARTIFACT_NAMES
+            and Path(destination).suffix == ".bak"
+        ):
+            backup_copies += 1
+            if backup_copies == 1:
+                raise OSError("injected backup copy failure")
+        return original_copy2(source, destination, *args, **kwargs)
+
+    monkeypatch.setattr(cli, "copy2", fail_first_backup_copy)
+
+    with pytest.raises(OSError, match="injected backup copy failure"):
+        _run_audit(data_root, output_root)
+
+    assert backup_copies == 1
+    assert {
+        name: (output_root / name).read_bytes()
+        for name in _ARTIFACT_NAMES
+    } == old_bytes
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
 def test_audit_publish_failure_removes_finals_without_predecessors(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
