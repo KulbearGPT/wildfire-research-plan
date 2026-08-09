@@ -681,7 +681,7 @@ def _load_transaction(root: Path, journal: Path) -> _EvidenceTransaction:
         manifest_sha256=str(payload["manifest_sha256"]),
         generation=str(payload["generation"]),
     )
-    if transaction.journal != journal:
+    if journal not in (transaction.journal, transaction.journal_temp):
         raise ValueError(f"unrecognized repair evidence transaction: {journal.name}")
     return transaction
 
@@ -734,11 +734,24 @@ def _recover_interrupted_evidence(staging_root: Path) -> None:
             key=lambda path: path.name,
         )
     )
-    if len(journals) > 1:
+    journal_temps = tuple(
+        sorted(
+            staging_root.glob(f"{_TRANSACTION_PREFIX}*.txn.tmp"),
+            key=lambda path: path.name,
+        )
+    )
+    if len(journals) + len(journal_temps) > 1:
         raise ValueError("multiple interrupted repair evidence transactions found")
     if journals:
         journal = require_contained_path(staging_root, journals[0], "staging root")
         _recover_transaction(_load_transaction(staging_root, journal))
+    elif journal_temps:
+        journal_temp = require_contained_path(
+            staging_root, journal_temps[0], "staging root"
+        )
+        transaction = _load_transaction(staging_root, journal_temp)
+        journal_temp.replace(transaction.journal)
+        _recover_transaction(transaction)
 
 
 def _render_manifest(records: Sequence[RepairRecord]) -> bytes:
