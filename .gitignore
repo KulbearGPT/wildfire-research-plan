@@ -8,3 +8,4 @@ data/
 artifacts/phase0/*.csv
 artifacts/phase0/*.json
 artifacts/phase0/*.md
+artifacts/rule-baselines/

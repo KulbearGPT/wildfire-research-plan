@@ -235,14 +235,25 @@ def run_rule_evaluation(
             output_root, _RULE_ARTIFACT_NAMES
         ).items()
     }
+    manifest_path = Path(split_manifest).expanduser().resolve(strict=False)
+    if any(
+        manifest_path == artifact
+        or (
+            manifest_path.exists()
+            and artifact.exists()
+            and manifest_path.samefile(artifact)
+        )
+        for artifact in artifacts.values()
+    ):
+        raise ValueError("split manifest must not alias a rule output artifact")
 
     try:
-        manifest = pd.read_csv(split_manifest)
+        manifest = pd.read_csv(manifest_path)
         event_metrics = evaluate_rule_dataset(data_root, manifest)
         summary = summarize_rule_metrics(event_metrics)
-        report = render_rule_report(summary)
     except (FileNotFoundError, OSError, TypeError, ValueError):
         return 2
+    report = render_rule_report(summary)
 
     output_root.mkdir(parents=True, exist_ok=True)
     temp_paths: dict[Path, Path] = {}

@@ -211,6 +211,189 @@ def test_summary_rejects_malformed_frame_with_exact_message() -> None:
     )
 
 
+@pytest.mark.parametrize("column", ("event_id", "split", "baseline"))
+def test_summary_rejects_missing_identity_keys_with_exact_message(column: str) -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, column] = None
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "event metrics event_id, split, and baseline values must not be missing"
+    )
+
+
+def test_summary_rejects_duplicate_event_baseline_rows_with_exact_message() -> None:
+    frame = _summary_event_frame()
+    malformed = pd.concat([frame, frame.iloc[[0]]], ignore_index=True)
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "event metrics must contain one row per event and baseline"
+    )
+
+
+@pytest.mark.parametrize("invalid", (1, "true", np.nan))
+def test_summary_requires_strict_boolean_ap_defined_with_exact_message(
+    invalid: object,
+) -> None:
+    malformed = _summary_event_frame()
+    malformed["event_ap_defined"] = malformed["event_ap_defined"].astype(object)
+    malformed.loc[0, "event_ap_defined"] = invalid
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == "event_ap_defined values must be boolean"
+
+
+@pytest.mark.parametrize(
+    ("column", "invalid"),
+    (("total_pixels", 8.5), ("tp", True), ("fp", -1)),
+)
+def test_summary_requires_nonnegative_integer_counts_with_exact_message(
+    column: str,
+    invalid: object,
+) -> None:
+    malformed = _summary_event_frame()
+    malformed[column] = malformed[column].astype(object)
+    malformed.loc[0, column] = invalid
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "event metric count fields must contain non-negative integers"
+    )
+
+
+def test_summary_rejects_confusion_total_mismatch_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "total_pixels"] = 9
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == "tp + fp + fn + tn must equal total_pixels"
+
+
+def test_summary_rejects_positive_pixel_mismatch_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "positive_target_pixels"] = 1
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == "tp + fn must equal positive_target_pixels"
+
+
+@pytest.mark.parametrize("column", ("target_days", "total_pixels"))
+def test_summary_requires_positive_event_extents_with_exact_message(column: str) -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, column] = 0
+    if column == "total_pixels":
+        malformed.loc[0, ["tp", "fp", "tn", "positive_target_pixels"]] = 0
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == "target_days and total_pixels must be positive"
+
+
+def test_summary_rejects_zero_target_day_mismatch_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "zero_target_days"] = 2
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == "zero_target_days must not exceed target_days"
+
+
+def test_summary_rejects_zero_target_pixel_mismatch_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "zero_target_pixels"] = 9
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == "zero_target_pixels must not exceed total_pixels"
+
+
+def test_summary_rejects_zero_target_extent_mismatch_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[1, "zero_target_pixels"] = 2
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "zero_target_pixels must match zero_target_days and target_days"
+    )
+
+
+def test_summary_rejects_zero_target_prediction_mismatch_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[1, "zero_target_predicted_positive_pixels"] = 5
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "zero_target_predicted_positive_pixels must not exceed zero_target_pixels"
+    )
+
+
+def test_summary_rejects_zero_target_predictions_above_fp_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[1, "fp"] = 0
+    malformed.loc[1, "tn"] = 4
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "zero_target_predicted_positive_pixels must not exceed fp"
+    )
+
+
+def test_summary_requires_ap_defined_to_match_positive_pixels() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, ["tp", "fn", "positive_target_pixels"]] = 0
+    malformed.loc[0, "tn"] = 7
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "event_ap_defined must equal whether positive_target_pixels is positive"
+    )
+
+
+@pytest.mark.parametrize(
+    ("event_ap_defined", "event_ap"),
+    ((True, np.nan), (False, 0.25), (True, np.inf)),
+)
+def test_summary_requires_ap_value_to_match_defined_flag_with_exact_message(
+    event_ap_defined: bool,
+    event_ap: float,
+) -> None:
+    malformed = _summary_event_frame()
+    row = 0 if event_ap_defined else 1
+    malformed.loc[row, "event_ap_defined"] = event_ap_defined
+    malformed.loc[row, "event_ap"] = event_ap
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "event_ap must be finite exactly when event_ap_defined is true"
+    )
+
+
 def test_rule_report_is_deterministic_and_states_prespecified_evaluation() -> None:
     summary = summarize_rule_metrics(_summary_event_frame())
 

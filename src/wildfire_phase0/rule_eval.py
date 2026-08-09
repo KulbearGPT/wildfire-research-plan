@@ -1,7 +1,7 @@
 """Read-only, streaming evaluation of fixed wildfire rule baselines."""
 
 from datetime import date
-from numbers import Integral
+from numbers import Integral, Real
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
@@ -53,6 +53,18 @@ _SUMMARY_COLUMNS = [
     "positive_target_pixels",
     "total_pixels",
 ]
+_EVENT_COUNT_COLUMNS = (
+    "target_days",
+    "zero_target_days",
+    "positive_target_pixels",
+    "total_pixels",
+    "tp",
+    "fp",
+    "fn",
+    "tn",
+    "zero_target_pixels",
+    "zero_target_predicted_positive_pixels",
+)
 _MANIFEST_COLUMNS = ("event_id", "year", "fire_name", "path", "split")
 _REQUIRED_ATTRIBUTES = ("year", "fire_name", "img_dates", "lnglat")
 _SPLITS = {"train", "validation", "test"}
@@ -332,8 +344,7 @@ def evaluate_rule_dataset(
     ).reset_index(drop=True)
 
 
-def summarize_rule_metrics(event_metrics: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate event metrics for each frozen split and fixed rule baseline."""
+def _validate_event_metrics_for_summary(event_metrics: pd.DataFrame) -> None:
     missing_columns = set(_EVENT_COLUMNS).difference(event_metrics.columns)
     if missing_columns:
         raise ValueError(
@@ -341,11 +352,108 @@ def summarize_rule_metrics(event_metrics: pd.DataFrame) -> pd.DataFrame:
         )
     if event_metrics.empty:
         raise ValueError("event metrics must contain at least one row")
+    identity_columns = ["event_id", "split", "baseline"]
+    if event_metrics[identity_columns].isna().any().any():
+        raise ValueError(
+            "event metrics event_id, split, and baseline values must not be missing"
+        )
+    if event_metrics.duplicated(subset=["event_id", "baseline"]).any():
+        raise ValueError("event metrics must contain one row per event and baseline")
+    if not all(
+        isinstance(value, (bool, np.bool_))
+        for value in event_metrics["event_ap_defined"]
+    ):
+        raise ValueError("event_ap_defined values must be boolean")
+    if not all(
+        isinstance(value, Integral)
+        and not isinstance(value, (bool, np.bool_))
+        and value >= 0
+        for column in _EVENT_COUNT_COLUMNS
+        for value in event_metrics[column]
+    ):
+        raise ValueError(
+            "event metric count fields must contain non-negative integers"
+        )
+    if not (
+        event_metrics["tp"]
+        + event_metrics["fp"]
+        + event_metrics["fn"]
+        + event_metrics["tn"]
+        == event_metrics["total_pixels"]
+    ).all():
+        raise ValueError("tp + fp + fn + tn must equal total_pixels")
+    if not (
+        event_metrics["tp"] + event_metrics["fn"]
+        == event_metrics["positive_target_pixels"]
+    ).all():
+        raise ValueError("tp + fn must equal positive_target_pixels")
+    if (
+        (event_metrics["target_days"] == 0)
+        | (event_metrics["total_pixels"] == 0)
+    ).any():
+        raise ValueError("target_days and total_pixels must be positive")
+    if (event_metrics["zero_target_days"] > event_metrics["target_days"]).any():
+        raise ValueError("zero_target_days must not exceed target_days")
+    if (event_metrics["zero_target_pixels"] > event_metrics["total_pixels"]).any():
+        raise ValueError("zero_target_pixels must not exceed total_pixels")
+    if not (
+        event_metrics["zero_target_pixels"] * event_metrics["target_days"]
+        == event_metrics["total_pixels"] * event_metrics["zero_target_days"]
+    ).all():
+        raise ValueError(
+            "zero_target_pixels must match zero_target_days and target_days"
+        )
+    if (
+        event_metrics["zero_target_predicted_positive_pixels"]
+        > event_metrics["zero_target_pixels"]
+    ).any():
+        raise ValueError(
+            "zero_target_predicted_positive_pixels must not exceed zero_target_pixels"
+        )
+    if (
+        event_metrics["zero_target_predicted_positive_pixels"]
+        > event_metrics["fp"]
+    ).any():
+        raise ValueError(
+            "zero_target_predicted_positive_pixels must not exceed fp"
+        )
+    if not all(
+        bool(defined) == (positive_pixels > 0)
+        for defined, positive_pixels in zip(
+            event_metrics["event_ap_defined"],
+            event_metrics["positive_target_pixels"],
+        )
+    ):
+        raise ValueError(
+            "event_ap_defined must equal whether positive_target_pixels is positive"
+        )
+    for defined, value in zip(
+        event_metrics["event_ap_defined"], event_metrics["event_ap"]
+    ):
+        finite = (
+            isinstance(value, Real)
+            and not isinstance(value, (bool, np.bool_))
+            and bool(np.isfinite(value))
+        )
+        missing = value is None or value is pd.NA or (
+            isinstance(value, Real)
+            and not isinstance(value, (bool, np.bool_))
+            and bool(np.isnan(value))
+        )
+        if not ((bool(defined) and finite) or (not bool(defined) and missing)):
+            raise ValueError(
+                "event_ap must be finite exactly when event_ap_defined is true"
+            )
+
+
+def summarize_rule_metrics(event_metrics: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate event metrics for each frozen split and fixed rule baseline."""
+    _validate_event_metrics_for_summary(event_metrics)
 
     records = []
     grouped = event_metrics.groupby(["split", "baseline"], sort=True)
     for (split, baseline), group in grouped:
-        defined = group["event_ap_defined"] == True  # noqa: E712
+        defined = group["event_ap_defined"]
         counts = BinaryScoreCounts(
             tp=int(group["tp"].sum()),
             fp=int(group["fp"].sum()),

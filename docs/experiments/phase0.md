@@ -92,10 +92,14 @@ Evaluate the prespecified no-fire and latest-mask persistence rules at fixed
 `T=1` against the next-day target using the frozen audit split manifest:
 
 ```powershell
+if ([string]::IsNullOrWhiteSpace($env:WSTSPLUS_DATA_ROOT)) {
+  throw 'WSTSPLUS_DATA_ROOT must name the active HDF5 data directory'
+}
+$wstsDataRoot = (Resolve-Path -LiteralPath $env:WSTSPLUS_DATA_ROOT -ErrorAction Stop).Path
 python -m wildfire_phase0.cli evaluate-rules `
   --data-root "$wstsDataRoot" `
   --split-manifest artifacts\phase0\split_manifest.csv `
-  --output-root artifacts\phase0
+  --output-root artifacts\rule-baselines
 ```
 
 The command reads the HDF5 inputs without modifying them and publishes

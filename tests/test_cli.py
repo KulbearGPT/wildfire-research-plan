@@ -309,6 +309,92 @@ def test_evaluate_rules_validation_failure_returns_two_without_mixed_generation(
     assert not list(output_root.glob("*.bak"))
 
 
+@pytest.mark.parametrize(
+    "injected_error",
+    [
+        OSError("injected report I/O failure"),
+        TypeError("injected report type failure"),
+        ValueError("injected report value failure"),
+    ],
+    ids=("os-error", "type-error", "value-error"),
+)
+def test_evaluate_rules_report_errors_propagate_without_publishing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    injected_error: Exception,
+) -> None:
+    data_root = tmp_path / "data"
+    manifest_path = tmp_path / "split_manifest.csv"
+    output_root = tmp_path / "rule-artifacts"
+    _write_rule_fixture(data_root, manifest_path)
+    old_bytes = _seed_old_rule_generation(output_root)
+
+    def fail_report(summary: pd.DataFrame) -> str:
+        raise injected_error
+
+    monkeypatch.setattr(cli, "render_rule_report", fail_report)
+
+    with pytest.raises(type(injected_error), match=str(injected_error)):
+        _run_rules(data_root, manifest_path, output_root)
+
+    assert {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    } == old_bytes
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
+def test_evaluate_rules_rejects_manifest_at_final_path_with_exact_message(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "rule-artifacts"
+    manifest_path = output_root / "rule_summary.csv"
+    _write_rule_fixture(data_root, manifest_path)
+    manifest_bytes = manifest_path.read_bytes()
+
+    with pytest.raises(ValueError) as error:
+        _run_rules(data_root, manifest_path, output_root)
+
+    assert str(error.value) == "split manifest must not alias a rule output artifact"
+    assert manifest_path.read_bytes() == manifest_bytes
+    assert not (output_root / "rule_event_metrics.csv").exists()
+    assert not (output_root / "rule_report.md").exists()
+
+
+def test_evaluate_rules_rejects_manifest_hardlink_alias_with_exact_message(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "rule-artifacts"
+    manifest_path = output_root / "split_manifest.csv"
+    _write_rule_fixture(data_root, manifest_path)
+    alias = output_root / "rule_summary.csv"
+    os.link(manifest_path, alias)
+    manifest_bytes = manifest_path.read_bytes()
+
+    with pytest.raises(ValueError) as error:
+        _run_rules(data_root, manifest_path, output_root)
+
+    assert str(error.value) == "split manifest must not alias a rule output artifact"
+    assert manifest_path.read_bytes() == alias.read_bytes() == manifest_bytes
+    assert not (output_root / "rule_event_metrics.csv").exists()
+    assert not (output_root / "rule_report.md").exists()
+
+
+def test_evaluate_rules_allows_manifest_sidecar_in_output_root(tmp_path: Path) -> None:
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "rule-artifacts"
+    manifest_path = output_root / "split_manifest.csv"
+    _write_rule_fixture(data_root, manifest_path)
+    manifest_bytes = manifest_path.read_bytes()
+
+    assert _run_rules(data_root, manifest_path, output_root) == 0
+
+    assert manifest_path.read_bytes() == manifest_bytes
+    assert all((output_root / name).is_file() for name in _RULE_ARTIFACT_NAMES)
+
+
 def test_evaluate_rules_publish_error_bubbles_and_rolls_back_entire_generation(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
