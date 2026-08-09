@@ -58,8 +58,41 @@ def inspect_hdf5(path: Path, data_root: Path) -> EventInventory:
 
         n_days, n_channels, height, width = data.shape
         nan_count = 0
+        target_days = 0
+        zero_target_days = 0
+        positive_target_pixels = 0
+        active_fire_min_positive: float | None = None
+        active_fire_max_positive: float | None = None
         for day_index in range(n_days):
-            nan_count += int(np.isnan(data[day_index]).sum())
+            day = np.asarray(data[day_index])
+            nan_count += int(np.isnan(day).sum())
+            active = day[22]
+            finite_active = active[np.isfinite(active)]
+            if np.any(finite_active < 0) or np.any(
+                finite_active != np.floor(finite_active)
+            ):
+                raise ValueError("stored active-fire values must be nonnegative integer hours")
+            if np.any(finite_active > 23):
+                raise ValueError("stored active-fire values must be within 0-23 hours")
+            positive_active = finite_active[finite_active > 0]
+            if positive_active.size:
+                day_min = float(np.min(positive_active))
+                day_max = float(np.max(positive_active))
+                active_fire_min_positive = (
+                    day_min
+                    if active_fire_min_positive is None
+                    else min(active_fire_min_positive, day_min)
+                )
+                active_fire_max_positive = (
+                    day_max
+                    if active_fire_max_positive is None
+                    else max(active_fire_max_positive, day_max)
+                )
+            if day_index > 0:
+                positives = int(np.count_nonzero(finite_active > 0))
+                target_days += 1
+                zero_target_days += int(positives == 0)
+                positive_target_pixels += positives
         nan_fraction = nan_count / (n_days * n_channels * height * width)
 
     return validate_inventory_row(
@@ -73,6 +106,11 @@ def inspect_hdf5(path: Path, data_root: Path) -> EventInventory:
             "width": width,
             "dates": dates,
             "nan_fraction": nan_fraction,
+            "target_days": target_days,
+            "zero_target_days": zero_target_days,
+            "positive_target_pixels": positive_target_pixels,
+            "active_fire_min_positive": active_fire_min_positive,
+            "active_fire_max_positive": active_fire_max_positive,
         }
     )
 

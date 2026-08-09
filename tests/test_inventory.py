@@ -11,6 +11,7 @@ def _write_event(path: Path, *, byte_dates: bool = False) -> None:
     path.parent.mkdir(parents=True)
     values = np.zeros((3, 23, 8, 8), dtype=np.float32)
     values[0, 2, 0, 0] = np.nan
+    values[1, 22, 0, 0] = 9
     with h5py.File(path, "w") as handle:
         data = handle.create_dataset("data", data=values)
         data.attrs["year"] = 2021
@@ -29,6 +30,33 @@ def test_inspect_hdf5_reads_official_layout(tmp_path: Path) -> None:
     item = inspect_hdf5(path, tmp_path)
     assert (item.year, item.fire_name, item.n_days, item.n_channels) == (2021, "demo_fire", 3, 23)
     assert item.nan_fraction == 1 / (3 * 23 * 8 * 8)
+    assert item.target_days == 2
+    assert item.zero_target_days == 1
+    assert item.positive_target_pixels == 1
+    assert item.active_fire_min_positive == 9
+    assert item.active_fire_max_positive == 9
+
+
+@pytest.mark.parametrize(
+    ("stored_value", "message"),
+    [
+        (24, "within 0-23 hours"),
+        (-1, "nonnegative integer hours"),
+        (1.5, "nonnegative integer hours"),
+    ],
+)
+def test_inspect_hdf5_rejects_invalid_stored_active_fire_values(
+    tmp_path: Path,
+    stored_value: float,
+    message: str,
+) -> None:
+    path = tmp_path / "2021" / "demo_fire.hdf5"
+    _write_event(path)
+    with h5py.File(path, "r+") as handle:
+        handle["data"][0, 22, 0, 0] = stored_value
+
+    with pytest.raises(ValueError, match=message):
+        inspect_hdf5(path, tmp_path)
 
 
 def test_inventory_dataset_is_deterministic(tmp_path: Path) -> None:

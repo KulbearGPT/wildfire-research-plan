@@ -17,6 +17,11 @@ class EventInventory:
     width: int
     dates: tuple[str, ...]
     nan_fraction: float
+    target_days: int = 0
+    zero_target_days: int = 0
+    positive_target_pixels: int = 0
+    active_fire_min_positive: float | None = None
+    active_fire_max_positive: float | None = None
 
 
 def validate_inventory_row(row: Mapping[str, object]) -> EventInventory:
@@ -30,6 +35,19 @@ def validate_inventory_row(row: Mapping[str, object]) -> EventInventory:
     width = int(row["width"])
     dates = tuple(str(value) for value in row["dates"])
     nan_fraction = float(row["nan_fraction"])
+    target_days = int(row["target_days"])
+    zero_target_days = int(row["zero_target_days"])
+    positive_target_pixels = int(row["positive_target_pixels"])
+    active_fire_min_positive = (
+        None
+        if row["active_fire_min_positive"] is None
+        else float(row["active_fire_min_positive"])
+    )
+    active_fire_max_positive = (
+        None
+        if row["active_fire_max_positive"] is None
+        else float(row["active_fire_max_positive"])
+    )
 
     if path.is_absolute():
         raise ValueError("path must be relative")
@@ -41,6 +59,14 @@ def validate_inventory_row(row: Mapping[str, object]) -> EventInventory:
         raise ValueError("dates count must equal n_days")
     if not 0 <= nan_fraction <= 1:
         raise ValueError("nan_fraction must be between 0 and 1")
+    if target_days < 0 or zero_target_days < 0 or positive_target_pixels < 0:
+        raise ValueError("target counts must be nonnegative")
+    if zero_target_days > target_days:
+        raise ValueError("zero_target_days must not exceed target_days")
+    if positive_target_pixels == 0 and (
+        active_fire_min_positive is not None or active_fire_max_positive is not None
+    ):
+        raise ValueError("positive active-fire extrema must be None for zero-positive events")
 
     parsed_dates = tuple(date.fromisoformat(value) for value in dates)
     if any(left >= right for left, right in zip(parsed_dates, parsed_dates[1:])):
@@ -56,4 +82,9 @@ def validate_inventory_row(row: Mapping[str, object]) -> EventInventory:
         width=width,
         dates=dates,
         nan_fraction=nan_fraction,
+        target_days=target_days,
+        zero_target_days=zero_target_days,
+        positive_target_pixels=positive_target_pixels,
+        active_fire_min_positive=active_fire_min_positive,
+        active_fire_max_positive=active_fire_max_positive,
     )

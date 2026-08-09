@@ -20,10 +20,17 @@ _ARTIFACT_NAMES = (
 )
 
 
-def _write_event(path: Path, year: int, fire_name: str) -> None:
+def _write_event(
+    path: Path,
+    year: int,
+    fire_name: str,
+    *,
+    target_hour: float = 9,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     values = np.zeros((2, 23, 4, 4), dtype=np.float32)
     values[0, 0, 0, 0] = np.nan
+    values[1, 22, 0, 0] = target_hour
     with h5py.File(path, "w") as handle:
         data = handle.create_dataset("data", data=values)
         data.attrs["year"] = year
@@ -159,11 +166,38 @@ def test_audit_serializes_inventory_and_split_in_deterministic_order(tmp_path: P
     assert _run_audit(data_root, output_root) == 0
 
     with (output_root / "inventory.csv").open(newline="", encoding="utf-8") as handle:
-        inventory_rows = list(csv.DictReader(handle))
+        inventory_reader = csv.DictReader(handle)
+        inventory_rows = list(inventory_reader)
+    assert inventory_reader.fieldnames == [
+        "year",
+        "fire_name",
+        "path",
+        "n_days",
+        "n_channels",
+        "height",
+        "width",
+        "dates",
+        "nan_fraction",
+        "target_days",
+        "zero_target_days",
+        "positive_target_pixels",
+        "active_fire_min_positive",
+        "active_fire_max_positive",
+    ]
     assert [(row["year"], row["fire_name"], row["dates"]) for row in inventory_rows] == [
         ("2016", "zulu_fire", '["2016-08-01","2016-08-02"]'),
         ("2023", "alpha_fire", '["2023-08-01","2023-08-02"]'),
     ]
+    assert [
+        (
+            row["target_days"],
+            row["zero_target_days"],
+            row["positive_target_pixels"],
+            row["active_fire_min_positive"],
+            row["active_fire_max_positive"],
+        )
+        for row in inventory_rows
+    ] == [("1", "0", "1", "9.0", "9.0"), ("1", "0", "1", "9.0", "9.0")]
 
     with (output_root / "split_manifest.csv").open(newline="", encoding="utf-8") as handle:
         split_rows = list(csv.DictReader(handle))
@@ -171,6 +205,32 @@ def test_audit_serializes_inventory_and_split_in_deterministic_order(tmp_path: P
         ("2016:zulu_fire", "train"),
         ("2023:alpha_fire", "test"),
     ]
+
+
+def test_audit_blocks_all_zero_benchmark_year_and_split_with_complete_artifacts(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    _write_event(
+        data_root / "2022" / "zero_fire.hdf5",
+        2022,
+        "zero_fire",
+        target_hour=0,
+    )
+    blocker = (
+        "ValueError: split test has zero positive target pixels; "
+        "year 2022 has zero positive target pixels"
+    )
+
+    assert _run_audit(data_root, output_root) == 2
+    assert {path.name for path in output_root.iterdir()} == set(_ARTIFACT_NAMES)
+    report = (output_root / "phase0_report.md").read_text(encoding="utf-8")
+    assert blocker in report
+    decision = json.loads((output_root / "contract_decision.json").read_text(encoding="utf-8"))
+    assert decision["status"] == "blocked"
+    assert f"Data-gate validation failed: {blocker}" in decision["notes"]
+    assert not list(output_root.glob("*.tmp"))
 
 
 def test_audit_blocks_on_invalid_event_and_leaves_final_artifacts(tmp_path: Path) -> None:

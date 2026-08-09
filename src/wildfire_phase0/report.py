@@ -1,6 +1,6 @@
 """Markdown rendering for the reproducible Phase 0 data gate."""
 
-from collections import Counter
+from collections import defaultdict
 from collections.abc import Sequence
 
 import pandas as pd
@@ -13,13 +13,41 @@ _FROZEN_SPLIT = "2016–2020 train / 2021 validation / 2022–2023 test"
 _TARGET = "next-calendar-day active-fire proxy"
 
 
-def _markdown_counts(title: str, rows: Sequence[tuple[object, int]]) -> list[str]:
-    lines = [f"### Counts by {title}", "", f"| {title} | events |", "| --- | ---: |"]
+def _markdown_target_counts(
+    title: str,
+    rows: Sequence[tuple[object, int, int, int, int]],
+) -> list[str]:
+    lines = [
+        f"### Target counts by {title}",
+        "",
+        f"| {title} | events | target days | zero-target days | positive target pixels |",
+        "| --- | ---: | ---: | ---: | ---: |",
+    ]
     if rows:
-        lines.extend(f"| {value} | {count} |" for value, count in rows)
+        lines.extend(
+            f"| {value} | {events} | {target_days} | {zero_days} | {positive_pixels} |"
+            for value, events, target_days, zero_days, positive_pixels in rows
+        )
     else:
-        lines.append("| none | 0 |")
+        lines.append("| none | 0 | 0 | 0 | 0 |")
     return lines
+
+
+def _target_counts(
+    inventory: Sequence[EventInventory],
+    groups: Sequence[object],
+) -> list[tuple[object, int, int, int, int]]:
+    totals: dict[object, list[int]] = defaultdict(lambda: [0, 0, 0, 0])
+    for item, group in zip(inventory, groups):
+        row = totals[group]
+        row[0] += 1
+        row[1] += item.target_days
+        row[2] += item.zero_target_days
+        row[3] += item.positive_target_pixels
+    return [
+        (group, *totals[group])
+        for group in sorted(totals, key=str)
+    ]
 
 
 def render_phase0_report(
@@ -30,10 +58,22 @@ def render_phase0_report(
     commands: Sequence[str],
 ) -> str:
     """Render a deterministic human-readable summary of a Phase 0 gate run."""
-    year_counts = sorted(Counter(item.year for item in inventory).items())
-    split_counts = sorted(
-        ((str(split), int(count)) for split, count in split_manifest["split"].value_counts().items()),
-        key=lambda item: item[0],
+    year_counts = _target_counts(inventory, [item.year for item in inventory])
+    inventory_by_id = {
+        f"{item.year}:{item.fire_name}": item for item in inventory
+    }
+    split_inventory = [
+        inventory_by_id[str(event_id)]
+        for event_id in split_manifest["event_id"]
+        if str(event_id) in inventory_by_id
+    ]
+    split_counts = _target_counts(
+        split_inventory,
+        [
+            str(row["split"])
+            for row in split_manifest.to_dict("records")
+            if str(row["event_id"]) in inventory_by_id
+        ],
     )
     pixel_counts = [item.n_days * item.n_channels * item.height * item.width for item in inventory]
     total_pixels = sum(pixel_counts)
@@ -67,9 +107,9 @@ def render_phase0_report(
         "",
         _FROZEN_SPLIT,
         "",
-        *_markdown_counts("year", year_counts),
+        *_markdown_target_counts("year", year_counts),
         "",
-        *_markdown_counts("split", split_counts),
+        *_markdown_target_counts("split", split_counts),
         "",
         "## Inventory validation",
         "",

@@ -15,6 +15,7 @@ from wildfire_phase0.report import render_phase0_report
 from wildfire_phase0.repair import stage_active_fire_repair
 from wildfire_phase0.schema import EventInventory
 from wildfire_phase0.splits import build_forward_split
+from wildfire_phase0.target_gate import target_integrity_errors
 
 
 _ARTIFACT_NAMES = (
@@ -33,6 +34,11 @@ _INVENTORY_COLUMNS = (
     "width",
     "dates",
     "nan_fraction",
+    "target_days",
+    "zero_target_days",
+    "positive_target_pixels",
+    "active_fire_min_positive",
+    "active_fire_max_positive",
 )
 
 
@@ -112,6 +118,11 @@ def _inventory_frame(inventory: Sequence[EventInventory]) -> pd.DataFrame:
             "width": item.width,
             "dates": json.dumps(item.dates, separators=(",", ":")),
             "nan_fraction": item.nan_fraction,
+            "target_days": item.target_days,
+            "zero_target_days": item.zero_target_days,
+            "positive_target_pixels": item.positive_target_pixels,
+            "active_fire_min_positive": item.active_fire_min_positive,
+            "active_fire_max_positive": item.active_fire_max_positive,
         }
         for item in sorted(inventory, key=lambda item: (item.year, item.fire_name))
     ]
@@ -152,6 +163,9 @@ def run_audit(data_root: Path, output_root: Path) -> int:
     try:
         inventory = inventory_dataset(Path(data_root))
         split_manifest = build_forward_split(inventory)
+        target_errors = target_integrity_errors(inventory, split_manifest)
+        if target_errors:
+            raise ValueError("; ".join(target_errors))
     except (FileNotFoundError, OSError, TypeError, ValueError) as error:
         invalid_file_error = f"{type(error).__name__}: {error}"
         decision = _blocked_decision(decision, error)
