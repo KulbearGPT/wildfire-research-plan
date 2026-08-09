@@ -1,0 +1,451 @@
+"""Independently recompute and verify one preserved calibration run."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import math
+import os
+import re
+import statistics
+import subprocess
+import uuid
+from collections.abc import Mapping, Sequence
+from datetime import datetime
+from pathlib import Path
+
+
+EXPECTED_COMMIT = "ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad"
+EXPECTED_PATCH_SHA256 = "e7b0211e762cb7a888b0ce699e2d22537b372a49cfc0baf52e078513fbdc0c83"
+EXPECTED_EFFECTIVE_POS_CLASS_WEIGHT = 608.4653828020165
+PROGRESS = re.compile(r"\bEpoch\s+(\d+):.*?(\d+)\s*/\s*(\d+)")
+VALIDATION = re.compile(r"\bValidation DataLoader\s+\d+:.*?(\d+)\s*/\s*(\d+)")
+METRIC = re.compile(
+    r"\b(?:train_loss|train_f1|val_loss|val_avg_precision|val_f1)"
+    r"(?:_step|_epoch)?\s*=\s*"
+    r"([+-]?(?:nan|inf|(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?))",
+    re.IGNORECASE,
+)
+
+
+def _events(text: str) -> list[tuple[float, str]]:
+    result: list[tuple[float, str]] = []
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        item = json.loads(line)
+        seconds = float(item["seconds"])
+        fragment = item["text"]
+        if not math.isfinite(seconds) or not isinstance(fragment, str):
+            raise ValueError("invalid raw observer event")
+        if result and seconds < result[-1][0]:
+            raise ValueError("raw observer event time regressed")
+        result.append((seconds, fragment))
+    return result
+
+
+def independent_progress(text: str) -> list[tuple[int, float]]:
+    """Independently reconstruct global steps from Lightning epoch progress."""
+    result: list[tuple[int, float]] = []
+    current_epoch: int | None = None
+    offset = 0
+    total: int | None = None
+    position: int | None = None
+    for seconds, fragment in _events(text):
+        if "Validation DataLoader" in fragment or "Sanity Checking" in fragment:
+            continue
+        match = PROGRESS.search(fragment)
+        if match is None:
+            continue
+        next_epoch, next_position, next_total = map(int, match.groups())
+        if next_total <= 0 or not 0 <= next_position <= next_total:
+            raise ValueError("invalid progress coordinates")
+        if current_epoch is None:
+            current_epoch, total = next_epoch, next_total
+        elif next_epoch == current_epoch:
+            if next_total != total:
+                raise ValueError("epoch denominator changed")
+            if position == total and next_position == 0:
+                continue
+            if position is not None and next_position < position:
+                raise ValueError("optimizer position regressed")
+        elif next_epoch == current_epoch + 1 and position == total:
+            offset += int(total)
+            current_epoch, total, position = next_epoch, next_total, None
+        else:
+            raise ValueError("epoch sequence is discontinuous")
+        position = next_position
+        global_step = offset + next_position
+        if result and global_step < result[-1][0]:
+            raise ValueError("global step regressed")
+        if not result or global_step != result[-1][0]:
+            result.append((global_step, seconds))
+    return result
+
+
+def independent_effective_config(config_path: Path) -> float:
+    """Independently read the saved effective positive-class weight."""
+    matches = re.findall(
+        r"(?m)^\s+pos_class_weight:\s*(\S+)\s*$",
+        config_path.read_text(encoding="utf-8"),
+    )
+    if len(matches) != 1:
+        raise ValueError("saved config must contain one positive-class weight")
+    value = float(matches[0])
+    if value != EXPECTED_EFFECTIVE_POS_CLASS_WEIGHT:
+        raise ValueError("saved config positive-class weight is not the official dynamic value")
+    return value
+
+
+def independent_epoch_boundaries(text: str) -> list[tuple[int, int, float, int]]:
+    """Independently select each epoch's first completed-step timestamp."""
+    boundaries: list[tuple[int, int, float, int]] = []
+    totals: list[int] = []
+    seen: set[int] = set()
+    for seconds, fragment in _events(text):
+        if "Validation DataLoader" in fragment or "Sanity Checking" in fragment:
+            continue
+        match = PROGRESS.search(fragment)
+        if match is None:
+            continue
+        epoch, position, total = map(int, match.groups())
+        if position != 1 or epoch in seen:
+            continue
+        if epoch != len(boundaries) or total <= 0:
+            raise ValueError("independent epoch boundaries are discontinuous")
+        boundaries.append((epoch, sum(totals) + 1, seconds, total))
+        totals.append(total)
+        seen.add(epoch)
+    if len(boundaries) < 2:
+        raise ValueError("insufficient epoch boundaries")
+    return boundaries
+
+
+def _percentile(values: Sequence[float], fraction: float) -> float:
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * fraction
+    lower, upper = math.floor(position), math.ceil(position)
+    if lower == upper:
+        return ordered[lower]
+    weight = position - lower
+    return ordered[lower] * (1 - weight) + ordered[upper] * weight
+
+
+def independent_timing(
+    samples: Sequence[tuple[int, float]],
+    *,
+    wall_seconds: float,
+    validation_seconds: float,
+) -> dict[str, float]:
+    intervals = [
+        (current_seconds - previous_seconds) / (current_step - previous_step)
+        for (previous_step, previous_seconds), (current_step, current_seconds) in zip(
+            samples, samples[1:]
+        )
+        if previous_step >= 49
+    ]
+    if not intervals:
+        raise ValueError("no post-warm-up intervals")
+    median = statistics.median(intervals)
+    p25, p75 = _percentile(intervals, 0.25), _percentile(intervals, 0.75)
+    startup = samples[0][1]
+    return {
+        "wall_seconds": wall_seconds,
+        "startup_seconds": startup,
+        "validation_seconds": validation_seconds,
+        "observed_progress_seconds": samples[-1][1] - samples[0][1],
+        "post_warmup_interval_count": float(len(intervals)),
+        "median_step_seconds": median,
+        "p25_step_seconds": p25,
+        "p75_step_seconds": p75,
+        "instantaneous_samples_per_second": 64 / median,
+        "compute_only_10000_seconds": 10_000 * median,
+    }
+
+
+def independent_epoch_projection(
+    boundaries: Sequence[tuple[int, int, float, int]],
+    *,
+    startup_seconds: float,
+    median_step_seconds: float,
+    p25_step_seconds: float,
+    p75_step_seconds: float,
+    wall_seconds: float,
+    observed_steps: int,
+) -> dict[str, object]:
+    epoch_size = boundaries[0][3]
+    if any(boundary[3] != epoch_size for boundary in boundaries):
+        raise ValueError("independent epoch size changed")
+    cycles = [
+        current[2] - previous[2]
+        for previous, current in zip(boundaries, boundaries[1:])
+    ]
+    if not cycles or any(not math.isfinite(value) or value <= 0 for value in cycles):
+        raise ValueError("independent epoch cycles are invalid")
+    median_cycle = statistics.median(cycles)
+    p25_cycle = _percentile(cycles, 0.25)
+    p75_cycle = _percentile(cycles, 0.75)
+    full_cycles, partial_steps = divmod(10_000, epoch_size)
+    return {
+        "epoch_size_steps": epoch_size,
+        "epoch_first_step_boundaries": [list(boundary) for boundary in boundaries],
+        "epoch_cycle_seconds": cycles,
+        "epoch_cycle_count": len(cycles),
+        "median_epoch_cycle_seconds": median_cycle,
+        "p25_epoch_cycle_seconds": p25_cycle,
+        "p75_epoch_cycle_seconds": p75_cycle,
+        "projected_full_epoch_cycles": full_cycles,
+        "projected_partial_steps": partial_steps,
+        "epoch_aware_10000_central_seconds": (
+            startup_seconds + full_cycles * median_cycle + partial_steps * median_step_seconds
+        ),
+        "epoch_aware_10000_lower_seconds": (
+            startup_seconds + full_cycles * p25_cycle + partial_steps * p25_step_seconds
+        ),
+        "epoch_aware_10000_upper_seconds": (
+            startup_seconds + full_cycles * p75_cycle + partial_steps * p75_step_seconds
+        ),
+        "naive_wall_linear_10000_seconds": wall_seconds / observed_steps * 10_000,
+        "end_to_end_samples_per_second": observed_steps * 64 / wall_seconds,
+    }
+
+
+def _validation_seconds(text: str) -> float:
+    total_seconds = 0.0
+    start: float | None = None
+    saw = False
+    for seconds, fragment in _events(text):
+        if "Sanity Checking" in fragment:
+            continue
+        match = VALIDATION.search(fragment)
+        if match is None:
+            continue
+        saw = True
+        position, total = map(int, match.groups())
+        if position == 0:
+            if start is not None:
+                raise ValueError("overlapping validation progress")
+            start = seconds
+        elif start is None:
+            raise ValueError("validation progress lacks a start")
+        if position == total:
+            if start is None:
+                raise ValueError("validation progress lacks a start")
+            total_seconds += seconds - start
+            start = None
+    if not saw or start is not None:
+        raise ValueError("validation progress is not independently identifiable")
+    return total_seconds
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _git(root: Path, *arguments: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(root.resolve()), *arguments],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode:
+        raise ValueError(result.stderr.strip() or "git verification failed")
+    return result.stdout
+
+
+def _write_json_atomic(path: Path, payload: Mapping[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    temporary.write_text(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    os.replace(temporary, path)
+
+
+def verify(
+    run_root: Path, original_root: Path, derived_root: Path, patch_path: Path
+) -> dict[str, object]:
+    run = run_root.resolve()
+    started = json.loads((run / "started.json").read_text(encoding="utf-8"))
+    command = started["command"]
+    required = {
+        "--data.data_fold_id=2",
+        "--data.features_to_keep=null",
+        "--data.n_leading_observations=1",
+        "--data.remove_duplicate_features=true",
+        "--data.num_workers=8",
+        "--trainer.max_steps=500",
+        "--do_test=false",
+    }
+    if not required.issubset(command):
+        raise ValueError("effective command is missing an approved override")
+    if any("do_predict" in arg or "do_validate" in arg for arg in command):
+        raise ValueError("effective command contains test-adjacent action override")
+    if not any(arg.endswith("res18_monotemporal.yaml") for arg in command):
+        raise ValueError("Res18 config is missing")
+    if not any(arg.endswith("trainer_single_gpu.yaml") for arg in command):
+        raise ValueError("single-GPU config is missing")
+    if not any(arg.endswith("data_monotemporal_full_features.yaml") for arg in command):
+        raise ValueError("All-feature config is missing")
+
+    exit_code = int((run / "exit-code.txt").read_text(encoding="utf-8").strip())
+    stdout = (run / "stdout.log").read_text(encoding="utf-8", errors="replace")
+    stderr = (run / "stderr.log").read_text(encoding="utf-8", errors="replace")
+    combined = stdout + "\n" + stderr
+    if exit_code != 0 or re.search(r"max_steps=500`?\s+reached", combined) is None:
+        raise ValueError("child did not exit cleanly at exact max_steps=500")
+    if re.search(r"\b(?:testing|predicting) dataloader\b", combined, re.IGNORECASE):
+        raise ValueError("test or predict invocation found")
+    if "out of memory" in combined.lower():
+        raise ValueError("OOM found in final child output")
+    peak_matches = re.findall(
+        r"(?m)^WSTS_OBSERVER_PEAK_ALLOCATED_BYTES=(\d+)\s*$", combined
+    )
+    if len(peak_matches) != 1 or int(peak_matches[0]) <= 0:
+        raise ValueError("unique positive PyTorch peak sentinel is missing")
+    metrics = [float(value) for value in METRIC.findall(combined)]
+    if not metrics or not all(math.isfinite(value) for value in metrics):
+        raise ValueError("finite metrics are missing")
+
+    event_text = (run / "stream-events.jsonl").read_text(encoding="utf-8")
+    samples = independent_progress(event_text)
+    if samples[0][0] != 0 or samples[-1][0] != 500 or len(samples) != 501:
+        raise ValueError("independent progress reconstruction did not establish steps 0..500")
+    validation_seconds = _validation_seconds(event_text)
+    start_seconds = datetime.fromisoformat(started["started_utc"]).timestamp()
+    wall_seconds = (run / "exit-code.txt").stat().st_mtime_ns / 1e9 - start_seconds
+    timing = independent_timing(
+        samples, wall_seconds=wall_seconds, validation_seconds=validation_seconds
+    )
+    epoch_boundaries = independent_epoch_boundaries(event_text)
+    epoch_projection = independent_epoch_projection(
+        epoch_boundaries,
+        startup_seconds=timing["startup_seconds"],
+        median_step_seconds=timing["median_step_seconds"],
+        p25_step_seconds=timing["p25_step_seconds"],
+        p75_step_seconds=timing["p75_step_seconds"],
+        wall_seconds=wall_seconds,
+        observed_steps=500,
+    )
+
+    with (run / "gpu.csv").open(encoding="utf-8", newline="") as handle:
+        gpu = list(csv.DictReader(handle))
+    used = [float(row["memory_used_mib"]) for row in gpu]
+    utilization = [float(row["utilization_gpu_percent"]) for row in gpu]
+    child = [float(row["child_memory_mib"]) for row in gpu]
+    child_available = any(value > 0 for value in child)
+    gpu_summary = {
+        "gpu_sample_count": float(len(gpu)),
+        "gpu_sampling_span_seconds": float(gpu[-1]["observer_seconds"])
+        - float(gpu[0]["observer_seconds"]),
+        "peak_gpu_used_mib": max(used),
+        "peak_child_process_mib": max(child) if child_available else None,
+        "child_process_memory_available": child_available,
+        "gpu_utilization_min_percent": min(utilization),
+        "gpu_utilization_median_percent": statistics.median(utilization),
+        "gpu_utilization_max_percent": max(utilization),
+    }
+    source_pre = json.loads((run / "source-data-pre.json").read_text(encoding="utf-8"))
+    source_post = json.loads((run / "source-data-post.json").read_text(encoding="utf-8"))
+    if source_pre != source_post:
+        raise ValueError("source inventory changed")
+    original_commit = _git(original_root, "rev-parse", "HEAD").strip()
+    original_status = _git(original_root, "status", "--porcelain").splitlines()
+    derived_commit = _git(derived_root, "rev-parse", "HEAD").strip()
+    derived_status = _git(derived_root, "status", "--porcelain").splitlines()
+    if original_commit != EXPECTED_COMMIT or original_status:
+        raise ValueError("original pinned checkout integrity failed")
+    if derived_commit != EXPECTED_COMMIT or derived_status != [" M src/models/__init__.py"]:
+        raise ValueError("derived runtime integrity failed")
+    patch_sha256 = _sha256(patch_path)
+    if patch_sha256 != EXPECTED_PATCH_SHA256:
+        raise ValueError("runtime patch hash changed")
+
+    recorded = json.loads((run / "timing.json").read_text(encoding="utf-8"))
+    effective_pos_class_weight = independent_effective_config(run / "config.yaml")
+    if recorded.get("effective_pos_class_weight") != effective_pos_class_weight:
+        raise ValueError("recorded effective positive-class weight mismatch")
+    if recorded.get("source_yaml_pos_class_weight") != 236.0:
+        raise ValueError("recorded source-YAML positive-class weight mismatch")
+    if recorded.get("official_dynamic_override") is not True:
+        raise ValueError("recorded dynamic positive-class override flag is missing")
+    comparisons = {**timing, **epoch_projection, **gpu_summary}
+    for key, value in comparisons.items():
+        if isinstance(value, list) or value is None or isinstance(value, bool):
+            matches = recorded[key] == value
+        elif isinstance(value, (float, int)):
+            matches = math.isclose(float(recorded[key]), float(value), rel_tol=0, abs_tol=1e-9)
+        else:
+            matches = recorded[key] == value
+        if not matches:
+            raise ValueError(f"recorded timing mismatch: {key}")
+    peak_bytes = int(peak_matches[0])
+    if recorded["peak_allocated_bytes"] != peak_bytes:
+        raise ValueError("recorded peak allocation mismatch")
+
+    raw_names = (
+        "stdout.log",
+        "stderr.log",
+        "stream-events.jsonl",
+        "gpu.csv",
+        "exit-code.txt",
+        "started.json",
+    )
+    return {
+        "status": "pass",
+        "independent_implementation": True,
+        "runner_imported": False,
+        "exit_code": exit_code,
+        "optimizer_steps": samples[-1][0],
+        "progress_sample_count": len(samples),
+        "num_workers": 8,
+        "peak_allocated_bytes": peak_bytes,
+        "peak_allocated_mib": peak_bytes / 1024**2,
+        "command_sha256": hashlib.sha256(
+            json.dumps(command, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        ).hexdigest(),
+        "data_inventory_identical": True,
+        "data_file_count": source_pre["file_count"],
+        "data_total_bytes": source_pre["total_bytes"],
+        "original_upstream_commit": original_commit,
+        "original_upstream_clean": True,
+        "derived_upstream_commit": derived_commit,
+        "derived_status": derived_status,
+        "patch_sha256": patch_sha256,
+        "effective_pos_class_weight": effective_pos_class_weight,
+        "source_yaml_pos_class_weight": 236.0,
+        "official_dynamic_override": True,
+        "effective_config_sha256": _sha256(run / "config.yaml"),
+        "test_or_predict_invoked": False,
+        "raw_sha256": {name: _sha256(run / name) for name in raw_names},
+        "timing": {**timing, **epoch_projection},
+        "gpu": gpu_summary,
+    }
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--run-directory", required=True, type=Path)
+    parser.add_argument("--original-upstream", required=True, type=Path)
+    parser.add_argument("--derived-upstream", required=True, type=Path)
+    parser.add_argument("--patch", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args(argv)
+    result = verify(
+        args.run_directory, args.original_upstream, args.derived_upstream, args.patch
+    )
+    _write_json_atomic(args.output.resolve(), result)
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

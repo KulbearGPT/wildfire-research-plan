@@ -14,7 +14,13 @@ SCRIPTS_DIR = (
 )
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-from smoke_fold2 import assert_fold_mapping, inspect_batch, main  # noqa: E402
+from smoke_fold2 import (  # noqa: E402
+    assert_fold_mapping,
+    inspect_batch,
+    inspect_train_validation_batches,
+    main,
+    summarize_ram_samples,
+)
 from control import verify_inventory  # noqa: E402
 
 
@@ -40,6 +46,45 @@ def test_inspect_batch_accepts_finite_t1_all_feature_crop_and_records_boundaries
         "inputs_finite": True,
         "targets_binary": True,
         "next_day_target_distinct": True,
+    }
+
+
+def test_inspect_train_validation_batches_checks_both_loader_boundaries() -> None:
+    report = inspect_train_validation_batches(_valid_batch(), _valid_batch())
+
+    assert report["train"]["model_input_shape"] == [2, 40, 128, 128]
+    assert report["validation"]["model_input_shape"] == [2, 40, 128, 128]
+    assert report["validation_loader_called"] is True
+    assert report["validation_sample_loaded"] is True
+    assert report["test_loader_called"] is False
+    assert report["test_sample_loaded"] is False
+    assert report["training_started"] is False
+
+
+def test_inspect_train_validation_batches_rejects_invalid_validation_batch() -> None:
+    validation_inputs, validation_targets = _valid_batch()
+    validation_targets[0, 0, 0] = 2
+
+    with pytest.raises(ValueError, match="binary"):
+        inspect_train_validation_batches(
+            _valid_batch(), (validation_inputs, validation_targets)
+        )
+
+
+def test_summarize_ram_samples_records_before_after_and_peak_used_bytes() -> None:
+    assert summarize_ram_samples(
+        [
+            {"total": 64_000, "available": 40_000},
+            {"total": 64_000, "available": 10_000},
+            {"total": 64_000, "available": 30_000},
+        ]
+    ) == {
+        "ram_total_bytes": 64_000,
+        "ram_available_before_bytes": 40_000,
+        "ram_available_after_bytes": 30_000,
+        "ram_minimum_available_bytes": 10_000,
+        "ram_peak_used_bytes": 54_000,
+        "ram_sample_count": 3,
     }
 
 

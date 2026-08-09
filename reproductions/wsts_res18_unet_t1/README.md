@@ -71,3 +71,68 @@ The smoke calls only `setup('fit')` and `train_dataloader()`. Upstream creates
 loader and never loads a 2021 sample. A passing attempt atomically writes
 `smoke.json`; it does not start training and does not support a 500-step AP
 claim.
+
+## Windows train-and-validation smoke and calibration runner
+
+The original workers-64 smoke remains the baseline evidence. The full trainer
+later showed that native Windows could exhaust CPU allocator memory when 64
+validation workers were spawned during Lightning sanity checking. Before the
+explicit worker recovery, run a second no-training smoke that loads exactly one
+train batch and one validation batch at workers 8 and records RAM samples:
+
+```powershell
+& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' `
+  reproductions/wsts_res18_unet_t1/scripts/smoke_fold2.py `
+  --upstream-root reproductions/wsts_res18_unet_t1/.local/WildfireSpreadTS `
+  --data-root 'D:\WildFire Project\data\hdf5' `
+  --output-dir artifacts/reproductions/wsts-res18-t1/fold2-train-val-smoke-workers8-20260809 `
+  --num-workers 8 --include-validation
+```
+
+`run_calibration.py` is an external observer. It validates environment, GPU,
+data, original checkout, derived runtime patch, configs, import-only help, and
+smoke evidence before it can create an atomic launch lock. It passes
+`do_test=false`, never passes `do_predict` or `do_validate`, timestamps raw
+stdout/stderr, and samples `nvidia-smi`; it does not change the model,
+datamodule, loss, optimizer, callbacks, Trainer, or metrics.
+
+The pinned upstream package initializer eagerly imports seven architectures
+that the Res18 training path does not use, including mixed-package and missing
+imports. The tracked `patches/res18_import_scope.patch` only removes those seven
+exports from an ignored derived checkout. The original pinned checkout remains
+clean, the four exports required by `train.py` remain unchanged, and no class or
+module body is patched.
+
+The 2026-08-09 launch lineage is deliberately immutable:
+
+- launch 1 stopped on the native import defect before Trainer or optimization;
+- launch 2 used the exact import-scope patch but workers 64 exhausted Windows
+  CPU allocator memory during validation sanity checking, before optimization;
+- launch 3 changed only `data.num_workers=64` to `8` (besides its unique output
+  directory), reached exactly optimizer step 500, and exited 0.
+
+There is no automatic retry path and launch 3 is final. An observer parser
+initially treated Lightning's completed-epoch tqdm teardown reset as optimizer
+regression after the successful child exited. `--finalize-existing` performs
+only offline validation and summary generation for that preserved run; it
+cannot launch a child. The run therefore retains `failure.json` as evidence of
+the observer-only postprocessing failure, while `completed.json` is the
+governing recovered status and explicitly classifies the distinction.
+
+`calibration.csv` contains one summary row. Per-step details are in
+`step-timing.csv`. `timing.json` distinguishes the instantaneous compute-only
+hard lower bound, an epoch-aware estimate that includes recurring loader and
+validation cycles, and a conservative wall-linear estimate. On Windows WDDM,
+per-child memory attribution may be unavailable; in that case it is recorded as
+JSON `null`, not zero, while total GPU memory and PyTorch allocated memory remain
+reported.
+
+The source Res18 YAML contains `pos_class_weight: 236`, but this is not the
+effective runtime value. The official, unchanged
+`train.py.before_instantiate_classes` recomputes `1 / fire_rate` for the selected
+fold and overwrites the YAML value before model construction. For fold 2 the
+saved effective `config.yaml` records `608.4653828020165`. The finalizer and
+independent verifier both require that exact runtime value. This official
+config/code discrepancy does not invalidate the timing observation, but the
+intended positive-class setting must be resolved before claiming a full paper
+reproduction.

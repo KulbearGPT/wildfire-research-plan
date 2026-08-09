@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import os
 import random
 import sys
+import threading
 import traceback
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -113,6 +115,42 @@ def inspect_batch(batch: object) -> dict[str, object]:
     }
 
 
+def inspect_train_validation_batches(
+    train_batch: object, validation_batch: object
+) -> dict[str, object]:
+    """Validate one train batch and one validation batch without training."""
+    return {
+        "train": inspect_batch(train_batch),
+        "validation": inspect_batch(validation_batch),
+        "validation_loader_called": True,
+        "validation_sample_loaded": True,
+        "test_loader_called": False,
+        "test_sample_loaded": False,
+        "training_started": False,
+    }
+
+
+def summarize_ram_samples(samples: Sequence[Mapping[str, int]]) -> dict[str, int]:
+    """Summarize system RAM sampled around loader construction and iteration."""
+    if not samples:
+        raise ValueError("RAM observer must record at least one sample")
+    totals = [int(sample["total"]) for sample in samples]
+    available = [int(sample["available"]) for sample in samples]
+    if any(total <= 0 for total in totals) or len(set(totals)) != 1:
+        raise ValueError("RAM samples must share one positive total byte count")
+    total = totals[0]
+    if any(value < 0 or value > total for value in available):
+        raise ValueError("RAM available bytes must be within the total byte count")
+    return {
+        "ram_total_bytes": total,
+        "ram_available_before_bytes": available[0],
+        "ram_available_after_bytes": available[-1],
+        "ram_minimum_available_bytes": min(available),
+        "ram_peak_used_bytes": total - min(available),
+        "ram_sample_count": len(samples),
+    }
+
+
 def assert_fold_mapping(datamodule: object) -> dict[str, list[int]]:
     """Require the exact original-WSTS fold-2 year assignment."""
     split_fires = getattr(datamodule, "split_fires", None)
@@ -137,7 +175,11 @@ def _load_lock(lock_path: Path) -> Mapping[str, Any]:
 
 
 def _run_real_smoke(
-    upstream_root: Path, data_root: Path, output_dir: Path, num_workers: int
+    upstream_root: Path,
+    data_root: Path,
+    output_dir: Path,
+    num_workers: int,
+    include_validation: bool = False,
 ) -> dict[str, object]:
     lock_path = Path(__file__).resolve().parents[1] / "upstream.lock.json"
     lock = _load_lock(lock_path)
@@ -181,13 +223,64 @@ def _run_real_smoke(
         *fold_mapping["test"],
     ]
     inventory = verify_inventory(data_root, selected_years=selected_years)
-    datamodule.setup("fit")
-    batch = next(iter(datamodule.train_dataloader()))
-    batch_report = inspect_batch(batch)
+    ram_samples: list[dict[str, int]] = []
+    observer_stop = threading.Event()
+    observer: threading.Thread | None = None
+    if include_validation:
+        import psutil
+
+        def sample_ram() -> None:
+            while not observer_stop.is_set():
+                memory = psutil.virtual_memory()
+                ram_samples.append(
+                    {"total": int(memory.total), "available": int(memory.available)}
+                )
+                observer_stop.wait(0.1)
+
+        sample_ram_once = psutil.virtual_memory()
+        ram_samples.append(
+            {
+                "total": int(sample_ram_once.total),
+                "available": int(sample_ram_once.available),
+            }
+        )
+        observer = threading.Thread(target=sample_ram, daemon=True)
+        observer.start()
+
+    try:
+        datamodule.setup("fit")
+        train_loader = datamodule.train_dataloader()
+        train_iterator = iter(train_loader)
+        train_batch = next(train_iterator)
+        del train_iterator, train_loader
+        gc.collect()
+
+        if include_validation:
+            validation_loader = datamodule.val_dataloader()
+            validation_iterator = iter(validation_loader)
+            validation_batch = next(validation_iterator)
+            batch_report = inspect_train_validation_batches(train_batch, validation_batch)
+            del validation_iterator, validation_loader, validation_batch
+        else:
+            batch_report = inspect_batch(train_batch)
+    finally:
+        if observer is not None:
+            observer_stop.set()
+            observer.join(timeout=2.0)
+            import psutil
+
+            memory = psutil.virtual_memory()
+            ram_samples.append(
+                {"total": int(memory.total), "available": int(memory.available)}
+            )
 
     report: dict[str, object] = {
         "status": "pass",
-        "purpose": "fold-2 real-data loader smoke only; no training performed",
+        "purpose": (
+            "fold-2 real-data train+validation loader smoke only; no training performed"
+            if include_validation
+            else "fold-2 real-data loader smoke only; no training performed"
+        ),
         "upstream_commit": actual_commit,
         "weights_revision": lock["weights"]["revision"],
         "seed": 0,
@@ -203,6 +296,8 @@ def _run_real_smoke(
         "test_sample_loaded": False,
         "training_started": False,
     }
+    if include_validation:
+        report["ram"] = summarize_ram_samples(ram_samples)
     write_json_atomic(output_dir / "smoke.json", report)
     return report
 
@@ -213,6 +308,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--data-root", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--num-workers", type=int, choices=(64, 8, 4, 0), default=64)
+    parser.add_argument("--include-validation", action="store_true")
     return parser
 
 
@@ -224,6 +320,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             arguments.data_root,
             arguments.output_dir.resolve(),
             arguments.num_workers,
+            arguments.include_validation,
         )
     except (ImportError, OSError, RuntimeError, TypeError, ValueError) as error:
         traceback.print_exc()

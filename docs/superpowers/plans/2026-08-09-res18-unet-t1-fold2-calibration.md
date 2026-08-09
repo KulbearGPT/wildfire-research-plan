@@ -105,20 +105,24 @@
 - Produces: `parse_progress(text: str) -> list[tuple[int, float]]`, `summarize_timing(samples: Sequence[tuple[int, float]], wall_seconds: float, startup_seconds: float, validation_seconds: float) -> dict[str, float]`, and a CLI that creates one unique ignored run directory.
 - Produces: `timing.json`, `calibration.csv`, `effective-command.json`, `stdout.log`, `stderr.log`, `gpu.csv`, `exit-code.txt`, provenance copies, and a local Markdown report.
 
-- [ ] **Step 1: Write failing timing and command tests**
+- [x] **Step 1: Write failing timing and command tests**
 
-  Provide captured Lightning progress fragments containing carriage-return updates and assert monotonic `(optimizer_step, timestamp)` extraction, duplicate-step collapse, exclusion of warm-up steps 0--49, median steady-state seconds per step, samples/second at batch 64, `10,000 * median_step_seconds`, and startup/validation overhead addition. Require rejection when progress never reaches exactly 500, steps regress, values are non-finite, or the effective command contains `do_test=true`, a test/predict action, another fold, another feature subset, or a non-allowlisted scientific override.
+  Provide captured Lightning progress fragments containing carriage-return updates and assert monotonic `(optimizer_step, timestamp)` extraction, duplicate-step collapse, exclusion of warm-up steps 0--49, median instantaneous seconds per step, samples/second at batch 64, and `10,000 * median_step_seconds` as a compute-only hard lower bound. Separately reconstruct first-step epoch boundaries so recurring loader/validation gaps produce an epoch-aware 10,000-step central/range estimate; also report complete-wall linear scaling and end-to-end throughput. Require rejection when progress never reaches exactly 500, steps regress, values are non-finite, or the effective command contains `do_test=true`, a test/predict action, another fold, another feature subset, or a non-allowlisted scientific override.
 
-- [ ] **Step 2: Run focused tests and confirm RED**
+- [x] **Step 2: Run focused tests and confirm RED**
 
   Run `python -m pytest tests/test_wsts_calibration_runner.py -q` and require failure because `run_calibration.py` does not yet exist.
 
-- [ ] **Step 3: Implement the observer-only runner**
+- [x] **Step 3: Implement the observer-only runner**
 
   Build the official command from the three upstream YAML files and these explicit overrides: `data.data_dir`, `data.data_fold_id=2`, `data.features_to_keep=null`, `data.n_leading_observations=1`, `data.remove_duplicate_features=true`, selected `data.num_workers`, `trainer.max_steps=500`, local `trainer.default_root_dir`, and `do_test=false`. Set `WANDB_MODE=disabled`, `WANDB_SILENT=true`, deterministic cache locations, and do not change the upstream files. Do not add explicit `do_predict` or `do_validate` overrides: they are unapproved changes to official defaults.
 
-  `official_entrypoint.py` must add the pinned upstream `src` directory to
-  `sys.path`, execute the unchanged official `src/train.py` in the same
+  Keep the original pinned checkout clean. Create an ignored derived checkout
+  at the same commit and apply the tracked runtime-safety import-scope patch,
+  which only removes seven unrelated eager architecture exports while leaving
+  the four imports required by `train.py` unchanged. `official_entrypoint.py`
+  must add only that derived checkout's `src` directory to `sys.path`, execute
+  the unchanged official `src/train.py` in the same
   process, and after normal return print one machine-readable sentinel holding
   `torch.cuda.max_memory_allocated()`. It must not monkeypatch the model,
   datamodule, optimizer, callbacks, trainer, or metrics.
@@ -131,15 +135,15 @@
   the timing summaries and effective command. Do not automatically retry the
   training process.
 
-- [ ] **Step 4: Run the one authorized calibration**
+- [x] **Step 4: Run the authorized calibration lineage**
 
-  Recheck GPU availability, provenance, disk space, data inventory, and `smoke.json`. Start exactly one 500-step process. If the outer shell times out while the child remains alive, attach to and monitor that same PID; never launch a replacement. Record peak allocated GPU memory when Lightning exposes it, peak `nvidia-smi` memory, utilization distribution, total wall time, observed training/progress interval, median post-warm-up step time, throughput, startup/validation overhead, and the extrapolated 10,000-step range.
+  Recheck GPU availability, provenance, disk space, data inventory, and `smoke.json`. Every launch must have an atomic lineage lock and the runner must never retry automatically. Preserve an import-time failure before Trainer as attempt 1 and an explicit runtime-patch recovery as attempt 2. If Windows `num_workers=64` exhausts CPU allocator memory during validation sanity checking before any optimizer step, require a separate no-training train+validation one-batch smoke at workers 8 with RAM evidence, then permit one final explicit worker-recovery attempt whose only command change is `data.num_workers=8` (besides the unique output directory). No fourth launch is permitted. If the outer shell times out while a child remains alive, attach to and monitor that same PID; never launch a replacement. Record peak allocated GPU memory when Lightning exposes it, peak `nvidia-smi` memory, utilization distribution, total wall time, observed training/progress interval, median post-warm-up step time, throughput, startup/validation overhead, and the extrapolated 10,000-step range.
 
-- [ ] **Step 5: Independently verify artifacts and analyze the result**
+- [x] **Step 5: Independently verify artifacts and analyze the result**
 
   Recompute timing statistics from raw timestamp/progress and GPU CSV files in a separate process. Verify the command allowlist, child exit code 0, exact step 500, finite peak allocated memory from the wrapper sentinel, absence of test invocation, unchanged upstream status, and unchanged source-data size/mtime inventory. Compare the extrapolated one-fold time with the paper's approximate `0.4 h` entry while explicitly noting that the paper does not document hardware and that its time is not directly equivalent to this end-to-end calibration.
 
-- [ ] **Step 6: Document and commit Task 3**
+- [x] **Step 6: Document and commit Task 3**
 
   Write the exact hardware, selected worker count, environment revisions, measured times, throughput, GPU memory/utilization, extrapolation formula/range, warnings, and interpretation to `docs/experiments/res18_unet_t1_reproduction.md`. State prominently that this is timing calibration only, contains no test AP, and cannot establish reproduction of `0.460 +/- 0.084`. Run the focused and full test suites, `git diff --check`, and a secret/path scan; commit tracked files with `docs: record fold 2 timing calibration`.
 

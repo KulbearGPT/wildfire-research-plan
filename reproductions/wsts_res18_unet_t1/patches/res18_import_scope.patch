@@ -1,0 +1,15 @@
+diff --git a/src/models/__init__.py b/src/models/__init__.py
+--- a/src/models/__init__.py
++++ b/src/models/__init__.py
+@@ -1,11 +1,4 @@
+ from .BaseModel import BaseModel
+ from .ConvLSTMLightning import ConvLSTMLightning
+ from .LogisticRegression import LogisticRegression
+ from .SMPModel import SMPModel
+-from .UTAELightning import UTAELightning
+-from .SwinUnetLightning import SwinUnetLightning
+-from .SwinUnetTempLightning import SwinUnetTempLightning
+-from .UTAELightningDumb import UTAELightningDumb
+-from .TransUnetLightning import TransUnetLightning
+-from .SMPTempModel import SMPTempModel 
+-from .SegFormerLightning import SegFormerLightning
