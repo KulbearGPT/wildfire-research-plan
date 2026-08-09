@@ -913,6 +913,7 @@
             <li>2018--2021 的 607 个事件均可从 GeoTIFF 恢复有限经纬度；新增年份仅 1/392 个事件保留有限 ROI 坐标。</li>
             <li>加强后的目标完整性闸门要求每个现有 benchmark 年份和每个冻结划分都包含非零正目标像素；八个年份和三个划分均通过。</li>
             <li>公开字段仍缺少 <code>observation_time</code>、<code>availability_time</code>、<code>qa</code>、<code>coverage</code> 与 <code>target_validity</code>。</li>
+            <li>当前保留的运行式阻断项恰为 availability_time、event_roi_provenance 与 target_validity。</li>
           </ul>
           <p><strong>决策：<code>continue_controlled</code>。</strong> 保留 WSTS+、冻结的跨年份划分、原 backbone 和轻量门控路线；主结论限定为预先定义的受控缺失，不主张已刻画自然缺失或具备运行式部署能力。</p>
         </div>
@@ -1678,6 +1679,7 @@
         ["原始 WSTS 的 2018--2021 年共有 607 个有效事件；WSTS+ 新增年份压缩包有 397 个事件目录，其中 5 个 2022 目录为空，最终新增 392 个有效事件。", "The original WSTS years 2018--2021 contain 607 valid events. The WSTS+ added-year archive contains 397 event directories, of which five 2022 directories are empty, leaving 392 valid added-year events."],
         ["2018--2021 的 607 个事件均可从 GeoTIFF 恢复有限经纬度；新增年份仅 1/392 个事件保留有限 ROI 坐标。", "Finite longitude and latitude can be recovered from GeoTIFF metadata for all 607 events from 2018--2021; only 1 of 392 valid added-year events retains finite ROI coordinates."],
         ["加强后的目标完整性闸门要求每个现有 benchmark 年份和每个冻结划分都包含非零正目标像素；八个年份和三个划分均通过。", "The strengthened target-integrity gate requires nonzero positive target pixels in every present benchmark year and every frozen split; all eight years and all three splits pass."],
+        ["当前保留的运行式阻断项恰为 availability_time、event_roi_provenance 与 target_validity。", "The retained operational blockers are exactly availability_time, event_roi_provenance, and target_validity."],
         ["公开字段仍缺少", "The public fields still lack"],
         ["与", "and"],
         ["决策：", "Decision:"],
