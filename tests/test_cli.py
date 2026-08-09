@@ -412,3 +412,39 @@ def test_repair_active_fire_cli_returns_two_with_complete_error_evidence(
     assert decision["status"] == "blocked"
     assert decision["errors"]
     assert not list(staging_root.rglob("*.tmp"))
+
+
+def test_repair_active_fire_cli_returns_two_with_deterministic_invalid_year_evidence(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+
+    first_exit = _run_repair(source_tiff_root, hdf5_root, staging_root, (2015,))
+    manifest_path = staging_root / "active_fire_repair_manifest.csv"
+    decision_path = staging_root / "active_fire_repair_decision.json"
+    first_manifest = manifest_path.read_bytes()
+    first_decision = decision_path.read_bytes()
+    second_exit = _run_repair(source_tiff_root, hdf5_root, staging_root, (2015,))
+
+    assert first_exit == second_exit == 2
+    assert manifest_path.read_bytes() == first_manifest
+    assert decision_path.read_bytes() == first_decision
+    assert first_manifest.decode("utf-8").splitlines() == [
+        "year,fire_name,source_hdf5,staged_hdf5,source_fingerprint,"
+        "source_encoding,days,target_days,zero_target_days,"
+        "positive_target_pixels,status,error"
+    ]
+    decision = json.loads(first_decision)
+    assert decision == {
+        "errors": ["ValueError: years must be unique integers within 2016..2023"],
+        "excluded_empty_source_directories": [],
+        "files_expected": 0,
+        "files_staged": 0,
+        "files_verified": 0,
+        "requested_years": [2015],
+        "status": "blocked",
+    }
+    assert first_decision.endswith(b"\n")
+    assert not list(staging_root.rglob("*.tmp"))

@@ -255,6 +255,33 @@ def test_stage_event_rejects_corrupted_preexisting_stage(
     assert not staging_hdf5.with_name("fire_a.hdf5.tmp").exists()
 
 
+@pytest.mark.parametrize("mutation", ["altered", "missing", "extra"])
+def test_stage_event_rejects_changed_preserved_attributes_on_retry(
+    tmp_path: Path, mutation: str
+) -> None:
+    source_root = tmp_path / "tiff"
+    event_dir = source_root / "2016" / "fire_a"
+    source_hdf5 = tmp_path / "hdf5" / "2016" / "fire_a.hdf5"
+    staging_hdf5 = tmp_path / "staging" / "2016" / "fire_a.hdf5"
+    _write_tiff_event(event_dir, [0.0, 6.0])
+    _write_hdf5_event(source_hdf5, [0.0, 0.0])
+    stage_event(event_dir, source_hdf5, staging_hdf5, source_root)
+    with h5py.File(staging_hdf5, "r+") as handle:
+        attributes = handle["data"].attrs
+        if mutation == "altered":
+            attributes["lnglat"] = [-115.0, 52.0]
+        elif mutation == "missing":
+            del attributes["lnglat"]
+        else:
+            attributes["unexpected_preserved_attr"] = "unexpected"
+
+    with pytest.raises(ValueError, match="attributes"):
+        stage_event(event_dir, source_hdf5, staging_hdf5, source_root)
+
+    assert staging_hdf5.exists()
+    assert not staging_hdf5.with_name("fire_a.hdf5.tmp").exists()
+
+
 def test_stage_active_fire_repair_stages_all_events_and_writes_evidence(
     tmp_path: Path,
 ) -> None:
@@ -350,10 +377,19 @@ def test_stage_active_fire_repair_records_empty_and_unmatched_sources(
 
 
 @pytest.mark.parametrize("years", [(2016, 2016), (2015,), (2024,)])
-def test_stage_active_fire_repair_rejects_invalid_requested_years(
+def test_stage_active_fire_repair_blocks_invalid_requested_years_with_evidence(
     tmp_path: Path, years: tuple[int, ...]
 ) -> None:
-    with pytest.raises(ValueError, match="years"):
-        stage_active_fire_repair(
-            tmp_path / "tiff", tmp_path / "hdf5", tmp_path / "staging", years
-        )
+    staging_root = tmp_path / "staging"
+
+    decision = stage_active_fire_repair(
+        tmp_path / "tiff", tmp_path / "hdf5", staging_root, years
+    )
+
+    assert decision.status == "blocked"
+    assert decision.errors == (
+        "ValueError: years must be unique integers within 2016..2023",
+    )
+    assert (staging_root / "active_fire_repair_manifest.csv").is_file()
+    assert (staging_root / "active_fire_repair_decision.json").is_file()
+    assert not list(staging_root.rglob("*.tmp"))

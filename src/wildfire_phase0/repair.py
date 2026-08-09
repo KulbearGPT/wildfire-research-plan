@@ -16,6 +16,14 @@ import tifffile
 
 ActiveFireEncoding = Literal["hour", "hhmm", "no_positive_values"]
 REPAIR_VERSION = "1"
+_REPAIR_ATTRIBUTES = frozenset(
+    {
+        "active_fire_source_encoding",
+        "active_fire_stored_encoding",
+        "active_fire_repair_version",
+        "active_fire_source_fingerprint",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -132,6 +140,30 @@ def _normalized_active_fire(
     return normalize_active_fire(np.stack(active_arrays))
 
 
+def _attribute_values_equal(source_value: object, staged_value: object) -> bool:
+    source_array = np.asarray(source_value)
+    staged_array = np.asarray(staged_value)
+    if source_array.dtype != staged_array.dtype or source_array.shape != staged_array.shape:
+        return False
+    try:
+        return bool(np.array_equal(source_array, staged_array, equal_nan=True))
+    except TypeError:
+        return bool(np.array_equal(source_array, staged_array))
+
+
+def _require_preserved_attributes(
+    source_attributes: h5py.AttributeManager,
+    staged_attributes: h5py.AttributeManager,
+) -> None:
+    source_names = set(source_attributes) - _REPAIR_ATTRIBUTES
+    staged_names = set(staged_attributes) - _REPAIR_ATTRIBUTES
+    if source_names != staged_names or any(
+        not _attribute_values_equal(source_attributes[name], staged_attributes[name])
+        for name in source_names
+    ):
+        raise ValueError("staged preserved attributes do not match source HDF5")
+
+
 def _validate_staged_event(
     staged_path: Path,
     source_hdf5: Path,
@@ -174,6 +206,8 @@ def _validate_staged_event(
             source_data.attrs.get("img_dates", ())
         ):
             raise ValueError("staged dates do not match source HDF5")
+        _require_preserved_attributes(source.attrs, staged.attrs)
+        _require_preserved_attributes(source_data.attrs, staged_data.attrs)
         if not np.array_equal(
             source_data[:, :22], staged_data[:, :22], equal_nan=True
         ):
@@ -392,16 +426,26 @@ def stage_active_fire_repair(
     years: Sequence[int],
 ) -> RepairDecision:
     requested_years = tuple(years)
+    staging_root = Path(staging_root)
+    staging_root.mkdir(parents=True, exist_ok=True)
     if (
         len(set(requested_years)) != len(requested_years)
         or any(not isinstance(year, int) or not 2016 <= year <= 2023 for year in requested_years)
     ):
-        raise ValueError("years must be unique integers within 2016..2023")
+        decision = RepairDecision(
+            status="blocked",
+            requested_years=tuple(sorted(requested_years)),
+            files_expected=0,
+            files_staged=0,
+            files_verified=0,
+            excluded_empty_source_directories=(),
+            errors=("ValueError: years must be unique integers within 2016..2023",),
+        )
+        _write_repair_evidence(staging_root, (), decision)
+        return decision
     sorted_years = tuple(sorted(requested_years))
     source_tiff_root = Path(source_tiff_root)
     hdf5_root = Path(hdf5_root)
-    staging_root = Path(staging_root)
-    staging_root.mkdir(parents=True, exist_ok=True)
 
     records: list[RepairRecord] = []
     errors: list[str] = []
