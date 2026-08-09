@@ -48,6 +48,11 @@ the data volume currently has more than 250 GiB free.
 - Do not train a neural model in this change.
 - Do not treat the five empty 2022 source directories as valid events.
 
+The five empty 2022 source directories are recorded as explicit nonblocking
+exclusions in the repair decision. A nonempty source event without a matching
+HDF5 file, or a source HDF5 file without a matching nonempty event directory,
+is a blocking repair error.
+
 ## Chosen approach
 
 Use a staged, event-atomic channel repair rather than rebuilding every channel

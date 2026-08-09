@@ -1,5 +1,10 @@
 # Active-Fire Label Repair and Rule Baselines Implementation Plan
 
+> **Execution note:** This combined draft is superseded by
+> `2026-08-08-active-fire-label-repair.md` and
+> `2026-08-08-rule-baseline-evaluation.md`, which add explicit empty-source
+> exclusions, independent repair verification, and smaller reviewable tasks.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Repair the four WSTS+ added-year active-fire label channels through a staged, reversible workflow, strengthen Phase 0 so invalid target years cannot pass, and produce deterministic real-data no-fire and persistence baseline results.
