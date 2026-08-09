@@ -120,8 +120,8 @@ the observer-only postprocessing failure, while `completed.json` is the
 governing recovered status and explicitly classifies the distinction.
 
 `calibration.csv` contains one summary row. Per-step details are in
-`step-timing.csv`. `timing.json` distinguishes the instantaneous compute-only
-hard lower bound, an epoch-aware estimate that includes recurring loader and
+`step-timing.csv`. `timing.json` distinguishes the optimistic empirical
+compute-only extrapolation/reference, an epoch-aware estimate that includes recurring loader and
 validation cycles, and a conservative wall-linear estimate. On Windows WDDM,
 per-child memory attribution may be unavailable; in that case it is recorded as
 JSON `null`, not zero, while total GPU memory and PyTorch allocated memory remain
@@ -136,3 +136,20 @@ independent verifier both require that exact runtime value. This official
 config/code discrepancy does not invalidate the timing observation, but the
 intended positive-class setting must be resolved before claiming a full paper
 reproduction.
+
+Future GPU observation uses absolute monotonic one-second deadlines, rather
+than waiting one second after each `nvidia-smi` query. Every result reports its
+actual cadence from `observer_seconds`. The existing successful run contains
+877 samples over 1,023.770009 s: mean interval 1.168687225 s, median interval
+1.164594750 s, and effective rate 0.855660932 Hz. Its 6,309 MiB total-GPU peak
+is the maximum at that observed cadence and may miss a between-sample transient;
+it is not described as an exact target-cadence peak.
+
+Independent verification constructs the entire ordered attempt-3 command and
+requires list equality with no extra arguments. It cross-checks the command
+hash across `started.json`, global/run locks, worker authorization,
+`effective-command.json`, and `timing.json`. It also derives the expected
+runtime initializer by deleting exactly seven authorized exports from pristine
+content, requires every other derived file clean, matches the tracked/copied
+patch and copied git diff, and derives the positive-weight override from the
+pinned `train.py` AST rather than hard-coding the conclusion.

@@ -834,12 +834,28 @@ def summarize_gpu_samples(rows: Sequence[Mapping[str, str]]) -> dict[str, object
     used = [float(row["memory_used_mib"]) for row in rows]
     utilization = [float(row["utilization_gpu_percent"]) for row in rows]
     child = [float(row["child_memory_mib"]) for row in rows]
-    values = [*used, *utilization, *child]
+    observer_seconds = [float(row["observer_seconds"]) for row in rows]
+    values = [*used, *utilization, *child, *observer_seconds]
     if not all(math.isfinite(value) and value >= 0 for value in values):
         raise ValueError("GPU samples must be finite and non-negative")
+    if len(observer_seconds) < 2:
+        raise ValueError("at least two GPU timestamps are required for cadence evidence")
+    intervals = [
+        current - previous
+        for previous, current in zip(observer_seconds, observer_seconds[1:])
+    ]
+    if any(interval <= 0 for interval in intervals):
+        raise ValueError("GPU observer timestamps must strictly increase")
+    sampling_span = observer_seconds[-1] - observer_seconds[0]
     child_available = any(value > 0 for value in child)
     return {
         "gpu_sample_count": float(len(rows)),
+        "gpu_interval_count": len(intervals),
+        "gpu_interval_mean_seconds": float(statistics.mean(intervals)),
+        "gpu_interval_median_seconds": float(statistics.median(intervals)),
+        "gpu_observed_effective_hz": float(len(intervals) / sampling_span),
+        "gpu_peak_is_observed_sample_max": True,
+        "gpu_peak_may_miss_between_sample_transients": True,
         "peak_gpu_used_mib": float(max(used)),
         "peak_child_process_mib": float(max(child)) if child_available else None,
         "child_process_memory_available": child_available,
@@ -847,6 +863,21 @@ def summarize_gpu_samples(rows: Sequence[Mapping[str, str]]) -> dict[str, object
         "gpu_utilization_median_percent": float(statistics.median(utilization)),
         "gpu_utilization_max_percent": float(max(utilization)),
     }
+
+
+def next_gpu_sample_deadline(
+    previous_deadline: float, now: float, interval_seconds: float = 1.0
+) -> float:
+    """Advance an absolute monotonic sampling schedule without accumulating query time."""
+    if not all(math.isfinite(value) for value in (previous_deadline, now, interval_seconds)):
+        raise ValueError("GPU sampling schedule values must be finite")
+    if interval_seconds <= 0:
+        raise ValueError("GPU sampling interval must be positive")
+    deadline = previous_deadline + interval_seconds
+    if deadline <= now:
+        missed = math.floor((now - deadline) / interval_seconds) + 1
+        deadline += missed * interval_seconds
+    return float(deadline)
 
 
 GpuSampler = Callable[[int, float], Mapping[str, object] | None]
@@ -939,6 +970,7 @@ def observe_process(
     def sample_gpu() -> None:
         if gpu_sampler is None:
             return
+        deadline = start_perf
         while True:
             elapsed = time.perf_counter() - start_perf
             try:
@@ -947,7 +979,9 @@ def observe_process(
                     gpu_rows.append(dict(sample))
             except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as error:
                 gpu_errors.append(f"{type(error).__name__}: {error}")
-            if stop_gpu.wait(1.0):
+            now = time.perf_counter()
+            deadline = next_gpu_sample_deadline(deadline, now)
+            if stop_gpu.wait(max(0.0, deadline - time.perf_counter())):
                 break
 
     with (run_root / "stream-events.jsonl").open("w", encoding="utf-8", newline="\n") as events:
@@ -1487,7 +1521,11 @@ def _local_report(timing: Mapping[str, object]) -> str:
         f"- End-to-end throughput: {timing['end_to_end_samples_per_second']:.6f} samples/s\n"
         f"- Peak PyTorch allocated: {timing['peak_allocated_mib']:.3f} MiB\n"
         f"- Peak nvidia-smi total GPU used: {timing['peak_gpu_used_mib']:.3f} MiB\n"
-        f"- 10,000-step compute-only hard lower bound: {timing['compute_only_10000_seconds']:.3f} s\n"
+        f"- Observed GPU cadence: mean {timing['gpu_interval_mean_seconds']:.6f} s, "
+        f"median {timing['gpu_interval_median_seconds']:.6f} s, "
+        f"effective {timing['gpu_observed_effective_hz']:.6f} Hz\n"
+        "- GPU peak is the sampled maximum at that cadence and may miss a between-sample transient\n"
+        f"- Optimistic empirical compute-only 10,000-step reference: {timing['compute_only_10000_seconds']:.3f} s\n"
         f"- 10,000-step epoch-aware estimate: {timing['epoch_aware_10000_central_seconds']:.3f} s "
         f"[{timing['epoch_aware_10000_lower_seconds']:.3f}, {timing['epoch_aware_10000_upper_seconds']:.3f}]\n"
         f"- 10,000-step naive wall-linear estimate: {timing['naive_wall_linear_10000_seconds']:.3f} s\n\n"
@@ -1595,7 +1633,9 @@ def finalize_existing_run(run_directory: Path) -> dict[str, object]:
             "startup_seconds + 82 * median_full_epoch_first_step_cycle_seconds + "
             "78 * median_instantaneous_step_seconds"
         ),
-        "compute_only_is_hard_lower_bound": True,
+        "compute_only_interpretation": (
+            "optimistic empirical compute-only extrapolation/reference"
+        ),
         "naive_wall_linear_is_conservative_empirical": True,
         "upstream_commit": post_commit,
         "weights_revision": EXPECTED_WEIGHTS_REVISION,
@@ -1859,7 +1899,9 @@ def _run_one_calibration(
                 "startup_seconds + 82 * median_full_epoch_first_step_cycle_seconds + "
                 "78 * median_instantaneous_step_seconds"
             ),
-            "compute_only_is_hard_lower_bound": True,
+            "compute_only_interpretation": (
+                "optimistic empirical compute-only extrapolation/reference"
+            ),
             "naive_wall_linear_is_conservative_empirical": True,
             "upstream_commit": post_commit,
             "weights_revision": EXPECTED_WEIGHTS_REVISION,

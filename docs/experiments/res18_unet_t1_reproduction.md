@@ -92,7 +92,10 @@ GPU compute.
 
 PyTorch reported peak allocated memory of 1,826,138,624 bytes
 (1,741.541504 MiB). Across 877 `nvidia-smi` samples spanning 1,023.770009 s,
-peak total GPU used memory was 6,309 MiB. Windows WDDM did not expose reliable
+the actual cadence was mean interval 1.168687225 s, median interval
+1.164594750 s, and effective rate 0.855660932 Hz. Peak total GPU used memory
+observed at that cadence was 6,309 MiB; this sampled maximum may miss a
+between-sample transient. Windows WDDM did not expose reliable
 per-child memory attribution, so `peak_child_process_mib` is `null` with
 `child_process_memory_available=false`; it must not be interpreted as zero GPU
 memory.
@@ -100,8 +103,9 @@ memory.
 ## 10,000-step interpretation
 
 The instantaneous compute-only product is
-`10,000 * 0.091461900 = 914.618999996 s` (15.243650 min). It is a hard lower
-bound, not a realistic total.
+`10,000 * 0.091461900 = 914.618999996 s` (15.243650 min). It is an optimistic
+empirical compute-only extrapolation/reference, not a realistic total or a
+mathematical lower bound.
 
 The raw first-completed-step boundaries were global steps 1, 122, 243, 364,
 and 485. Their four full 121-step cycle durations were 202.148682600,
@@ -129,7 +133,7 @@ not evidence that either result is wrong.
 
 The successful ignored run is
 `artifacts/reproductions/wsts-res18-t1/fold2-calibration-20260809T221432Z-9329670d`.
-It contains raw stdout/stderr, timestamped events, 1 Hz GPU samples, atomic
+It contains raw stdout/stderr, timestamped events, observed-cadence GPU samples, atomic
 locks and PID, exit code, source inventories, configs/provenance, one-row
 `calibration.csv`, 501-row `step-timing.csv`, `timing.json`, and the recovered
 completion markers.
@@ -147,3 +151,22 @@ It also independently read `config.yaml`, required effective
 `pos_class_weight=608.4653828020165`, and matched the recorded provenance; the
 effective config SHA-256 is
 `743e3d02b784f22a390a208905d3c60067db20fa2aadf5ae346c2774f97458fc`.
+
+The verifier constructs the full ordered child command independently: exact
+environment Python and entrypoint, exact derived root and three absolute config
+paths, exact data root/fold/All/T=1/deduplication/workers-8/max-500/local-root
+arguments, and `do_test=false`, with no extra argument. It exact-compares the
+list and cross-checks SHA-256
+`1302459851e26669ca61a6c9ea551797f8421db4bf95c35059ecee3ee2b7b75a`
+across the start marker, global/run locks, worker authorization, effective
+command, and timing summary.
+
+For code provenance, it independently reads both initializers, derives the
+expected runtime content by deleting the seven authorized unused exports, and
+requires byte/content equality with no other derived file changed. It matches
+the tracked patch, copied patch, actual git diff, copied diff, patch SHA-256,
+and diff SHA-256. It parses the pinned `train.py` AST to establish that
+`before_instantiate_classes` computes `float(1 / fire_rate)` and assigns it to
+the model config, then combines that observation with source YAML 236 and saved
+effective config 608.4653828020165; the dynamic-override conclusion is derived,
+not asserted as a constant.

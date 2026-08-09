@@ -107,7 +107,7 @@
 
 - [x] **Step 1: Write failing timing and command tests**
 
-  Provide captured Lightning progress fragments containing carriage-return updates and assert monotonic `(optimizer_step, timestamp)` extraction, duplicate-step collapse, exclusion of warm-up steps 0--49, median instantaneous seconds per step, samples/second at batch 64, and `10,000 * median_step_seconds` as a compute-only hard lower bound. Separately reconstruct first-step epoch boundaries so recurring loader/validation gaps produce an epoch-aware 10,000-step central/range estimate; also report complete-wall linear scaling and end-to-end throughput. Require rejection when progress never reaches exactly 500, steps regress, values are non-finite, or the effective command contains `do_test=true`, a test/predict action, another fold, another feature subset, or a non-allowlisted scientific override.
+  Provide captured Lightning progress fragments containing carriage-return updates and assert monotonic `(optimizer_step, timestamp)` extraction, duplicate-step collapse, exclusion of warm-up steps 0--49, median instantaneous seconds per step, samples/second at batch 64, and `10,000 * median_step_seconds` as an optimistic empirical compute-only extrapolation/reference. Separately reconstruct first-step epoch boundaries so recurring loader/validation gaps produce an epoch-aware 10,000-step central/range estimate; also report complete-wall linear scaling and end-to-end throughput. Require rejection when progress never reaches exactly 500, steps regress, values are non-finite, or the effective command contains `do_test=true`, a test/predict action, another fold, another feature subset, or a non-allowlisted scientific override.
 
 - [x] **Step 2: Run focused tests and confirm RED**
 
@@ -128,8 +128,10 @@
   datamodule, optimizer, callbacks, trainer, or metrics.
 
   Launch that entrypoint with the official environment's Python, timestamp
-  stdout/stderr progress externally, and sample `nvidia-smi` once per second
-  into `gpu.csv`. Always record the child exit code. On success, require exact
+  stdout/stderr progress externally, and schedule `nvidia-smi` against absolute
+  monotonic one-second deadlines into `gpu.csv` so query duration does not
+  accumulate. Always record the actual mean/median interval and effective Hz;
+  an observed peak may miss between-sample transients. Always record the child exit code. On success, require exact
   step 500, finite final loss, a finite peak-allocated sentinel, no OOM, no
   test/predict markers, and a clean upstream checkout; then atomically write
   the timing summaries and effective command. Do not automatically retry the

@@ -26,6 +26,7 @@ from run_calibration import (  # noqa: E402
     build_source_inventory,
     create_unique_run_directory,
     measure_wall_seconds_from_markers,
+    next_gpu_sample_deadline,
     parse_epoch_boundaries,
     measure_validation_seconds,
     observe_process,
@@ -622,9 +623,9 @@ def test_parse_peak_allocated_accepts_one_positive_integer_sentinel() -> None:
 
 def test_summarize_gpu_samples_reports_gpu_and_child_process_peaks() -> None:
     rows = [
-        {"memory_used_mib": "1000", "utilization_gpu_percent": "10", "child_memory_mib": "900"},
-        {"memory_used_mib": "2500", "utilization_gpu_percent": "90", "child_memory_mib": "2300"},
-        {"memory_used_mib": "2000", "utilization_gpu_percent": "50", "child_memory_mib": "1900"},
+        {"observer_seconds": "0", "memory_used_mib": "1000", "utilization_gpu_percent": "10", "child_memory_mib": "900"},
+        {"observer_seconds": "1", "memory_used_mib": "2500", "utilization_gpu_percent": "90", "child_memory_mib": "2300"},
+        {"observer_seconds": "2", "memory_used_mib": "2000", "utilization_gpu_percent": "50", "child_memory_mib": "1900"},
     ]
 
     assert summarize_gpu_samples(rows) == {
@@ -632,6 +633,12 @@ def test_summarize_gpu_samples_reports_gpu_and_child_process_peaks() -> None:
         "peak_gpu_used_mib": 2500.0,
         "peak_child_process_mib": 2300.0,
         "child_process_memory_available": True,
+        "gpu_interval_count": 2,
+        "gpu_interval_mean_seconds": 1.0,
+        "gpu_interval_median_seconds": 1.0,
+        "gpu_observed_effective_hz": 1.0,
+        "gpu_peak_is_observed_sample_max": True,
+        "gpu_peak_may_miss_between_sample_transients": True,
         "gpu_utilization_min_percent": 10.0,
         "gpu_utilization_median_percent": 50.0,
         "gpu_utilization_max_percent": 90.0,
@@ -641,13 +648,19 @@ def test_summarize_gpu_samples_reports_gpu_and_child_process_peaks() -> None:
 def test_summarize_gpu_samples_marks_zero_child_attribution_unavailable() -> None:
     summary = summarize_gpu_samples(
         [
-            {"memory_used_mib": "1000", "utilization_gpu_percent": "5", "child_memory_mib": "0"},
-            {"memory_used_mib": "2000", "utilization_gpu_percent": "10", "child_memory_mib": "0"},
+            {"observer_seconds": "0", "memory_used_mib": "1000", "utilization_gpu_percent": "5", "child_memory_mib": "0"},
+            {"observer_seconds": "1", "memory_used_mib": "2000", "utilization_gpu_percent": "10", "child_memory_mib": "0"},
         ]
     )
 
     assert summary["peak_child_process_mib"] is None
     assert summary["child_process_memory_available"] is False
+
+
+def test_absolute_gpu_deadline_does_not_accumulate_query_duration() -> None:
+    assert next_gpu_sample_deadline(100.0, 100.2) == pytest.approx(101.0)
+    assert next_gpu_sample_deadline(101.0, 101.4) == pytest.approx(102.0)
+    assert next_gpu_sample_deadline(102.0, 104.2) == pytest.approx(105.0)
 
 
 def test_nvidia_sampler_parses_real_seven_column_gpu_row_and_child_pid(
