@@ -1,5 +1,6 @@
 import json
 import sys
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,7 @@ SCRIPTS_DIR = (
 )
 sys.path.insert(0, str(SCRIPTS_DIR))
 
+import verify_calibration as verifier  # noqa: E402
 from verify_calibration import (  # noqa: E402
     build_exact_expected_command,
     derive_dynamic_positive_weight_provenance,
@@ -153,6 +155,261 @@ def test_command_lineage_cross_checks_all_markers_and_hashes(tmp_path: Path) -> 
     )
     with pytest.raises(ValueError, match="command lineage"):
         validate_command_lineage(run, global_lock, command)
+
+
+def _valid_command_lineage(tmp_path: Path) -> tuple[Path, Path, list[str]]:
+    run = (tmp_path / "run").resolve()
+    run.mkdir()
+    command = build_exact_expected_command(
+        run, (tmp_path / "WildfireSpreadTS-res18-runtime").resolve()
+    )
+    command_hash = __import__("hashlib").sha256(
+        json.dumps(command, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    command_and_hash = {"command": command, "command_sha256": command_hash}
+    (run / "started.json").write_text(
+        json.dumps({"command": command, "pid": 123, "started_utc": "2026-08-09T00:00:00+00:00"}),
+        encoding="utf-8",
+    )
+    for name in (
+        "launch.lock.json",
+        "worker-recovery-authorization.json",
+        "effective-command.json",
+    ):
+        (run / name).write_text(json.dumps(command_and_hash), encoding="utf-8")
+    (run / "timing.json").write_text(
+        json.dumps({"command_sha256": command_hash}), encoding="utf-8"
+    )
+    global_lock = tmp_path / "fold2-calibration-worker-recovery.lock.json"
+    global_lock.write_text(json.dumps(command_and_hash), encoding="utf-8")
+    return run, global_lock, command
+
+
+@pytest.mark.parametrize(
+    ("marker_name", "field", "expected_message"),
+    [
+        ("started.json", "command", "command lineage missing command: started.json"),
+        (
+            "fold2-calibration-worker-recovery.lock.json",
+            "command",
+            "command lineage missing command: fold2-calibration-worker-recovery.lock.json",
+        ),
+        ("launch.lock.json", "command", "command lineage missing command: launch.lock.json"),
+        (
+            "worker-recovery-authorization.json",
+            "command",
+            "command lineage missing command: worker-recovery-authorization.json",
+        ),
+        (
+            "effective-command.json",
+            "command",
+            "command lineage missing command: effective-command.json",
+        ),
+        (
+            "fold2-calibration-worker-recovery.lock.json",
+            "command_sha256",
+            "command lineage missing command_sha256: fold2-calibration-worker-recovery.lock.json",
+        ),
+        (
+            "launch.lock.json",
+            "command_sha256",
+            "command lineage missing command_sha256: launch.lock.json",
+        ),
+        (
+            "worker-recovery-authorization.json",
+            "command_sha256",
+            "command lineage missing command_sha256: worker-recovery-authorization.json",
+        ),
+        (
+            "effective-command.json",
+            "command_sha256",
+            "command lineage missing command_sha256: effective-command.json",
+        ),
+        (
+            "timing.json",
+            "command_sha256",
+            "command lineage missing command_sha256: timing.json",
+        ),
+    ],
+)
+def test_command_lineage_rejects_each_missing_required_field(
+    tmp_path: Path, marker_name: str, field: str, expected_message: str
+) -> None:
+    run, global_lock, command = _valid_command_lineage(tmp_path)
+    marker = global_lock if marker_name == global_lock.name else run / marker_name
+    payload = json.loads(marker.read_text(encoding="utf-8"))
+    del payload[field]
+    marker.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError) as error:
+        validate_command_lineage(run, global_lock, command)
+    assert str(error.value) == expected_message
+
+
+@pytest.mark.parametrize(
+    ("marker_name", "field", "bad_value", "expected_message"),
+    [
+        ("started.json", "command", "not-a-list", "command lineage invalid command type: started.json"),
+        (
+            "fold2-calibration-worker-recovery.lock.json",
+            "command",
+            "not-a-list",
+            "command lineage invalid command type: fold2-calibration-worker-recovery.lock.json",
+        ),
+        (
+            "launch.lock.json",
+            "command",
+            ["valid-string", 1],
+            "command lineage invalid command type: launch.lock.json",
+        ),
+        (
+            "worker-recovery-authorization.json",
+            "command",
+            "not-a-list",
+            "command lineage invalid command type: worker-recovery-authorization.json",
+        ),
+        (
+            "effective-command.json",
+            "command",
+            "not-a-list",
+            "command lineage invalid command type: effective-command.json",
+        ),
+        (
+            "fold2-calibration-worker-recovery.lock.json",
+            "command_sha256",
+            130245,
+            "command lineage invalid command_sha256 type: fold2-calibration-worker-recovery.lock.json",
+        ),
+        (
+            "launch.lock.json",
+            "command_sha256",
+            130245,
+            "command lineage invalid command_sha256 type: launch.lock.json",
+        ),
+        (
+            "worker-recovery-authorization.json",
+            "command_sha256",
+            ["not-a-string"],
+            "command lineage invalid command_sha256 type: worker-recovery-authorization.json",
+        ),
+        (
+            "effective-command.json",
+            "command_sha256",
+            130245,
+            "command lineage invalid command_sha256 type: effective-command.json",
+        ),
+        (
+            "timing.json",
+            "command_sha256",
+            130245,
+            "command lineage invalid command_sha256 type: timing.json",
+        ),
+    ],
+)
+def test_command_lineage_rejects_wrong_required_field_types(
+    tmp_path: Path,
+    marker_name: str,
+    field: str,
+    bad_value: object,
+    expected_message: str,
+) -> None:
+    run, global_lock, command = _valid_command_lineage(tmp_path)
+    marker = global_lock if marker_name == global_lock.name else run / marker_name
+    payload = json.loads(marker.read_text(encoding="utf-8"))
+    payload[field] = bad_value
+    marker.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError) as error:
+        validate_command_lineage(run, global_lock, command)
+    assert str(error.value) == expected_message
+
+
+def _complete_inventory(root: Path) -> dict[str, object]:
+    year_counts = {"2018": 176, "2019": 74, "2020": 201, "2021": 156}
+    files = []
+    ordinal = 0
+    for year, count in year_counts.items():
+        for index in range(count):
+            ordinal += 1
+            files.append(
+                {
+                    "path": f"{year}/fire_{index:08d}.hdf5",
+                    "size": ordinal,
+                    "mtime_ns": 1_700_000_000_000_000_000 + ordinal,
+                }
+            )
+    return {
+        "root": str(root.resolve()),
+        "file_count": 607,
+        "total_bytes": 184_528,
+        "files": files,
+    }
+
+
+def test_source_inventory_rejects_identical_but_truncated_snapshots(tmp_path: Path) -> None:
+    validator = getattr(verifier, "validate_source_inventory_lineage", None)
+    assert validator is not None, "source inventory validator is required"
+    truncated = _complete_inventory(tmp_path)
+    truncated["files"] = truncated["files"][:-1]
+    truncated["file_count"] = 606
+    truncated["total_bytes"] = 183_921
+
+    with pytest.raises(ValueError) as error:
+        validator(truncated, deepcopy(truncated), deepcopy(truncated), tmp_path)
+    assert str(error.value) == "source inventory must contain exactly 607 files: pre"
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_message"),
+    [
+        ("duplicate", "source inventory paths are not unique: pre"),
+        ("wrong_file_count", "source inventory file_count does not match entries length: pre"),
+        ("wrong_total_bytes", "source inventory total_bytes does not equal summed sizes: pre"),
+        ("wrong_root", "source inventory root mismatch: pre"),
+        ("wrong_year_count", "source inventory year counts mismatch: pre"),
+        ("bad_path", "source inventory path structure invalid: pre"),
+        ("bad_size", "source inventory file size invalid: pre"),
+        ("bad_mtime", "source inventory mtime_ns invalid: pre"),
+    ],
+)
+def test_source_inventory_rejects_malformed_snapshot(
+    tmp_path: Path, mutation: str, expected_message: str
+) -> None:
+    validator = getattr(verifier, "validate_source_inventory_lineage", None)
+    assert validator is not None, "source inventory validator is required"
+    snapshot = _complete_inventory(tmp_path)
+    if mutation == "duplicate":
+        snapshot["files"][1]["path"] = snapshot["files"][0]["path"]
+    elif mutation == "wrong_file_count":
+        snapshot["file_count"] = 608
+    elif mutation == "wrong_total_bytes":
+        snapshot["total_bytes"] += 1
+    elif mutation == "wrong_root":
+        snapshot["root"] = str((tmp_path / "wrong").resolve())
+    elif mutation == "wrong_year_count":
+        snapshot["files"][-1]["path"] = "2020/fire_moved_from_2021.hdf5"
+    elif mutation == "bad_path":
+        snapshot["files"][0]["path"] = "2018/nested/fire.hdf5"
+    elif mutation == "bad_size":
+        snapshot["files"][0]["size"] = "1"
+    elif mutation == "bad_mtime":
+        snapshot["files"][0]["mtime_ns"] = None
+
+    with pytest.raises(ValueError) as error:
+        validator(snapshot, deepcopy(snapshot), deepcopy(snapshot), tmp_path)
+    assert str(error.value) == expected_message
+
+
+def test_source_inventory_rejects_live_metadata_mismatch(tmp_path: Path) -> None:
+    validator = getattr(verifier, "validate_source_inventory_lineage", None)
+    assert validator is not None, "source inventory validator is required"
+    snapshot = _complete_inventory(tmp_path)
+    live = deepcopy(snapshot)
+    live["files"][0]["mtime_ns"] += 1
+
+    with pytest.raises(ValueError) as error:
+        validator(snapshot, deepcopy(snapshot), live, tmp_path)
+    assert str(error.value) == "live source inventory differs from post snapshot"
 
 
 def _official_init_text() -> str:

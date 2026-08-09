@@ -34,25 +34,25 @@
 - Produces: `verify_inventory(data_root: Path) -> dict[str, int]`, `verify_upstream(upstream_root: Path, expected_commit: str) -> str`, `validate_overrides(overrides: Mapping[str, object]) -> None`, and `write_json_atomic(path: Path, payload: Mapping[str, object]) -> None`.
 - Produces: immutable JSON keys `code.url`, `code.commit`, `weights.url`, `weights.revision`, `paper.target`, and `calibration` for later scripts.
 
-- [ ] **Step 1: Write failing control tests**
+- [x] **Step 1: Write failing control tests**
 
   Add tests that create fake year directories and assert exact acceptance of the four frozen counts; rejection of missing, extra, or wrong-year `.hdf5` files; exact acceptance of the allowlisted override keys and values; rejection of `do_test=true`, non-fold-2, non-All-features, non-500-step, batch-size, precision, optimizer, or model changes; atomic JSON replacement; and upstream commit mismatch. Stub `git rev-parse HEAD` through an injected command runner rather than touching a real repository.
 
-- [ ] **Step 2: Run the focused tests and confirm RED**
+- [x] **Step 2: Run the focused tests and confirm RED**
 
   Run `python -m pytest tests/test_wsts_reproduction_control.py -q` and require failure because `control.py` does not yet exist.
 
-- [ ] **Step 3: Implement the minimal standard-library control module**
+- [x] **Step 3: Implement the minimal standard-library control module**
 
   Define constants for frozen years/counts and the exact effective override mapping. Resolve every path before reading it, count only direct `*.hdf5` children of the four allowed year directories, reject any additional year selected for the calibration, obtain the upstream commit with `git -C <root> rev-parse HEAD`, compare mappings using both key and type equality, and publish JSON through a same-directory temporary file followed by `os.replace`.
 
   Provide a CLI with `inventory`, `upstream`, and `validate-overrides` subcommands. Each successful command prints one compact JSON object; every validation error writes a precise message to stderr and exits 2.
 
-- [ ] **Step 4: Add the lock manifest, operator README, and ignore rules**
+- [x] **Step 4: Add the lock manifest, operator README, and ignore rules**
 
   The lock manifest must carry the two frozen revisions and paper target `0.460 +/- 0.084`. The README must state that 500-step timing is not a scientific reproduction result and list the official baseline command. Add `/artifacts/reproductions/` and `/reproductions/wsts_res18_unet_t1/.local/` to `.gitignore` without broadening existing ignores.
 
-- [ ] **Step 5: Verify and commit Task 1**
+- [x] **Step 5: Verify and commit Task 1**
 
   Run `python -m pytest tests/test_wsts_reproduction_control.py -q`, `python -m pytest -q`, and `git diff --check`. Commit only Task 1 files with `feat: add WSTS reproduction controls`.
 
@@ -69,25 +69,25 @@
 - Produces: an ignored pinned checkout at `reproductions/wsts_res18_unet_t1/.local/WildfireSpreadTS`, a dedicated Conda environment at `D:\WildFire Project\.conda-envs\wsts-res18-t1`, and `smoke.json` in the selected local run directory.
 - Produces: `inspect_batch(batch: object) -> dict[str, object]` and `assert_fold_mapping(datamodule: object) -> dict[str, list[int]]` for the real smoke run.
 
-- [ ] **Step 1: Write failing smoke-unit tests**
+- [x] **Step 1: Write failing smoke-unit tests**
 
   Use small NumPy arrays to require that `inspect_batch` records loader and model-boundary shapes, accepts finite `T=1`, 40-channel, 128x128 tensors with binary targets, and rejects non-finite inputs, non-binary targets, wrong temporal/channel/spatial dimensions, or equality between the input-day active-fire mask and next-day target. Use a fake datamodule to require the exact fold-2 year mapping.
 
-- [ ] **Step 2: Run the focused tests and confirm RED**
+- [x] **Step 2: Run the focused tests and confirm RED**
 
   Run `python -m pytest tests/test_wsts_fold2_smoke.py -q` and require failure because `smoke_fold2.py` does not yet exist.
 
-- [ ] **Step 3: Implement bootstrap and smoke scripts**
+- [x] **Step 3: Implement bootstrap and smoke scripts**
 
   `bootstrap.ps1` must be idempotent: clone the official repository only when absent, fetch and checkout the frozen commit in detached mode, fail if `git status --porcelain` is non-empty, create the prefix Conda environment with Python 3.10.4 only when absent, install the authors' pinned requirements using the CUDA-compatible PyTorch 2.0.0 wheels, and export `conda-list.txt`, `pip-freeze.txt`, GPU/driver, CPU, RAM, and disk metadata into the ignored run directory. It must never activate or install into the current environment.
 
   `smoke_fold2.py` must put only the pinned upstream `src` on `sys.path`, instantiate the official fold-2 datamodule with the frozen All-feature/T=1/crop settings, call `setup('fit')`, take exactly one seeded training batch, record both official loader output and flattened 40-channel model-boundary shapes, run the semantic assertions, and atomically emit `smoke.json`. It must not call `setup('test')`, `test_dataloader`, `trainer.test`, or read a 2021 sample.
 
-- [ ] **Step 4: Materialize the isolated environment and pass the real gate**
+- [x] **Step 4: Materialize the isolated environment and pass the real gate**
 
   Record source-data file size and modification-time inventories before the smoke. Run bootstrap, then run smoke initially with upstream `num_workers=64`. If native Windows fails specifically during worker creation/IPC, record the complete failure and retry loader smoke only with `8`, then `4`, then `0`, stopping at the first passing value. Do not change batch size or scientific settings. Cache the ResNet-18 ImageNet encoder weights before timing.
 
-- [ ] **Step 5: Verify and commit Task 2**
+- [x] **Step 5: Verify and commit Task 2**
 
   Require the real `smoke.json` to state total 607, fold mapping `train=[2018,2020]`, `validation=[2019]`, `test=[2021]`, `T=1`, model channels 40, crop 128, finite inputs, binary targets, distinct next-day target, and no test-loader call. Recompute the source-data inventory and require byte size and modification time unchanged. Run both focused tests, the full suite, and `git diff --check`; commit tracked Task 2 files with `feat: add official fold 2 smoke gate`.
 
@@ -143,7 +143,7 @@
 
 - [x] **Step 5: Independently verify artifacts and analyze the result**
 
-  Recompute timing statistics from raw timestamp/progress and GPU CSV files in a separate process. Verify the command allowlist, child exit code 0, exact step 500, finite peak allocated memory from the wrapper sentinel, absence of test invocation, unchanged upstream status, and unchanged source-data size/mtime inventory. Compare the extrapolated one-fold time with the paper's approximate `0.4 h` entry while explicitly noting that the paper does not document hardware and that its time is not directly equivalent to this end-to-end calibration.
+  Recompute timing statistics from raw timestamp/progress and GPU CSV files in a separate process. Require each command-lineage marker's schema-specific command/hash fields with exact types and values. Validate both source snapshots internally: exact data root, 607 unique direct year/file paths, year counts `176/74/201/156`, entry count, summed byte size, and integer nanosecond mtimes; independently stat the live 2018--2021 tree and require exact equality with the post snapshot. Verify child exit code 0, exact step 500, finite peak allocated memory from the wrapper sentinel, absence of test invocation, and unchanged upstream status. Compare the extrapolated one-fold time with the paper's approximate `0.4 h` entry while explicitly noting that the paper does not document hardware and that its time is not directly equivalent to this end-to-end calibration.
 
 - [x] **Step 6: Document and commit Task 3**
 
@@ -160,7 +160,7 @@
 
 - [ ] **Step 1: Run final verification**
 
-  Run `python -m pytest -q`, `git diff --check`, `git status --short`, confirm the pinned upstream checkout is clean, independently compare source-data pre/post inventories, and validate every required artifact exists and is mutually consistent.
+  Run `python -m pytest -q`, `git diff --check`, `git status --short`, confirm the pinned upstream checkout is clean, independently validate each source-data snapshot and compare pre/post/live metadata, and validate every required artifact exists and is mutually consistent.
 
 - [ ] **Step 2: Conduct broad review**
 

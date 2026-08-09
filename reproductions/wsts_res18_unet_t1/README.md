@@ -148,8 +148,17 @@ it is not described as an exact target-cadence peak.
 Independent verification constructs the entire ordered attempt-3 command and
 requires list equality with no extra arguments. It cross-checks the command
 hash across `started.json`, global/run locks, worker authorization,
-`effective-command.json`, and `timing.json`. It also derives the expected
+`effective-command.json`, and `timing.json`. Each marker must contain its
+schema-specific command and/or hash field with the expected JSON type; missing
+fields fail verification. It also derives the expected
 runtime initializer by deleting exactly seven authorized exports from pristine
 content, requires every other derived file clean, matches the tracked/copied
 patch and copied git diff, and derives the positive-weight override from the
 pinned `train.py` AST rather than hard-coding the conclusion.
+
+Source-data verification requires the exact data root, 607 unique direct
+`year/file.hdf5` entries, per-year counts `176/74/201/156`, internally
+consistent entry/byte totals, and integer size/mtime metadata. The independent
+verifier also stats the live selected-year tree and exact-compares its paths,
+sizes, and nanosecond mtimes with the post-run snapshot; equal pre/post JSON
+alone is insufficient.

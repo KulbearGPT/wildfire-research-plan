@@ -143,9 +143,13 @@ the runner. From raw files it independently reconstructed all 501 progress
 points (steps 0--500), epoch boundaries/cycles, wall/startup/validation times,
 instantaneous and end-to-end throughput, the three projections, GPU statistics,
 and peak sentinel. It exactly matched `timing.json`, confirmed exit 0 and no
-test/predict/OOM, confirmed all 607 selected source files and 24,242,259,023
-bytes were unchanged, confirmed the original checkout clean at the pinned
-commit, and confirmed the derived patch status and hash. Its result is
+test/predict/OOM, and validated the two source snapshots internally: exact
+data root, 607 unique direct entries with year counts 176/74/201/156, matching
+entry and byte totals, and valid integer size/mtime metadata. It independently
+statted the live selected-year tree and exactly matched all post-run paths,
+sizes, and nanosecond mtimes (24,242,259,023 bytes total). It also confirmed the
+original checkout clean at the pinned commit and the derived patch status and
+hash. Its result is
 `independent-verification.json` in the successful run directory.
 It also independently read `config.yaml`, required effective
 `pos_class_weight=608.4653828020165`, and matched the recorded provenance; the
@@ -159,7 +163,9 @@ arguments, and `do_test=false`, with no extra argument. It exact-compares the
 list and cross-checks SHA-256
 `1302459851e26669ca61a6c9ea551797f8421db4bf95c35059ecee3ee2b7b75a`
 across the start marker, global/run locks, worker authorization, effective
-command, and timing summary.
+command, and timing summary. Every marker must contain its schema-specific
+command and/or hash field with the correct JSON type; a missing field fails
+closed.
 
 For code provenance, it independently reads both initializers, derives the
 expected runtime content by deleting the seven authorized unused exports, and

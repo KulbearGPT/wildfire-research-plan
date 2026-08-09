@@ -41,6 +41,8 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 REPRODUCTION_ROOT = Path(__file__).resolve().parents[1]
 FIXED_ENVIRONMENT_PYTHON = Path(r"D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe")
 FIXED_DATA_ROOT = Path(r"D:\WildFire Project\data\hdf5")
+EXPECTED_SOURCE_YEAR_COUNTS = {"2018": 176, "2019": 74, "2020": 201, "2021": 156}
+EXPECTED_SOURCE_FILE_COUNT = sum(EXPECTED_SOURCE_YEAR_COUNTS.values())
 PROGRESS = re.compile(r"\bEpoch\s+(\d+):.*?(\d+)\s*/\s*(\d+)")
 VALIDATION = re.compile(r"\bValidation DataLoader\s+\d+:.*?(\d+)\s*/\s*(\d+)")
 METRIC = re.compile(
@@ -96,24 +98,147 @@ def validate_command_lineage(
     run = run_root.resolve()
     expected = list(expected_command)
     expected_hash = _command_sha256(expected)
-    marker_paths = [
-        run / "started.json",
-        global_worker_lock.resolve(),
-        run / "launch.lock.json",
-        run / "worker-recovery-authorization.json",
-        run / "effective-command.json",
-        run / "timing.json",
+    marker_contracts = [
+        (run / "started.json", True, False),
+        (global_worker_lock.resolve(), True, True),
+        (run / "launch.lock.json", True, True),
+        (run / "worker-recovery-authorization.json", True, True),
+        (run / "effective-command.json", True, True),
+        (run / "timing.json", False, True),
     ]
-    for path in marker_paths:
+    for path, command_required, hash_required in marker_contracts:
         payload = json.loads(path.read_text(encoding="utf-8"))
-        if "command" in payload and payload["command"] != expected:
+        if not isinstance(payload, Mapping):
+            raise ValueError(f"command lineage marker must be an object: {path.name}")
+        command_present = "command" in payload
+        if command_required and not command_present:
+            raise ValueError(f"command lineage missing command: {path.name}")
+        if command_present and (
+            not isinstance(payload["command"], list)
+            or not all(isinstance(argument, str) for argument in payload["command"])
+        ):
+            raise ValueError(f"command lineage invalid command type: {path.name}")
+        if command_present and payload["command"] != expected:
             raise ValueError(f"command lineage list mismatch: {path.name}")
-        if "command_sha256" in payload and payload["command_sha256"] != expected_hash:
+        hash_present = "command_sha256" in payload
+        if hash_required and not hash_present:
+            raise ValueError(f"command lineage missing command_sha256: {path.name}")
+        if hash_present and not isinstance(payload["command_sha256"], str):
+            raise ValueError(
+                f"command lineage invalid command_sha256 type: {path.name}"
+            )
+        if hash_present and payload["command_sha256"] != expected_hash:
             raise ValueError(f"command lineage hash mismatch: {path.name}")
-    started = json.loads((run / "started.json").read_text(encoding="utf-8"))
-    if _command_sha256(started["command"]) != expected_hash:
+    started = json.loads((run / "started.json").read_text(encoding="utf-8"))["command"]
+    if _command_sha256(started) != expected_hash:
         raise ValueError("command lineage started command hash mismatch")
     return expected_hash
+
+
+def rebuild_live_source_inventory(data_root: Path) -> dict[str, object]:
+    """Independently stat the fixed four selected-year source directories."""
+    root = data_root.resolve()
+    files: list[dict[str, object]] = []
+    for year in EXPECTED_SOURCE_YEAR_COUNTS:
+        year_root = root / year
+        if not year_root.is_dir():
+            raise ValueError(f"live source year directory is missing: {year}")
+        candidates = sorted(
+            (
+                Path(entry.path)
+                for entry in os.scandir(year_root)
+                if entry.is_file() and entry.name.endswith(".hdf5")
+            ),
+            key=lambda candidate: candidate.name,
+        )
+        for path in candidates:
+            stat = path.stat()
+            files.append(
+                {
+                    "path": path.relative_to(root).as_posix(),
+                    "size": stat.st_size,
+                    "mtime_ns": stat.st_mtime_ns,
+                }
+            )
+    return {
+        "root": str(root),
+        "file_count": len(files),
+        "total_bytes": sum(int(entry["size"]) for entry in files),
+        "files": files,
+    }
+
+
+def _validate_source_inventory_snapshot(
+    snapshot: object, expected_root: Path, label: str
+) -> None:
+    if not isinstance(snapshot, Mapping):
+        raise ValueError(f"source inventory snapshot must be an object: {label}")
+    if snapshot.get("root") != str(expected_root.resolve()):
+        raise ValueError(f"source inventory root mismatch: {label}")
+    files = snapshot.get("files")
+    if not isinstance(files, list):
+        raise ValueError(f"source inventory files must be a list: {label}")
+    file_count = snapshot.get("file_count")
+    if not isinstance(file_count, int) or isinstance(file_count, bool):
+        raise ValueError(f"source inventory file_count invalid: {label}")
+    if file_count != len(files):
+        raise ValueError(
+            f"source inventory file_count does not match entries length: {label}"
+        )
+    if file_count != EXPECTED_SOURCE_FILE_COUNT:
+        raise ValueError(
+            f"source inventory must contain exactly {EXPECTED_SOURCE_FILE_COUNT} files: {label}"
+        )
+
+    paths: list[str] = []
+    sizes: list[int] = []
+    year_counts = {year: 0 for year in EXPECTED_SOURCE_YEAR_COUNTS}
+    for entry in files:
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"source inventory file entry invalid: {label}")
+        path = entry.get("path")
+        if not isinstance(path, str) or re.fullmatch(
+            r"(?:2018|2019|2020|2021)/[^/\\]+\.hdf5", path
+        ) is None:
+            raise ValueError(f"source inventory path structure invalid: {label}")
+        size = entry.get("size")
+        if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+            raise ValueError(f"source inventory file size invalid: {label}")
+        mtime_ns = entry.get("mtime_ns")
+        if (
+            not isinstance(mtime_ns, int)
+            or isinstance(mtime_ns, bool)
+            or mtime_ns <= 0
+        ):
+            raise ValueError(f"source inventory mtime_ns invalid: {label}")
+        paths.append(path)
+        sizes.append(size)
+        year_counts[path.split("/", 1)[0]] += 1
+
+    if len(set(paths)) != len(paths):
+        raise ValueError(f"source inventory paths are not unique: {label}")
+    if year_counts != EXPECTED_SOURCE_YEAR_COUNTS:
+        raise ValueError(f"source inventory year counts mismatch: {label}")
+    total_bytes = snapshot.get("total_bytes")
+    if not isinstance(total_bytes, int) or isinstance(total_bytes, bool):
+        raise ValueError(f"source inventory total_bytes invalid: {label}")
+    if total_bytes != sum(sizes):
+        raise ValueError(
+            f"source inventory total_bytes does not equal summed sizes: {label}"
+        )
+
+
+def validate_source_inventory_lineage(
+    before: object, after: object, live: object, expected_root: Path
+) -> None:
+    """Validate each snapshot internally, across time, and against live metadata."""
+    _validate_source_inventory_snapshot(before, expected_root, "pre")
+    _validate_source_inventory_snapshot(after, expected_root, "post")
+    _validate_source_inventory_snapshot(live, expected_root, "live")
+    if before != after:
+        raise ValueError("source inventory changed")
+    if after != live:
+        raise ValueError("live source inventory differs from post snapshot")
 
 
 def validate_import_scope_contents(original_text: str, derived_text: str) -> None:
@@ -571,8 +696,10 @@ def verify(
     )
     source_pre = json.loads((run / "source-data-pre.json").read_text(encoding="utf-8"))
     source_post = json.loads((run / "source-data-post.json").read_text(encoding="utf-8"))
-    if source_pre != source_post:
-        raise ValueError("source inventory changed")
+    live_source = rebuild_live_source_inventory(FIXED_DATA_ROOT)
+    validate_source_inventory_lineage(
+        source_pre, source_post, live_source, FIXED_DATA_ROOT
+    )
     original_commit = _git(original, "rev-parse", "HEAD").strip()
     original_status = _git(original, "status", "--porcelain").splitlines()
     derived_commit = _git(derived, "rev-parse", "HEAD").strip()
@@ -681,8 +808,10 @@ def verify(
         "exact_command_verified": True,
         "command_lineage_verified": True,
         "data_inventory_identical": True,
+        "data_inventory_live_verified": True,
         "data_file_count": source_pre["file_count"],
         "data_total_bytes": source_pre["total_bytes"],
+        "data_year_counts": EXPECTED_SOURCE_YEAR_COUNTS,
         "original_upstream_commit": original_commit,
         "original_upstream_clean": True,
         "derived_upstream_commit": derived_commit,
