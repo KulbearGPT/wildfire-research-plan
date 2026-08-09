@@ -871,7 +871,7 @@ $expectedExclusions = @(
   '2022/fire_CA4186812327820220730',
   '2022/fire_ID4570411652620220904',
   '2022/fire_OR4513211711020220825',
-  '2022/fire_WA4687912083320220825',
+  '2022/fire_WA4687912083320220803',
   '2022/fire_WA4796412068520220909'
 )
 if ($decision.status -ne 'ready') { throw "repair decision is not ready" }
