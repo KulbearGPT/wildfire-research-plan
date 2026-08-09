@@ -59,6 +59,24 @@ def _write_event(
         data.attrs["lnglat"] = [-120.5, 54.1]
 
 
+def _write_protocol_events(
+    data_root: Path,
+    *,
+    names: dict[int, str] | None = None,
+    target_hours: dict[int, float] | None = None,
+) -> None:
+    event_names = names or {}
+    hours = target_hours or {}
+    for year in range(2016, 2024):
+        fire_name = event_names.get(year, f"fire_{year}")
+        _write_event(
+            data_root / str(year) / f"{fire_name}.hdf5",
+            year,
+            fire_name,
+            target_hour=hours.get(year, 9),
+        )
+
+
 def _write_string_event(path: Path, year: int, fire_name: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     values = np.full((2, 23, 4, 4), b"x", dtype="S1")
@@ -159,7 +177,7 @@ def test_audit_writes_controlled_gate_artifacts_for_a_valid_event(tmp_path: Path
     """Removing artifact serialization or the controlled decision must fail this test."""
     data_root = tmp_path / "data"
     output_root = tmp_path / "artifacts"
-    _write_event(data_root / "2021" / "demo_fire.hdf5", 2021, "demo_fire")
+    _write_protocol_events(data_root)
 
     assert _run_audit(data_root, output_root) == 0
     assert {path.name for path in output_root.iterdir()} == set(_ARTIFACT_NAMES)
@@ -180,8 +198,9 @@ def test_audit_serializes_inventory_and_split_in_deterministic_order(tmp_path: P
     """Removing stable ordering or deterministic date serialization must fail this test."""
     data_root = tmp_path / "data"
     output_root = tmp_path / "artifacts"
-    _write_event(data_root / "2023" / "alpha_fire.hdf5", 2023, "alpha_fire")
-    _write_event(data_root / "2016" / "zulu_fire.hdf5", 2016, "zulu_fire")
+    _write_protocol_events(
+        data_root, names={2016: "zulu_fire", 2023: "alpha_fire"}
+    )
 
     assert _run_audit(data_root, output_root) == 0
 
@@ -206,6 +225,12 @@ def test_audit_serializes_inventory_and_split_in_deterministic_order(tmp_path: P
     ]
     assert [(row["year"], row["fire_name"], row["dates"]) for row in inventory_rows] == [
         ("2016", "zulu_fire", '["2016-08-01","2016-08-02"]'),
+        ("2017", "fire_2017", '["2017-08-01","2017-08-02"]'),
+        ("2018", "fire_2018", '["2018-08-01","2018-08-02"]'),
+        ("2019", "fire_2019", '["2019-08-01","2019-08-02"]'),
+        ("2020", "fire_2020", '["2020-08-01","2020-08-02"]'),
+        ("2021", "fire_2021", '["2021-08-01","2021-08-02"]'),
+        ("2022", "fire_2022", '["2022-08-01","2022-08-02"]'),
         ("2023", "alpha_fire", '["2023-08-01","2023-08-02"]'),
     ]
     assert [
@@ -217,12 +242,27 @@ def test_audit_serializes_inventory_and_split_in_deterministic_order(tmp_path: P
             row["active_fire_max_positive"],
         )
         for row in inventory_rows
-    ] == [("1", "0", "1", "9.0", "9.0"), ("1", "0", "1", "9.0", "9.0")]
+    ] == [
+        ("1", "0", "1", "9.0", "9.0"),
+        ("1", "0", "1", "9.0", "9.0"),
+        ("1", "0", "1", "9.0", "9.0"),
+        ("1", "0", "1", "9.0", "9.0"),
+        ("1", "0", "1", "9.0", "9.0"),
+        ("1", "0", "1", "9.0", "9.0"),
+        ("1", "0", "1", "9.0", "9.0"),
+        ("1", "0", "1", "9.0", "9.0"),
+    ]
 
     with (output_root / "split_manifest.csv").open(newline="", encoding="utf-8") as handle:
         split_rows = list(csv.DictReader(handle))
     assert [(row["event_id"], row["split"]) for row in split_rows] == [
         ("2016:zulu_fire", "train"),
+        ("2017:fire_2017", "train"),
+        ("2018:fire_2018", "train"),
+        ("2019:fire_2019", "train"),
+        ("2020:fire_2020", "train"),
+        ("2021:fire_2021", "validation"),
+        ("2022:fire_2022", "test"),
         ("2023:alpha_fire", "test"),
     ]
 
@@ -232,15 +272,11 @@ def test_audit_blocks_all_zero_benchmark_year_and_split_with_complete_artifacts(
 ) -> None:
     data_root = tmp_path / "data"
     output_root = tmp_path / "artifacts"
-    _write_event(
-        data_root / "2022" / "zero_fire.hdf5",
-        2022,
-        "zero_fire",
-        target_hour=0,
-    )
+    _write_protocol_events(data_root, target_hours={2022: 0, 2023: 0})
     blocker = (
         "ValueError: split test has zero positive target pixels; "
-        "year 2022 has zero positive target pixels"
+        "year 2022 has zero positive target pixels; "
+        "year 2023 has zero positive target pixels"
     )
 
     assert _run_audit(data_root, output_root) == 2
@@ -251,6 +287,27 @@ def test_audit_blocks_all_zero_benchmark_year_and_split_with_complete_artifacts(
     assert decision["status"] == "blocked"
     assert f"Data-gate validation failed: {blocker}" in decision["notes"]
     assert not list(output_root.glob("*.tmp"))
+
+
+def test_audit_blocks_incomplete_frozen_protocol_with_complete_artifacts(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    output_root = tmp_path / "artifacts"
+    for year in range(2016, 2023):
+        _write_event(
+            data_root / str(year) / f"fire_{year}.hdf5",
+            year,
+            f"fire_{year}",
+        )
+
+    assert _run_audit(data_root, output_root) == 2
+    exact_error = "ValueError: benchmark year 2023 is missing from inventory"
+    assert exact_error in (output_root / "phase0_report.md").read_text(encoding="utf-8")
+    decision = json.loads(
+        (output_root / "contract_decision.json").read_text(encoding="utf-8")
+    )
+    assert any(exact_error in note for note in decision["notes"])
 
 
 def test_audit_blocks_on_invalid_event_and_leaves_final_artifacts(tmp_path: Path) -> None:
@@ -542,23 +599,24 @@ def test_repair_to_audit_preserves_nonzero_labels_in_every_split(
     staging_root = tmp_path / "staging"
     audit_root = tmp_path / "audit-data"
     output_root = tmp_path / "artifacts"
-    source_paths = {
-        year: _write_repair_event(
-            source_tiff_root, hdf5_root, year, f"fire_{year}"
-        )
-        for year in (2016, 2021, 2022)
-    }
-    with h5py.File(source_paths[2021], "r+") as handle:
-        handle["data"][1, 22, 0, 0] = 6.0
+    for year in (2016, 2017, 2022, 2023):
+        _write_repair_event(source_tiff_root, hdf5_root, year, f"fire_{year}")
+    original_paths = {}
+    for year in (2018, 2019, 2020, 2021):
+        path = hdf5_root / str(year) / f"fire_{year}.hdf5"
+        _write_event(path, year, f"fire_{year}", target_hour=6)
+        original_paths[year] = path
 
     assert _run_repair(
-        source_tiff_root, hdf5_root, staging_root, (2016, 2022)
+        source_tiff_root, hdf5_root, staging_root, (2016, 2017, 2022, 2023)
     ) == 0
 
     selected_paths = {
         2016: staging_root / "2016" / "fire_2016.hdf5",
-        2021: source_paths[2021],
+        2017: staging_root / "2017" / "fire_2017.hdf5",
+        **original_paths,
         2022: staging_root / "2022" / "fire_2022.hdf5",
+        2023: staging_root / "2023" / "fire_2023.hdf5",
     }
     for year, source_path in selected_paths.items():
         destination = audit_root / str(year) / source_path.name
@@ -567,9 +625,9 @@ def test_repair_to_audit_preserves_nonzero_labels_in_every_split(
 
     assert _run_audit(audit_root, output_root) == 0
     report = (output_root / "phase0_report.md").read_text(encoding="utf-8")
-    assert "| train | 1 | 1 | 0 | 1 |" in report
+    assert "| train | 5 | 5 | 0 | 5 |" in report
     assert "| validation | 1 | 1 | 0 | 1 |" in report
-    assert "| test | 1 | 1 | 0 | 1 |" in report
+    assert "| test | 2 | 2 | 0 | 2 |" in report
 
 
 def test_repair_active_fire_cli_returns_two_with_complete_error_evidence(

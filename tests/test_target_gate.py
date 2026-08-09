@@ -27,12 +27,18 @@ def _event(year: int, name: str, *, positives: int) -> EventInventory:
     )
 
 
-def test_gate_blocks_present_year_and_split_with_zero_positive_targets() -> None:
-    inventory = [
-        _event(2016, "train_positive", positives=1),
-        _event(2021, "validation_positive", positives=1),
-        _event(2022, "test_zero", positives=0),
+def _complete_inventory(
+    *, positive_overrides: dict[int, int] | None = None
+) -> list[EventInventory]:
+    overrides = positive_overrides or {}
+    return [
+        _event(year, f"fire_{year}", positives=overrides.get(year, 1))
+        for year in range(2016, 2024)
     ]
+
+
+def test_gate_blocks_present_year_and_split_with_zero_positive_targets() -> None:
+    inventory = _complete_inventory(positive_overrides={2022: 0, 2023: 0})
     split = build_forward_split(inventory)
 
     errors = target_integrity_errors(inventory, split)
@@ -40,26 +46,86 @@ def test_gate_blocks_present_year_and_split_with_zero_positive_targets() -> None
     assert errors == (
         "split test has zero positive target pixels",
         "year 2022 has zero positive target pixels",
+        "year 2023 has zero positive target pixels",
     )
 
 
 def test_gate_allows_zero_positive_events_when_year_and_split_are_positive() -> None:
     inventory = [
+        *_complete_inventory(),
         _event(2017, "zero_event", positives=0),
-        _event(2017, "positive_event", positives=2),
     ]
 
     assert target_integrity_errors(inventory, build_forward_split(inventory)) == ()
 
 
-def test_gate_returns_no_target_error_for_empty_inventory() -> None:
+def test_gate_reports_every_missing_year_and_split_for_empty_inventory() -> None:
     inventory: list[EventInventory] = []
 
-    assert target_integrity_errors(inventory, build_forward_split(inventory)) == ()
+    assert target_integrity_errors(inventory, build_forward_split(inventory)) == (
+        "benchmark year 2016 is missing from inventory",
+        "benchmark year 2017 is missing from inventory",
+        "benchmark year 2018 is missing from inventory",
+        "benchmark year 2019 is missing from inventory",
+        "benchmark year 2020 is missing from inventory",
+        "benchmark year 2021 is missing from inventory",
+        "benchmark year 2022 is missing from inventory",
+        "benchmark year 2023 is missing from inventory",
+        "canonical split test is missing from split manifest",
+        "canonical split train is missing from split manifest",
+        "canonical split validation is missing from split manifest",
+    )
+
+
+def test_gate_reports_missing_benchmark_year_and_split() -> None:
+    inventory = [_event(year, f"fire_{year}", positives=1) for year in range(2016, 2022)]
+
+    assert target_integrity_errors(inventory, build_forward_split(inventory)) == (
+        "benchmark year 2022 is missing from inventory",
+        "benchmark year 2023 is missing from inventory",
+        "canonical split test is missing from split manifest",
+    )
+
+
+def test_gate_rejects_unknown_split_label() -> None:
+    inventory = _complete_inventory()
+    split = build_forward_split(inventory)
+    split.loc[0, "split"] = "holdout"
+
+    with pytest.raises(
+        ValueError,
+        match="split manifest contains unknown split labels: holdout",
+    ):
+        target_integrity_errors(inventory, split)
+
+
+def test_gate_rejects_missing_canonical_split() -> None:
+    inventory = _complete_inventory()
+    split = build_forward_split(inventory)
+    split.loc[split["split"] == "test", "split"] = "train"
+
+    with pytest.raises(
+        ValueError,
+        match="split manifest is missing canonical splits: test",
+    ):
+        target_integrity_errors(inventory, split)
+
+
+def test_gate_rejects_relabelled_frozen_year_mapping() -> None:
+    inventory = _complete_inventory()
+    split = build_forward_split(inventory)
+    split.loc[split["year"] == 2020, "split"] = "validation"
+    split.loc[split["year"] == 2021, "split"] = "train"
+
+    with pytest.raises(
+        ValueError,
+        match="split manifest maps year 2020 to validation; expected train",
+    ):
+        target_integrity_errors(inventory, split)
 
 
 def test_gate_rejects_split_manifest_event_id_mismatch() -> None:
-    inventory = [_event(2021, "validation_positive", positives=1)]
+    inventory = _complete_inventory()
     split = build_forward_split(inventory)
     split.loc[0, "event_id"] = "2021:different"
 

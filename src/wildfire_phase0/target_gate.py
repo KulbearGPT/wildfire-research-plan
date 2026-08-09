@@ -8,6 +8,18 @@ import pandas as pd
 from wildfire_phase0.schema import EventInventory
 
 
+_BENCHMARK_YEARS = frozenset(range(2016, 2024))
+_CANONICAL_SPLITS = frozenset({"train", "validation", "test"})
+
+
+def _expected_split(year: int) -> str:
+    if year <= 2020:
+        return "train"
+    if year == 2021:
+        return "validation"
+    return "test"
+
+
 def target_integrity_errors(
     inventory: Sequence[EventInventory],
     split_manifest: pd.DataFrame,
@@ -32,7 +44,8 @@ def target_integrity_errors(
         "fire_name": lambda event: event.fire_name,
         "path": lambda event: event.path.as_posix(),
     }
-    for row in split_manifest.to_dict("records"):
+    manifest_records = split_manifest.to_dict("records")
+    for row in manifest_records:
         event = inventory_by_id[str(row["event_id"])]
         if any(
             column in row and row[column] != getter(event)
@@ -40,22 +53,60 @@ def target_integrity_errors(
         ):
             raise ValueError("split manifest metadata must match inventory events")
 
+    split_names = {str(row["split"]) for row in manifest_records}
+    unknown_splits = sorted(split_names - _CANONICAL_SPLITS)
+    if unknown_splits:
+        raise ValueError(
+            "split manifest contains unknown split labels: "
+            + ", ".join(unknown_splits)
+        )
+
+    observed_years = {event.year for event in inventory}
+    unexpected_years = sorted(observed_years - _BENCHMARK_YEARS)
+    if unexpected_years:
+        raise ValueError(
+            "inventory contains years outside benchmark protocol: "
+            + ", ".join(str(year) for year in unexpected_years)
+        )
+    missing_splits = sorted(_CANONICAL_SPLITS - split_names)
+    if observed_years == _BENCHMARK_YEARS and missing_splits:
+        raise ValueError(
+            "split manifest is missing canonical splits: " + ", ".join(missing_splits)
+        )
+    for row in sorted(manifest_records, key=lambda item: str(item["event_id"])):
+        event = inventory_by_id[str(row["event_id"])]
+        actual_split = str(row["split"])
+        expected_split = _expected_split(event.year)
+        if actual_split != expected_split:
+            raise ValueError(
+                f"split manifest maps year {event.year} to {actual_split}; "
+                f"expected {expected_split}"
+            )
+
     year_totals: dict[int, int] = defaultdict(int)
     for event in inventory:
         year_totals[event.year] += event.positive_target_pixels
 
     split_totals: dict[str, int] = defaultdict(int)
-    for row in split_manifest.to_dict("records"):
+    for row in manifest_records:
         split_name = str(row["split"])
         split_totals[split_name] += inventory_by_id[
             str(row["event_id"])
         ].positive_target_pixels
 
     errors = [
+        f"benchmark year {year} is missing from inventory"
+        for year in sorted(_BENCHMARK_YEARS - observed_years)
+    ]
+    errors.extend(
+        f"canonical split {split_name} is missing from split manifest"
+        for split_name in missing_splits
+    )
+    errors.extend(
         f"year {year} has zero positive target pixels"
         for year, positives in year_totals.items()
         if positives == 0
-    ]
+    )
     errors.extend(
         f"split {split_name} has zero positive target pixels"
         for split_name, positives in split_totals.items()
