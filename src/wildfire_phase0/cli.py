@@ -91,6 +91,12 @@ def _write_frame_temp(path: Path, frame: pd.DataFrame) -> None:
     frame.to_csv(path, index=False, encoding="utf-8", lineterminator="\n")
 
 
+def _paths_alias(left: Path, right: Path) -> bool:
+    return left == right or (
+        left.exists() and right.exists() and left.samefile(right)
+    )
+
+
 def _publish_staged_artifacts(
     paths: Sequence[Path], temp_paths: Mapping[Path, Path]
 ) -> None:
@@ -235,14 +241,16 @@ def run_rule_evaluation(
             output_root, _RULE_ARTIFACT_NAMES
         ).items()
     }
+    artifact_paths = tuple(artifacts.values())
+    if any(
+        _paths_alias(left, right)
+        for index, left in enumerate(artifact_paths)
+        for right in artifact_paths[index + 1 :]
+    ):
+        raise ValueError("rule output artifact paths must not alias each other")
     manifest_path = Path(split_manifest).expanduser().resolve(strict=False)
     if any(
-        manifest_path == artifact
-        or (
-            manifest_path.exists()
-            and artifact.exists()
-            and manifest_path.samefile(artifact)
-        )
+        _paths_alias(manifest_path, artifact)
         for artifact in artifacts.values()
     ):
         raise ValueError("split manifest must not alias a rule output artifact")

@@ -236,6 +236,30 @@ def test_summary_rejects_duplicate_event_baseline_rows_with_exact_message() -> N
     )
 
 
+def test_summary_rejects_invalid_split_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "split"] = "holdout"
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "event metrics split values must be train, validation, or test"
+    )
+
+
+def test_summary_rejects_invalid_baseline_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "baseline"] = "persistence"
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "event metrics baseline values must be no_fire or persistence_latest"
+    )
+
+
 @pytest.mark.parametrize("invalid", (1, "true", np.nan))
 def test_summary_requires_strict_boolean_ap_defined_with_exact_message(
     invalid: object,
@@ -425,6 +449,43 @@ def test_summary_requires_ap_value_to_match_defined_flag_with_exact_message(
     )
 
 
+@pytest.mark.parametrize("event_ap", (-0.01, 1.01))
+def test_summary_rejects_defined_ap_outside_unit_interval_with_exact_message(
+    event_ap: float,
+) -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "event_ap"] = event_ap
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == "defined event_ap values must be within [0, 1]"
+
+
+def test_summary_rejects_defined_ap_inconsistent_with_counts_with_exact_message() -> None:
+    malformed = _summary_event_frame()
+    malformed.loc[0, "event_ap"] = 0.5
+
+    with pytest.raises(ValueError) as error:
+        summarize_rule_metrics(malformed)
+
+    assert str(error.value) == (
+        "defined event_ap must match AP recomputed from confusion counts"
+    )
+
+
+def test_summary_accepts_defined_ap_rounded_to_twelve_decimal_places() -> None:
+    rounded = _summary_event_frame()
+    rounded.loc[0, "event_ap"] = 0.666666666667
+
+    summary = summarize_rule_metrics(rounded)
+
+    persistence = summary.set_index(["split", "baseline"]).loc[
+        ("test", "persistence_latest")
+    ]
+    assert persistence["events"] == 2
+
+
 def test_rule_report_is_deterministic_and_states_prespecified_evaluation() -> None:
     summary = summarize_rule_metrics(_summary_event_frame())
 
@@ -570,6 +631,19 @@ def test_event_evaluation_rejects_non_string_date_attributes(tmp_path: Path) -> 
 
     with pytest.raises(ValueError, match="img_dates attribute"):
         evaluate_rule_event(path, tmp_path, "validation")
+
+
+def test_event_evaluation_rejects_nonconsecutive_dates_with_exact_message(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "2021" / "fire_a.hdf5"
+    _write_active_event(path, np.zeros((2, 2, 2), dtype=np.uint8))
+    _replace_data_attribute(path, "img_dates", ["2021-08-01", "2021-08-03"])
+
+    with pytest.raises(ValueError) as error:
+        evaluate_rule_event(path, tmp_path, "validation")
+
+    assert str(error.value) == "image dates must be consecutive calendar days"
 
 
 @pytest.mark.parametrize(

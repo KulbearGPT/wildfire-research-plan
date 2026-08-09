@@ -382,6 +382,59 @@ def test_evaluate_rules_rejects_manifest_hardlink_alias_with_exact_message(
     assert not (output_root / "rule_report.md").exists()
 
 
+def test_evaluate_rules_rejects_hardlink_aliased_finals_before_manifest_read(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    data_root.mkdir()
+    output_root = tmp_path / "rule-artifacts"
+    _seed_old_rule_generation(output_root)
+    summary_path = output_root / "rule_summary.csv"
+    summary_path.unlink()
+    os.link(output_root / "rule_event_metrics.csv", summary_path)
+    old_bytes = {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    }
+
+    with pytest.raises(ValueError) as error:
+        _run_rules(data_root, tmp_path / "missing_manifest.csv", output_root)
+
+    assert str(error.value) == "rule output artifact paths must not alias each other"
+    assert {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    } == old_bytes
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
+def test_evaluate_rules_rejects_internal_symlink_aliased_finals_before_manifest_read(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "data"
+    data_root.mkdir()
+    output_root = tmp_path / "rule-artifacts"
+    _seed_old_rule_generation(output_root)
+    summary_path = output_root / "rule_summary.csv"
+    summary_path.unlink()
+    try:
+        summary_path.symlink_to(output_root / "rule_event_metrics.csv")
+    except OSError as error:
+        pytest.skip(f"file symlinks are unavailable: {error}")
+    old_bytes = {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    }
+
+    with pytest.raises(ValueError) as error:
+        _run_rules(data_root, tmp_path / "missing_manifest.csv", output_root)
+
+    assert str(error.value) == "rule output artifact paths must not alias each other"
+    assert {
+        name: (output_root / name).read_bytes() for name in _RULE_ARTIFACT_NAMES
+    } == old_bytes
+    assert not list(output_root.glob("*.tmp"))
+    assert not list(output_root.glob("*.bak"))
+
+
 def test_evaluate_rules_allows_manifest_sidecar_in_output_root(tmp_path: Path) -> None:
     data_root = tmp_path / "data"
     output_root = tmp_path / "rule-artifacts"

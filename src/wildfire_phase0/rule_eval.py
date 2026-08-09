@@ -68,6 +68,8 @@ _EVENT_COUNT_COLUMNS = (
 _MANIFEST_COLUMNS = ("event_id", "year", "fire_name", "path", "split")
 _REQUIRED_ATTRIBUTES = ("year", "fire_name", "img_dates", "lnglat")
 _SPLITS = {"train", "validation", "test"}
+# Covers decimal CSV round-tripping while remaining strict for event-level AP.
+_EVENT_AP_ABS_TOLERANCE = 1e-12
 
 
 def _decode_utf8_attribute(value: Any, name: str) -> str:
@@ -94,6 +96,8 @@ def _validate_dates(value: Any, n_days: int) -> None:
         raise ValueError("image dates must use ISO format") from error
     if any(left >= right for left, right in zip(parsed, parsed[1:])):
         raise ValueError("dates must be strictly increasing")
+    if any((right - left).days != 1 for left, right in zip(parsed, parsed[1:])):
+        raise ValueError("image dates must be consecutive calendar days")
 
 
 def _validate_lnglat(value: Any) -> None:
@@ -357,6 +361,14 @@ def _validate_event_metrics_for_summary(event_metrics: pd.DataFrame) -> None:
         raise ValueError(
             "event metrics event_id, split, and baseline values must not be missing"
         )
+    if not event_metrics["split"].isin(_SPLITS).all():
+        raise ValueError(
+            "event metrics split values must be train, validation, or test"
+        )
+    if not event_metrics["baseline"].isin(_BASELINES).all():
+        raise ValueError(
+            "event metrics baseline values must be no_fire or persistence_latest"
+        )
     if event_metrics.duplicated(subset=["event_id", "baseline"]).any():
         raise ValueError("event metrics must contain one row per event and baseline")
     if not all(
@@ -442,8 +454,13 @@ def _validate_event_metrics_for_summary(event_metrics: pd.DataFrame) -> None:
             "positive_target_pixels must satisfy target_days - zero_target_days <= "
             "positive_target_pixels <= total_pixels - zero_target_pixels"
         )
-    for defined, value in zip(
-        event_metrics["event_ap_defined"], event_metrics["event_ap"]
+    for defined, value, tp, fp, fn, tn in zip(
+        event_metrics["event_ap_defined"],
+        event_metrics["event_ap"],
+        event_metrics["tp"],
+        event_metrics["fp"],
+        event_metrics["fn"],
+        event_metrics["tn"],
     ):
         finite = (
             isinstance(value, Real)
@@ -459,6 +476,18 @@ def _validate_event_metrics_for_summary(event_metrics: pd.DataFrame) -> None:
             raise ValueError(
                 "event_ap must be finite exactly when event_ap_defined is true"
             )
+        if bool(defined):
+            if not 0.0 <= float(value) <= 1.0:
+                raise ValueError("defined event_ap values must be within [0, 1]")
+            expected = binary_average_precision(
+                BinaryScoreCounts(tp=int(tp), fp=int(fp), fn=int(fn), tn=int(tn))
+            )
+            if not np.isclose(
+                float(value), expected, rtol=0.0, atol=_EVENT_AP_ABS_TOLERANCE
+            ):
+                raise ValueError(
+                    "defined event_ap must match AP recomputed from confusion counts"
+                )
 
 
 def summarize_rule_metrics(event_metrics: pd.DataFrame) -> pd.DataFrame:
