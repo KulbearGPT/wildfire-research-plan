@@ -115,7 +115,7 @@
 
 - [ ] **Step 3: Implement the observer-only runner**
 
-  Build the official command from the three upstream YAML files and these explicit overrides: `data.data_dir`, `data.data_fold_id=2`, `data.features_to_keep=null`, `data.n_leading_observations=1`, `data.remove_duplicate_features=true`, selected `data.num_workers`, `trainer.max_steps=500`, local `trainer.default_root_dir`, `do_test=false`, `do_predict=false`, and `do_validate=false`. Set `WANDB_MODE=disabled`, `WANDB_SILENT=true`, deterministic cache locations, and do not change the upstream files.
+  Build the official command from the three upstream YAML files and these explicit overrides: `data.data_dir`, `data.data_fold_id=2`, `data.features_to_keep=null`, `data.n_leading_observations=1`, `data.remove_duplicate_features=true`, selected `data.num_workers`, `trainer.max_steps=500`, local `trainer.default_root_dir`, and `do_test=false`. Set `WANDB_MODE=disabled`, `WANDB_SILENT=true`, deterministic cache locations, and do not change the upstream files. Do not add explicit `do_predict` or `do_validate` overrides: they are unapproved changes to official defaults.
 
   `official_entrypoint.py` must add the pinned upstream `src` directory to
   `sys.path`, execute the unchanged official `src/train.py` in the same
