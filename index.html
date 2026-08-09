@@ -905,6 +905,7 @@
         <div class="callout warning">
           <strong>Phase 0 实测结论（2026-08-07）</strong>
           <p>完整八年审计覆盖 999 个有效事件：2016--2020 训练集 653 个、2021 验证集 156 个、2022--2023 untouched test 190 个。像素加权 NaN 比例为 1.6668%，单事件最大 NaN 比例为 27.6664%。</p>
+          <p>标签修复状态：新增年份的源 GeoTIFF 活跃火点标签以小时值编码，但现有 HDF5 的对应标签被错误归零。上述已发布计数仍待 Task 5 激活修复数据并完成更正审计后确认。</p>
           <ul>
             <li>原始 WSTS 的 2018--2021 年共有 607 个有效事件；WSTS+ 新增年份压缩包有 397 个事件目录，其中 5 个 2022 目录为空，最终新增 392 个有效事件。</li>
             <li>2018--2021 的 607 个事件均可从 GeoTIFF 恢复有限经纬度；新增年份仅 1/392 个事件保留有限 ROI 坐标。</li>
@@ -1668,6 +1669,7 @@
         ["在 TS-SatFire 上单独训练和评估 progression proxy，不与 WSTS+ 分数合并；若实现成本过高，则优先完成负控制、校准和数据质量分析。", "Train and evaluate the TS-SatFire progression proxy separately without pooling WSTS+ scores; if implementation cost is too high, prioritize negative controls, calibration, and data-quality analysis."],
         ["Phase 0 实测结论（2026-08-07）", "Phase 0 measured result (2026-08-07)"],
         ["完整八年审计覆盖 999 个有效事件：2016--2020 训练集 653 个、2021 验证集 156 个、2022--2023 untouched test 190 个。像素加权 NaN 比例为 1.6668%，单事件最大 NaN 比例为 27.6664%。", "The full eight-year audit covers 999 valid events: 653 in the 2016--2020 training set, 156 in the 2021 validation set, and 190 in the untouched 2022--2023 test set. The pixel-weighted NaN fraction is 1.6668%, and the maximum single-event NaN fraction is 27.6664%."],
+        ["标签修复状态：新增年份的源 GeoTIFF 活跃火点标签以小时值编码，但现有 HDF5 的对应标签被错误归零。上述已发布计数仍待 Task 5 激活修复数据并完成更正审计后确认。", "Label-repair status: the added-year source GeoTIFF active-fire labels encode hour values, but the corresponding labels in the current HDF5 files were incorrectly zeroed. The published counts above remain pending until Task 5 activates the repaired data and completes a corrected audit."],
         ["原始 WSTS 的 2018--2021 年共有 607 个有效事件；WSTS+ 新增年份压缩包有 397 个事件目录，其中 5 个 2022 目录为空，最终新增 392 个有效事件。", "The original WSTS years 2018--2021 contain 607 valid events. The WSTS+ added-year archive contains 397 event directories, of which five 2022 directories are empty, leaving 392 valid added-year events."],
         ["2018--2021 的 607 个事件均可从 GeoTIFF 恢复有限经纬度；新增年份仅 1/392 个事件保留有限 ROI 坐标。", "Finite longitude and latitude can be recovered from GeoTIFF metadata for all 607 events from 2018--2021; only 1 of 392 valid added-year events retains finite ROI coordinates."],
         ["公开字段仍缺少", "The public fields still lack"],

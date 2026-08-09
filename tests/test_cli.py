@@ -1,5 +1,6 @@
 import csv
 import json
+import shutil
 from collections.abc import Callable
 from pathlib import Path
 
@@ -447,6 +448,44 @@ def test_repair_active_fire_cli_returns_zero_and_preserves_sources(tmp_path: Pat
     decision_path = staging_root / "active_fire_repair_decision.json"
     assert json.loads(decision_path.read_text(encoding="utf-8"))["status"] == "ready"
     assert not list(staging_root.rglob("*.tmp"))
+
+
+def test_repair_to_audit_preserves_nonzero_labels_in_every_split(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    audit_root = tmp_path / "audit-data"
+    output_root = tmp_path / "artifacts"
+    source_paths = {
+        year: _write_repair_event(
+            source_tiff_root, hdf5_root, year, f"fire_{year}"
+        )
+        for year in (2016, 2021, 2022)
+    }
+    with h5py.File(source_paths[2021], "r+") as handle:
+        handle["data"][1, 22, 0, 0] = 6.0
+
+    assert _run_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016, 2022)
+    ) == 0
+
+    selected_paths = {
+        2016: staging_root / "2016" / "fire_2016.hdf5",
+        2021: source_paths[2021],
+        2022: staging_root / "2022" / "fire_2022.hdf5",
+    }
+    for year, source_path in selected_paths.items():
+        destination = audit_root / str(year) / source_path.name
+        destination.parent.mkdir(parents=True)
+        shutil.copy2(source_path, destination)
+
+    assert _run_audit(audit_root, output_root) == 0
+    report = (output_root / "phase0_report.md").read_text(encoding="utf-8")
+    assert "| train | 1 | 1 | 0 | 1 |" in report
+    assert "| validation | 1 | 1 | 0 | 1 |" in report
+    assert "| test | 1 | 1 | 0 | 1 |" in report
 
 
 def test_repair_active_fire_cli_returns_two_with_complete_error_evidence(

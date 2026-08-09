@@ -51,3 +51,76 @@ unless the missing provenance is recovered from upstream products.
 The generated CSV, JSON, and Markdown artifacts remain local derived data under
 `artifacts/phase0/`; they can be regenerated with the command above and are not
 committed to the repository.
+
+## Active-fire repair operator workflow
+
+The added-year source GeoTIFFs encode positive active-fire pixels as detection
+hours, but those labels were incorrectly zeroed in the current HDF5 conversion.
+The repair command writes only to the caller-supplied staging root. It does not
+activate staged files and does not delete, overwrite, rename, or otherwise
+modify an active HDF5 year directory.
+
+Stage the four affected years with operator-resolved paths:
+
+```powershell
+python -m wildfire_phase0.cli repair-active-fire `
+  --source-tiff-root "$wstsPlusTiffRoot" `
+  --hdf5-root "$wstsHdf5Root" `
+  --staging-root "$repairStagingRoot" `
+  --years 2016 2017 2022 2023
+```
+
+Independently verify the staged tree against raw TIFF samples and the complete
+source-derived totals:
+
+```powershell
+python -m wildfire_phase0.verify_repair `
+  --hdf5-root "$repairStagingRoot" `
+  --source-tiff-root "$wstsPlusTiffRoot" `
+  --expect 2016:92:2102:886:303648 `
+  --expect 2017:110:2490:1481:177972 `
+  --expect 2022:122:3424:2158:105377 `
+  --expect 2023:68:2442:1297:167952
+```
+
+Activation is blocked until every hard precondition below is satisfied:
+
+- `active_fire_repair_decision.json` has decision status `ready`.
+- The staging root contains exactly 392 staged HDF5 files, zero recorded
+  errors, and zero `.tmp` files.
+- Every staged `data` dataset uses LZF compression with shuffle enabled.
+- The verifier confirms these exact counts:
+
+  | year | files | target days | zero-target days | positive target pixels |
+  | --- | ---: | ---: | ---: | ---: |
+  | 2016 | 92 | 2,102 | 886 | 303,648 |
+  | 2017 | 110 | 2,490 | 1,481 | 177,972 |
+  | 2022 | 122 | 3,424 | 2,158 | 105,377 |
+  | 2023 | 68 | 2,442 | 1,297 | 167,952 |
+
+- The four active year paths, their four staged replacements, and the exact
+  backup root `hdf5-active-fire-bug-backup` are individually resolved and
+  checked to be on the same volume.
+
+Activation is a separate, explicit same-volume directory rename for each of
+the four years: rename each active year into
+`hdf5-active-fire-bug-backup`, then rename its staged replacement into the
+active location. Retain the backup through the corrected audit and baseline
+smoke run. Rollback reverses those exact renames: move the activated year back
+to its staging location and restore the corresponding retained backup year to
+the active location. Do not proceed if any resolved path, destination, count,
+or volume check differs from the preflight record.
+
+After activation, regenerate the Phase 0 artifacts and require a non-blocked
+decision with nonzero positive target pixels in every present year and frozen
+split:
+
+```powershell
+python -m wildfire_phase0.cli audit `
+  --data-root "$wstsHdf5Root" `
+  --output-root artifacts\phase0
+```
+
+Until Task 5 performs those explicit activation and corrected-audit steps, the
+published active-fire label counts remain pending and the currently active data
+must not be treated as repaired.
