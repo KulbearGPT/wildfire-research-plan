@@ -9,3 +9,5 @@ artifacts/phase0/*.csv
 artifacts/phase0/*.json
 artifacts/phase0/*.md
 artifacts/rule-baselines/
+/artifacts/reproductions/
+/reproductions/wsts_res18_unet_t1/.local/

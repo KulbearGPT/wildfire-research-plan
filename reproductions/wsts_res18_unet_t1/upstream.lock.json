@@ -1,0 +1,19 @@
+{
+  "code": {
+    "url": "https://github.com/slahrichi/WildfireSpreadTS.git",
+    "commit": "ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad"
+  },
+  "weights": {
+    "url": "https://huggingface.co/saadlahrichi/WSTSPlus",
+    "revision": "acf70a37394849f4ec8d108a51d6f4325a554d0a"
+  },
+  "paper": {
+    "target": "0.460 +/- 0.084"
+  },
+  "calibration": {
+    "fold": 2,
+    "max_steps": 500,
+    "test_loader_allowed": false,
+    "purpose": "timing only"
+  }
+}
