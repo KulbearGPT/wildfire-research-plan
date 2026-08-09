@@ -21,8 +21,16 @@ EXPECTED_OVERRIDES = {
     "data.remove_duplicate_features": True,
     "trainer.max_steps": 500,
     "do_test": False,
-    "do_predict": False,
-    "do_validate": False,
+}
+FROZEN_DATA_ROOT = r"D:\WildFire Project\data\hdf5"
+ALLOWED_NUM_WORKERS = {64, 8, 4, 0}
+ENVIRONMENT_KEYS = {
+    "data.data_dir",
+    "trainer.default_root_dir",
+    "data.num_workers",
+    "WANDB_MODE",
+    "timing_logging",
+    "progress_logging",
 }
 
 CommandRunner: TypeAlias = Callable[[list[str]], subprocess.CompletedProcess[str]]
@@ -72,7 +80,7 @@ def verify_upstream(
     upstream_root: Path,
     expected_commit: str,
     *,
-    command_runner: CommandRunner = None,
+    command_runner: CommandRunner | None = None,
 ) -> str:
     """Return the pinned checkout commit or reject a provenance mismatch."""
     root = upstream_root.resolve()
@@ -86,6 +94,12 @@ def verify_upstream(
         raise ValueError(
             f"upstream commit mismatch: expected {expected_commit}, got {actual_commit}"
         )
+    status = runner(["git", "-C", str(root), "status", "--porcelain"])
+    if status.returncode != 0:
+        detail = status.stderr.strip() or "git status --porcelain failed"
+        raise ValueError(f"cannot verify upstream checkout cleanliness: {detail}")
+    if status.stdout.strip():
+        raise ValueError("upstream checkout is dirty")
     return actual_commit
 
 
@@ -118,6 +132,53 @@ def validate_overrides(overrides: Mapping[str, object]) -> None:
             raise ValueError(
                 f"override {key} must be {expected_value!r}; got {actual_value!r}"
             )
+
+
+def validate_environment(
+    environment: Mapping[str, object], artifacts_root: Path | None = None
+) -> None:
+    """Allow only fixed local paths, disabled W&B, logging, and safe workers."""
+    actual_keys = set(environment)
+    if actual_keys != ENVIRONMENT_KEYS:
+        missing = sorted(ENVIRONMENT_KEYS - actual_keys)
+        unexpected = sorted(actual_keys - ENVIRONMENT_KEYS)
+        details = []
+        if missing:
+            details.append("missing keys: " + ", ".join(missing))
+        if unexpected:
+            details.append("unexpected keys: " + ", ".join(unexpected))
+        raise ValueError("environment keys must exactly match the allowlist (" + "; ".join(details) + ")")
+
+    data_root = environment["data.data_dir"]
+    if type(data_root) is not str or data_root != FROZEN_DATA_ROOT:
+        raise ValueError(f"data.data_dir must be the frozen data root {FROZEN_DATA_ROOT!r}")
+
+    output_root = environment["trainer.default_root_dir"]
+    if type(output_root) is not str:
+        raise ValueError("trainer.default_root_dir must be an absolute string path")
+    output_path = Path(output_root)
+    if not output_path.is_absolute():
+        raise ValueError("trainer.default_root_dir must be an absolute path")
+    allowed_artifacts_root = (
+        artifacts_root.resolve()
+        if artifacts_root is not None
+        else Path(__file__).resolve().parents[3] / "artifacts" / "reproductions"
+    )
+    try:
+        output_path.resolve().relative_to(allowed_artifacts_root)
+    except ValueError as error:
+        raise ValueError(
+            f"trainer.default_root_dir must be under {allowed_artifacts_root}"
+        ) from error
+
+    workers = environment["data.num_workers"]
+    if type(workers) is not int or workers not in ALLOWED_NUM_WORKERS:
+        raise ValueError("data.num_workers must be one of 64, 8, 4, or 0")
+    if environment["WANDB_MODE"] != "disabled" or type(environment["WANDB_MODE"]) is not str:
+        raise ValueError("WANDB_MODE must be 'disabled'")
+    for key in ("timing_logging", "progress_logging"):
+        if environment[key] is not True or type(environment[key]) is not bool:
+            raise ValueError(f"{key} must be true")
 
 
 def write_json_atomic(path: Path, payload: Mapping[str, object]) -> None:
@@ -160,6 +221,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
     overrides = subcommands.add_parser("validate-overrides")
     overrides.add_argument("overrides_json")
+
+    environment = subcommands.add_parser("validate-environment")
+    environment.add_argument("environment_json")
     return parser
 
 
@@ -173,8 +237,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = {
                 "commit": verify_upstream(arguments.upstream_root, arguments.expected_commit)
             }
-        else:
+        elif arguments.command == "validate-overrides":
             validate_overrides(_parse_override_json(arguments.overrides_json))
+            output = {"valid": True}
+        else:
+            validate_environment(_parse_override_json(arguments.environment_json))
             output = {"valid": True}
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         print(str(error), file=sys.stderr)
