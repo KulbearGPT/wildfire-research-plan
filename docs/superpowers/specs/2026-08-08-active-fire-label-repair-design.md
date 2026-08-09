@@ -123,6 +123,14 @@ files plus `active_fire_repair_manifest.csv` and
 operator step after validation so a repair command cannot silently replace the
 benchmark.
 
+The decision is published last as the evidence-generation commit marker. It
+contains `manifest_sha256`, the SHA-256 of the exact manifest bytes, and a
+deterministic `generation` hash over that digest plus the canonical decision
+payload. Activation consumers must call
+`verify_repair_evidence(staging_root)` before reading decision fields; a raw
+decision JSON file is not sufficient evidence that the two files belong to one
+generation.
+
 The manifest has one deterministic row per matched success or failure and per
 unmatched nonempty source/HDF5 event. It records the source event directory as
 well as source and staged HDF5 provenance. An empty CSV path cell means that
@@ -145,11 +153,18 @@ event data are already being scanned:
 - `active_fire_min_positive`
 - `active_fire_max_positive`
 
+The positive-pixel count covers next-day targets, while the extrema cover all
+stored days so they also validate the input encoding. Therefore an event with
+positives only on input day 0 legitimately has zero positive target pixels and
+non-`None` paired extrema.
+
 The report aggregates these fields by year and split. Phase 0 returns
-`blocked` when any expected benchmark year or any frozen split has zero
-positive target pixels, when stored positive active-fire values fall outside
-`[1, 23]`, or when the target channel cannot be read. Individual events and
-days may legitimately have no positives and are reported rather than rejected.
+`blocked` unless years are exactly 2016--2023, split labels are exactly
+`train`/`validation`/`test`, and the mapping is exactly
+`2016--2020 / 2021 / 2022--2023`. It also blocks when any required group has
+zero positive target pixels, stored positive active-fire values fall outside
+`[1, 23]`, or the target channel cannot be read. Individual events and days may
+legitimately have no positives and are reported rather than rejected.
 
 This rule detects the current failure while allowing the observed 27
 zero-positive events in 2017 and 16 in 2022.
@@ -158,6 +173,13 @@ zero-positive events in 2017 and 16 in 2022.
 
 - Every staged file is written through a sibling temporary path and renamed
   only after event validation succeeds.
+- Manifest and decision publication uses per-invocation temp, backup, and
+  transaction-journal sidecars. The manifest is replaced first and the
+  decision commit marker last. A journaled interruption is recovered on the
+  next invocation by completing a verifiable target generation or restoring
+  the exact predecessor pair.
+- Cleanup removes only sidecars owned by that transaction; unknown
+  pre-existing temp or backup files are preserved.
 - A failed or unmatched event is recorded once with its year, event name,
   available source/HDF5 paths, and exact error. The command exits nonzero and
   does not activate any data.
@@ -185,8 +207,10 @@ Unit and integration tests use synthetic HDF5/TIFF fixtures to cover:
 - legitimate zero-positive events/days reported without blocking a split that
   contains positive labels.
 
-Before activation, the staged four-year dataset must contain 392 valid files,
-zero temporary files, zero repair errors, LZF compression with shuffle enabled,
+Before activation, `verify_repair_evidence` must validate the exact
+manifest/decision generation and return status `ready`. The staged four-year
+dataset must contain 392 valid files, zero temporary files or interrupted
+transaction journals, zero repair errors, LZF compression with shuffle enabled,
 and these exact next-day target counts derived independently from source TIFFs:
 
 | year | events | target days | zero-target days | positive target pixels |

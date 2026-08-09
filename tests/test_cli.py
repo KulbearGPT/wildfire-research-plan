@@ -707,6 +707,8 @@ def test_repair_active_fire_cli_returns_two_with_deterministic_invalid_year_evid
         "files_expected": 0,
         "files_staged": 0,
         "files_verified": 0,
+        "generation": "efc4c03d6ef18801cd783c5dc09a61e0d5d318f85e7a06c4c0ca5254faecc9d4",
+        "manifest_sha256": "6be655dc500875332ae05ff17112447ff709cbb7a7c212309b1a0c990ae5eccf",
         "requested_years": [2015],
         "status": "blocked",
     }

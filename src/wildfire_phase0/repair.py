@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import io
 import json
 import os
 import shutil
@@ -10,6 +11,7 @@ from dataclasses import asdict, dataclass, fields, replace
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
+from uuid import uuid4
 
 import h5py
 import numpy as np
@@ -24,6 +26,10 @@ from wildfire_phase0.path_safety import (
 
 ActiveFireEncoding = Literal["hour", "hhmm", "no_positive_values"]
 REPAIR_VERSION = "1"
+_MANIFEST_NAME = "active_fire_repair_manifest.csv"
+_DECISION_NAME = "active_fire_repair_decision.json"
+_TRANSACTION_PREFIX = ".active_fire_repair_evidence."
+_TRANSACTION_SUFFIX = ".txn.json"
 _REPAIR_ATTRIBUTES = frozenset(
     {
         "active_fire_source_encoding",
@@ -60,6 +66,25 @@ class RepairDecision:
     files_verified: int
     excluded_empty_source_directories: tuple[str, ...]
     errors: tuple[str, ...]
+    manifest_sha256: str = ""
+    generation: str = ""
+
+
+@dataclass(frozen=True)
+class _EvidenceTransaction:
+    invocation_id: str
+    manifest: Path
+    decision: Path
+    manifest_temp: Path
+    decision_temp: Path
+    manifest_backup: Path
+    decision_backup: Path
+    journal_temp: Path
+    journal: Path
+    preexisting_manifest: bool
+    preexisting_decision: bool
+    manifest_sha256: str
+    generation: str
 
 
 def _finite_positive_integers(values: np.ndarray) -> np.ndarray:
@@ -384,49 +409,352 @@ def _remove_paths(paths: Sequence[Path]) -> None:
             path.unlink()
 
 
-def _owned_sidecar(path: Path, suffix: str) -> Path:
-    file_descriptor, sidecar_name = tempfile.mkstemp(
-        prefix=f".{path.name}.", suffix=suffix, dir=path.parent
-    )
-    os.close(file_descriptor)
-    return Path(sidecar_name)
+def _evidence_generation(
+    manifest_digest: str, decision_payload: Mapping[str, object]
+) -> str:
+    decision_core = dict(decision_payload)
+    decision_core.pop("manifest_sha256", None)
+    decision_core.pop("generation", None)
+    canonical_core = json.dumps(
+        decision_core, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return sha256(f"{manifest_digest}\n".encode("ascii") + canonical_core).hexdigest()
 
 
-def _publish_evidence(
-    paths: Sequence[Path], temp_paths: Mapping[Path, Path]
-) -> None:
-    preexisting = frozenset(path for path in paths if path.exists())
-    backups: dict[Path, Path] = {}
+def _decision_from_payload(payload: Mapping[str, object]) -> RepairDecision:
     try:
-        for path in preexisting:
-            backup = _owned_sidecar(path, ".bak")
-            backups[path] = backup
-            shutil.copy2(path, backup)
-        for path in paths:
-            temp_paths[path].replace(path)
-    except OSError:
-        rollback_succeeded = False
-        try:
-            for path in paths:
-                backup = backups.get(path)
-                if backup is not None and backup.exists():
-                    shutil.copy2(backup, path)
-                elif path not in preexisting and path.exists():
-                    path.unlink()
-            rollback_succeeded = True
-        finally:
-            if rollback_succeeded:
-                _remove_paths(tuple(backups.values()))
+        return RepairDecision(
+            status=str(payload["status"]),
+            requested_years=tuple(int(year) for year in payload["requested_years"]),
+            files_expected=int(payload["files_expected"]),
+            files_staged=int(payload["files_staged"]),
+            files_verified=int(payload["files_verified"]),
+            excluded_empty_source_directories=tuple(
+                str(path) for path in payload["excluded_empty_source_directories"]
+            ),
+            errors=tuple(str(error) for error in payload["errors"]),
+            manifest_sha256=str(payload["manifest_sha256"]),
+            generation=str(payload["generation"]),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("repair decision has invalid integrity metadata") from error
+
+
+def _verify_evidence_paths(manifest: Path, decision_path: Path) -> RepairDecision:
+    try:
+        manifest_bytes = manifest.read_bytes()
+        payload = json.loads(decision_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("repair evidence is incomplete or unreadable") from error
+    if not isinstance(payload, dict):
+        raise ValueError("repair decision must be a JSON object")
+    manifest_digest = sha256(manifest_bytes).hexdigest()
+    if payload.get("manifest_sha256") != manifest_digest:
+        raise ValueError("manifest digest does not match repair decision")
+    expected_generation = _evidence_generation(manifest_digest, payload)
+    if payload.get("generation") != expected_generation:
+        raise ValueError("repair evidence generation does not match decision payload")
+    return _decision_from_payload(payload)
+
+
+def verify_repair_evidence(staging_root: Path) -> RepairDecision:
+    """Verify and load the committed manifest/decision evidence generation."""
+    root = canonical_root(Path(staging_root), "staging root", must_exist=True)
+    manifest = require_contained_path(
+        root, root / _MANIFEST_NAME, "staging root"
+    )
+    decision_path = require_contained_path(
+        root, root / _DECISION_NAME, "staging root"
+    )
+    return _verify_evidence_paths(manifest, decision_path)
+
+
+def _transaction_path(root: Path, name: str) -> Path:
+    return require_contained_path(root, root / name, "staging root")
+
+
+def _transaction_for(
+    root: Path,
+    invocation_id: str,
+    *,
+    preexisting_manifest: bool,
+    preexisting_decision: bool,
+    manifest_sha256: str,
+    generation: str,
+) -> _EvidenceTransaction:
+    return _EvidenceTransaction(
+        invocation_id=invocation_id,
+        manifest=_transaction_path(root, _MANIFEST_NAME),
+        decision=_transaction_path(root, _DECISION_NAME),
+        manifest_temp=_transaction_path(
+            root, f".{_MANIFEST_NAME}.{invocation_id}.tmp"
+        ),
+        decision_temp=_transaction_path(
+            root, f".{_DECISION_NAME}.{invocation_id}.tmp"
+        ),
+        manifest_backup=_transaction_path(
+            root, f".{_MANIFEST_NAME}.{invocation_id}.bak"
+        ),
+        decision_backup=_transaction_path(
+            root, f".{_DECISION_NAME}.{invocation_id}.bak"
+        ),
+        journal_temp=_transaction_path(
+            root, f"{_TRANSACTION_PREFIX}{invocation_id}.txn.tmp"
+        ),
+        journal=_transaction_path(
+            root, f"{_TRANSACTION_PREFIX}{invocation_id}{_TRANSACTION_SUFFIX}"
+        ),
+        preexisting_manifest=preexisting_manifest,
+        preexisting_decision=preexisting_decision,
+        manifest_sha256=manifest_sha256,
+        generation=generation,
+    )
+
+
+def _transaction_sidecars(transaction: _EvidenceTransaction) -> tuple[Path, ...]:
+    return (
+        transaction.manifest_temp,
+        transaction.decision_temp,
+        transaction.manifest_backup,
+        transaction.decision_backup,
+        transaction.journal_temp,
+        transaction.journal,
+    )
+
+
+def _new_transaction(
+    root: Path, manifest_sha256: str, generation: str
+) -> _EvidenceTransaction:
+    while True:
+        transaction = _transaction_for(
+            root,
+            uuid4().hex,
+            preexisting_manifest=(root / _MANIFEST_NAME).exists(),
+            preexisting_decision=(root / _DECISION_NAME).exists(),
+            manifest_sha256=manifest_sha256,
+            generation=generation,
+        )
+        if not any(path.exists() for path in _transaction_sidecars(transaction)):
+            return transaction
+
+
+def _reserve_owned_file(path: Path) -> None:
+    with path.open("xb"):
+        pass
+
+
+def _journal_payload(transaction: _EvidenceTransaction) -> dict[str, object]:
+    return {
+        "generation": transaction.generation,
+        "invocation_id": transaction.invocation_id,
+        "manifest_sha256": transaction.manifest_sha256,
+        "preexisting_decision": transaction.preexisting_decision,
+        "preexisting_manifest": transaction.preexisting_manifest,
+        "version": 1,
+    }
+
+
+def _prepare_transaction(
+    transaction: _EvidenceTransaction,
+    manifest_bytes: bytes,
+    decision_bytes: bytes,
+) -> None:
+    created: list[Path] = []
+    try:
+        for path, content in (
+            (transaction.manifest_temp, manifest_bytes),
+            (transaction.decision_temp, decision_bytes),
+        ):
+            _reserve_owned_file(path)
+            created.append(path)
+            path.write_bytes(content)
+        for preexisting, final_path, backup_path in (
+            (
+                transaction.preexisting_manifest,
+                transaction.manifest,
+                transaction.manifest_backup,
+            ),
+            (
+                transaction.preexisting_decision,
+                transaction.decision,
+                transaction.decision_backup,
+            ),
+        ):
+            if preexisting:
+                _reserve_owned_file(backup_path)
+                created.append(backup_path)
+                shutil.copy2(final_path, backup_path)
+        _reserve_owned_file(transaction.journal_temp)
+        created.append(transaction.journal_temp)
+        transaction.journal_temp.write_text(
+            json.dumps(_journal_payload(transaction), indent=2, sort_keys=True)
+            + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        transaction.journal_temp.replace(transaction.journal)
+    except Exception:
+        _remove_paths(tuple(created))
+        raise
+
+
+def _rollback_transaction(transaction: _EvidenceTransaction) -> None:
+    for preexisting, final_path, backup_path in (
+        (
+            transaction.preexisting_manifest,
+            transaction.manifest,
+            transaction.manifest_backup,
+        ),
+        (
+            transaction.preexisting_decision,
+            transaction.decision,
+            transaction.decision_backup,
+        ),
+    ):
+        if preexisting:
+            if not backup_path.is_file():
+                raise ValueError("repair evidence transaction backup is missing")
+            shutil.copy2(backup_path, final_path)
+        elif final_path.exists():
+            final_path.unlink()
+
+
+def _cleanup_transaction(transaction: _EvidenceTransaction) -> None:
+    _remove_paths(_transaction_sidecars(transaction))
+
+
+def _publish_transaction(transaction: _EvidenceTransaction) -> None:
+    try:
+        transaction.manifest_temp.replace(transaction.manifest)
+        transaction.decision_temp.replace(transaction.decision)
+        committed = _verify_evidence_paths(
+            transaction.manifest, transaction.decision
+        )
+        if committed.generation != transaction.generation:
+            raise ValueError("published repair evidence has the wrong generation")
+    except (OSError, ValueError):
+        _rollback_transaction(transaction)
+        _cleanup_transaction(transaction)
         raise
     else:
-        _remove_paths(tuple(backups.values()))
+        _cleanup_transaction(transaction)
+
+
+def _valid_transaction_id(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 32
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def _valid_digest(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def _load_transaction(root: Path, journal: Path) -> _EvidenceTransaction:
+    try:
+        payload = json.loads(journal.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"unrecognized repair evidence transaction: {journal.name}") from error
+    if not isinstance(payload, dict):
+        raise ValueError(f"unrecognized repair evidence transaction: {journal.name}")
+    invocation_id = payload.get("invocation_id")
+    if (
+        payload.get("version") != 1
+        or not _valid_transaction_id(invocation_id)
+        or not _valid_digest(payload.get("manifest_sha256"))
+        or not _valid_digest(payload.get("generation"))
+        or type(payload.get("preexisting_manifest")) is not bool
+        or type(payload.get("preexisting_decision")) is not bool
+    ):
+        raise ValueError(f"unrecognized repair evidence transaction: {journal.name}")
+    transaction = _transaction_for(
+        root,
+        str(invocation_id),
+        preexisting_manifest=bool(payload["preexisting_manifest"]),
+        preexisting_decision=bool(payload["preexisting_decision"]),
+        manifest_sha256=str(payload["manifest_sha256"]),
+        generation=str(payload["generation"]),
+    )
+    if transaction.journal != journal:
+        raise ValueError(f"unrecognized repair evidence transaction: {journal.name}")
+    return transaction
+
+
+def _recover_transaction(transaction: _EvidenceTransaction) -> None:
+    manifest_candidates = tuple(
+        path
+        for path in (transaction.manifest, transaction.manifest_temp)
+        if path.is_file()
+        and sha256(path.read_bytes()).hexdigest() == transaction.manifest_sha256
+    )
+    decision_candidates = tuple(
+        path
+        for path in (transaction.decision, transaction.decision_temp)
+        if path.is_file()
+    )
+    target_pair: tuple[Path, Path] | None = None
+    for manifest_candidate in manifest_candidates:
+        for decision_candidate in decision_candidates:
+            try:
+                decision = _verify_evidence_paths(
+                    manifest_candidate, decision_candidate
+                )
+            except ValueError:
+                continue
+            if decision.generation == transaction.generation:
+                target_pair = (manifest_candidate, decision_candidate)
+                break
+        if target_pair is not None:
+            break
+    if target_pair is None:
+        _rollback_transaction(transaction)
+        _cleanup_transaction(transaction)
+        return
+    manifest_candidate, decision_candidate = target_pair
+    if manifest_candidate != transaction.manifest:
+        manifest_candidate.replace(transaction.manifest)
+    if decision_candidate != transaction.decision:
+        decision_candidate.replace(transaction.decision)
+    committed = _verify_evidence_paths(transaction.manifest, transaction.decision)
+    if committed.generation != transaction.generation:
+        raise ValueError("recovered repair evidence has the wrong generation")
+    _cleanup_transaction(transaction)
+
+
+def _recover_interrupted_evidence(staging_root: Path) -> None:
+    journals = tuple(
+        sorted(
+            staging_root.glob(f"{_TRANSACTION_PREFIX}*{_TRANSACTION_SUFFIX}"),
+            key=lambda path: path.name,
+        )
+    )
+    if len(journals) > 1:
+        raise ValueError("multiple interrupted repair evidence transactions found")
+    if journals:
+        journal = require_contained_path(staging_root, journals[0], "staging root")
+        _recover_transaction(_load_transaction(staging_root, journal))
+
+
+def _render_manifest(records: Sequence[RepairRecord]) -> bytes:
+    buffer = io.StringIO(newline="")
+    field_names = [field.name for field in fields(RepairRecord)]
+    writer = csv.DictWriter(buffer, fieldnames=field_names, lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(asdict(record) for record in records)
+    return buffer.getvalue().encode("utf-8")
 
 
 def _write_repair_evidence(
     staging_root: Path,
     records: Sequence[RepairRecord],
     decision: RepairDecision,
-) -> None:
+) -> RepairDecision:
     manifest = require_contained_path(
         staging_root,
         staging_root / "active_fire_repair_manifest.csv",
@@ -437,24 +765,25 @@ def _write_repair_evidence(
         staging_root / "active_fire_repair_decision.json",
         "staging root",
     )
-    paths = (manifest, decision_path)
-    temp_paths: dict[Path, Path] = {}
-    try:
-        for path in paths:
-            temp_paths[path] = _owned_sidecar(path, ".tmp")
-        with temp_paths[manifest].open("w", newline="", encoding="utf-8") as handle:
-            field_names = [field.name for field in fields(RepairRecord)]
-            writer = csv.DictWriter(handle, fieldnames=field_names, lineterminator="\n")
-            writer.writeheader()
-            writer.writerows(asdict(record) for record in records)
-        temp_paths[decision_path].write_text(
-            json.dumps(asdict(decision), indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-            newline="\n",
-        )
-        _publish_evidence(paths, temp_paths)
-    finally:
-        _remove_paths(tuple(temp_paths.values()))
+    manifest_bytes = _render_manifest(records)
+    manifest_digest = sha256(manifest_bytes).hexdigest()
+    decision_payload = asdict(decision)
+    committed_decision = replace(
+        decision,
+        manifest_sha256=manifest_digest,
+        generation=_evidence_generation(manifest_digest, decision_payload),
+    )
+    decision_bytes = (
+        json.dumps(asdict(committed_decision), indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    transaction = _new_transaction(
+        staging_root, committed_decision.manifest_sha256, committed_decision.generation
+    )
+    if transaction.manifest != manifest or transaction.decision != decision_path:
+        raise AssertionError("repair evidence transaction paths changed unexpectedly")
+    _prepare_transaction(transaction, manifest_bytes, decision_bytes)
+    _publish_transaction(transaction)
+    return committed_decision
 
 
 def stage_active_fire_repair(
@@ -484,6 +813,8 @@ def stage_active_fire_repair(
         staging_root / "active_fire_repair_decision.json",
         "staging root",
     )
+    if staging_root.is_dir():
+        _recover_interrupted_evidence(staging_root)
     for year in requested_years:
         source_year = require_contained_path(
             source_tiff_root, source_tiff_root / str(year), "source TIFF root"
@@ -518,8 +849,7 @@ def stage_active_fire_repair(
             excluded_empty_source_directories=(),
             errors=("ValueError: years must not be empty",),
         )
-        _write_repair_evidence(staging_root, (), decision)
-        return decision
+        return _write_repair_evidence(staging_root, (), decision)
     if (
         len(set(requested_years)) != len(requested_years)
         or any(not isinstance(year, int) or not 2016 <= year <= 2023 for year in requested_years)
@@ -533,8 +863,7 @@ def stage_active_fire_repair(
             excluded_empty_source_directories=(),
             errors=("ValueError: years must be unique integers within 2016..2023",),
         )
-        _write_repair_evidence(staging_root, (), decision)
-        return decision
+        return _write_repair_evidence(staging_root, (), decision)
     sorted_years = tuple(sorted(requested_years))
     root_errors = []
     if not source_tiff_root.is_dir():
@@ -553,8 +882,7 @@ def stage_active_fire_repair(
             excluded_empty_source_directories=(),
             errors=tuple(sorted(root_errors)),
         )
-        _write_repair_evidence(staging_root, (), decision)
-        return decision
+        return _write_repair_evidence(staging_root, (), decision)
 
     records: list[RepairRecord] = []
     errors: list[str] = []
@@ -678,5 +1006,4 @@ def stage_active_fire_repair(
         excluded_empty_source_directories=tuple(sorted(exclusions)),
         errors=ordered_errors,
     )
-    _write_repair_evidence(staging_root, ordered_records, decision)
-    return decision
+    return _write_repair_evidence(staging_root, ordered_records, decision)

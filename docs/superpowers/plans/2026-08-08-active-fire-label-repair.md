@@ -17,7 +17,11 @@
 - The repair command writes only to a caller-supplied staging root. It never activates, deletes, or overwrites an active year directory.
 - Use `hdf5-active-fire-bug-backup` as the exact deterministic backup root during manual activation, and retain it through the repaired audit and baseline smoke run.
 - Use SHA-256 over ordered source-relative TIFF paths, file sizes, and nanosecond modification timestamps as the source fingerprint.
-- A present benchmark year or frozen split with zero positive next-day target pixels is a blocking data error; individual zero-positive events and days remain valid and must be reported.
+- The audit must contain exactly benchmark years 2016--2023 and canonical splits
+  `train`, `validation`, and `test`, with the frozen mapping
+  `2016--2020 / 2021 / 2022--2023`; a missing group, mapping mismatch, or group
+  with zero positive next-day target pixels is a blocking data error. Individual
+  zero-positive events and days remain valid and must be reported.
 - Staged real-data acceptance requires 392 HDF5 files, no `*.tmp`, no repair errors, LZF plus shuffle, and exact source-derived label counts: 2016 `303648`, 2017 `177972`, 2022 `105377`, 2023 `167952`.
 - Source data and active HDF5 files are immutable until the explicit activation step. All repository file edits use `apply_patch`; all commits are small and intentional.
 
@@ -234,6 +238,8 @@ git commit -m "feat: classify active-fire source encoding"
 - Produces: immutable `RepairRecord` and `RepairDecision` dataclasses.
 - Produces: `stage_event(source_event_dir: Path, source_hdf5: Path, staging_hdf5: Path, source_root: Path) -> RepairRecord`.
 - Produces: `stage_active_fire_repair(source_tiff_root: Path, hdf5_root: Path, staging_root: Path, years: Sequence[int]) -> RepairDecision`.
+- Produces: `verify_repair_evidence(staging_root: Path) -> RepairDecision`, which
+  accepts only a manifest/decision pair from one committed generation.
 - Produces CLI: `python -m wildfire_phase0.cli repair-active-fire --source-tiff-root PATH --hdf5-root PATH --staging-root PATH --years 2016 2017 2022 2023`.
 - Writes `active_fire_repair_manifest.csv` and `active_fire_repair_decision.json` under the staging root.
 
@@ -385,6 +391,8 @@ class RepairDecision:
     files_verified: int
     excluded_empty_source_directories: tuple[str, ...]
     errors: tuple[str, ...]
+    manifest_sha256: str
+    generation: str
 ```
 
 Implement `stage_event` in this order:
@@ -438,8 +446,15 @@ both cases, and source HDF5 hashes unchanged.
   as empty CSV cells rather than invented paths;
 - call `stage_event` deterministically by `(year, fire_name)`;
 - write the manifest with the exact `RepairRecord` field order;
-- write the decision JSON with sorted keys and a final newline;
-- stage both evidence files through sibling `.tmp` paths before replacing them;
+- bind the decision to the exact manifest bytes with `manifest_sha256` and a
+  deterministic generation hash over that digest plus canonical decision data;
+- write the decision JSON with sorted keys and a final newline, and publish it
+  last as the commit marker for the manifest/decision generation;
+- use per-invocation temp, backup, and transaction-journal sidecars; recover a
+  journaled interruption on the next invocation by completing a valid target
+  generation or restoring the exact predecessor pair;
+- remove only sidecars named in the owned transaction and preserve unknown
+  pre-existing `.tmp`/`.bak` files;
 - return `ready` only when every source HDF5 has a valid staged file and there
   are no errors;
 - never rename or remove active data directories.
@@ -456,7 +471,8 @@ python -m pytest tests/test_repair.py tests/test_cli.py -v
 python -m pytest -q
 ```
 
-Expected: all tests pass; no fixture leaves `.tmp` files.
+Expected: all tests pass; no fixture leaves an owned transaction journal or
+owned evidence sidecar.
 
 - [ ] **Step 7: Commit the staged repair workflow**
 
@@ -503,8 +519,10 @@ assert item.active_fire_max_positive == 9
 
 Add tests that reject stored positive active-fire values above 23, negative
 values, and non-integer values. Extend schema tests to reject negative counts,
-`zero_target_days > target_days`, and non-`None` min/max for zero-positive
-events.
+`zero_target_days > target_days`, unpaired or invalid extrema, and missing
+extrema when `positive_target_pixels > 0`. Because extrema cover every stored
+day while `positive_target_pixels` covers only next-day targets, allow valid
+paired extrema when the only positive value occurs on input day 0.
 
 - [ ] **Step 2: Run focused tests to verify RED**
 
@@ -572,10 +590,13 @@ error remains the primary blocker.
 
 Implement `target_integrity_errors` deterministically:
 
-- aggregate positive target pixels for every present year;
+- require exactly benchmark years 2016--2023;
+- require exactly canonical split labels `train`, `validation`, and `test`, and
+  the mapping `2016--2020 train / 2021 validation / 2022--2023 test`;
+- aggregate positive target pixels for every benchmark year;
 - aggregate by `split_manifest.split` through event IDs, rejecting any manifest
   mismatch;
-- emit sorted, exact messages for each present year or split with total zero;
+- emit sorted, exact messages for each missing or zero-positive year/split;
 - do not reject individual zero-positive events or days.
 
 In `run_audit`, call it only after inventory and split construction succeed. If
@@ -593,8 +614,9 @@ year | events | target days | zero-target days | positive target pixels
 split | events | target days | zero-target days | positive target pixels
 ```
 
-Update valid CLI fixtures to contain at least one positive target in every
-present year/split. Add a CLI regression test with all-zero 2022 data that
+Update valid CLI fixtures to contain all eight benchmark years, the canonical
+split mapping, and at least one positive target in every year/split. Add a CLI
+regression test with all-zero 2022 data that
 asserts exit `2`, complete artifacts, and exact blocker text in both report and
 decision notes.
 
@@ -771,7 +793,9 @@ python -m wildfire_phase0.cli repair-active-fire `
 
 Document these hard preconditions before activation:
 
-- decision status `ready`;
+- `verify_repair_evidence` confirms that the decision is the last-published
+  commit marker for the exact manifest digest and generation, and its status is
+  `ready`;
 - exactly these five sorted empty-source exclusions, checked by a deterministic
   order-sensitive comparison command before activation:
   `2022/fire_CA4186812327820220730`,
@@ -878,7 +902,18 @@ Then validate repair evidence and exclusions:
 
 ```powershell
 $stagingRoot = 'D:\WildFire Project\data\hdf5-active-fire-repair-staging'
-$decision = Get-Content -LiteralPath (Join-Path $stagingRoot 'active_fire_repair_decision.json') -Raw | ConvertFrom-Json
+$verifiedDecisionJson = @'
+from dataclasses import asdict
+import json
+import sys
+from pathlib import Path
+
+from wildfire_phase0.repair import verify_repair_evidence
+
+print(json.dumps(asdict(verify_repair_evidence(Path(sys.argv[1]))), sort_keys=True))
+'@ | python - $stagingRoot
+if ($LASTEXITCODE -ne 0) { throw "repair evidence generation is invalid" }
+$decision = $verifiedDecisionJson | ConvertFrom-Json
 $expectedExclusions = @(
   '2022/fire_CA4186812327820220730',
   '2022/fire_ID4570411652620220904',
@@ -888,6 +923,7 @@ $expectedExclusions = @(
 )
 if ($decision.status -ne 'ready') { throw "repair decision is not ready" }
 if (@(Get-ChildItem -LiteralPath $stagingRoot -Recurse -File -Filter '*.tmp').Count -ne 0) { throw "staging contains temp files" }
+if (@(Get-ChildItem -LiteralPath $stagingRoot -File -Filter '.active_fire_repair_evidence.*.txn.json').Count -ne 0) { throw "staging contains an interrupted evidence transaction" }
 $actualExclusions = @($decision.excluded_empty_source_directories)
 $exclusionDiff = Compare-Object -ReferenceObject $expectedExclusions -DifferenceObject $actualExclusions -SyncWindow 0
 if ($actualExclusions.Count -ne $expectedExclusions.Count -or $null -ne $exclusionDiff) { throw "empty-source exclusions differ" }

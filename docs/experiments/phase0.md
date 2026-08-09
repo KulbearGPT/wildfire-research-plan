@@ -62,9 +62,11 @@ the audit was rerun.
 | validation | 156 | 3,961 | 1,332 | 768,324 |
 | test | 190 | 5,866 | 3,455 | 273,329 |
 
-The target-integrity gate now rejects any present benchmark year or frozen
-split with zero positive target pixels. All eight years and all three splits
-pass that strengthened gate in the fresh report.
+The target-integrity gate now requires exactly years 2016--2023, exactly the
+`train`/`validation`/`test` split labels, and the canonical mapping
+`2016--2020 / 2021 / 2022--2023`; it rejects any missing, remapped, or
+zero-positive group. All eight years and all three splits pass that strengthened
+gate in the fresh report.
 
 The pixel-weighted dataset NaN fraction is `0.0166683592232`, and the maximum
 single-event NaN fraction is `0.276663755051`. All 607 original WSTS events
@@ -97,6 +99,10 @@ modify an active HDF5 year directory.
 matched success or failure and every unmatched nonempty source/HDF5 event. Its
 `source_event_dir` column preserves source provenance; an empty source-HDF5 or
 staged-HDF5 cell means that file is actually absent.
+`active_fire_repair_decision.json` is published last as the commit marker for
+one evidence generation. Its `manifest_sha256` binds it to the exact manifest
+bytes, and its `generation` binds that digest to the canonical decision data.
+Never activate from either file in isolation.
 
 Stage the four affected years with operator-resolved paths:
 
@@ -123,7 +129,8 @@ python -m wildfire_phase0.verify_repair `
 
 Activation is blocked until every hard precondition below is satisfied:
 
-- `active_fire_repair_decision.json` has decision status `ready`.
+- `verify_repair_evidence` confirms one committed manifest/decision generation,
+  and the verified decision has status `ready`.
 - Its sorted `excluded_empty_source_directories` value contains exactly these
   five IDs and no others:
 
@@ -134,7 +141,7 @@ Activation is blocked until every hard precondition below is satisfied:
   - `2022/fire_WA4796412068520220909`
 
 - The staging root contains exactly 392 staged HDF5 files, zero recorded
-  errors, and zero `.tmp` files.
+  errors, zero `.tmp` files, and no interrupted evidence transaction journal.
 - Every staged `data` dataset uses LZF compression with shuffle enabled.
 - The verifier confirms these exact counts:
 
@@ -149,11 +156,24 @@ Activation is blocked until every hard precondition below is satisfied:
   backup root `hdf5-active-fire-bug-backup` are individually resolved and
   checked to be on the same volume.
 
-Compare the decision exclusions in deterministic sorted order before any
-activation rename:
+Verify the evidence generation, then compare its decision exclusions in
+deterministic sorted order before any activation rename:
 
 ```powershell
-$decision = Get-Content -LiteralPath (Join-Path $repairStagingRoot 'active_fire_repair_decision.json') -Raw | ConvertFrom-Json
+$verifiedDecisionJson = @'
+from dataclasses import asdict
+import json
+import sys
+from pathlib import Path
+
+from wildfire_phase0.repair import verify_repair_evidence
+
+print(json.dumps(asdict(verify_repair_evidence(Path(sys.argv[1]))), sort_keys=True))
+'@ | python - $repairStagingRoot
+if ($LASTEXITCODE -ne 0) {
+  throw 'repair manifest and decision do not form a committed evidence generation'
+}
+$decision = $verifiedDecisionJson | ConvertFrom-Json
 $expectedExclusions = @(
   '2022/fire_CA4186812327820220730',
   '2022/fire_ID4570411652620220904',
@@ -178,8 +198,9 @@ the active location. Do not proceed if any resolved path, destination, count,
 or volume check differs from the preflight record.
 
 After activation, regenerate the Phase 0 artifacts and require a non-blocked
-decision with nonzero positive target pixels in every present year and frozen
-split:
+decision containing exactly years 2016--2023, the canonical
+`2016--2020 train / 2021 validation / 2022--2023 test` mapping, and nonzero
+positive target pixels in all eight years and all three splits:
 
 ```powershell
 python -m wildfire_phase0.cli audit `

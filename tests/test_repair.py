@@ -16,6 +16,7 @@ from wildfire_phase0.repair import (
     source_fingerprint,
     stage_active_fire_repair,
     stage_event,
+    verify_repair_evidence,
 )
 
 
@@ -365,6 +366,221 @@ def test_stage_active_fire_repair_stages_all_events_and_writes_evidence(
     ]
     assert json.loads(decision_path.read_text(encoding="utf-8"))["status"] == "ready"
     assert decision_path.read_bytes().endswith(b"\n")
+
+
+def test_repair_decision_commits_exact_manifest_digest_and_generation(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+
+    returned = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    manifest_bytes = (staging_root / "active_fire_repair_manifest.csv").read_bytes()
+    payload = json.loads(
+        (staging_root / "active_fire_repair_decision.json").read_text(encoding="utf-8")
+    )
+    manifest_digest = hashlib.sha256(manifest_bytes).hexdigest()
+    decision_core = {
+        key: value
+        for key, value in payload.items()
+        if key not in {"generation", "manifest_sha256"}
+    }
+    canonical_core = json.dumps(
+        decision_core, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    expected_generation = hashlib.sha256(
+        f"{manifest_digest}\n".encode("ascii") + canonical_core
+    ).hexdigest()
+
+    assert payload["manifest_sha256"] == manifest_digest
+    assert payload["generation"] == expected_generation
+    assert returned.manifest_sha256 == manifest_digest
+    assert returned.generation == expected_generation
+    assert verify_repair_evidence(staging_root) == returned
+
+
+@pytest.mark.parametrize("tamper", ("manifest", "generation"))
+def test_verify_repair_evidence_rejects_mixed_or_tampered_generation(
+    tmp_path: Path, tamper: str
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+    stage_active_fire_repair(source_tiff_root, hdf5_root, staging_root, (2016,))
+    if tamper == "manifest":
+        with (staging_root / "active_fire_repair_manifest.csv").open(
+            "a", encoding="utf-8", newline=""
+        ) as handle:
+            handle.write("tampered\n")
+        match = "manifest digest"
+    else:
+        decision_path = staging_root / "active_fire_repair_decision.json"
+        payload = json.loads(decision_path.read_text(encoding="utf-8"))
+        payload["generation"] = "0" * 64
+        decision_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        match = "generation"
+
+    with pytest.raises(ValueError, match=match):
+        verify_repair_evidence(staging_root)
+
+
+def test_repair_evidence_publish_failure_rolls_back_committed_pair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+    committed = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+    manifest_path = staging_root / "active_fire_repair_manifest.csv"
+    decision_path = staging_root / "active_fire_repair_decision.json"
+    committed_bytes = (manifest_path.read_bytes(), decision_path.read_bytes())
+    unknown_sidecar = staging_root / "active_fire_repair_manifest.csv.tmp"
+    unknown_sidecar.write_bytes(b"unknown")
+    original_replace = Path.replace
+    publish_calls = 0
+
+    def fail_decision_publish(source: Path, target: Path) -> Path:
+        nonlocal publish_calls
+        if Path(target).name in {
+            "active_fire_repair_manifest.csv",
+            "active_fire_repair_decision.json",
+        } and source.name.endswith(".tmp"):
+            publish_calls += 1
+            if publish_calls == 2:
+                raise OSError("injected decision publish failure")
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", fail_decision_publish)
+
+    with pytest.raises(OSError, match="injected decision publish failure"):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    assert publish_calls == 2
+    assert (manifest_path.read_bytes(), decision_path.read_bytes()) == committed_bytes
+    assert verify_repair_evidence(staging_root) == committed
+    assert unknown_sidecar.read_bytes() == b"unknown"
+    assert not list(staging_root.glob(".active_fire_repair_evidence.*.txn.json"))
+
+
+def test_repair_evidence_recovers_interruption_between_manifest_and_decision(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class SimulatedCrash(BaseException):
+        pass
+
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+    first_generation = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    ).generation
+    unknown_sidecar = staging_root / "active_fire_repair_decision.json.bak"
+    unknown_sidecar.write_bytes(b"unknown")
+    original_replace = Path.replace
+    publish_calls = 0
+
+    def crash_before_decision_commit(source: Path, target: Path) -> Path:
+        nonlocal publish_calls
+        if Path(target).name in {
+            "active_fire_repair_manifest.csv",
+            "active_fire_repair_decision.json",
+        } and source.name.endswith(".tmp"):
+            publish_calls += 1
+            if publish_calls == 2:
+                raise SimulatedCrash()
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", crash_before_decision_commit)
+
+    with pytest.raises(SimulatedCrash):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    assert publish_calls == 2
+    with pytest.raises(ValueError, match="manifest digest"):
+        verify_repair_evidence(staging_root)
+    assert len(list(staging_root.glob(".active_fire_repair_evidence.*.txn.json"))) == 1
+
+    monkeypatch.setattr(Path, "replace", original_replace)
+    recovered = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    assert recovered.generation != first_generation
+    assert verify_repair_evidence(staging_root) == recovered
+    assert unknown_sidecar.read_bytes() == b"unknown"
+    assert not list(staging_root.glob(".active_fire_repair_evidence.*.txn.json"))
+    assert not list(staging_root.glob(".active_fire_repair_manifest.csv.*.tmp"))
+    assert not list(staging_root.glob(".active_fire_repair_decision.json.*.tmp"))
+    assert not list(staging_root.glob(".active_fire_repair_manifest.csv.*.bak"))
+    assert not list(staging_root.glob(".active_fire_repair_decision.json.*.bak"))
+
+
+def test_repair_evidence_recovers_interrupted_first_publish(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class SimulatedCrash(BaseException):
+        pass
+
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    _write_tiff_event(source_tiff_root / "2016" / "fire_a", [0.0, 6.0])
+    _write_hdf5_event(hdf5_root / "2016" / "fire_a.hdf5", [0.0, 0.0])
+    original_replace = Path.replace
+    publish_calls = 0
+
+    def crash_before_first_decision(source: Path, target: Path) -> Path:
+        nonlocal publish_calls
+        if Path(target).name in {
+            "active_fire_repair_manifest.csv",
+            "active_fire_repair_decision.json",
+        } and source.name.endswith(".tmp"):
+            publish_calls += 1
+            if publish_calls == 2:
+                raise SimulatedCrash()
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", crash_before_first_decision)
+
+    with pytest.raises(SimulatedCrash):
+        stage_active_fire_repair(
+            source_tiff_root, hdf5_root, staging_root, (2016,)
+        )
+
+    assert (staging_root / "active_fire_repair_manifest.csv").is_file()
+    assert not (staging_root / "active_fire_repair_decision.json").exists()
+    assert len(list(staging_root.glob(".active_fire_repair_evidence.*.txn.json"))) == 1
+
+    monkeypatch.setattr(Path, "replace", original_replace)
+    recovered = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    assert recovered.status == "ready"
+    assert verify_repair_evidence(staging_root) == recovered
+    assert not list(staging_root.glob(".active_fire_repair_evidence.*.txn.json"))
 
 
 def test_repair_evidence_preserves_unknown_preexisting_sidecars(tmp_path: Path) -> None:
