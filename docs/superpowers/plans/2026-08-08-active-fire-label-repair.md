@@ -363,8 +363,9 @@ Add dataclasses with exact fields:
 class RepairRecord:
     year: int
     fire_name: str
-    source_hdf5: str
-    staged_hdf5: str
+    source_event_dir: str | None
+    source_hdf5: str | None
+    staged_hdf5: str | None
     source_fingerprint: str
     source_encoding: str
     days: int
@@ -431,6 +432,10 @@ both cases, and source HDF5 hashes unchanged.
   exactly the five known exclusions in the real-data acceptance check;
 - treat any nonempty source directory without HDF5, or HDF5 without a matching
   nonempty source directory, as an error;
+- emit exactly one deterministic manifest record for every matched success or
+  failure and every unmatched nonempty source/HDF5 event; record
+  `source_event_dir` provenance and serialize absent source HDF5 or staged paths
+  as empty CSV cells rather than invented paths;
 - call `stage_event` deterministically by `(year, fire_name)`;
 - write the manifest with the exact `RepairRecord` field order;
 - write the decision JSON with sorted keys and a final newline;

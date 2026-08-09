@@ -38,8 +38,9 @@ _REPAIR_ATTRIBUTES = frozenset(
 class RepairRecord:
     year: int
     fire_name: str
-    source_hdf5: str
-    staged_hdf5: str
+    source_event_dir: str | None
+    source_hdf5: str | None
+    staged_hdf5: str | None
     source_fingerprint: str
     source_encoding: str
     days: int
@@ -174,6 +175,7 @@ def _require_preserved_attributes(
 
 def _validate_staged_event(
     staged_path: Path,
+    source_event_dir: Path,
     source_hdf5: Path,
     fingerprint: str,
     expected_normalized: np.ndarray | None = None,
@@ -235,6 +237,7 @@ def _validate_staged_event(
     return RepairRecord(
         year=year,
         fire_name=fire_name,
+        source_event_dir=Path(source_event_dir).as_posix(),
         source_hdf5=Path(source_hdf5).as_posix(),
         staged_hdf5=Path(staged_path).as_posix(),
         source_fingerprint=fingerprint,
@@ -305,6 +308,7 @@ def stage_event(
             return replace(
                 _validate_staged_event(
                     staging_hdf5,
+                    source_event_dir,
                     source_hdf5,
                     fingerprint,
                     expected_normalized=normalized,
@@ -333,6 +337,7 @@ def stage_event(
             handle.flush()
         record = _validate_staged_event(
             temp_path,
+            source_event_dir,
             source_hdf5,
             fingerprint,
             expected_normalized=normalized,
@@ -348,16 +353,20 @@ def stage_event(
 def _error_record(
     year: int,
     fire_name: str,
-    source_hdf5: Path,
-    staged_hdf5: Path,
+    source_event_dir: Path | None,
+    source_hdf5: Path | None,
+    staged_hdf5: Path | None,
     days: int,
     error: str,
 ) -> RepairRecord:
     return RepairRecord(
         year=year,
         fire_name=fire_name,
-        source_hdf5=source_hdf5.as_posix(),
-        staged_hdf5=staged_hdf5.as_posix(),
+        source_event_dir=(
+            None if source_event_dir is None else source_event_dir.as_posix()
+        ),
+        source_hdf5=None if source_hdf5 is None else source_hdf5.as_posix(),
+        staged_hdf5=None if staged_hdf5 is None else staged_hdf5.as_posix(),
         source_fingerprint="",
         source_encoding="",
         days=days,
@@ -587,8 +596,21 @@ def stage_active_fire_repair(
             )
 
         for fire_name in sorted(source_events.keys() - hdf5_events.keys()):
-            errors.append(
+            error = (
                 f"{year}/{fire_name}: nonempty source directory without HDF5"
+            )
+            errors.append(error)
+            source_event = source_events[fire_name]
+            records.append(
+                _error_record(
+                    year,
+                    fire_name,
+                    source_event,
+                    None,
+                    None,
+                    len(tuple(source_event.glob("*.tif"))),
+                    error,
+                )
             )
         for fire_name in sorted(hdf5_events.keys() - source_events.keys()):
             error = (
@@ -599,8 +621,9 @@ def stage_active_fire_repair(
                 _error_record(
                     year,
                     fire_name,
+                    None,
                     hdf5_events[fire_name],
-                    staging_root / str(year) / f"{fire_name}.hdf5",
+                    None,
                     0,
                     error,
                 )
@@ -628,8 +651,9 @@ def stage_active_fire_repair(
                     _error_record(
                         year,
                         fire_name,
+                        source_event,
                         source_hdf5,
-                        staged_hdf5,
+                        staged_hdf5 if staged_hdf5.is_file() else None,
                         len(tuple(source_event.glob("*.tif"))),
                         error_text,
                     )

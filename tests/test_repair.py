@@ -149,6 +149,7 @@ def test_stage_event_repairs_only_active_channel_and_preserves_source(
     assert _sha256(source_hdf5) == source_hash
     assert record.status == "repaired"
     assert record.source_encoding == "hour"
+    assert record.source_event_dir == event_dir.resolve().as_posix()
     with h5py.File(source_hdf5, "r") as source, h5py.File(staging_hdf5, "r") as staged:
         np.testing.assert_array_equal(source["data"][:, :22], staged["data"][:, :22])
         assert staged["data"][:, 22, 0, 0].tolist() == [0.0, 6.0, 22.0]
@@ -350,6 +351,7 @@ def test_stage_active_fire_repair_stages_all_events_and_writes_evidence(
     assert list(rows[0]) == [
         "year",
         "fire_name",
+        "source_event_dir",
         "source_hdf5",
         "staged_hdf5",
         "source_fingerprint",
@@ -431,7 +433,72 @@ def test_stage_active_fire_repair_records_empty_and_unmatched_sources(
     )
     assert (staging_root / "active_fire_repair_manifest.csv").is_file()
     assert (staging_root / "active_fire_repair_decision.json").is_file()
+    with (staging_root / "active_fire_repair_manifest.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        rows = list(csv.DictReader(handle))
+    assert [
+        (
+            row["fire_name"],
+            row["source_event_dir"],
+            row["source_hdf5"],
+            row["staged_hdf5"],
+            row["status"],
+        )
+        for row in rows
+    ] == [
+        (
+            "hdf5_only",
+            "",
+            (hdf5_root / "2022" / "hdf5_only.hdf5").resolve().as_posix(),
+            "",
+            "error",
+        ),
+        (
+            "tiff_only",
+            (source_tiff_root / "2022" / "tiff_only").resolve().as_posix(),
+            "",
+            "",
+            "error",
+        ),
+    ]
     assert not list(staging_root.rglob("*.tmp"))
+
+
+def test_stage_active_fire_repair_records_one_row_for_matched_failure(
+    tmp_path: Path,
+) -> None:
+    source_tiff_root = tmp_path / "tiff"
+    hdf5_root = tmp_path / "hdf5"
+    staging_root = tmp_path / "staging"
+    event_dir = source_tiff_root / "2016" / "fire_a"
+    source_hdf5 = hdf5_root / "2016" / "fire_a.hdf5"
+    _write_tiff_event(
+        event_dir,
+        [0.0, 6.0],
+        dates=("2016-01-01", "2016-01-02"),
+    )
+    _write_hdf5_event(
+        source_hdf5,
+        [0.0, 0.0],
+        dates=("2016-01-01", "2016-01-03"),
+    )
+
+    decision = stage_active_fire_repair(
+        source_tiff_root, hdf5_root, staging_root, (2016,)
+    )
+
+    assert decision.status == "blocked"
+    with (staging_root / "active_fire_repair_manifest.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        rows = list(csv.DictReader(handle))
+    assert len(rows) == 1
+    assert rows[0]["source_event_dir"] == event_dir.resolve().as_posix()
+    assert rows[0]["source_hdf5"] == source_hdf5.resolve().as_posix()
+    assert rows[0]["staged_hdf5"] == ""
+    assert rows[0]["status"] == "error"
+    assert "dates" in rows[0]["error"]
 
 
 @pytest.mark.parametrize("years", [(2016, 2016), (2015,), (2024,)])

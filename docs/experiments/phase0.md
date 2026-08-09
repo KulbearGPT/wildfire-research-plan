@@ -93,6 +93,10 @@ source encoding and stores finite integer hours in `[0, 23]`.
 The repair command writes only to the caller-supplied staging root. It does not
 activate staged files and does not delete, overwrite, rename, or otherwise
 modify an active HDF5 year directory.
+`active_fire_repair_manifest.csv` contains one deterministic row for every
+matched success or failure and every unmatched nonempty source/HDF5 event. Its
+`source_event_dir` column preserves source provenance; an empty source-HDF5 or
+staged-HDF5 cell means that file is actually absent.
 
 Stage the four affected years with operator-resolved paths:
 

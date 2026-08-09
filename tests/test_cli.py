@@ -696,7 +696,7 @@ def test_repair_active_fire_cli_returns_two_with_deterministic_invalid_year_evid
     assert manifest_path.read_bytes() == first_manifest
     assert decision_path.read_bytes() == first_decision
     assert first_manifest.decode("utf-8").splitlines() == [
-        "year,fire_name,source_hdf5,staged_hdf5,source_fingerprint,"
+        "year,fire_name,source_event_dir,source_hdf5,staged_hdf5,source_fingerprint,"
         "source_encoding,days,target_days,zero_target_days,"
         "positive_target_pixels,status,error"
     ]

@@ -123,6 +123,12 @@ files plus `active_fire_repair_manifest.csv` and
 operator step after validation so a repair command cannot silently replace the
 benchmark.
 
+The manifest has one deterministic row per matched success or failure and per
+unmatched nonempty source/HDF5 event. It records the source event directory as
+well as source and staged HDF5 provenance. An empty CSV path cell means that
+artifact is actually absent; the workflow does not invent a would-be path for
+an unmatched or failed event.
+
 The implementation uses `tifffile` and `imagecodecs` for TIFF decoding and
 adds compatible bounded dependencies to `pyproject.toml`. It does not add
 `rasterio` as a package dependency because geospatial transforms are not
@@ -152,8 +158,9 @@ zero-positive events in 2017 and 16 in 2022.
 
 - Every staged file is written through a sibling temporary path and renamed
   only after event validation succeeds.
-- A failed event is recorded with its year, event name, source path, HDF5 path,
-  and exact error. The command exits nonzero and does not activate any data.
+- A failed or unmatched event is recorded once with its year, event name,
+  available source/HDF5 paths, and exact error. The command exits nonzero and
+  does not activate any data.
 - Existing staging files are accepted only after their repair attributes and
   source fingerprint match; otherwise they are rejected rather than silently
   skipped. The fingerprint is SHA-256 over the ordered source-relative TIFF
