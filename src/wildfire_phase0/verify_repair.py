@@ -53,7 +53,7 @@ def _raw_channels(path: Path, height: int, width: int) -> np.ndarray:
     )
 
 
-def _normalize_raw_active(values: np.ndarray) -> np.ndarray:
+def _normalize_raw_active(values: np.ndarray) -> tuple[np.ndarray, str]:
     array = np.asarray(values)
     if np.any(np.isinf(array)):
         raise ValueError("raw comparison active-fire values contain infinity")
@@ -64,19 +64,23 @@ def _normalize_raw_active(values: np.ndarray) -> np.ndarray:
         )
     positive = finite[finite > 0]
     normalized = np.nan_to_num(array, nan=0.0).copy()
+    encoding = "no_positive_values"
     if positive.size:
         hour_mask = positive <= 23
         if np.any(hour_mask) and not np.all(hour_mask):
             raise ValueError("raw comparison contains mixed hour and HHMM values")
         if not np.any(hour_mask):
+            encoding = "hhmm"
             hours = np.floor_divide(positive, 100)
             minutes = np.mod(positive, 100)
             if np.any(hours > 23) or np.any(minutes > 59):
                 raise ValueError("raw comparison contains an invalid HHMM value")
             normalized = np.floor_divide(normalized, 100)
+        else:
+            encoding = "hour"
     if np.any(normalized < 0) or np.any(normalized > 23):
         raise ValueError("raw comparison normalized values must be within 0-23")
-    return normalized
+    return normalized, encoding
 
 
 def _require_repair_attributes(data: h5py.Dataset, path: Path) -> None:
@@ -102,13 +106,14 @@ def _require_raw_sample(
     staged_day: np.ndarray,
     height: int,
     width: int,
-) -> None:
+) -> str:
     raw = _raw_channels(path, height, width)
     if not np.array_equal(raw[:22], staged_day[:22], equal_nan=True):
         raise ValueError(f"raw comparison failed for non-active channels: {path}")
-    normalized_active = _normalize_raw_active(raw[22])
+    normalized_active, encoding = _normalize_raw_active(raw[22])
     if not np.array_equal(normalized_active, staged_day[22], equal_nan=True):
         raise ValueError(f"raw comparison failed for active-fire channel: {path}")
+    return encoding
 
 
 def _verify_event(
@@ -165,10 +170,15 @@ def _verify_event(
 
         if compare_raw:
             _, _, height, width = data.shape
+            sampled_encodings: set[str] = set()
             for day in sorted({0, data.shape[0] - 1}):
-                _require_raw_sample(
+                encoding = _require_raw_sample(
                     tiff_paths[day], np.asarray(data[day]), height, width
                 )
+                if encoding != "no_positive_values":
+                    sampled_encodings.add(encoding)
+            if len(sampled_encodings) > 1:
+                raise ValueError(f"raw comparison contains mixed event encoding: {path}")
     return summary
 
 

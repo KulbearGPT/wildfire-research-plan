@@ -220,6 +220,20 @@ def test_verifier_independently_normalizes_raw_hhmm_samples(tmp_path: Path) -> N
     assert summary[2016].positive_target_pixels == 1
 
 
+def test_verifier_rejects_cross_day_mixed_raw_encoding(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    hdf5_root = tmp_path / "staged"
+    dates = _write_raw_event(source_root / "2016" / "fire_a", [9.0, 930.0])
+    _write_staged_event(
+        hdf5_root / "2016" / "fire_a.hdf5", [9.0, 9.0], dates=dates
+    )
+
+    with pytest.raises(ValueError, match="mixed event encoding"):
+        verify_active_fire_dataset(
+            hdf5_root, source_root, {2016: ExpectedYear(1, 1, 0, 1)}
+        )
+
+
 @pytest.mark.parametrize(
     "expectations",
     [
