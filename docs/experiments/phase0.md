@@ -109,6 +109,37 @@ retains counts of events whose AP is undefined and warns that raw AP depends on
 positive prevalence. These rule-baseline artifacts are reproducible, ignored
 local derivatives and are not committed to the repository.
 
+### Measured fixed-rule result (2026-08-09)
+
+The fresh audit passed all frozen prerequisites before evaluation: 999 events,
+`continue_controlled`, split counts `653/156/190`, and nonzero positive target
+pixels in every year and split. The evaluation was then run once. `no_fire`
+assigns score zero to every target pixel. `persistence_latest` copies the most
+recent active-fire mask forward as the fixed `T=1` next-day score.
+
+| split | rule | events | event-macro AP | AP defined / undefined | pooled AP | positive prevalence | zero-target FAR |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| train | no_fire | 653 | 0.001156603331 | 626 / 27 | 0.001367787980 | 0.001367787980 | 0 |
+| train | persistence_latest | 653 | 0.074670022088 | 626 / 27 | 0.126383035985 | 0.001367787980 | 0.000127607813 |
+| validation | no_fire | 156 | 0.001885736126 | 156 / 0 | 0.002529419492 | 0.002529419492 | 0 |
+| validation | persistence_latest | 156 | 0.143628059298 | 156 / 0 | 0.283867881947 | 0.002529419492 | 0.000268773985 |
+| test | no_fire | 190 | 0.000530785830 | 174 / 16 | 0.000458901563 | 0.000458901563 | 0 |
+| test | persistence_latest | 190 | 0.070538373867 | 174 / 16 | 0.105814987028 | 0.000458901563 | 0.000063380673 |
+
+Event-macro AP excludes events with no positive target pixels; the table reports
+those defined and undefined counts explicitly. Pooled AP and prevalence aggregate
+all pixels within each split. Zero-target FAR is the fraction of predicted-positive
+pixels over pixels on zero-target days. All event rows, split totals, confusion
+totals, Phase 0 target totals, undefined-AP counts, AP ranges, and publication
+files were independently recomputed from the CSV artifacts after the run.
+
+No threshold or model tuning was performed. The 2022--2023 test split remained
+untouched by threshold or model selection and was evaluated only after the
+protocol and prerequisites were frozen. These are deterministic reference rules,
+not learned-model performance. They do not provide evidence for
+natural-missingness performance or operational deployment, and raw AP must not
+be compared across splits without accounting for prevalence.
+
 ## Active-fire repair operator workflow
 
 The added-year source GeoTIFFs encode positive active-fire pixels as detection

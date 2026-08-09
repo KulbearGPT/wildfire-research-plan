@@ -917,6 +917,37 @@
           </ul>
           <p><strong>决策：<code>continue_controlled</code>。</strong> 保留 WSTS+、冻结的跨年份划分、原 backbone 和轻量门控路线；主结论限定为预先定义的受控缺失，不主张已刻画自然缺失或具备运行式部署能力。</p>
         </div>
+
+        <div class="callout info">
+          <strong>固定 T=1 规则基线实测（2026-08-09）</strong>
+          <p>在新的 Phase 0 审计通过全部冻结前提后，规则评估只运行一次。<code>no_fire</code> 将所有目标像素评分置零；<code>persistence_latest</code> 将最近一次 active-fire mask 原样延续为下一日评分。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>划分</th>
+                  <th>规则</th>
+                  <th>事件</th>
+                  <th>event-macro AP</th>
+                  <th>AP defined / undefined</th>
+                  <th>pooled AP</th>
+                  <th>positive prevalence</th>
+                  <th>zero-target FAR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>train</td><td>no_fire</td><td>653</td><td>0.001156603331</td><td>626 / 27</td><td>0.001367787980</td><td>0.001367787980</td><td>0</td></tr>
+                <tr><td>train</td><td>persistence_latest</td><td>653</td><td>0.074670022088</td><td>626 / 27</td><td>0.126383035985</td><td>0.001367787980</td><td>0.000127607813</td></tr>
+                <tr><td>validation</td><td>no_fire</td><td>156</td><td>0.001885736126</td><td>156 / 0</td><td>0.002529419492</td><td>0.002529419492</td><td>0</td></tr>
+                <tr><td>validation</td><td>persistence_latest</td><td>156</td><td>0.143628059298</td><td>156 / 0</td><td>0.283867881947</td><td>0.002529419492</td><td>0.000268773985</td></tr>
+                <tr><td>test</td><td>no_fire</td><td>190</td><td>0.000530785830</td><td>174 / 16</td><td>0.000458901563</td><td>0.000458901563</td><td>0</td></tr>
+                <tr><td>test</td><td>persistence_latest</td><td>190</td><td>0.070538373867</td><td>174 / 16</td><td>0.105814987028</td><td>0.000458901563</td><td>0.000063380673</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>event-macro AP 只汇总具有正目标像素、因而 AP 有定义的事件；defined / undefined 计数明确列出。pooled AP、positive prevalence 和 zero-target FAR 均按各划分的全部相应像素汇总。原始 AP 依赖正类 prevalence，不能脱离同划分参考直接作跨年份优劣判断。</p>
+          <p><strong>边界：</strong>未进行阈值或模型调优；2022--2023 test 未参与阈值或模型选择，只在协议和前提冻结后评估。这两条结果是确定性参考规则，不是学习模型性能，也不构成自然缺失表现或运行式部署能力的证据。</p>
+        </div>
       </section>
 
       <section class="section searchable" id="s5">
@@ -1684,6 +1715,16 @@
         ["与", "and"],
         ["决策：", "Decision:"],
         ["。 保留 WSTS+、冻结的跨年份划分、原 backbone 和轻量门控路线；主结论限定为预先定义的受控缺失，不主张已刻画自然缺失或具备运行式部署能力。", ". Retain WSTS+, the frozen cross-year split, the original backbone, and the lightweight gating route. Restrict the main claims to prespecified controlled missingness; do not claim that natural missingness is characterized or that the system is ready for operational deployment."],
+        ["固定 T=1 规则基线实测（2026-08-09）", "Measured fixed T=1 rule baselines (2026-08-09)"],
+        ["在新的 Phase 0 审计通过全部冻结前提后，规则评估只运行一次。", "After a fresh Phase 0 audit passed every frozen prerequisite, the rule evaluation was run once."],
+        ["将所有目标像素评分置零；", "assigns a score of zero to every target pixel;"],
+        ["将最近一次 active-fire mask 原样延续为下一日评分。", "copies the most recent active-fire mask forward as the next-day score."],
+        ["划分", "Split"],
+        ["规则", "Rule"],
+        ["事件", "Events"],
+        ["event-macro AP 只汇总具有正目标像素、因而 AP 有定义的事件；defined / undefined 计数明确列出。pooled AP、positive prevalence 和 zero-target FAR 均按各划分的全部相应像素汇总。原始 AP 依赖正类 prevalence，不能脱离同划分参考直接作跨年份优劣判断。", "Event-macro AP includes only events with positive target pixels and therefore defined AP; the defined and undefined counts are reported explicitly. Pooled AP, positive prevalence, and zero-target FAR aggregate all corresponding pixels within each split. Raw AP depends on positive prevalence and must not be used for direct cross-year ranking without a within-split reference."],
+        ["边界：", "Boundary:"],
+        ["未进行阈值或模型调优；2022--2023 test 未参与阈值或模型选择，只在协议和前提冻结后评估。这两条结果是确定性参考规则，不是学习模型性能，也不构成自然缺失表现或运行式部署能力的证据。", "No threshold or model tuning was performed; the 2022--2023 test split did not participate in threshold or model selection and was evaluated only after the protocol and prerequisites were frozen. These two results are deterministic reference rules, not learned-model performance, and they are not evidence of natural-missingness performance or operational capability."],
         ["官方代码", "Official code"],
         ["数据生成代码", "Dataset-creation code"]
       ]);
