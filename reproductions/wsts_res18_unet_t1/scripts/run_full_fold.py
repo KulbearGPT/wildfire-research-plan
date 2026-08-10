@@ -55,6 +55,9 @@ FULL_ARTIFACTS_ROOT = (
 GLOBAL_LAUNCH_LOCK = FULL_ARTIFACTS_ROOT / "fold2-full-launch.lock.json"
 EXPECTED_EFFECTIVE_POS_WEIGHT = 608.4653828020165
 MINIMUM_DISK_FREE_BYTES = 20 * 1024**3
+OBSERVER_TEST_METRIC_FAILURE = (
+    "ValueError: test_AP is missing from the Lightning test table"
+)
 
 
 def _command_sha256(command: Sequence[str]) -> str:
@@ -119,6 +122,15 @@ def parse_test_metrics(output: str) -> dict[str, float]:
         r"(?m)[│|]\s*(test_(?:AP|f1|iou|loss|precision|recall))\s*[│|]\s*"
         r"([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)",
         output,
+    )
+    metric_name = r"test_(?:AP|f1|iou|loss|precision|recall)"
+    scalar = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+    matches.extend(
+        re.findall(
+            rf"(?m)(?:^|[\r\n])[ \t]*({metric_name})[ \t]{{2,}}({scalar})"
+            r"(?=[ \t]*(?:[\r\n]|$))",
+            output,
+        )
     )
     metrics: dict[str, float] = {}
     for name, raw in matches:
@@ -390,6 +402,74 @@ def _launch_once() -> tuple[Path, dict[str, object]]:
         raise
 
 
+def finalize_existing_run(run_directory: Path) -> dict[str, object]:
+    """Recover an exit-zero run from the one authorized observer parser failure."""
+    run = run_directory.resolve()
+    artifacts_root = FULL_ARTIFACTS_ROOT.resolve()
+    if run.parent != artifacts_root or not run.name.startswith("fold2-full-"):
+        raise ValueError("finalize-existing run is outside the full-fold artifact root")
+    if (run / "completed.json").exists():
+        raise FileExistsError("finalize-existing refuses an already completed run")
+    failure_path = run / "failure.json"
+    failure_bytes = failure_path.read_bytes()
+    failure = json.loads(failure_bytes.decode("utf-8"))
+    if not isinstance(failure, Mapping):
+        raise ValueError("failure marker must be an object")
+    if (
+        failure.get("status") != "fail"
+        or failure.get("error") != OBSERVER_TEST_METRIC_FAILURE
+        or failure.get("training_retry_performed") is not False
+    ):
+        raise ValueError("finalize-existing requires the exact observer parser failure")
+    exit_code = int((run / "exit-code.txt").read_text(encoding="utf-8").strip())
+    if exit_code != 0:
+        raise ValueError("finalize-existing requires scientific child exit code zero")
+    started = json.loads((run / "started.json").read_text(encoding="utf-8"))
+    if not isinstance(started, Mapping):
+        raise ValueError("started marker must be an object")
+    pid = started.get("pid")
+    if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0:
+        raise ValueError("started.pid must be a positive integer")
+    result = parse_full_result(run)
+    if (
+        result.get("status") != "pass"
+        or result.get("optimizer_steps") != 10_000
+        or not isinstance(result.get("test_metrics"), Mapping)
+        or "test_AP" not in result["test_metrics"]
+    ):
+        raise ValueError("finalize-existing reconstructed result is incomplete")
+    result_path = run / "full-result.json"
+    write_json_atomic(result_path, result)
+    finalized_utc = datetime.now(timezone.utc).isoformat()
+    recovery = {
+        "status": "pass",
+        "recovery_type": "observer_parser_finalize_existing",
+        "finalized_utc": finalized_utc,
+        "previous_error": OBSERVER_TEST_METRIC_FAILURE,
+        "failure_sha256": hashlib.sha256(failure_bytes).hexdigest(),
+        "full_result_sha256": _sha256(result_path),
+        "command_sha256": result.get("command_sha256"),
+        "checkpoint_sha256": result.get("checkpoint_sha256"),
+        "optimizer_steps": result["optimizer_steps"],
+        "test_AP": result["test_metrics"]["test_AP"],
+        "previous_failure_preserved": True,
+        "scientific_child_relaunched": False,
+    }
+    write_json_atomic(run / "observer-recovery.json", recovery)
+    write_json_atomic(
+        run / "completed.json",
+        {
+            "status": "pass",
+            "exit_code": exit_code,
+            "pid": pid,
+            "completed_utc": finalized_utc,
+            "finalized_existing": True,
+            "observer_recovery": True,
+        },
+    )
+    return result
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     action = parser.add_mutually_exclusive_group(required=True)
@@ -409,8 +489,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(json.dumps(metadata, sort_keys=True, separators=(",", ":")))
             return 0
         if arguments.finalize_existing is not None:
-            result = parse_full_result(arguments.finalize_existing)
-            write_json_atomic(arguments.finalize_existing / "full-result.json", result)
+            result = finalize_existing_run(arguments.finalize_existing)
             print(json.dumps(result, sort_keys=True, separators=(",", ":")))
             return 0
         run, result = _launch_once()
@@ -423,4 +502,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

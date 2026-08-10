@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import sys
 from pathlib import Path
@@ -19,7 +20,9 @@ from evaluate_released_weight import (  # noqa: E402
     validate_weight_manifest,
     validate_weight_output,
 )
+import evaluate_released_weight as weight_controller  # noqa: E402
 from verify_released_weight import validate_weight_result  # noqa: E402
+import verify_released_weight as weight_verifier  # noqa: E402
 
 
 FILENAMES = [
@@ -208,3 +211,101 @@ def test_released_weight_result_requires_strict_load_test_only_and_ap_delta() ->
                 "filename_ap": 0.571,
             }
         )
+
+
+def test_weight_launch_dependency_requires_completed_and_independently_verified_full_run(
+    tmp_path: Path,
+) -> None:
+    validate = getattr(weight_controller, "validate_full_run_dependency", None)
+    assert validate is not None, "full-run dependency validator is required"
+    run = (tmp_path / "fold2-full-run").resolve()
+    run.mkdir()
+    lock = tmp_path / "fold2-full-launch.lock.json"
+    lock.write_text(json.dumps({"run_directory": str(run)}), encoding="utf-8")
+    (run / "completed.json").write_text(
+        json.dumps({"status": "pass", "exit_code": 0}), encoding="utf-8"
+    )
+    (run / "full-result.json").write_text(
+        json.dumps(
+            {
+                "status": "pass",
+                "optimizer_steps": 10_000,
+                "command_sha256": "full-command",
+                "checkpoint_sha256": "best-checkpoint",
+            }
+        ),
+        encoding="utf-8",
+    )
+    independent = run / "independent-verification.json"
+    independent.write_text(
+        json.dumps(
+            {
+                "status": "pass",
+                "optimizer_steps": 10_000,
+                "command_sha256": "full-command",
+                "checkpoint_sha256": "best-checkpoint",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = validate(lock)
+    assert result["independent_status"] == "pass"
+    independent.unlink()
+    with pytest.raises(ValueError) as error:
+        validate(lock)
+    assert str(error.value) == "full Fold-2 independent verification is missing"
+
+
+def test_independent_weight_verifier_builds_exact_command_and_requires_all_lineage(
+    tmp_path: Path,
+) -> None:
+    builder = getattr(weight_verifier, "build_expected_weight_command", None)
+    validate = getattr(weight_verifier, "verify_weight_command_lineage", None)
+    assert builder is not None, "independent weight command builder is required"
+    assert validate is not None, "independent weight lineage validator is required"
+    run = (tmp_path / "weight-run").resolve()
+    derived = (tmp_path / "WildfireSpreadTS-res18-runtime").resolve()
+    weight = (tmp_path / "fold2_testAP0.571.pth").resolve()
+    command = builder(run, derived, weight)
+    command_hash = hashlib.sha256(
+        json.dumps(command, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    payload = {"command": command, "command_sha256": command_hash}
+    payloads = {
+        "launch": dict(payload),
+        "run_lock": dict(payload),
+        "preflight": dict(payload),
+        "started": dict(payload),
+        "effective": dict(payload),
+        "result": {"command_sha256": command_hash},
+    }
+
+    validate(payloads, command, command_hash)
+    del payloads["run_lock"]
+    with pytest.raises(ValueError) as error:
+        validate(payloads, command, command_hash)
+    assert str(error.value) == "run_lock marker is missing"
+
+
+def test_independent_weight_verifier_reconstructs_raw_strict_test_evidence() -> None:
+    reconstruct = getattr(weight_verifier, "reconstruct_weight_evidence", None)
+    assert reconstruct is not None, "independent raw weight evidence parser is required"
+    output = (
+        "WSTS_OFFICIAL_WEIGHT_STRICT_LOAD=1 tensors=123\n"
+        "Testing DataLoader 0: 100%|##########| 156/156\n"
+        "│ test_AP │ 0.5708 │\n"
+        "│ test_f1 │ 0.4 │\n"
+        "WSTS_OBSERVER_PEAK_ALLOCATED_BYTES=1700000000\n"
+    )
+
+    assert reconstruct(output, 0) == {
+        "exit_code": 0,
+        "strict_load": True,
+        "loaded_tensor_count": 123,
+        "train_invoked": False,
+        "validation_invoked": False,
+        "predict_invoked": False,
+        "test_metrics": {"test_AP": pytest.approx(0.5708), "test_f1": pytest.approx(0.4)},
+        "peak_allocated_bytes": 1_700_000_000,
+    }

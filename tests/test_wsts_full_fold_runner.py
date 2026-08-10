@@ -9,6 +9,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPOSITORY_ROOT / "reproductions" / "wsts_res18_unet_t1" / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
+import run_full_fold as runner  # noqa: E402
 from run_full_fold import (  # noqa: E402
     build_full_command,
     parse_test_metrics,
@@ -117,6 +118,28 @@ def test_test_metric_parser_accepts_lightning_table_and_rejects_missing_ap() -> 
         parse_test_metrics("Testing DataLoader 0: 100%|##########| 1/1")
 
 
+def test_test_metric_parser_accepts_observed_windows_cr_table_without_borders() -> None:
+    output = (
+        "Testing DataLoader 0: 100%|##########| 3337/3337\r\n"
+        "Test metric             DataLoader 0\r\r\n"
+        "         test_AP            0.5546640157699585\r\r\n"
+        "         test_f1            0.4988675117492676\r\r\n"
+        "        test_iou            0.3323274552822113\r\r\n"
+        "        test_loss          0.0064315893687307835\r\r\n"
+        "     test_precision           0.7076455950737\r\r\n"
+        "       test_recall          0.3852163851261139\r\r\n"
+    )
+
+    assert parse_test_metrics(output) == {
+        "test_AP": pytest.approx(0.5546640157699585),
+        "test_f1": pytest.approx(0.4988675117492676),
+        "test_iou": pytest.approx(0.3323274552822113),
+        "test_loss": pytest.approx(0.0064315893687307835),
+        "test_precision": pytest.approx(0.7076455950737),
+        "test_recall": pytest.approx(0.3852163851261139),
+    }
+
+
 def test_full_success_requires_exact_step_best_checkpoint_and_completed_test(
     tmp_path: Path,
 ) -> None:
@@ -166,3 +189,76 @@ def test_full_success_fails_closed_on_incomplete_or_extra_actions(
 
     with pytest.raises(ValueError, match=message):
         validate_full_success(events, output, exit_code, checkpoints)
+
+
+def test_finalize_existing_recovers_only_observer_parser_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    artifact_root = tmp_path / "wsts-res18-t1-full"
+    run = artifact_root / "fold2-full-terminal"
+    run.mkdir(parents=True)
+    failure_path = run / "failure.json"
+    failure_path.write_text(
+        json.dumps(
+            {
+                "status": "fail",
+                "error": "ValueError: test_AP is missing from the Lightning test table",
+                "training_retry_performed": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    failure_before = failure_path.read_bytes()
+    (run / "exit-code.txt").write_text("0\n", encoding="utf-8")
+    (run / "started.json").write_text(json.dumps({"pid": 22944}), encoding="utf-8")
+    result = {
+        "status": "pass",
+        "optimizer_steps": 10_000,
+        "command_sha256": "command-sha",
+        "checkpoint_sha256": "checkpoint-sha",
+        "test_metrics": {"test_AP": 0.5546640157699585},
+    }
+    monkeypatch.setattr(runner, "FULL_ARTIFACTS_ROOT", artifact_root)
+    monkeypatch.setattr(runner, "parse_full_result", lambda _: result)
+
+    assert runner.finalize_existing_run(run) == result
+    assert failure_path.read_bytes() == failure_before
+    completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
+    recovery = json.loads((run / "observer-recovery.json").read_text(encoding="utf-8"))
+    assert completed["status"] == "pass"
+    assert completed["exit_code"] == 0
+    assert completed["pid"] == 22944
+    assert completed["finalized_existing"] is True
+    assert completed["observer_recovery"] is True
+    assert recovery["previous_error"] == (
+        "ValueError: test_AP is missing from the Lightning test table"
+    )
+    assert recovery["scientific_child_relaunched"] is False
+    assert recovery["optimizer_steps"] == 10_000
+    assert recovery["test_AP"] == pytest.approx(0.5546640157699585)
+    assert recovery["failure_sha256"] == runner._sha256(failure_path)
+    assert recovery["full_result_sha256"] == runner._sha256(run / "full-result.json")
+
+
+def test_finalize_existing_rejects_non_parser_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    artifact_root = tmp_path / "wsts-res18-t1-full"
+    run = artifact_root / "fold2-full-terminal"
+    run.mkdir(parents=True)
+    (run / "failure.json").write_text(
+        json.dumps(
+            {
+                "status": "fail",
+                "error": "RuntimeError: scientific child failed",
+                "training_retry_performed": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "exit-code.txt").write_text("0\n", encoding="utf-8")
+    (run / "started.json").write_text(json.dumps({"pid": 22944}), encoding="utf-8")
+    monkeypatch.setattr(runner, "FULL_ARTIFACTS_ROOT", artifact_root)
+
+    with pytest.raises(ValueError, match="exact observer parser failure"):
+        runner.finalize_existing_run(run)

@@ -317,17 +317,44 @@ def _strict_load_preflight(command: Sequence[str]) -> dict[str, object]:
     }
 
 
-def _full_run_complete() -> dict[str, object]:
-    lock_path = FULL_ARTIFACTS_ROOT / "fold2-full-launch.lock.json"
+def validate_full_run_dependency(lock_path: Path) -> dict[str, object]:
+    """Require controller completion and a matching independent PASS artifact."""
     if not lock_path.is_file():
         raise ValueError("full Fold-2 run has not been launched")
     lock = json.loads(lock_path.read_text(encoding="utf-8"))
     run = Path(str(lock.get("run_directory", ""))).resolve()
     completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
     result = json.loads((run / "full-result.json").read_text(encoding="utf-8"))
-    if completed.get("status") != "pass" or result.get("optimizer_steps") != 10_000:
-        raise ValueError("full Fold-2 run is not complete and verified")
-    return {"run_directory": str(run), "result_sha256": _sha256(run / "full-result.json")}
+    independent_path = run / "independent-verification.json"
+    if not independent_path.is_file():
+        raise ValueError("full Fold-2 independent verification is missing")
+    independent = json.loads(independent_path.read_text(encoding="utf-8"))
+    if (
+        completed.get("status") != "pass"
+        or completed.get("exit_code") != 0
+        or result.get("status") != "pass"
+        or result.get("optimizer_steps") != 10_000
+    ):
+        raise ValueError("full Fold-2 run is not complete")
+    if independent.get("status") != "pass" or independent.get(
+        "optimizer_steps"
+    ) != 10_000:
+        raise ValueError("full Fold-2 independent verification did not pass")
+    for field in ("command_sha256", "checkpoint_sha256"):
+        if independent.get(field) != result.get(field):
+            raise ValueError(f"full Fold-2 independent {field} mismatch")
+    return {
+        "run_directory": str(run),
+        "result_sha256": _sha256(run / "full-result.json"),
+        "independent_sha256": _sha256(independent_path),
+        "independent_status": "pass",
+    }
+
+
+def _full_run_complete() -> dict[str, object]:
+    return validate_full_run_dependency(
+        FULL_ARTIFACTS_ROOT / "fold2-full-launch.lock.json"
+    )
 
 
 def _create_run_directory() -> Path:
