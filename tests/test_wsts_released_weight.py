@@ -309,3 +309,37 @@ def test_independent_weight_verifier_reconstructs_raw_strict_test_evidence() -> 
         "test_metrics": {"test_AP": pytest.approx(0.5708), "test_f1": pytest.approx(0.4)},
         "peak_allocated_bytes": 1_700_000_000,
     }
+
+
+def test_independent_weight_verifier_parses_windows_borderless_lightning_table() -> None:
+    output = (
+        "WSTS_OFFICIAL_WEIGHT_STRICT_LOAD=1 tensors=123\n"
+        "Testing DataLoader 0: 100%|##########| 3337/3337\n"
+        "────────────────────────────────────────────────────────────────\n"
+        "       Test metric             DataLoader 0\n"
+        "\n"
+        "         test_AP            0.5709022879600525\n"
+        "\n"
+        "         test_f1             0.433401882648468\n"
+        "\n"
+        "        test_iou            0.27665162086486816\n"
+        "\n"
+        "        test_loss          0.005918989889323711\n"
+        "\n"
+        "     test_precision         0.7646416425704956\n"
+        "\n"
+        "       test_recall          0.3024023771286011\n"
+        "────────────────────────────────────────────────────────────────\n"
+        "WSTS_OBSERVER_PEAK_ALLOCATED_BYTES=12050196992\n"
+    )
+
+    result = weight_verifier.reconstruct_weight_evidence(output, 0)
+
+    assert result["test_metrics"] == {
+        "test_AP": pytest.approx(0.5709022879600525),
+        "test_f1": pytest.approx(0.433401882648468),
+        "test_iou": pytest.approx(0.27665162086486816),
+        "test_loss": pytest.approx(0.005918989889323711),
+        "test_precision": pytest.approx(0.7646416425704956),
+        "test_recall": pytest.approx(0.3024023771286011),
+    }

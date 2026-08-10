@@ -27,6 +27,16 @@ The preserved 500-step calibration predicts roughly 4.68--5.69 hours for the
 complete run on this Windows host. A partial checkpoint must not be reported as
 a complete reproduction.
 
+The sole completed full launch reached exact optimizer step 10,000 in
+18,759.618905067 s (5.211005251 h), then tested the epoch-79 / validation-AP
+0.33 best checkpoint. Fold-2 test AP was `0.5546640157699585`; checkpoint
+SHA-256 was
+`7c2fa769e3fa66c8833b8d94b339e6d205abad96f25249cadf335bf3474e076c`.
+An observer-only Windows table-parser failure occurred after the scientific
+child had exited 0. Its evidence remains in the run, and a TDD-fixed,
+no-launch `--finalize-existing` path recovered the result from unchanged raw
+artifacts. Independent verification passed; there was no second full launch.
+
 ## Released Fold-2 weight
 
 The pinned Hub revision contains the raw state dictionary
@@ -52,6 +62,13 @@ paths are forbidden:
 ```powershell
 python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --launch
 ```
+
+The sole completed release evaluation strict-loaded 182 tensors and finished
+all 3,337 official test batches without train, validation, predict, resume, or
+retry. Recomputed Fold-2 AP was `0.5709022879600525` (absolute difference
+`0.0000977120399474618` from filename `0.571`) in 560.127523899 s. Its
+independent verifier passed after a TDD-only fix for the Windows borderless
+Lightning result table; no scientific child was relaunched.
 
 This directory controls a provenance-checked timing calibration of the authors'
 released Res18-U-Net, `T=1`, All-features configuration on official WSTS fold 2.

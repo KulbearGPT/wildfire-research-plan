@@ -154,6 +154,17 @@ def reconstruct_weight_evidence(output: str, exit_code: int) -> dict[str, object
             output,
         )
     }
+    metric_name = r"test_(?:AP|f1|iou|loss|precision|recall)"
+    scalar = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+    observed_matches = re.findall(
+        rf"(?m)(?:^|[\r\n])[ \t]*({metric_name})[ \t]{{2,}}({scalar})"
+        r"(?=[ \t]*(?:[\r\n]|$))",
+        output,
+    )
+    for name, raw in observed_matches:
+        if name in metrics:
+            raise ValueError(f"released-weight duplicate test metric: {name}")
+        metrics[name] = float(raw)
     if "test_AP" not in metrics or not all(math.isfinite(value) for value in metrics.values()):
         raise ValueError("released-weight finite test metrics are missing")
     peak = re.findall(r"(?m)^WSTS_OBSERVER_PEAK_ALLOCATED_BYTES=(\d+)\s*$", output)

@@ -31,7 +31,7 @@
 - Produces `build_full_command(run_directory: Path) -> list[str]`, `validate_full_command(command: Sequence[str], run_directory: Path) -> None`, `parse_full_result(run_directory: Path) -> dict[str, object]`, and CLI actions `--preflight-only`, `--launch`, `--finalize-existing`.
 - Produces independent CLI `verify_full_fold.py --run-directory ... --original-upstream ... --derived-upstream ... --patch ... --output ...`.
 
-- [ ] **Step 1: Write RED contract tests**
+- [x] **Step 1: Write RED contract tests**
 
   Assert exact ordered command fields: three official YAMLs, Fold 2, All,
   `T=1`, deduplication, workers 8, `max_steps=10000`, local root, and
@@ -39,11 +39,11 @@
   provenance gates, exact success sentinels, finite test metrics, unique best
   checkpoint, and malformed/missing raw artifacts fail closed.
 
-- [ ] **Step 2: Run RED tests**
+- [x] **Step 2: Run RED tests**
 
   Run `python -m pytest tests/test_wsts_full_fold_runner.py tests/test_wsts_full_fold_verifier.py -q` and require failure because both modules are absent.
 
-- [ ] **Step 3: Implement the minimal controller and verifier**
+- [x] **Step 3: Implement the minimal controller and verifier**
 
   Reuse `observe_process`, `_sample_nvidia_smi`, `_prepare_derived_runtime`,
   inventory builders, atomic JSON writing, and the fixed environment from the
@@ -51,13 +51,13 @@
   provenance before launch, never retry, and validate post-run evidence before
   writing `completed.json` and `full-result.json`.
 
-- [ ] **Step 4: Verify GREEN and preflight**
+- [x] **Step 4: Verify GREEN and preflight**
 
   Run focused tests, the full suite, `git diff --check`, then
   `run_full_fold.py --preflight-only`. Confirm no training process or full-run
   lock exists.
 
-- [ ] **Step 5: Commit Task 1**
+- [x] **Step 5: Commit Task 1**
 
   Commit tracked files with `feat: add full fold reproduction runner`.
 
@@ -74,31 +74,31 @@
 - Produces `validate_weight_manifest(items: Sequence[Mapping[str, object]]) -> dict[str, object]`, `validate_download(path: Path) -> None`, `build_weight_command(run_directory: Path, weight_path: Path) -> list[str]`, and CLI actions `--fetch-only`, `--preflight-only`, `--launch`, `--finalize-existing`.
 - The entrypoint loads the raw state dict using `strict=True` and invokes exactly `Trainer.test`.
 
-- [ ] **Step 1: Write RED contract tests**
+- [x] **Step 1: Write RED contract tests**
 
   Assert exact Hub revision/path/size/SHA, twelve-file manifest and filename AP
   aggregate, strict raw-state loading contract, test-only command, atomic
   evaluation lock, finite metric parsing, filename-versus-recomputed AP delta,
   and failures for training/predict/validate evidence.
 
-- [ ] **Step 2: Run RED tests**
+- [x] **Step 2: Run RED tests**
 
   Run `python -m pytest tests/test_wsts_released_weight.py -q` and require
   failure because the evaluation modules are absent.
 
-- [ ] **Step 3: Implement fetch, test-only entrypoint, and verifier**
+- [x] **Step 3: Implement fetch, test-only entrypoint, and verifier**
 
   Query the pinned Hub tree, download only Fold 2 into the ignored local cache,
   verify exact bytes/hash, instantiate the same official CLI/config, load with
   `strict=True`, call `Trainer.test`, preserve raw evidence, and independently
   verify all claims.
 
-- [ ] **Step 4: Verify GREEN and fetch-only gate**
+- [x] **Step 4: Verify GREEN and fetch-only gate**
 
   Run focused/full tests and `--fetch-only`; check the downloaded SHA and run
   `--preflight-only` without invoking a test loader.
 
-- [ ] **Step 5: Commit Task 2**
+- [x] **Step 5: Commit Task 2**
 
   Commit tracked files with `feat: add released weight verification`.
 
@@ -108,18 +108,18 @@
 - Produces ignored artifacts under `artifacts/reproductions/wsts-res18-t1-full/`.
 - Modify after completion: `docs/experiments/res18_unet_t1_reproduction.md`
 
-- [ ] **Step 1: Run final launch gates**
+- [x] **Step 1: Run final launch gates**
 
   Re-run full tests, preflight, GPU/disk/process checks, exact command hash, and
   absence of the global full-run lock.
 
-- [ ] **Step 2: Launch once and monitor the same PID**
+- [x] **Step 2: Launch once and monitor the same PID**
 
   Start `run_full_fold.py --launch` hidden, record the outer and child PID, and
   inspect saved stream events at the 1.5-hour checkpoint. Do not stop a healthy
   process and do not launch a replacement.
 
-- [ ] **Step 3: Finalize and independently verify**
+- [x] **Step 3: Finalize and independently verify**
 
   Require exact step 10,000, best checkpoint test completion, exit zero,
   unchanged sources, and independent verifier PASS. Record runtime, best
@@ -132,17 +132,17 @@
 - Produces ignored artifacts under `artifacts/reproductions/wsts-res18-t1-official-weight/`.
 - Modify after completion: `docs/experiments/res18_unet_t1_reproduction.md`
 
-- [ ] **Step 1: Re-run weight preflight after training terminates**
+- [x] **Step 1: Re-run weight preflight after training terminates**
 
   Require the exact pinned weight SHA, free GPU, no training process, unchanged
   data/code, and absence of the weight-evaluation launch lock.
 
-- [ ] **Step 2: Launch test-only evaluation once**
+- [x] **Step 2: Launch test-only evaluation once**
 
   Monitor the same PID to terminal state. Require strict load and forbid train,
   validation, predict, or checkpoint-resume actions.
 
-- [ ] **Step 3: Verify and compare**
+- [x] **Step 3: Verify and compare**
 
   Independently recompute the result artifact, compare test AP with filename
   `0.571`, calculate the twelve-filename aggregate, and state its relation to
@@ -154,19 +154,18 @@
 - Modify: `docs/experiments/res18_unet_t1_reproduction.md`
 - Modify: `reproductions/wsts_res18_unet_t1/README.md`
 
-- [ ] **Step 1: Write the evidence-bounded report**
+- [x] **Step 1: Write the evidence-bounded report**
 
   Present trained versus official-weight Fold 2 metrics, runtime/resource
   observations, configuration discrepancies, and next recommendation. Keep
   single-fold and twelve-fold claims separate.
 
-- [ ] **Step 2: Run completion audit**
+- [x] **Step 2: Run completion audit**
 
   Run both independent verifiers, the full pytest suite, `git diff --check`,
   tracked/upstream/derived status checks, raw artifact hashes, and confirm no
   relevant Python process remains.
 
-- [ ] **Step 3: Commit without push or merge**
+- [x] **Step 3: Commit without push or merge**
 
   Commit the final report with `docs: report fold 2 full reproduction`.
-

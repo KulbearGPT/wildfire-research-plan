@@ -1,8 +1,87 @@
-# Res18-U-Net T=1 fold-2 timing calibration
+# Res18-U-Net T=1 fold-2 reproduction evidence
 
-Status: **PASS for timing calibration only.** This run did not invoke the test
-loader, `test`, or `predict`, contains no test AP, and cannot establish
-reproduction of the paper value `0.460 +/- 0.084`.
+Status: **PASS for the 500-step timing calibration, the single full Fold-2
+official-code-path run, and the released Fold-2 weight test.** The calibration
+did not invoke test or predict. The later full run reached exactly 10,000
+optimizer steps and the separate released-weight run invoked only official
+`Trainer.test`. These are single-fold observations, not a reproduction of the
+paper's 12-fold aggregate `0.460 +/- 0.084`; the official 236-versus-608.465
+positive-weight discrepancy below also remains unresolved as to paper intent.
+
+## Completed full Fold-2 run
+
+The only full training launch used controller PID 24216 and scientific PID
+22944. It ran for 18,759.618905067 s (5.211005251 h), stopped at exactly 10,000
+optimizer steps, exited 0, selected
+`best-epoch=79-val_avg_precision=0.33.ckpt`, and then completed the unchanged
+official 3,337-batch test loader. The checkpoint is 173,524,843 bytes with
+SHA-256
+`7c2fa769e3fa66c8833b8d94b339e6d205abad96f25249cadf335bf3474e076c`.
+The test metrics were:
+
+| Metric | Full trained Fold 2 | Released Fold-2 weight |
+|---|---:|---:|
+| AP | 0.5546640158 | 0.5709022880 |
+| F1 | 0.4988675117 | 0.4334018826 |
+| IoU | 0.3323274553 | 0.2766516209 |
+| Precision | 0.7076455951 | 0.7646416426 |
+| Recall | 0.3852163851 | 0.3024023771 |
+| Loss | 0.0064315894 | 0.0059189899 |
+
+The full run's AP is 0.0162382722 below the independently recomputed released
+weight AP. This difference is descriptive for two Fold-2 states only. Neither
+number should be compared as though it were the paper's mean over 12 folds.
+
+The full run recorded 3,560 GPU samples. Their mean/median interval was
+5.268894689/3.007272100 s (effective 0.189793127 Hz), median utilization was 6%,
+and the sampled total-GPU peak was 15,765 MiB. That peak is only the maximum at
+the observed cadence and may miss a transient. PyTorch reported peak allocated
+memory of 12,167,387,136 bytes; WDDM child attribution was unavailable rather
+than zero.
+
+At the scheduled 1.5-hour checkpoint the same two PIDs were healthy at
+approximately step 2,904, epoch 24 batch 0, with a then-best epoch-22 AP-0.29
+checkpoint. The atomic checkpoint explicitly recorded continue-not-truncate;
+the process was not restarted or replaced.
+
+The scientific child produced complete raw evidence and exited 0, but the
+controller initially failed after exit because its table parser did not accept
+Lightning's Windows borderless test-result rendering. The run retains that
+`failure.json`. A RED/GREEN parser fix and no-launch `--finalize-existing`
+reconstructed the result from the same raw files, wrote an observer-recovery
+lineage, and made `completed.json` governing. No second full child was started.
+The independent verifier rebuilt exact steps, metrics, command, checkpoint,
+data inventory, effective positive weight, and runtime-patch provenance and
+returned PASS.
+
+## Completed official released-weight test
+
+After the full run and its independent verification passed, exactly one
+released-weight controller created run
+`fold2-weight-20260810T133336Z-2e071197`. Scientific PID 37668 loaded all 182
+state-dict tensors with `strict=True`, invoked only `Trainer.test`, completed
+3,337/3,337 batches, and exited 0. Train, validation, predict, resume, and retry
+were not invoked. The measured AP was `0.5709022879600525`, an absolute
+difference of `0.0000977120399474618` from filename value `0.571`.
+
+This test took 560.127523899 s. Its 561 GPU samples had mean/median intervals
+0.999990586/0.999306600 s (effective 1.000009414 Hz), median utilization 50%,
+and sampled total-GPU peak 15,525 MiB. PyTorch peak allocated memory was
+12,050,196,992 bytes; WDDM child attribution was unavailable. Official test
+code emitted `test_pr_curve_data.npz` in the derived runtime working directory;
+the 1,976-byte output was preserved unchanged in the run directory with
+SHA-256
+`08c47d22aa87102c88104e42b5c7cc37c08e6481b09d573a5726d0b73f8dc785`
+and an explicit provenance marker, restoring the derived checkout to exactly
+the authorized import-scope patch.
+
+The independent released-weight verifier initially exposed the same offline
+Windows table-parser gap. A focused RED/GREEN fix added the strict borderless
+table form without importing the controller parser. Re-running only the
+verifier returned PASS and independently confirmed the exact command hash,
+strict-load sentinel, six metrics, pinned weight hash, full-run dependency,
+607-file live source inventory, original checkout, derived patch, and copied
+provenance. No evaluation child was relaunched.
 
 ## Frozen experiment
 
