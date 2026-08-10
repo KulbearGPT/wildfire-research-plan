@@ -1,5 +1,32 @@
 # WSTS Res18-U-Net T=1 fold-2 timing calibration
 
+## Full Fold-2 reproduction
+
+`run_full_fold.py` is the separate, single-use controller for the authorized
+scientific run. It keeps the same pinned code/data/model configuration and the
+audited Windows workers-8 compatibility setting, changes the calibration stop
+to the official sweep value of 10,000 optimizer steps, and restores
+`do_test=true`. The unchanged official `train.py` tests the validation-AP-best
+checkpoint after fitting. The controller has a distinct global atomic lock and
+never retries.
+
+Before launch, run:
+
+```powershell
+python reproductions/wsts_res18_unet_t1/scripts/run_full_fold.py --preflight-only
+```
+
+The launch action is:
+
+```powershell
+python reproductions/wsts_res18_unet_t1/scripts/run_full_fold.py --launch
+```
+
+The 1.5-hour allocation is an observation checkpoint, not a stop condition.
+The preserved 500-step calibration predicts roughly 4.68--5.69 hours for the
+complete run on this Windows host. A partial checkpoint must not be reported as
+a complete reproduction.
+
 This directory controls a provenance-checked timing calibration of the authors'
 released Res18-U-Net, `T=1`, All-features configuration on official WSTS fold 2.
 The 500-step timing run is **not a scientific reproduction result**: it does not
