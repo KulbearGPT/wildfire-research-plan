@@ -36,8 +36,9 @@ SHA-256 was
 `7c2fa769e3fa66c8833b8d94b339e6d205abad96f25249cadf335bf3474e076c`.
 An observer-only Windows table-parser failure occurred after the scientific
 child had exited 0. Its evidence remains in the run, and a TDD-fixed,
-no-launch `--finalize-existing` path recovered the result from unchanged raw
-artifacts. Independent verification passed; there was no second full launch.
+no-launch `--finalize-existing` path recovered the result by reading the
+preserved raw artifact set. Independent verification passed; there was no
+second full launch.
 It reconstructs exact step 10,000 from raw events and wall/GPU statistics from
 raw observer files. A later no-launch seal found identical before/after hashes
 for the fixed 14-entry raw set; this current-state check is not presented as
