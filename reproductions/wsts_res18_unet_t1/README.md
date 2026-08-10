@@ -27,6 +27,32 @@ The preserved 500-step calibration predicts roughly 4.68--5.69 hours for the
 complete run on this Windows host. A partial checkpoint must not be reported as
 a complete reproduction.
 
+## Released Fold-2 weight
+
+The pinned Hub revision contains the raw state dictionary
+`trained_model_weights/Res18Unet_T1/All/fold2_testAP0.571.pth`. Fetching is
+separate from evaluation and verifies 57,889,221 bytes plus SHA-256
+`e17cd58e29ee7b91f6a8ba85ddcb5783ec69b9541e2de93298ba3241e785a9ec`:
+
+```powershell
+python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --fetch-only
+```
+
+The preflight instantiates the official model and applies the raw state dict
+with `strict=True`, but does not call any loader:
+
+```powershell
+python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --preflight-only
+```
+
+The launch action is gated on a completed full Fold-2 run. It invokes only
+`Trainer.test`; train, validation, prediction, and Lightning checkpoint-resume
+paths are forbidden:
+
+```powershell
+python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --launch
+```
+
 This directory controls a provenance-checked timing calibration of the authors'
 released Res18-U-Net, `T=1`, All-features configuration on official WSTS fold 2.
 The 500-step timing run is **not a scientific reproduction result**: it does not
