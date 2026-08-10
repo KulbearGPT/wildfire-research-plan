@@ -58,6 +58,22 @@ MINIMUM_DISK_FREE_BYTES = 20 * 1024**3
 OBSERVER_TEST_METRIC_FAILURE = (
     "ValueError: test_AP is missing from the Lightning test table"
 )
+FULL_RAW_RELATIVE_PATHS = (
+    "stdout.log",
+    "stderr.log",
+    "stream-events.jsonl",
+    "gpu.csv",
+    "exit-code.txt",
+    "started.json",
+    "config.yaml",
+    "source-data-pre.json",
+    "source-data-post.json",
+    "launch.lock.json",
+    "preflight.json",
+    "effective-command.json",
+    "failure.json",
+)
+RAW_SEAL_SCOPE = "current offline re-finalization; not retrospective proof"
 
 
 def _command_sha256(command: Sequence[str]) -> str:
@@ -144,9 +160,88 @@ def parse_test_metrics(output: str) -> dict[str, float]:
         if name == "test_loss" and value < 0.0:
             raise ValueError("test loss must be non-negative")
         metrics[name] = value
-    if "test_AP" not in metrics:
-        raise ValueError("test_AP is missing from the Lightning test table")
+    expected = {
+        "test_AP",
+        "test_f1",
+        "test_iou",
+        "test_loss",
+        "test_precision",
+        "test_recall",
+    }
+    if set(metrics) != expected:
+        raise ValueError("all six test metrics are required from the Lightning table")
     return metrics
+
+
+def validate_checkpoint_metadata(payload: Mapping[str, object]) -> dict[str, object]:
+    epoch = payload.get("epoch")
+    global_step = payload.get("global_step")
+    version = payload.get("pytorch-lightning_version")
+    if type(epoch) is not int or epoch < 0:
+        raise ValueError("checkpoint epoch must be a non-negative integer")
+    if type(global_step) is not int or global_step <= 0:
+        raise ValueError("checkpoint global_step must be a positive integer")
+    if not isinstance(version, str) or not version:
+        raise ValueError("checkpoint Lightning version is missing")
+    return {
+        "best_epoch": epoch,
+        "best_checkpoint_global_step": global_step,
+        "checkpoint_lightning_version": version,
+    }
+
+
+def read_checkpoint_metadata(checkpoint: Path) -> dict[str, object]:
+    import torch
+
+    payload = torch.load(checkpoint.resolve(), map_location="cpu")
+    if not isinstance(payload, Mapping):
+        raise ValueError("checkpoint payload must be a mapping")
+    return validate_checkpoint_metadata(payload)
+
+
+def parse_displayed_validation_ap(event_text: str, best_epoch: int) -> float:
+    value: float | None = None
+    progress = re.compile(
+        rf"\bEpoch\s+{best_epoch}:.*?(\d+)\s*/\s*(\d+).*?"
+        r"val_avg_precision=([-+]?(?:\d+(?:\.\d*)?|\.\d+))"
+    )
+    for line_number, line in enumerate(event_text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            payload = json.loads(line)
+            fragment = payload["text"]
+        except (KeyError, TypeError, json.JSONDecodeError) as error:
+            raise ValueError(f"invalid stream event on line {line_number}") from error
+        if not isinstance(fragment, str):
+            raise ValueError("stream event text must be a string")
+        match = progress.search(fragment)
+        if match is not None and int(match.group(1)) == int(match.group(2)):
+            value = float(match.group(3))
+    if value is None or not math.isfinite(value) or not 0.0 <= value <= 1.0:
+        raise ValueError("best-epoch displayed validation AP is missing or invalid")
+    return value
+
+
+def capture_full_raw_manifest(run_directory: Path) -> dict[str, object]:
+    run = run_directory.resolve()
+    checkpoints = sorted(run.rglob("*.ckpt"))
+    if len(checkpoints) != 1:
+        raise ValueError("raw evidence requires exactly one checkpoint")
+    relative_paths = [*FULL_RAW_RELATIVE_PATHS, checkpoints[0].relative_to(run).as_posix()]
+    entries: list[dict[str, object]] = []
+    for relative in relative_paths:
+        path = run / Path(relative)
+        if not path.is_file():
+            raise ValueError(f"fixed raw evidence file is missing: {relative}")
+        entries.append(
+            {
+                "path": relative,
+                "bytes": path.stat().st_size,
+                "sha256": _sha256(path),
+            }
+        )
+    return {"schema_version": 1, "entry_count": len(entries), "entries": entries}
 
 
 def validate_full_success(
@@ -294,6 +389,12 @@ def parse_full_result(run_directory: Path) -> dict[str, object]:
     )
     if checkpoint_match is None:
         raise ValueError("best checkpoint filename lacks epoch/validation AP provenance")
+    checkpoint_metadata = read_checkpoint_metadata(checkpoint)
+    if checkpoint_metadata["best_epoch"] != int(checkpoint_match.group(1)):
+        raise ValueError("checkpoint epoch differs from its filename label")
+    displayed_validation_ap = parse_displayed_validation_ap(
+        events, int(checkpoint_match.group(1))
+    )
     started = json.loads((run / "started.json").read_text(encoding="utf-8"))
     wall_seconds = measure_wall_seconds_from_markers(
         str(started["started_utc"]), (run / "exit-code.txt").stat().st_mtime_ns
@@ -314,8 +415,9 @@ def parse_full_result(run_directory: Path) -> dict[str, object]:
         "wall_hours": wall_seconds / 3600,
         "best_checkpoint": str(checkpoint),
         "checkpoint_sha256": _sha256(checkpoint),
-        "best_epoch": int(checkpoint_match.group(1)),
-        "best_validation_AP_from_filename": float(checkpoint_match.group(2)),
+        **checkpoint_metadata,
+        "best_validation_AP_filename_rounded": float(checkpoint_match.group(2)),
+        "best_validation_AP_displayed": displayed_validation_ap,
         "command_sha256": effective["command_sha256"],
         **effective_config,
         **summary,
@@ -408,8 +510,20 @@ def finalize_existing_run(run_directory: Path) -> dict[str, object]:
     artifacts_root = FULL_ARTIFACTS_ROOT.resolve()
     if run.parent != artifacts_root or not run.name.startswith("fold2-full-"):
         raise ValueError("finalize-existing run is outside the full-fold artifact root")
-    if (run / "completed.json").exists():
-        raise FileExistsError("finalize-existing refuses an already completed run")
+    existing_completed = (run / "completed.json").exists()
+    if existing_completed:
+        completed_before = json.loads(
+            (run / "completed.json").read_text(encoding="utf-8")
+        )
+        if (
+            not isinstance(completed_before, Mapping)
+            or completed_before.get("status") != "pass"
+            or completed_before.get("exit_code") != 0
+            or completed_before.get("finalized_existing") is not True
+            or completed_before.get("observer_recovery") is not True
+            or not (run / "observer-recovery.json").is_file()
+        ):
+            raise ValueError("completed run lacks the authorized observer recovery lineage")
     failure_path = run / "failure.json"
     failure_bytes = failure_path.read_bytes()
     failure = json.loads(failure_bytes.decode("utf-8"))
@@ -430,6 +544,7 @@ def finalize_existing_run(run_directory: Path) -> dict[str, object]:
     pid = started.get("pid")
     if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0:
         raise ValueError("started.pid must be a positive integer")
+    raw_before = capture_full_raw_manifest(run)
     result = parse_full_result(run)
     if (
         result.get("status") != "pass"
@@ -438,9 +553,23 @@ def finalize_existing_run(run_directory: Path) -> dict[str, object]:
         or "test_AP" not in result["test_metrics"]
     ):
         raise ValueError("finalize-existing reconstructed result is incomplete")
+    raw_after = capture_full_raw_manifest(run)
+    if raw_before != raw_after:
+        raise ValueError("fixed raw evidence changed during offline finalization")
+    finalized_utc = datetime.now(timezone.utc).isoformat()
+    raw_seal = {
+        "status": "pass",
+        "sealed_utc": finalized_utc,
+        "seal_scope": RAW_SEAL_SCOPE,
+        "scientific_child_relaunched": False,
+        "before": raw_before,
+        "after": raw_after,
+    }
+    raw_seal_path = run / "raw-evidence-seal.json"
+    write_json_atomic(raw_seal_path, raw_seal)
+    result["raw_evidence_seal_sha256"] = _sha256(raw_seal_path)
     result_path = run / "full-result.json"
     write_json_atomic(result_path, result)
-    finalized_utc = datetime.now(timezone.utc).isoformat()
     recovery = {
         "status": "pass",
         "recovery_type": "observer_parser_finalize_existing",
@@ -454,6 +583,11 @@ def finalize_existing_run(run_directory: Path) -> dict[str, object]:
         "test_AP": result["test_metrics"]["test_AP"],
         "previous_failure_preserved": True,
         "scientific_child_relaunched": False,
+        "offline_refinalization": existing_completed,
+        "retrospective_raw_integrity_claim": False,
+        "raw_evidence_seal_sha256": result["raw_evidence_seal_sha256"],
+        "raw_evidence_before_equals_after": True,
+        "raw_evidence_scope": RAW_SEAL_SCOPE,
     }
     write_json_atomic(run / "observer-recovery.json", recovery)
     write_json_atomic(

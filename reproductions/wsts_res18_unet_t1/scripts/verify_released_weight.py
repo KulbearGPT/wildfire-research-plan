@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import math
 import re
+import statistics
 import subprocess
 from collections.abc import Mapping
 from collections.abc import Sequence
+from datetime import datetime
 from pathlib import Path
 
 from verify_calibration import (
@@ -57,6 +60,52 @@ EXPECTED_WEIGHT_ROOT = (
     / "reproductions"
     / "wsts-res18-t1-official-weight"
 )
+EXPECTED_RELEASED_WEIGHT_FILENAMES = (
+    "fold0_testAP0.528.pth",
+    "fold1_testAP0.426.pth",
+    "fold2_testAP0.571.pth",
+    "fold3_testAP0.307.pth",
+    "fold4_testAP0.483.pth",
+    "fold5_testAP0.322.pth",
+    "fold6_testAP0.577.pth",
+    "fold7_testAP0.474.pth",
+    "fold8_testAP0.478.pth",
+    "fold9_testAP0.471.pth",
+    "fold10_testAP0.324.pth",
+    "fold11_testAP0.474.pth",
+)
+WEIGHT_PREFIX = "trained_model_weights/Res18Unet_T1/All/"
+EXPECTED_REVISION = "acf70a37394849f4ec8d108a51d6f4325a554d0a"
+FILENAME_PROVENANCE = (
+    "derived only from filenames in the pinned official All/T=1 weight manifest; "
+    "not provenance for the paper table"
+)
+EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256 = (
+    "de60464477f74d324bd2fadb451526814bc729fa71d1eeb167f53340626e080b"
+)
+EXPECTED_TEST_METRICS = {
+    "test_AP",
+    "test_f1",
+    "test_iou",
+    "test_loss",
+    "test_precision",
+    "test_recall",
+}
+WEIGHT_RAW_RELATIVE_PATHS = (
+    "stdout.log",
+    "stderr.log",
+    "stream-events.jsonl",
+    "gpu.csv",
+    "exit-code.txt",
+    "started.json",
+    "config.yaml",
+    "source-data-pre.json",
+    "source-data-post.json",
+    "launch.lock.json",
+    "preflight.json",
+    "effective-command.json",
+    "official-test-pr-curve-data.npz",
+)
 
 
 def _command_sha256(command: Sequence[str]) -> str:
@@ -65,6 +114,139 @@ def _command_sha256(command: Sequence[str]) -> str:
             "utf-8"
         )
     ).hexdigest()
+
+
+def derive_filename_manifest_evidence() -> dict[str, object]:
+    values = [
+        float(re.fullmatch(r"fold\d+_testAP(0\.\d+)\.pth", name).group(1))
+        for name in EXPECTED_RELEASED_WEIGHT_FILENAMES
+    ]
+    return {
+        "revision": EXPECTED_REVISION,
+        "prefix": WEIGHT_PREFIX,
+        "filenames": list(EXPECTED_RELEASED_WEIGHT_FILENAMES),
+        "aggregate": {
+            "count": len(values),
+            "mean": sum(values) / len(values),
+            "population_std": statistics.pstdev(values),
+        },
+        "paper_table_provenance": False,
+        "provenance_note": FILENAME_PROVENANCE,
+    }
+
+
+def validate_test_metrics(metrics: Mapping[str, object]) -> dict[str, float]:
+    if set(metrics) != EXPECTED_TEST_METRICS:
+        raise ValueError("independent verifier requires six legal test metrics")
+    values = {name: float(value) for name, value in metrics.items()}
+    if any(not math.isfinite(value) for value in values.values()):
+        raise ValueError("independent verifier requires six legal test metrics")
+    if values["test_loss"] < 0 or any(
+        not 0.0 <= value <= 1.0
+        for name, value in values.items()
+        if name != "test_loss"
+    ):
+        raise ValueError("independent verifier requires six legal test metrics")
+    return values
+
+
+def reconstruct_observer_statistics(
+    started_utc: str,
+    exit_mtime_ns: int,
+    gpu_rows: Sequence[Mapping[str, str]],
+) -> dict[str, object]:
+    try:
+        start = datetime.fromisoformat(started_utc).timestamp()
+    except (TypeError, ValueError) as error:
+        raise ValueError("independent weight start timestamp is invalid") from error
+    wall = exit_mtime_ns / 1_000_000_000 - start
+    if not math.isfinite(wall) or wall <= 0 or len(gpu_rows) < 2:
+        raise ValueError("independent weight observer evidence is incomplete")
+    observer = [float(row["observer_seconds"]) for row in gpu_rows]
+    used = [float(row["memory_used_mib"]) for row in gpu_rows]
+    utilization = [float(row["utilization_gpu_percent"]) for row in gpu_rows]
+    child = [float(row["child_memory_mib"]) for row in gpu_rows]
+    if not all(
+        math.isfinite(value) and value >= 0
+        for value in [*observer, *used, *utilization, *child]
+    ):
+        raise ValueError("independent weight GPU sample is invalid")
+    intervals = [current - previous for previous, current in zip(observer, observer[1:])]
+    if any(interval <= 0 for interval in intervals):
+        raise ValueError("independent weight GPU timestamps do not strictly increase")
+    span = observer[-1] - observer[0]
+    child_available = any(value > 0 for value in child)
+    return {
+        "wall_seconds": float(wall),
+        "gpu_sample_count": float(len(gpu_rows)),
+        "gpu_interval_count": len(intervals),
+        "gpu_interval_mean_seconds": float(statistics.mean(intervals)),
+        "gpu_interval_median_seconds": float(statistics.median(intervals)),
+        "gpu_observed_effective_hz": float(len(intervals) / span),
+        "gpu_peak_is_observed_sample_max": True,
+        "gpu_peak_may_miss_between_sample_transients": True,
+        "peak_gpu_used_mib": float(max(used)),
+        "peak_child_process_mib": float(max(child)) if child_available else None,
+        "child_process_memory_available": child_available,
+        "gpu_utilization_min_percent": float(min(utilization)),
+        "gpu_utilization_median_percent": float(statistics.median(utilization)),
+        "gpu_utilization_max_percent": float(max(utilization)),
+    }
+
+
+def capture_weight_raw_manifest(
+    run_directory: Path, weight_path: Path
+) -> dict[str, object]:
+    run = run_directory.resolve()
+    entries: list[dict[str, object]] = []
+    for relative in WEIGHT_RAW_RELATIVE_PATHS:
+        path = run / relative
+        if not path.is_file():
+            raise ValueError(f"independent weight raw evidence is missing: {relative}")
+        entries.append(
+            {"path": relative, "bytes": path.stat().st_size, "sha256": _sha256(path)}
+        )
+    weight = weight_path.resolve()
+    entries.append(
+        {
+            "path": "released-weight::" + str(weight),
+            "bytes": weight.stat().st_size,
+            "sha256": _sha256(weight),
+        }
+    )
+    return {"schema_version": 1, "entry_count": len(entries), "entries": entries}
+
+
+def verify_first_verifier_failure(run_directory: Path) -> dict[str, bool]:
+    marker_path = run_directory.resolve() / "independent-verifier-first-failure.json"
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    expected = {
+        "status": "fail",
+        "failure_stage": "independent_verifier_postprocess",
+        "error": "ValueError: released-weight finite test metrics are missing",
+        "scientific_child_exit_code": 0,
+        "scientific_child_relaunched": False,
+        "retrospective_documentation": True,
+    }
+    if not isinstance(marker, Mapping) or any(
+        marker.get(field) != value for field, value in expected.items()
+    ):
+        raise ValueError("first verifier failure evidence mismatch")
+    return {"first_verifier_failure_preserved": True}
+
+
+def build_weight_provenance_contract() -> tuple[dict[str, Path], dict[str, str]]:
+    return (
+        {
+            "upstream.lock.json": REPRODUCTION_ROOT / "upstream.lock.json",
+            "smoke.json": EXPECTED_WORKER_SMOKE,
+            "official_weight_entrypoint.py": Path(__file__).with_name(
+                "official_weight_entrypoint.py"
+            ),
+            "res18_import_scope.patch": EXPECTED_PATCH,
+        },
+        {"evaluate_released_weight.py": EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256},
+    )
 
 
 def build_expected_weight_command(
@@ -165,8 +347,7 @@ def reconstruct_weight_evidence(output: str, exit_code: int) -> dict[str, object
         if name in metrics:
             raise ValueError(f"released-weight duplicate test metric: {name}")
         metrics[name] = float(raw)
-    if "test_AP" not in metrics or not all(math.isfinite(value) for value in metrics.values()):
-        raise ValueError("released-weight finite test metrics are missing")
+    metrics = validate_test_metrics(metrics)
     peak = re.findall(r"(?m)^WSTS_OBSERVER_PEAK_ALLOCATED_BYTES=(\d+)\s*$", output)
     if len(peak) != 1 or int(peak[0]) <= 0:
         raise ValueError("released-weight peak allocation evidence is missing")
@@ -273,22 +454,16 @@ def _verify_weight_runtime_provenance(
     }.items():
         if runtime_patch.get(field) != expected:
             raise ValueError(f"weight preflight runtime_patch.{field} mismatch")
-    authoritative_sources = {
-        "upstream.lock.json": REPRODUCTION_ROOT / "upstream.lock.json",
-        "smoke.json": EXPECTED_WORKER_SMOKE,
-        "official_weight_entrypoint.py": Path(__file__).with_name(
-            "official_weight_entrypoint.py"
-        ),
-        "evaluate_released_weight.py": Path(__file__).with_name(
-            "evaluate_released_weight.py"
-        ),
-        "res18_import_scope.patch": patch,
-    }
+    authoritative_sources, launch_time_hashes = build_weight_provenance_contract()
     recorded_hashes = effective.get("provenance_sha256")
     if not isinstance(recorded_hashes, Mapping):
         raise ValueError("weight effective provenance hash manifest is missing")
     validate_provenance_copies(
-        run / "provenance", recorded_hashes, authoritative_sources, actual_diff
+        run / "provenance",
+        recorded_hashes,
+        authoritative_sources,
+        actual_diff,
+        launch_time_hashes=launch_time_hashes,
     )
     return {
         "original_upstream_commit": original_commit,
@@ -300,7 +475,32 @@ def _verify_weight_runtime_provenance(
     }
 
 
-def _verify_full_dependency(preflight: Mapping[str, object]) -> dict[str, object]:
+def validate_full_dependency_augmentation(
+    run: Path,
+    launch_recorded: object,
+    current: Mapping[str, object],
+) -> None:
+    marker = json.loads(
+        (run.resolve() / "offline-full-dependency-augmentation.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    expected = {
+        "status": "pass",
+        "augmentation_scope": "offline current full-run dependency hashes only",
+        "launch_recorded_dependency": launch_recorded,
+        "current_dependency": dict(current),
+        "scientific_child_relaunched": False,
+    }
+    if not isinstance(marker, Mapping) or any(
+        marker.get(field) != value for field, value in expected.items()
+    ):
+        raise ValueError("full dependency augmentation mismatch")
+
+
+def _verify_full_dependency(
+    run: Path, preflight: Mapping[str, object]
+) -> dict[str, object]:
     lock = json.loads(
         (EXPECTED_FULL_ROOT / "fold2-full-launch.lock.json").read_text(encoding="utf-8")
     )
@@ -324,8 +524,9 @@ def _verify_full_dependency(preflight: Mapping[str, object]) -> dict[str, object
         "independent_sha256": _sha256(independent_path),
         "independent_status": "pass",
     }
-    if preflight.get("full_run_dependency") != expected:
-        raise ValueError("weight preflight full-run dependency provenance mismatch")
+    launch_recorded = preflight.get("full_run_dependency")
+    if launch_recorded != expected:
+        validate_full_dependency_augmentation(run, launch_recorded, expected)
     return expected
 
 
@@ -340,6 +541,8 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
         weight
     ) != EXPECTED_WEIGHT_SHA256:
         raise ValueError("released-weight bytes differ from the pinned Fold-2 weight")
+    raw_before = capture_weight_raw_manifest(run, weight)
+    first_failure = verify_first_verifier_failure(run)
     result = json.loads((run / "weight-result.json").read_text(encoding="utf-8"))
     preflight = json.loads((run / "preflight.json").read_text(encoding="utf-8"))
     effective = json.loads(
@@ -351,6 +554,22 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
     run_lock = json.loads((run / "launch.lock.json").read_text(encoding="utf-8"))
     started = json.loads((run / "started.json").read_text(encoding="utf-8"))
     completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
+    filename_manifest = derive_filename_manifest_evidence()
+    if preflight.get("filename_manifest") != filename_manifest:
+        augmentation_path = run / "offline-preflight-augmentation.json"
+        if not augmentation_path.is_file():
+            raise ValueError("weight preflight filename manifest evidence is missing")
+        augmentation = json.loads(augmentation_path.read_text(encoding="utf-8"))
+        expected_augmentation = {
+            "status": "pass",
+            "augmentation_scope": "offline filename-manifest provenance only",
+            "launch_preflight_sha256": _sha256(run / "preflight.json"),
+            "filename_manifest": filename_manifest,
+            "scientific_child_relaunched": False,
+        }
+        for field, expected in expected_augmentation.items():
+            if augmentation.get(field) != expected:
+                raise ValueError(f"weight offline preflight augmentation mismatch: {field}")
     expected_command = build_expected_weight_command(
         run, EXPECTED_DERIVED_UPSTREAM, weight
     )
@@ -368,7 +587,7 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
         command_hash,
     )
     provenance = _verify_weight_runtime_provenance(run, effective, preflight)
-    full_dependency = _verify_full_dependency(preflight)
+    full_dependency = _verify_full_dependency(run, preflight)
     before = json.loads((run / "source-data-pre.json").read_text(encoding="utf-8"))
     after = json.loads((run / "source-data-post.json").read_text(encoding="utf-8"))
     live = rebuild_live_source_inventory(FIXED_DATA_ROOT)
@@ -378,14 +597,23 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
     ).read_text(encoding="utf-8", errors="replace")
     exit_code = int((run / "exit-code.txt").read_text(encoding="utf-8").strip())
     evidence = reconstruct_weight_evidence(output, exit_code)
+    with (run / "gpu.csv").open(encoding="utf-8", newline="") as handle:
+        gpu_rows = list(csv.DictReader(handle))
+    observer = reconstruct_observer_statistics(
+        str(started.get("started_utc")),
+        (run / "exit-code.txt").stat().st_mtime_ns,
+        gpu_rows,
+    )
     independently_recorded = {
         "status": "pass",
         **evidence,
         "filename_ap": 0.571,
+        "filename_manifest": filename_manifest,
         "weight_path": str(weight),
         "weight_sha256": EXPECTED_WEIGHT_SHA256,
         "command_sha256": command_hash,
         "child_pid": started.get("pid"),
+        **observer,
     }
     summary = validate_weight_result(independently_recorded)
     independently_recorded.update(summary)
@@ -400,18 +628,31 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
         or completed.get("pid") != started.get("pid")
     ):
         raise ValueError("released-weight completion marker mismatch")
+    raw_after = capture_weight_raw_manifest(run, weight)
+    if raw_before != raw_after:
+        raise ValueError("weight raw evidence changed during independent verification")
+    raw_manifest_sha = hashlib.sha256(
+        json.dumps(raw_before, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
     return {
         "status": "pass",
         "command_sha256": command_hash,
         "weight_sha256": EXPECTED_WEIGHT_SHA256,
         "loaded_tensor_count": evidence["loaded_tensor_count"],
         "test_metrics": evidence["test_metrics"],
+        "filename_manifest": filename_manifest,
+        "filename_aggregate": filename_manifest["aggregate"],
+        **observer,
+        "raw_evidence_manifest": raw_before,
+        "raw_evidence_manifest_sha256": raw_manifest_sha,
+        "raw_evidence_unchanged_during_verification": True,
         "data_inventory_live_verified": True,
         "data_file_count": before["file_count"],
         "data_total_bytes": before["total_bytes"],
         "full_run_dependency": full_dependency,
         **summary,
         **provenance,
+        **first_failure,
         "independent_implementation": True,
     }
 

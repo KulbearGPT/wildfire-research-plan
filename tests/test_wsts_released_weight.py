@@ -90,8 +90,11 @@ def test_manifest_selects_exact_pinned_fold2_weight_and_aggregate() -> None:
     )
     aggregate = summarize_filename_aps(FILENAMES)
     assert aggregate["count"] == 12
-    assert aggregate["mean"] == pytest.approx(0.4529166666666667)
-    assert aggregate["population_std"] == pytest.approx(0.0882717946017992)
+    assert aggregate["mean"] == 0.45291666666666663
+    assert aggregate["population_std"] == 0.08827179460179917
+    assert selected["filename_manifest"]["filenames"] == FILENAMES
+    assert selected["filename_manifest"]["aggregate"] == aggregate
+    assert selected["filename_manifest"]["paper_table_provenance"] is False
 
 
 def test_manifest_rejects_missing_duplicate_or_wrong_fold2_hash() -> None:
@@ -151,6 +154,10 @@ def test_weight_output_requires_strict_load_and_test_without_fit_or_validation()
         "Testing DataLoader 0: 100%|##########| 156/156\n"
         "│ test_AP │ 0.5708 │\n"
         "│ test_f1 │ 0.4 │\n"
+        "        test_iou            0.3\n"
+        "        test_loss           0.01\n"
+        "        test_precision      0.5\n"
+        "        test_recall         0.5\n"
         "WSTS_OBSERVER_PEAK_ALLOCATED_BYTES=1700000000\n"
     )
 
@@ -296,6 +303,10 @@ def test_independent_weight_verifier_reconstructs_raw_strict_test_evidence() -> 
         "Testing DataLoader 0: 100%|##########| 156/156\n"
         "│ test_AP │ 0.5708 │\n"
         "│ test_f1 │ 0.4 │\n"
+        "        test_iou            0.3\n"
+        "        test_loss           0.01\n"
+        "        test_precision      0.5\n"
+        "        test_recall         0.5\n"
         "WSTS_OBSERVER_PEAK_ALLOCATED_BYTES=1700000000\n"
     )
 
@@ -306,7 +317,14 @@ def test_independent_weight_verifier_reconstructs_raw_strict_test_evidence() -> 
         "train_invoked": False,
         "validation_invoked": False,
         "predict_invoked": False,
-        "test_metrics": {"test_AP": pytest.approx(0.5708), "test_f1": pytest.approx(0.4)},
+        "test_metrics": {
+            "test_AP": pytest.approx(0.5708),
+            "test_f1": pytest.approx(0.4),
+            "test_iou": pytest.approx(0.3),
+            "test_loss": pytest.approx(0.01),
+            "test_precision": pytest.approx(0.5),
+            "test_recall": pytest.approx(0.5),
+        },
         "peak_allocated_bytes": 1_700_000_000,
     }
 
@@ -343,3 +361,237 @@ def test_independent_weight_verifier_parses_windows_borderless_lightning_table()
         "test_precision": pytest.approx(0.7646416425704956),
         "test_recall": pytest.approx(0.3024023771286011),
     }
+
+
+def test_weight_verifier_independently_derives_filename_manifest_aggregate() -> None:
+    evidence = weight_verifier.derive_filename_manifest_evidence()
+
+    assert evidence["filenames"] == FILENAMES
+    assert evidence["aggregate"] == {
+        "count": 12,
+        "mean": 0.45291666666666663,
+        "population_std": 0.08827179460179917,
+    }
+    assert evidence["paper_table_provenance"] is False
+
+
+def test_weight_verifier_reconstructs_wall_gpu_and_preserves_raw_manifest(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "fold2-weight-terminal"
+    run.mkdir()
+    raw_names = (
+        "stdout.log",
+        "stderr.log",
+        "stream-events.jsonl",
+        "gpu.csv",
+        "exit-code.txt",
+        "started.json",
+        "config.yaml",
+        "source-data-pre.json",
+        "source-data-post.json",
+        "launch.lock.json",
+        "preflight.json",
+        "effective-command.json",
+        "official-test-pr-curve-data.npz",
+    )
+    for index, name in enumerate(raw_names):
+        (run / name).write_bytes(f"raw-{index}\n".encode())
+    weight = tmp_path / "fold2_testAP0.571.pth"
+    weight.write_bytes(b"weight")
+    before = weight_verifier.capture_weight_raw_manifest(run, weight)
+    rows = [
+        {
+            "observer_seconds": "0.0",
+            "memory_used_mib": "100",
+            "utilization_gpu_percent": "10",
+            "child_memory_mib": "0",
+        },
+        {
+            "observer_seconds": "1.0",
+            "memory_used_mib": "120",
+            "utilization_gpu_percent": "50",
+            "child_memory_mib": "0",
+        },
+        {
+            "observer_seconds": "2.0",
+            "memory_used_mib": "110",
+            "utilization_gpu_percent": "30",
+            "child_memory_mib": "0",
+        },
+    ]
+
+    observer = weight_verifier.reconstruct_observer_statistics(
+        "2026-08-10T00:00:00+00:00", 1_786_320_010_000_000_000, rows
+    )
+    after = weight_verifier.capture_weight_raw_manifest(run, weight)
+
+    assert before == after
+    assert observer["wall_seconds"] == pytest.approx(10.0)
+    assert observer["gpu_sample_count"] == 3.0
+    assert observer["gpu_observed_effective_hz"] == pytest.approx(1.0)
+    assert observer["peak_gpu_used_mib"] == 120.0
+    (run / "stdout.log").write_bytes(b"tampered")
+    assert weight_verifier.capture_weight_raw_manifest(run, weight) != before
+
+
+@pytest.mark.parametrize(
+    "metrics",
+    [
+        {
+            "test_AP": float("nan"),
+            "test_f1": 0.4,
+            "test_iou": 0.3,
+            "test_loss": 0.01,
+            "test_precision": 0.5,
+            "test_recall": 0.5,
+        },
+        {
+            "test_AP": 0.5,
+            "test_f1": 0.4,
+            "test_iou": 0.3,
+            "test_loss": -0.01,
+            "test_precision": 0.5,
+            "test_recall": 0.5,
+        },
+        {
+            "test_AP": 0.5,
+            "test_f1": 0.4,
+            "test_iou": 0.3,
+            "test_loss": 0.01,
+            "test_precision": 0.5,
+        },
+    ],
+)
+def test_weight_verifier_requires_six_finite_legal_metrics(
+    metrics: dict[str, float],
+) -> None:
+    with pytest.raises(ValueError, match="six legal test metrics"):
+        weight_verifier.validate_test_metrics(metrics)
+
+
+def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_preflight(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    artifact_root = tmp_path / "wsts-res18-t1-official-weight"
+    run = artifact_root / "fold2-weight-terminal"
+    run.mkdir(parents=True)
+    preflight = run / "preflight.json"
+    preflight.write_text(json.dumps({"status": "pass"}), encoding="utf-8")
+    preflight_before = preflight.read_bytes()
+    (run / "completed.json").write_text(
+        json.dumps({"status": "pass", "exit_code": 0, "pid": 37668}),
+        encoding="utf-8",
+    )
+    (run / "exit-code.txt").write_text("0\n", encoding="utf-8")
+    (run / "started.json").write_text(
+        json.dumps({"pid": 37668, "command_sha256": "command-sha"}), encoding="utf-8"
+    )
+    (run / "effective-command.json").write_text(
+        json.dumps({"command_sha256": "command-sha"}), encoding="utf-8"
+    )
+    result = {
+        "status": "pass",
+        "exit_code": 0,
+        "strict_load": True,
+        "train_invoked": False,
+        "validation_invoked": False,
+        "predict_invoked": False,
+        "test_metrics": {
+            "test_AP": 0.5709,
+            "test_f1": 0.4,
+            "test_iou": 0.3,
+            "test_loss": 0.01,
+            "test_precision": 0.5,
+            "test_recall": 0.5,
+        },
+        "filename_manifest": weight_controller.build_filename_manifest_evidence(),
+    }
+    monkeypatch.setattr(weight_controller, "WEIGHT_ARTIFACTS_ROOT", artifact_root)
+    monkeypatch.setattr(weight_controller, "parse_weight_run", lambda _: dict(result))
+
+    expected = {
+        **result,
+        "command_sha256": "command-sha",
+        "child_pid": 37668,
+    }
+    finalized = weight_controller.finalize_existing_weight(run)
+
+    assert finalized == expected
+    assert preflight.read_bytes() == preflight_before
+    augmentation = json.loads(
+        (run / "offline-preflight-augmentation.json").read_text(encoding="utf-8")
+    )
+    assert augmentation["filename_manifest"] == result["filename_manifest"]
+    assert augmentation["scientific_child_relaunched"] is False
+    assert augmentation["launch_preflight_sha256"] == hashlib.sha256(
+        preflight_before
+    ).hexdigest()
+
+
+def test_weight_verifier_requires_preserved_first_parser_failure(tmp_path: Path) -> None:
+    run = tmp_path / "fold2-weight-terminal"
+    run.mkdir()
+    marker = {
+        "status": "fail",
+        "failure_stage": "independent_verifier_postprocess",
+        "error": "ValueError: released-weight finite test metrics are missing",
+        "scientific_child_exit_code": 0,
+        "scientific_child_relaunched": False,
+        "retrospective_documentation": True,
+    }
+    (run / "independent-verifier-first-failure.json").write_text(
+        json.dumps(marker), encoding="utf-8"
+    )
+
+    assert weight_verifier.verify_first_verifier_failure(run) == {
+        "first_verifier_failure_preserved": True
+    }
+    marker["scientific_child_relaunched"] = True
+    (run / "independent-verifier-first-failure.json").write_text(
+        json.dumps(marker), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="first verifier failure evidence mismatch"):
+        weight_verifier.verify_first_verifier_failure(run)
+
+
+def test_weight_provenance_classifies_controller_as_launch_time_copy() -> None:
+    authoritative, launch_time = weight_verifier.build_weight_provenance_contract()
+
+    assert "evaluate_released_weight.py" not in authoritative
+    assert launch_time == {
+        "evaluate_released_weight.py": (
+            "de60464477f74d324bd2fadb451526814bc729fa71d1eeb167f53340626e080b"
+        )
+    }
+
+
+def test_weight_verifier_accepts_only_explicit_offline_full_dependency_augmentation(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "fold2-weight-terminal"
+    run.mkdir()
+    launch_recorded = {"result_sha256": "old", "independent_sha256": "old-independent"}
+    current = {"result_sha256": "new", "independent_sha256": "new-independent"}
+    marker = {
+        "status": "pass",
+        "augmentation_scope": "offline current full-run dependency hashes only",
+        "launch_recorded_dependency": launch_recorded,
+        "current_dependency": current,
+        "scientific_child_relaunched": False,
+    }
+    (run / "offline-full-dependency-augmentation.json").write_text(
+        json.dumps(marker), encoding="utf-8"
+    )
+
+    weight_verifier.validate_full_dependency_augmentation(
+        run, launch_recorded, current
+    )
+    marker["scientific_child_relaunched"] = True
+    (run / "offline-full-dependency-augmentation.json").write_text(
+        json.dumps(marker), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="full dependency augmentation mismatch"):
+        weight_verifier.validate_full_dependency_augmentation(
+            run, launch_recorded, current
+        )

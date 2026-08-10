@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
+import math
 import re
+import statistics
 import subprocess
 from collections.abc import Mapping, Sequence
+from datetime import datetime
 from pathlib import Path
 
 from verify_calibration import (
@@ -45,6 +49,31 @@ EXPECTED_LAUNCH_RUNNER_SHA256 = (
 EXPECTED_OBSERVER_TEST_METRIC_FAILURE = (
     "ValueError: test_AP is missing from the Lightning test table"
 )
+FULL_RAW_RELATIVE_PATHS = (
+    "stdout.log",
+    "stderr.log",
+    "stream-events.jsonl",
+    "gpu.csv",
+    "exit-code.txt",
+    "started.json",
+    "config.yaml",
+    "source-data-pre.json",
+    "source-data-post.json",
+    "launch.lock.json",
+    "preflight.json",
+    "effective-command.json",
+    "failure.json",
+)
+RAW_SEAL_SCOPE = "current offline re-finalization; not retrospective proof"
+TRAIN_PROGRESS = re.compile(r"\bEpoch\s+(\d+):.*?(\d+)\s*/\s*(\d+)")
+EXPECTED_TEST_METRICS = {
+    "test_AP",
+    "test_f1",
+    "test_iou",
+    "test_loss",
+    "test_precision",
+    "test_recall",
+}
 
 
 def _sha256(path: Path) -> str:
@@ -59,6 +88,200 @@ def _command_sha256(command: Sequence[str]) -> str:
     return hashlib.sha256(
         json.dumps(list(command), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
+
+
+def _event_rows(event_text: str) -> list[tuple[float, str]]:
+    rows: list[tuple[float, str]] = []
+    for line_number, line in enumerate(event_text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            payload = json.loads(line)
+            seconds = float(payload["seconds"])
+            fragment = payload["text"]
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            raise ValueError(f"invalid independent stream event on line {line_number}") from error
+        if not math.isfinite(seconds) or not isinstance(fragment, str):
+            raise ValueError("independent stream event fields are invalid")
+        if rows and seconds < rows[-1][0]:
+            raise ValueError("independent stream event timestamps regress")
+        rows.append((seconds, fragment))
+    return rows
+
+
+def reconstruct_optimizer_steps(event_text: str) -> int:
+    current_epoch: int | None = None
+    epoch_total: int | None = None
+    epoch_position: int | None = None
+    offset = 0
+    observed: int | None = None
+    for _, fragment in _event_rows(event_text):
+        if "Validation DataLoader" in fragment or "Sanity Checking" in fragment:
+            continue
+        match = TRAIN_PROGRESS.search(fragment)
+        if match is None:
+            continue
+        epoch, position, total = map(int, match.groups())
+        if total <= 0 or position < 0 or position > total:
+            raise ValueError("independent optimizer progress values are invalid")
+        if current_epoch is None:
+            current_epoch, epoch_total = epoch, total
+        elif epoch == current_epoch:
+            if total != epoch_total:
+                raise ValueError("independent epoch denominator changed")
+            if epoch_position == epoch_total and position == 0:
+                continue
+            if epoch_position is not None and position < epoch_position:
+                raise ValueError("independent optimizer progress regressed")
+        elif epoch == current_epoch + 1:
+            if epoch_position != epoch_total:
+                raise ValueError("independent next epoch began before completion")
+            offset += int(epoch_total)
+            current_epoch, epoch_total, epoch_position = epoch, total, None
+        else:
+            raise ValueError("independent epoch sequence is discontinuous")
+        step = offset + position
+        epoch_position = position
+        if observed is not None and step < observed:
+            raise ValueError("independent global optimizer step regressed")
+        if observed is None or step > observed:
+            observed = step
+    if observed is None:
+        raise ValueError("independent optimizer progress evidence is missing")
+    return observed
+
+
+def reconstruct_observer_statistics(
+    started_utc: str,
+    exit_mtime_ns: int,
+    gpu_rows: Sequence[Mapping[str, str]],
+) -> dict[str, object]:
+    try:
+        started_seconds = datetime.fromisoformat(started_utc).timestamp()
+    except (TypeError, ValueError) as error:
+        raise ValueError("independent started timestamp is invalid") from error
+    wall = exit_mtime_ns / 1_000_000_000 - started_seconds
+    if not math.isfinite(wall) or wall <= 0:
+        raise ValueError("independent wall time is invalid")
+    if len(gpu_rows) < 2:
+        raise ValueError("independent GPU evidence needs at least two samples")
+    observer = [float(row["observer_seconds"]) for row in gpu_rows]
+    used = [float(row["memory_used_mib"]) for row in gpu_rows]
+    utilization = [float(row["utilization_gpu_percent"]) for row in gpu_rows]
+    child = [float(row["child_memory_mib"]) for row in gpu_rows]
+    if not all(
+        math.isfinite(value) and value >= 0
+        for value in [*observer, *used, *utilization, *child]
+    ):
+        raise ValueError("independent GPU sample is invalid")
+    intervals = [current - previous for previous, current in zip(observer, observer[1:])]
+    if any(interval <= 0 for interval in intervals):
+        raise ValueError("independent GPU timestamps do not strictly increase")
+    span = observer[-1] - observer[0]
+    child_available = any(value > 0 for value in child)
+    return {
+        "wall_seconds": float(wall),
+        "wall_hours": float(wall / 3600),
+        "gpu_sample_count": float(len(gpu_rows)),
+        "gpu_interval_count": len(intervals),
+        "gpu_interval_mean_seconds": float(statistics.mean(intervals)),
+        "gpu_interval_median_seconds": float(statistics.median(intervals)),
+        "gpu_observed_effective_hz": float(len(intervals) / span),
+        "gpu_peak_is_observed_sample_max": True,
+        "gpu_peak_may_miss_between_sample_transients": True,
+        "peak_gpu_used_mib": float(max(used)),
+        "peak_child_process_mib": float(max(child)) if child_available else None,
+        "child_process_memory_available": child_available,
+        "gpu_utilization_min_percent": float(min(utilization)),
+        "gpu_utilization_median_percent": float(statistics.median(utilization)),
+        "gpu_utilization_max_percent": float(max(utilization)),
+    }
+
+
+def validate_test_metrics(metrics: Mapping[str, object]) -> dict[str, float]:
+    if set(metrics) != EXPECTED_TEST_METRICS:
+        raise ValueError("independent verifier requires six legal test metrics")
+    values = {name: float(value) for name, value in metrics.items()}
+    if any(not math.isfinite(value) for value in values.values()):
+        raise ValueError("independent verifier requires six legal test metrics")
+    if values["test_loss"] < 0 or any(
+        not 0.0 <= value <= 1.0
+        for name, value in values.items()
+        if name != "test_loss"
+    ):
+        raise ValueError("independent verifier requires six legal test metrics")
+    return values
+
+
+def validate_checkpoint_metadata(payload: Mapping[str, object]) -> dict[str, object]:
+    epoch = payload.get("epoch")
+    global_step = payload.get("global_step")
+    version = payload.get("pytorch-lightning_version")
+    if type(epoch) is not int or epoch < 0 or type(global_step) is not int or global_step <= 0:
+        raise ValueError("independent checkpoint epoch/global_step is invalid")
+    if not isinstance(version, str) or not version:
+        raise ValueError("independent checkpoint Lightning version is missing")
+    return {
+        "best_epoch": epoch,
+        "best_checkpoint_global_step": global_step,
+        "checkpoint_lightning_version": version,
+    }
+
+
+def read_checkpoint_metadata(checkpoint: Path) -> dict[str, object]:
+    import torch
+
+    payload = torch.load(checkpoint.resolve(), map_location="cpu")
+    if not isinstance(payload, Mapping):
+        raise ValueError("independent checkpoint payload must be a mapping")
+    return validate_checkpoint_metadata(payload)
+
+
+def reconstruct_displayed_validation_ap(event_text: str, best_epoch: int) -> float:
+    value: float | None = None
+    pattern = re.compile(
+        rf"\bEpoch\s+{best_epoch}:.*?(\d+)\s*/\s*(\d+).*?"
+        r"val_avg_precision=([-+]?(?:\d+(?:\.\d*)?|\.\d+))"
+    )
+    for _, fragment in _event_rows(event_text):
+        match = pattern.search(fragment)
+        if match is not None and int(match.group(1)) == int(match.group(2)):
+            value = float(match.group(3))
+    if value is None or not math.isfinite(value) or not 0.0 <= value <= 1.0:
+        raise ValueError("independent displayed validation AP is missing or invalid")
+    return value
+
+
+def capture_full_raw_manifest(run_directory: Path) -> dict[str, object]:
+    run = run_directory.resolve()
+    checkpoints = sorted(run.rglob("*.ckpt"))
+    if len(checkpoints) != 1:
+        raise ValueError("independent raw evidence requires exactly one checkpoint")
+    relative_paths = [*FULL_RAW_RELATIVE_PATHS, checkpoints[0].relative_to(run).as_posix()]
+    entries: list[dict[str, object]] = []
+    for relative in relative_paths:
+        path = run / Path(relative)
+        if not path.is_file():
+            raise ValueError(f"independent fixed raw evidence file is missing: {relative}")
+        entries.append(
+            {"path": relative, "bytes": path.stat().st_size, "sha256": _sha256(path)}
+        )
+    return {"schema_version": 1, "entry_count": len(entries), "entries": entries}
+
+
+def verify_full_raw_seal(
+    run_directory: Path, seal: Mapping[str, object]
+) -> dict[str, bool]:
+    if (
+        seal.get("status") != "pass"
+        or seal.get("seal_scope") != RAW_SEAL_SCOPE
+        or seal.get("scientific_child_relaunched") is not False
+        or seal.get("before") != seal.get("after")
+    ):
+        raise ValueError("full raw evidence seal contract mismatch")
+    if seal.get("after") != capture_full_raw_manifest(run_directory):
+        raise ValueError("full raw evidence manifest mismatch")
+    return {"raw_evidence_seal_verified": True}
 
 
 def build_expected_full_command(run_directory: Path, derived_root: Path) -> list[str]:
@@ -257,10 +480,16 @@ def verify_completion_lineage(
         "test_AP": test_metrics["test_AP"],
         "previous_failure_preserved": True,
         "scientific_child_relaunched": False,
+        "retrospective_raw_integrity_claim": False,
+        "raw_evidence_seal_sha256": recorded.get("raw_evidence_seal_sha256"),
+        "raw_evidence_before_equals_after": True,
+        "raw_evidence_scope": RAW_SEAL_SCOPE,
     }
     for field, expected in expected_recovery.items():
         if recovery.get(field) != expected:
             raise ValueError(f"observer recovery field mismatch: {field}")
+    if not isinstance(recovery.get("offline_refinalization"), bool):
+        raise ValueError("observer recovery offline_refinalization must be boolean")
     if (
         completed.get("finalized_existing") is not True
         or completed.get("observer_recovery") is not True
@@ -303,9 +532,7 @@ def _parse_metrics(output: str) -> dict[str, float]:
         if name in values:
             raise ValueError(f"independent verifier found duplicate test metric: {name}")
         values[name] = value
-    if "test_AP" not in values:
-        raise ValueError("independent verifier could not reconstruct test_AP")
-    return values
+    return validate_test_metrics(values)
 
 
 def verify_runtime_provenance(
@@ -470,6 +697,8 @@ def verify_run(
     )
     if dynamic_weight["effective_pos_class_weight"] != EXPECTED_EFFECTIVE_POS_CLASS_WEIGHT:
         raise ValueError("effective positive-class weight mismatch")
+    event_text = (run / "stream-events.jsonl").read_text(encoding="utf-8")
+    optimizer_steps = reconstruct_optimizer_steps(event_text)
     output = (run / "stdout.log").read_text(encoding="utf-8", errors="replace") + "\n" + (
         run / "stderr.log"
     ).read_text(encoding="utf-8", errors="replace")
@@ -485,41 +714,72 @@ def verify_run(
     if len(checkpoints) != 1:
         raise ValueError("independent checkpoint inventory is not exactly one")
     metrics = _parse_metrics(output)
-    raw = dict(recorded)
     checkpoint_match = re.search(
         r"best-epoch=(\d+)-val_avg_precision=([0-9.]+)\.ckpt$",
         checkpoints[0].name,
     )
     if checkpoint_match is None:
         raise ValueError("independent best checkpoint filename provenance is missing")
+    checkpoint_metadata = read_checkpoint_metadata(checkpoints[0])
+    if checkpoint_metadata["best_epoch"] != int(checkpoint_match.group(1)):
+        raise ValueError("independent checkpoint epoch differs from filename label")
+    displayed_validation_ap = reconstruct_displayed_validation_ap(
+        event_text, int(checkpoint_match.group(1))
+    )
     peak_matches = re.findall(
         r"(?m)^WSTS_OBSERVER_PEAK_ALLOCATED_BYTES=(\d+)\s*$", output
     )
     if len(peak_matches) != 1 or int(peak_matches[0]) <= 0:
         raise ValueError("independent peak-allocation sentinel is missing or ambiguous")
-    raw["status"] = "pass"
-    raw["fold"] = 2
-    raw["command_sha256"] = command_hash
-    raw["test_metrics"] = metrics
-    raw["best_checkpoint"] = str(checkpoints[0].resolve())
-    raw["checkpoint_sha256"] = _sha256(checkpoints[0])
-    raw["optimizer_steps"] = 10_000
-    raw["best_epoch"] = int(checkpoint_match.group(1))
-    raw["best_validation_AP_from_filename"] = float(checkpoint_match.group(2))
-    raw["peak_allocated_bytes"] = int(peak_matches[0])
-    for field, value in dynamic_weight.items():
-        if field in raw:
-            raw[field] = value
+    with (run / "gpu.csv").open(encoding="utf-8", newline="") as handle:
+        gpu_rows = list(csv.DictReader(handle))
+    observer = reconstruct_observer_statistics(
+        str(started.get("started_utc")),
+        (run / "exit-code.txt").stat().st_mtime_ns,
+        gpu_rows,
+    )
+    seal_path = run / "raw-evidence-seal.json"
+    seal = json.loads(seal_path.read_text(encoding="utf-8"))
+    seal_verified = verify_full_raw_seal(run, seal)
+    seal_sha = _sha256(seal_path)
+    dynamic_recorded = {
+        field: dynamic_weight[field]
+        for field in (
+            "source_yaml_pos_class_weight",
+            "effective_pos_class_weight",
+            "official_dynamic_override",
+        )
+    }
+    raw: dict[str, object] = {
+        "status": "pass",
+        "fold": 2,
+        "optimizer_steps": optimizer_steps,
+        **observer,
+        "best_checkpoint": str(checkpoints[0].resolve()),
+        "checkpoint_sha256": _sha256(checkpoints[0]),
+        **checkpoint_metadata,
+        "best_validation_AP_filename_rounded": float(checkpoint_match.group(2)),
+        "best_validation_AP_displayed": displayed_validation_ap,
+        "command_sha256": command_hash,
+        **dynamic_recorded,
+        "test_metrics": metrics,
+        "peak_allocated_bytes": int(peak_matches[0]),
+        "raw_evidence_seal_sha256": seal_sha,
+    }
     verify_result_summary(raw, recorded)
     return {
         "status": "pass",
         "command_sha256": command_hash,
-        "optimizer_steps": 10_000,
+        "optimizer_steps": optimizer_steps,
         "test_metrics": metrics,
         "checkpoint_sha256": _sha256(checkpoints[0]),
-        "best_epoch": int(checkpoint_match.group(1)),
-        "best_validation_AP_from_filename": float(checkpoint_match.group(2)),
+        **checkpoint_metadata,
+        "best_validation_AP_filename_rounded": float(checkpoint_match.group(2)),
+        "best_validation_AP_displayed": displayed_validation_ap,
         "peak_allocated_bytes": int(peak_matches[0]),
+        **observer,
+        "raw_evidence_seal_sha256": seal_sha,
+        **seal_verified,
         "data_inventory_live_verified": True,
         "data_file_count": source_pre["file_count"],
         "data_total_bytes": source_pre["total_bytes"],

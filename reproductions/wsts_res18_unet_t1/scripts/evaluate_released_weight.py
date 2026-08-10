@@ -70,6 +70,24 @@ WEIGHT_ARTIFACTS_ROOT = (
     / "wsts-res18-t1-official-weight"
 )
 GLOBAL_WEIGHT_LOCK = WEIGHT_ARTIFACTS_ROOT / "fold2-weight-evaluation.lock.json"
+RELEASED_WEIGHT_FILENAMES = (
+    "fold0_testAP0.528.pth",
+    "fold1_testAP0.426.pth",
+    "fold2_testAP0.571.pth",
+    "fold3_testAP0.307.pth",
+    "fold4_testAP0.483.pth",
+    "fold5_testAP0.322.pth",
+    "fold6_testAP0.577.pth",
+    "fold7_testAP0.474.pth",
+    "fold8_testAP0.478.pth",
+    "fold9_testAP0.471.pth",
+    "fold10_testAP0.324.pth",
+    "fold11_testAP0.474.pth",
+)
+FILENAME_PROVENANCE = (
+    "derived only from filenames in the pinned official All/T=1 weight manifest; "
+    "not provenance for the paper table"
+)
 
 
 def summarize_filename_aps(filenames: Sequence[str]) -> dict[str, float | int]:
@@ -93,6 +111,26 @@ def summarize_filename_aps(filenames: Sequence[str]) -> dict[str, float | int]:
     }
 
 
+def build_filename_manifest_evidence(
+    filenames: Sequence[str] = RELEASED_WEIGHT_FILENAMES,
+) -> dict[str, object]:
+    ordered = sorted(
+        filenames,
+        key=lambda name: int(re.fullmatch(r"fold(\d+)_testAP0\.\d+\.pth", name).group(1))
+        if re.fullmatch(r"fold(\d+)_testAP0\.\d+\.pth", name)
+        else -1,
+    )
+    aggregate = summarize_filename_aps(ordered)
+    return {
+        "revision": REVISION,
+        "prefix": WEIGHT_PREFIX,
+        "filenames": ordered,
+        "aggregate": aggregate,
+        "paper_table_provenance": False,
+        "provenance_note": FILENAME_PROVENANCE,
+    }
+
+
 def validate_weight_manifest(
     items: Sequence[Mapping[str, object]],
 ) -> dict[str, object]:
@@ -112,6 +150,9 @@ def validate_weight_manifest(
         if "unique folds" in str(error):
             raise
         raise ValueError(f"released weight manifest is invalid: {error}") from error
+    filename_manifest = build_filename_manifest_evidence(filenames)
+    if filename_manifest["filenames"] != list(RELEASED_WEIGHT_FILENAMES):
+        raise ValueError("released weight filenames differ from the pinned manifest")
     selected = [item for item in matches if item.get("path") == FOLD2_PATH]
     if len(selected) != 1:
         raise ValueError("Fold 2 weight is missing or ambiguous")
@@ -126,6 +167,7 @@ def validate_weight_manifest(
         "lfs_sha256": FOLD2_SHA256,
         "filename_ap": 0.571,
         "filename_aggregate": aggregate,
+        "filename_manifest": filename_manifest,
     }
 
 
@@ -397,6 +439,7 @@ def _preflight(
             "weight_path": str(WEIGHT_CACHE.resolve()),
             "weight_sha256": FOLD2_SHA256,
             "filename_ap": 0.571,
+            "filename_manifest": build_filename_manifest_evidence(),
             "runtime": runtime,
             "gpu": gpu,
             "runtime_patch": runtime_patch,
@@ -460,6 +503,7 @@ def parse_weight_run(run_directory: Path) -> dict[str, object]:
         "predict_invoked": False,
         "test_metrics": evidence["test_metrics"],
         "filename_ap": 0.571,
+        "filename_manifest": build_filename_manifest_evidence(),
         "weight_path": str(WEIGHT_CACHE.resolve()),
         "weight_sha256": FOLD2_SHA256,
         "wall_seconds": wall,
@@ -468,6 +512,78 @@ def parse_weight_run(run_directory: Path) -> dict[str, object]:
     }
     payload.update(validate_weight_result(payload))
     return payload
+
+
+def finalize_existing_weight(run_directory: Path) -> dict[str, object]:
+    run = run_directory.resolve()
+    if run.parent != WEIGHT_ARTIFACTS_ROOT.resolve() or not run.name.startswith(
+        "fold2-weight-"
+    ):
+        raise ValueError("finalize-existing weight run is outside the fixed artifact root")
+    completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
+    if (
+        not isinstance(completed, Mapping)
+        or completed.get("status") != "pass"
+        or completed.get("exit_code") != 0
+        or int((run / "exit-code.txt").read_text(encoding="utf-8").strip()) != 0
+    ):
+        raise ValueError("finalize-existing requires a completed exit-zero weight child")
+    started = json.loads((run / "started.json").read_text(encoding="utf-8"))
+    effective = json.loads((run / "effective-command.json").read_text(encoding="utf-8"))
+    if (
+        not isinstance(started, Mapping)
+        or not isinstance(effective, Mapping)
+        or type(started.get("pid")) is not int
+        or started["pid"] != completed.get("pid")
+        or not isinstance(started.get("command_sha256"), str)
+        or started["command_sha256"] != effective.get("command_sha256")
+    ):
+        raise ValueError("finalize-existing weight launch lineage mismatch")
+    result = parse_weight_run(run)
+    result["command_sha256"] = started["command_sha256"]
+    result["child_pid"] = started["pid"]
+    if result.get("filename_manifest") != build_filename_manifest_evidence():
+        raise ValueError("finalize-existing filename manifest reconstruction failed")
+    write_json_atomic(run / "weight-result.json", result)
+    preflight_path = run / "preflight.json"
+    preflight = json.loads(preflight_path.read_text(encoding="utf-8"))
+    if preflight.get("filename_manifest") != result["filename_manifest"]:
+        write_json_atomic(
+            run / "offline-preflight-augmentation.json",
+            {
+                "status": "pass",
+                "augmentation_scope": "offline filename-manifest provenance only",
+                "launch_preflight_sha256": _sha256(preflight_path),
+                "filename_manifest": result["filename_manifest"],
+                "scientific_child_relaunched": False,
+            },
+        )
+    launch_dependency = preflight.get("full_run_dependency")
+    if isinstance(launch_dependency, Mapping):
+        current_dependency = _full_run_complete()
+        if launch_dependency != current_dependency:
+            write_json_atomic(
+                run / "offline-full-dependency-augmentation.json",
+                {
+                    "status": "pass",
+                    "augmentation_scope": (
+                        "offline current full-run dependency hashes only"
+                    ),
+                    "launch_recorded_dependency": launch_dependency,
+                    "current_dependency": current_dependency,
+                    "scientific_child_relaunched": False,
+                },
+            )
+    write_json_atomic(
+        run / "offline-finalization.json",
+        {
+            "status": "pass",
+            "finalization_scope": "existing scientific output only",
+            "weight_result_sha256": _sha256(run / "weight-result.json"),
+            "scientific_child_relaunched": False,
+        },
+    )
+    return result
 
 
 def _launch_once() -> tuple[Path, dict[str, object]]:
@@ -548,8 +664,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         placeholder.mkdir(parents=True, exist_ok=True)
         result, _ = _preflight(placeholder, require_full_complete=False)
     elif arguments.finalize_existing is not None:
-        result = parse_weight_run(arguments.finalize_existing)
-        write_json_atomic(arguments.finalize_existing / "weight-result.json", result)
+        result = finalize_existing_weight(arguments.finalize_existing)
     else:
         run, result = _launch_once()
         result = {"run_directory": str(run), **result}

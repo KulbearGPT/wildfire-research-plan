@@ -29,13 +29,19 @@ a complete reproduction.
 
 The sole completed full launch reached exact optimizer step 10,000 in
 18,759.618905067 s (5.211005251 h), then tested the epoch-79 / validation-AP
-0.33 best checkpoint. Fold-2 test AP was `0.5546640157699585`; checkpoint
+filename-label-0.33 best checkpoint. The label is rounded: checkpoint metadata
+records global step 9,680 and the raw progress display reports `0.326` at three
+decimal places. Fold-2 test AP was `0.5546640157699585`; checkpoint
 SHA-256 was
 `7c2fa769e3fa66c8833b8d94b339e6d205abad96f25249cadf335bf3474e076c`.
 An observer-only Windows table-parser failure occurred after the scientific
 child had exited 0. Its evidence remains in the run, and a TDD-fixed,
 no-launch `--finalize-existing` path recovered the result from unchanged raw
 artifacts. Independent verification passed; there was no second full launch.
+It reconstructs exact step 10,000 from raw events and wall/GPU statistics from
+raw observer files. A later no-launch seal found identical before/after hashes
+for the fixed 14-entry raw set; this current-state check is not presented as
+retrospective proof about the first parser recovery.
 
 ## Released Fold-2 weight
 
@@ -69,6 +75,21 @@ retry. Recomputed Fold-2 AP was `0.5709022879600525` (absolute difference
 `0.0000977120399474618` from filename `0.571`) in 560.127523899 s. Its
 independent verifier passed after a TDD-only fix for the Windows borderless
 Lightning result table; no scientific child was relaunched.
+
+Across the pinned official folds 0--11, the 12 filename AP labels have mean
+`0.45291666666666663` and population standard deviation
+`0.08827179460179917`. This is derived only from the filenames in the pinned
+`Res18Unet_T1/All` manifest; it is not paper-table provenance and is not a
+recomputation of 12 fold metrics. Fetch, future preflight/result summaries, and
+the independent verifier carry the exact filename manifest and this boundary.
+For the preserved historical launch, a separate offline augmentation records
+the manifest without rewriting launch-time `preflight.json`.
+
+The weight verifier independently recomputes wall time and every GPU summary
+from raw markers/CSV, requires six finite legal metrics, and confirms the fixed
+14-entry raw manifest was unchanged during the verifier process. Its first
+Windows-table parser failure remains documented separately; the scientific
+child had already exited 0 and was never relaunched.
 
 This directory controls a provenance-checked timing calibration of the authors'
 released Res18-U-Net, `T=1`, All-features configuration on official WSTS fold 2.

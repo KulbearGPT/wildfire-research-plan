@@ -17,6 +17,11 @@ optimizer steps, exited 0, selected
 official 3,337-batch test loader. The checkpoint is 173,524,843 bytes with
 SHA-256
 `7c2fa769e3fa66c8833b8d94b339e6d205abad96f25249cadf335bf3474e076c`.
+Checkpoint metadata independently records `epoch=79`, `global_step=9680`, and
+PyTorch Lightning `2.0.1`. The `0.33` in the filename is only a two-decimal
+rounded label; the raw progress display at the completed epoch reports
+`val_avg_precision=0.326`, itself limited to three displayed decimals. Neither
+is claimed as an unrounded validation score.
 The test metrics were:
 
 | Metric | Full trained Fold 2 | Released Fold-2 weight |
@@ -52,7 +57,22 @@ reconstructed the result from the same raw files, wrote an observer-recovery
 lineage, and made `completed.json` governing. No second full child was started.
 The independent verifier rebuilt exact steps, metrics, command, checkpoint,
 data inventory, effective positive weight, and runtime-patch provenance and
-returned PASS.
+returned PASS. In the review-hardened verifier, optimizer step 10,000 comes
+from an independent state-machine parse of raw `stream-events.jsonl`, not from
+`full-result.json`; wall time and every GPU cadence/count/utilization/peak field
+are independently recomputed from `started.json`, `exit-code.txt` metadata,
+and `gpu.csv`. All six test metrics must be finite, loss non-negative, and the
+other five within `[0,1]`.
+
+A later no-launch review finalization sealed a fixed 14-entry raw set: stdout,
+stderr, events, GPU CSV, exit/start markers, config, both source inventories,
+launch/preflight/effective-command markers, the preserved first observer
+failure, and the checkpoint. Its before/after SHA-256 manifests are identical;
+seal SHA-256 is
+`a21fc70de5a225ecb86f9f4d5edb74773cb079205381f5818be4e3e455bb004b`.
+This proves only that the fixed raw set did not change during that current
+offline re-finalization; it is explicitly not retrospective proof about the
+earlier parser recovery.
 
 ## Completed official released-weight test
 
@@ -63,6 +83,13 @@ state-dict tensors with `strict=True`, invoked only `Trainer.test`, completed
 3,337/3,337 batches, and exited 0. Train, validation, predict, resume, and retry
 were not invoked. The measured AP was `0.5709022879600525`, an absolute
 difference of `0.0000977120399474618` from filename value `0.571`.
+
+The pinned official `Res18Unet_T1/All` manifest has filename AP labels
+`0.528, 0.426, 0.571, 0.307, 0.483, 0.322, 0.577, 0.474, 0.478, 0.471,
+0.324, 0.474` for folds 0--11. Derived only from those 12 filenames, their
+mean is `0.45291666666666663` and population standard deviation is
+`0.08827179460179917`. This aggregate is pinned-manifest filename evidence,
+not provenance for the paper table and not recomputed fold metrics.
 
 This test took 560.127523899 s. Its 561 GPU samples had mean/median intervals
 0.999990586/0.999306600 s (effective 1.000009414 Hz), median utilization 50%,
@@ -81,11 +108,18 @@ table form without importing the controller parser. Re-running only the
 verifier returned PASS and independently confirmed the exact command hash,
 strict-load sentinel, six metrics, pinned weight hash, full-run dependency,
 607-file live source inventory, original checkout, derived patch, and copied
-provenance. No evaluation child was relaunched.
+provenance. It also independently recomputed wall/GPU statistics from raw
+markers and `gpu.csv`, enforced legal ranges for all six metrics, and captured
+the same fixed 14-entry raw manifest before and after verification. The
+manifests matched with canonical SHA-256
+`fe261e3b3a49afe69c1d50c69fc3725822dff233a5fd9423be2c17e9aad94d81`.
+The first verifier parser failure is retained in a marker explicitly labeled
+as retrospective documentation; it does not rewrite the successful child
+status. No evaluation child was relaunched.
 
-## Frozen experiment
+## Frozen calibration experiment
 
-The child used official WSTS code commit
+The 500-step calibration child used official WSTS code commit
 `ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad`, released-weight revision
 `acf70a37394849f4ec8d108a51d6f4325a554d0a`, fold 2 (train 2018/2020,
 validation 2019, test metadata 2021), Res18-U-Net, `T=1`, all 40 features,

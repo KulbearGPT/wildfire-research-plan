@@ -1,6 +1,7 @@
 import json
 import sys
 import hashlib
+import os
 from pathlib import Path
 
 import pytest
@@ -215,6 +216,7 @@ def test_independent_verifier_requires_observer_recovery_lineage(tmp_path: Path)
         "checkpoint_sha256": "checkpoint-sha",
         "optimizer_steps": 10_000,
         "test_metrics": {"test_AP": 0.5546640157699585},
+        "raw_evidence_seal_sha256": "seal-sha",
     }
     (run / "full-result.json").write_text(
         json.dumps(recorded, sort_keys=True, separators=(",", ":")) + "\n",
@@ -242,6 +244,11 @@ def test_independent_verifier_requires_observer_recovery_lineage(tmp_path: Path)
         "test_AP": 0.5546640157699585,
         "previous_failure_preserved": True,
         "scientific_child_relaunched": False,
+        "offline_refinalization": True,
+        "retrospective_raw_integrity_claim": False,
+        "raw_evidence_seal_sha256": "seal-sha",
+        "raw_evidence_before_equals_after": True,
+        "raw_evidence_scope": "current offline re-finalization; not retrospective proof",
     }
     (run / "observer-recovery.json").write_text(
         json.dumps(recovery), encoding="utf-8"
@@ -267,3 +274,158 @@ def test_independent_verifier_requires_observer_recovery_lineage(tmp_path: Path)
     with pytest.raises(ValueError) as error:
         verifier.verify_completion_lineage(run, recorded, {"pid": 22944})
     assert str(error.value) == "observer recovery failure SHA-256 mismatch"
+
+
+def _full_progress_events() -> str:
+    rows = [
+        json.dumps({"seconds": 1.0, "stream": "stdout", "text": "Epoch 0: 0%| | 0/121"})
+    ]
+    rows.extend(
+        json.dumps(
+            {
+                "seconds": float(epoch + 2),
+                "stream": "stdout",
+                "text": f"Epoch {epoch}: 100%| | 121/121",
+            }
+        )
+        for epoch in range(82)
+    )
+    rows.append(
+        json.dumps(
+            {"seconds": 100.0, "stream": "stdout", "text": "Epoch 82: 64%| | 78/121"}
+        )
+    )
+    return "\n".join(rows)
+
+
+def test_full_verifier_reconstructs_steps_wall_and_gpu_from_raw() -> None:
+    assert verifier.reconstruct_optimizer_steps(_full_progress_events()) == 10_000
+    rows = [
+        {
+            "observer_seconds": "0.0",
+            "memory_used_mib": "100",
+            "utilization_gpu_percent": "10",
+            "child_memory_mib": "0",
+        },
+        {
+            "observer_seconds": "1.0",
+            "memory_used_mib": "110",
+            "utilization_gpu_percent": "50",
+            "child_memory_mib": "0",
+        },
+        {
+            "observer_seconds": "3.0",
+            "memory_used_mib": "105",
+            "utilization_gpu_percent": "20",
+            "child_memory_mib": "0",
+        },
+    ]
+
+    summary = verifier.reconstruct_observer_statistics(
+        "2026-08-10T00:00:00+00:00", 1_786_320_010_000_000_000, rows
+    )
+
+    assert summary["wall_seconds"] == pytest.approx(10.0)
+    assert summary["wall_hours"] == pytest.approx(10.0 / 3600)
+    assert summary["gpu_sample_count"] == 3.0
+    assert summary["gpu_interval_count"] == 2
+    assert summary["gpu_interval_mean_seconds"] == pytest.approx(1.5)
+    assert summary["gpu_interval_median_seconds"] == pytest.approx(1.5)
+    assert summary["gpu_observed_effective_hz"] == pytest.approx(2 / 3)
+    assert summary["peak_gpu_used_mib"] == 110.0
+    assert summary["gpu_utilization_median_percent"] == 20.0
+
+
+@pytest.mark.parametrize(
+    "metrics",
+    [
+        {
+            "test_AP": 1.1,
+            "test_f1": 0.4,
+            "test_iou": 0.3,
+            "test_loss": 0.01,
+            "test_precision": 0.5,
+            "test_recall": 0.5,
+        },
+        {
+            "test_AP": 0.5,
+            "test_f1": 0.4,
+            "test_iou": 0.3,
+            "test_loss": -0.01,
+            "test_precision": 0.5,
+            "test_recall": 0.5,
+        },
+        {
+            "test_AP": 0.5,
+            "test_f1": 0.4,
+            "test_iou": 0.3,
+            "test_loss": 0.01,
+            "test_precision": 0.5,
+        },
+    ],
+)
+def test_full_verifier_requires_six_finite_legal_metrics(metrics: dict[str, float]) -> None:
+    with pytest.raises(ValueError, match="six legal test metrics"):
+        verifier.validate_test_metrics(metrics)
+
+
+def test_full_verifier_reads_checkpoint_step_and_displayed_validation_ap() -> None:
+    metadata = verifier.validate_checkpoint_metadata(
+        {"epoch": 79, "global_step": 9680, "pytorch-lightning_version": "2.0.1"}
+    )
+    events = (
+        '{"seconds":1,"stream":"stdout","text":"Epoch 79: 100%| | 121/121, '
+        'val_avg_precision=0.326\\r"}\n'
+    )
+
+    assert metadata == {
+        "best_epoch": 79,
+        "best_checkpoint_global_step": 9680,
+        "checkpoint_lightning_version": "2.0.1",
+    }
+    assert verifier.reconstruct_displayed_validation_ap(events, 79) == pytest.approx(0.326)
+
+
+def _write_full_raw_set(run: Path) -> Path:
+    names = (
+        "stdout.log",
+        "stderr.log",
+        "stream-events.jsonl",
+        "gpu.csv",
+        "exit-code.txt",
+        "started.json",
+        "config.yaml",
+        "source-data-pre.json",
+        "source-data-post.json",
+        "launch.lock.json",
+        "preflight.json",
+        "effective-command.json",
+        "failure.json",
+    )
+    for index, name in enumerate(names):
+        (run / name).write_bytes(f"raw-{index}\n".encode())
+    checkpoint = run / "model" / "checkpoints" / "best-epoch=79-val_avg_precision=0.33.ckpt"
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.write_bytes(b"checkpoint")
+    return checkpoint
+
+
+def test_full_raw_seal_is_independently_verified_and_detects_tamper(tmp_path: Path) -> None:
+    run = tmp_path / "fold2-full-terminal"
+    run.mkdir()
+    _write_full_raw_set(run)
+    manifest = verifier.capture_full_raw_manifest(run)
+    seal = {
+        "status": "pass",
+        "seal_scope": "current offline re-finalization; not retrospective proof",
+        "scientific_child_relaunched": False,
+        "before": manifest,
+        "after": manifest,
+    }
+
+    verified = verifier.verify_full_raw_seal(run, seal)
+
+    assert verified["raw_evidence_seal_verified"] is True
+    (run / "stdout.log").write_bytes(b"tampered\n")
+    with pytest.raises(ValueError, match="raw evidence manifest mismatch"):
+        verifier.verify_full_raw_seal(run, seal)
