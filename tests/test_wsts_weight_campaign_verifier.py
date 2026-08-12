@@ -1,8 +1,11 @@
 import sys
 import csv
+import errno
 import hashlib
 import json
+import os
 import statistics
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -351,3 +354,72 @@ def test_publication_fault_never_commits_a_partial_generation_and_rerun_switches
     current = verifier.load_committed_publication(campaign_directory)
     assert current["generation"] != previous["generation"]
     assert result["generation"] == current["generation"]
+
+
+def test_committed_publication_rejects_generation_directory_alias(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
+    publication = verifier.verify_campaign(campaign_directory)
+    generation = campaign_directory / str(publication["generation"])
+    alias_target = generation.with_name(generation.name + "-alias-target")
+    generation.rename(alias_target)
+    if os.name == "nt":
+        created = subprocess.run(
+            ["cmd.exe", "/d", "/c", "mklink", "/J", str(generation), str(alias_target)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert created.returncode == 0, created.stdout + created.stderr
+    else:
+        try:
+            generation.symlink_to(alias_target, target_is_directory=True)
+        except OSError as error:
+            if error.errno in {errno.EPERM, errno.EACCES, errno.ENOTSUP, errno.EOPNOTSUPP}:
+                pytest.skip(f"directory symlink unsupported: {error}")
+            raise
+
+    with pytest.raises(ValueError, match="generation path is aliased"):
+        verifier.load_committed_publication(campaign_directory)
+
+
+def test_committed_publication_rejects_hardlinked_output_alias(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
+    publication = verifier.verify_campaign(campaign_directory)
+    generation = campaign_directory / str(publication["generation"])
+    results = generation / verifier.RESULTS_FILENAME
+    summary = generation / verifier.SUMMARY_FILENAME
+    summary.unlink()
+    try:
+        os.link(results, summary)
+    except OSError as error:
+        unsupported = {errno.EPERM, errno.EACCES, errno.ENOTSUP, errno.EOPNOTSUPP}
+        if error.errno in unsupported or getattr(error, "winerror", None) in {1, 50}:
+            pytest.skip(f"hardlinks unsupported: {error}")
+        raise
+    shared_sha = _sha256(results)
+    independent_path = generation / verifier.INDEPENDENT_FILENAME
+    independent = json.loads(independent_path.read_text(encoding="utf-8"))
+    independent["summary_sha256"] = shared_sha
+    independent_path.write_text(
+        json.dumps(independent, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    publication["outputs"][verifier.SUMMARY_FILENAME]["sha256"] = shared_sha
+    publication["outputs"][verifier.INDEPENDENT_FILENAME]["sha256"] = _sha256(
+        independent_path
+    )
+    (campaign_directory / verifier.PUBLICATION_FILENAME).write_text(
+        json.dumps(publication, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="publication output is aliased"):
+        verifier.load_committed_publication(campaign_directory)

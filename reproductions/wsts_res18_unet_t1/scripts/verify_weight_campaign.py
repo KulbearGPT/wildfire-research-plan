@@ -9,6 +9,7 @@ import json
 import math
 import os
 import re
+import stat
 import statistics
 import tempfile
 import uuid
@@ -121,6 +122,40 @@ def _write_csv_atomic(path: Path, rows: Sequence[Mapping[str, object]]) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def _is_link_or_reparse(path: Path) -> bool:
+    metadata = path.lstat()
+    is_junction = getattr(path, "is_junction", lambda: False)
+    return (
+        path.is_symlink()
+        or is_junction()
+        or bool(
+            getattr(metadata, "st_file_attributes", 0)
+            & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+        )
+    )
+
+
+def _require_lexically_exact_path(
+    path: Path, *, checked_root: Path, description: str
+) -> Path:
+    lexical = path.absolute()
+    try:
+        resolved = path.resolve(strict=True)
+    except OSError as error:
+        raise ValueError(f"{description} is missing or inaccessible") from error
+    if resolved != lexical:
+        raise ValueError(f"{description} is aliased")
+    current = lexical
+    while True:
+        if _is_link_or_reparse(current):
+            raise ValueError(f"{description} is aliased")
+        if current == checked_root:
+            return lexical
+        if current.parent == current:
+            raise ValueError(f"{description} escapes its root")
+        current = current.parent
+
+
 def load_committed_publication(campaign_directory: Path) -> dict[str, object]:
     """Load the sole commit point and verify every referenced generation file."""
     campaign = campaign_directory.resolve()
@@ -141,24 +176,47 @@ def load_committed_publication(campaign_directory: Path) -> dict[str, object]:
     expected_names = {RESULTS_FILENAME, SUMMARY_FILENAME, INDEPENDENT_FILENAME}
     if not isinstance(outputs, Mapping) or set(outputs) != expected_names:
         raise ValueError("campaign publication output manifest mismatch")
-    generation_directory = (campaign / generation).resolve()
-    if generation_directory.parent != (campaign / "generations").resolve():
+    generations_root = campaign / "generations"
+    generation_directory = campaign / generation
+    if generation_directory.parent != generations_root:
         raise ValueError("campaign publication generation path escapes its root")
+    generation_directory = _require_lexically_exact_path(
+        generation_directory,
+        checked_root=generations_root,
+        description="campaign publication generation path",
+    )
+    output_paths: dict[str, Path] = {}
     for name in expected_names:
         seal = outputs[name]
         expected_relative = f"{generation}/{name}"
         if not isinstance(seal, Mapping) or set(seal) != {"path", "sha256"}:
             raise ValueError(f"campaign publication seal is invalid: {name}")
-        path = (campaign / str(seal.get("path", ""))).resolve()
-        if (
-            seal.get("path") != expected_relative
-            or path.parent != generation_directory
-            or not path.is_file()
-            or seal.get("sha256") != _sha256(path)
-        ):
+        if seal.get("path") != expected_relative:
+            raise ValueError(f"campaign publication file seal mismatch: {name}")
+        path = campaign / expected_relative
+        if path.parent != generation_directory:
+            raise ValueError(f"campaign publication file seal mismatch: {name}")
+        path = _require_lexically_exact_path(
+            path,
+            checked_root=path,
+            description="campaign publication output",
+        )
+        if not path.is_file():
+            raise ValueError(f"campaign publication file seal mismatch: {name}")
+        output_paths[name] = path
+    output_items = list(output_paths.items())
+    for index, (left_name, left_path) in enumerate(output_items):
+        for right_name, right_path in output_items[index + 1 :]:
+            if left_path.samefile(right_path):
+                raise ValueError(
+                    "campaign publication output is aliased: "
+                    f"{left_name}, {right_name}"
+                )
+    for name, path in output_paths.items():
+        if outputs[name]["sha256"] != _sha256(path):
             raise ValueError(f"campaign publication file seal mismatch: {name}")
     independent = json.loads(
-        (generation_directory / INDEPENDENT_FILENAME).read_text(encoding="utf-8")
+        output_paths[INDEPENDENT_FILENAME].read_text(encoding="utf-8")
     )
     if (
         not isinstance(independent, Mapping)
