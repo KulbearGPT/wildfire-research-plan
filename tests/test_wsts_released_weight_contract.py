@@ -100,6 +100,40 @@ def test_manifest_round_trip_is_schema_versioned_and_fold_sorted(tmp_path: Path)
     assert loaded == contract.parse_pinned_tree(_tree_items())
 
 
+def test_manifest_writer_rejects_duplicate_and_incomplete_fold_ids(tmp_path: Path) -> None:
+    specs = list(contract.parse_pinned_tree(_tree_items()))
+    specs[-1] = replace(specs[-1], fold_id=10)
+    manifest = tmp_path / "official_weights_manifest.json"
+
+    with pytest.raises(ValueError, match="fold IDs"):
+        contract.write_manifest_atomic(manifest, specs)
+    assert not manifest.exists()
+
+
+@pytest.mark.parametrize(
+    "mutate, message",
+    [
+        (lambda spec: replace(spec, hub_path="renamed/" + spec.filename), "path"),
+        (lambda spec: replace(spec, filename_ap=0.5), "metadata"),
+        (lambda spec: replace(spec, train_years=(2018, 2019)), "metadata"),
+        (lambda spec: replace(spec, validation_year=2018), "metadata"),
+        (lambda spec: replace(spec, test_year=2018), "metadata"),
+        (lambda spec: replace(spec, size=0), "positive"),
+        (lambda spec: replace(spec, sha256="A" * 64), "SHA-256"),
+    ],
+)
+def test_manifest_writer_rejects_tampered_weight_metadata(
+    tmp_path: Path, mutate, message: str
+) -> None:
+    specs = list(contract.parse_pinned_tree(_tree_items()))
+    specs[2] = mutate(specs[2])
+    manifest = tmp_path / "official_weights_manifest.json"
+
+    with pytest.raises(ValueError, match=message):
+        contract.write_manifest_atomic(manifest, specs)
+    assert not manifest.exists()
+
+
 def test_local_weight_rejects_wrong_size_and_hash(tmp_path: Path) -> None:
     weight = tmp_path / "weight.pth"
     weight.write_bytes(b"official")

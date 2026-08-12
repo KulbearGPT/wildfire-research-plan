@@ -127,11 +127,21 @@ def spec_for_fold(specs: Sequence[WeightSpec], fold_id: int) -> WeightSpec:
 
 
 def _manifest_payload(specs: Sequence[WeightSpec]) -> dict[str, object]:
-    ordered = tuple(sorted(specs, key=lambda spec: spec.fold_id))
-    if len(ordered) != len(OFFICIAL_FOLDS) or tuple(
-        spec.filename for spec in ordered
-    ) != RELEASED_WEIGHT_FILENAMES:
+    if len(specs) != len(OFFICIAL_FOLDS):
         raise ValueError("manifest must contain exactly the frozen twelve weights")
+    if any(not isinstance(spec, WeightSpec) for spec in specs):
+        raise ValueError("manifest weights must be WeightSpec instances")
+    if tuple(sorted(spec.fold_id for spec in specs)) != tuple(
+        range(len(OFFICIAL_FOLDS))
+    ):
+        raise ValueError("manifest fold IDs must be exactly 0 through 11")
+    validated: list[WeightSpec] = []
+    for spec in specs:
+        canonical = _weight_spec(spec.hub_path, spec.size, spec.sha256)
+        if spec != canonical:
+            raise ValueError("manifest weight metadata differs from the frozen contract")
+        validated.append(canonical)
+    ordered = tuple(sorted(validated, key=lambda spec: spec.fold_id))
     return {
         "schema_version": SCHEMA_VERSION,
         "repo_id": REPO_ID,
