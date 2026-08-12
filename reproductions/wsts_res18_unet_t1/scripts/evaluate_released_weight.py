@@ -91,6 +91,13 @@ def _fold2_spec() -> WeightSpec:
     return spec_for_fold(load_pinned_manifest(PINNED_MANIFEST_PATH), 2)
 
 
+def _canonical_spec(spec: WeightSpec) -> WeightSpec:
+    canonical = spec_for_fold(load_pinned_manifest(PINNED_MANIFEST_PATH), spec.fold_id)
+    if spec != canonical:
+        raise ValueError("released-weight spec differs from canonical pinned manifest spec")
+    return canonical
+
+
 def weight_cache_path(spec: WeightSpec) -> Path:
     return WEIGHT_CACHE_ROOT / spec.filename
 
@@ -344,6 +351,52 @@ def validate_weight_command(
     )
     if list(command) != expected:
         raise ValueError("effective command differs from the exact released-weight command")
+
+
+def validate_saved_weight_lineage(
+    run_directory: Path, spec: WeightSpec, weight_path: Path
+) -> dict[str, Mapping[str, object]]:
+    run = run_directory.resolve()
+    expected_command = build_weight_command(
+        spec=spec, run_directory=run, weight_path=weight_path
+    )
+    expected_hash = _command_sha256(expected_command)
+    paths = {
+        "global_lock": global_weight_lock_path(spec),
+        "run_lock": run / "launch.lock.json",
+        "preflight": run / "preflight.json",
+        "started": run / "started.json",
+        "effective": run / "effective-command.json",
+    }
+    payloads: dict[str, Mapping[str, object]] = {}
+    for label, path in paths.items():
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, Mapping):
+            raise ValueError(f"saved launch lineage {label} must be an object")
+        if payload.get("command") != expected_command:
+            raise ValueError(f"saved launch lineage {label}.command mismatch")
+        if payload.get("command_sha256") != expected_hash:
+            raise ValueError(f"saved launch lineage {label}.command_sha256 mismatch")
+        payloads[label] = payload
+    for label in ("global_lock", "run_lock"):
+        payload = payloads[label]
+        if (
+            payload.get("run_directory") != str(run)
+            or payload.get("test_only") is not True
+            or payload.get("single_launch_no_retry") is not True
+        ):
+            raise ValueError(f"saved launch lineage {label} identity mismatch")
+    preflight = payloads["preflight"]
+    claims = build_fold_claims(spec=spec, weight_path=weight_path)
+    if "fold_id" in preflight:
+        if any(preflight.get(field) != value for field, value in claims.items()):
+            raise ValueError("saved launch lineage preflight fold claims mismatch")
+    elif spec.fold_id != 2 or any(
+        preflight.get(field) != claims[field]
+        for field in ("weight_path", "weight_sha256", "filename_ap")
+    ):
+        raise ValueError("saved launch lineage preflight fold claims mismatch")
+    return payloads
 
 
 def validate_weight_output(combined_output: str, exit_code: int) -> dict[str, object]:
@@ -606,7 +659,7 @@ def parse_weight_run(
 def finalize_existing_weight(
     run_directory: Path, spec: WeightSpec | None = None
 ) -> dict[str, object]:
-    spec = _fold2_spec() if spec is None else spec
+    spec = _canonical_spec(_fold2_spec() if spec is None else spec)
     run = run_directory.resolve()
     validate_fold_paths(
         spec=spec,
@@ -628,8 +681,9 @@ def finalize_existing_weight(
         or int((run / "exit-code.txt").read_text(encoding="utf-8").strip()) != 0
     ):
         raise ValueError("finalize-existing requires a completed exit-zero weight child")
-    started = json.loads((run / "started.json").read_text(encoding="utf-8"))
-    effective = json.loads((run / "effective-command.json").read_text(encoding="utf-8"))
+    lineage = validate_saved_weight_lineage(run, spec, weight_cache_path(spec))
+    started = lineage["started"]
+    effective = lineage["effective"]
     if (
         not isinstance(started, Mapping)
         or not isinstance(effective, Mapping)

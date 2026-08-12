@@ -267,7 +267,20 @@ def verify_first_verifier_failure(run_directory: Path) -> dict[str, bool]:
     return {"first_verifier_failure_preserved": True}
 
 
-def verify_retrospective_markers(run_directory: Path) -> dict[str, bool]:
+def _require_exact_marker(
+    marker: object, expected: Mapping[str, object], message: str
+) -> None:
+    if not isinstance(marker, Mapping) or dict(marker) != dict(expected):
+        raise ValueError(message)
+
+
+def verify_retrospective_markers(
+    run_directory: Path,
+    *,
+    filename_manifest: Mapping[str, object] | None = None,
+    launch_recorded_dependency: object = None,
+    current_dependency: Mapping[str, object] | None = None,
+) -> dict[str, bool]:
     run = run_directory.resolve()
     first_path = run / "independent-verifier-first-failure.json"
     first_preserved = False
@@ -275,36 +288,78 @@ def verify_retrospective_markers(run_directory: Path) -> dict[str, bool]:
         first_preserved = verify_first_verifier_failure(run)[
             "first_verifier_failure_preserved"
         ]
-    augmentation_path = run / "offline-full-dependency-augmentation.json"
-    augmentation_present = augmentation_path.is_file()
+    preflight_augmentation = run / "offline-preflight-augmentation.json"
+    if preflight_augmentation.is_file():
+        if filename_manifest is None:
+            raise ValueError("preflight augmentation context is missing")
+        marker = json.loads(preflight_augmentation.read_text(encoding="utf-8"))
+        _require_exact_marker(
+            marker,
+            {
+                "status": "pass",
+                "augmentation_scope": "offline filename-manifest provenance only",
+                "launch_preflight_sha256": _sha256(run / "preflight.json"),
+                "filename_manifest": dict(filename_manifest),
+                "scientific_child_relaunched": False,
+            },
+            "preflight augmentation mismatch",
+        )
+    full_augmentation = run / "offline-full-dependency-augmentation.json"
+    augmentation_present = full_augmentation.is_file()
     if augmentation_present:
-        augmentation = json.loads(augmentation_path.read_text(encoding="utf-8"))
-        if (
-            not isinstance(augmentation, Mapping)
-            or augmentation.get("status") != "pass"
-            or augmentation.get("augmentation_scope")
-            != "offline current full-run dependency hashes only"
-            or augmentation.get("scientific_child_relaunched") is not False
-        ):
-            raise ValueError("full dependency augmentation mismatch")
+        if current_dependency is None:
+            raise ValueError("full dependency augmentation context is missing")
+        validate_full_dependency_augmentation(
+            run, launch_recorded_dependency, current_dependency
+        )
+    finalization_path = run / "offline-finalization.json"
+    if finalization_path.is_file():
+        marker = json.loads(finalization_path.read_text(encoding="utf-8"))
+        _require_exact_marker(
+            marker,
+            {
+                "status": "pass",
+                "finalization_scope": "existing scientific output only",
+                "weight_result_sha256": _sha256(run / "weight-result.json"),
+                "scientific_child_relaunched": False,
+            },
+            "offline finalization mismatch",
+        )
     return {
         "first_verifier_failure_preserved": first_preserved,
         "offline_full_dependency_augmentation_present": augmentation_present,
     }
 
 
-def build_weight_provenance_contract() -> tuple[dict[str, Path], dict[str, str]]:
-    return (
-        {
-            "upstream.lock.json": REPRODUCTION_ROOT / "upstream.lock.json",
-            "smoke.json": EXPECTED_WORKER_SMOKE,
-            "res18_import_scope.patch": EXPECTED_PATCH,
-        },
+def build_weight_provenance_contract(
+    spec: WeightSpec | None = None,
+) -> tuple[dict[str, Path], dict[str, str]]:
+    spec = _fold2_spec() if spec is None else spec
+    authoritative = {
+        "upstream.lock.json": REPRODUCTION_ROOT / "upstream.lock.json",
+        "smoke.json": EXPECTED_WORKER_SMOKE,
+        "res18_import_scope.patch": EXPECTED_PATCH,
+    }
+    launch_time = (
         {
             "official_weight_entrypoint.py": EXPECTED_LAUNCH_WEIGHT_ENTRYPOINT_SHA256,
             "evaluate_released_weight.py": EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256,
-        },
+        }
+        if spec.fold_id == 2
+        else {}
     )
+    if spec.fold_id != 2:
+        authoritative.update(
+            {
+                "official_weight_entrypoint.py": Path(__file__).with_name(
+                    "official_weight_entrypoint.py"
+                ),
+                "evaluate_released_weight.py": Path(__file__).with_name(
+                    "evaluate_released_weight.py"
+                ),
+            }
+        )
+    return authoritative, launch_time
 
 
 def build_expected_weight_command(
@@ -473,6 +528,7 @@ def _verify_weight_runtime_provenance(
     run: Path,
     effective: Mapping[str, object],
     preflight: Mapping[str, object],
+    spec: WeightSpec,
 ) -> dict[str, object]:
     original = EXPECTED_ORIGINAL_UPSTREAM.resolve()
     derived = EXPECTED_DERIVED_UPSTREAM.resolve()
@@ -516,9 +572,9 @@ def _verify_weight_runtime_provenance(
     }.items():
         if runtime_patch.get(field) != expected:
             raise ValueError(f"weight preflight runtime_patch.{field} mismatch")
-    authoritative_sources, launch_time_hashes = build_weight_provenance_contract()
+    authoritative_sources, launch_time_hashes = build_weight_provenance_contract(spec)
     copied_entrypoint = run / "provenance" / "official_weight_entrypoint.py"
-    if (
+    if spec.fold_id == 2 and (
         copied_entrypoint.is_file()
         and _sha256(copied_entrypoint) != EXPECTED_LAUNCH_WEIGHT_ENTRYPOINT_SHA256
     ):
@@ -527,7 +583,7 @@ def _verify_weight_runtime_provenance(
         ).with_name("official_weight_entrypoint.py")
         launch_time_hashes.pop("official_weight_entrypoint.py")
     copied_controller = run / "provenance" / "evaluate_released_weight.py"
-    if (
+    if spec.fold_id == 2 and (
         copied_controller.is_file()
         and _sha256(copied_controller) != EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256
     ):
@@ -572,10 +628,7 @@ def validate_full_dependency_augmentation(
         "current_dependency": dict(current),
         "scientific_child_relaunched": False,
     }
-    if not isinstance(marker, Mapping) or any(
-        marker.get(field) != value for field, value in expected.items()
-    ):
-        raise ValueError("full dependency augmentation mismatch")
+    _require_exact_marker(marker, expected, "full dependency augmentation mismatch")
 
 
 def _verify_full_dependency(
@@ -605,14 +658,23 @@ def _verify_full_dependency(
         "independent_status": "pass",
     }
     launch_recorded = preflight.get("full_run_dependency")
-    if launch_recorded != expected:
+    augmentation_path = run / "offline-full-dependency-augmentation.json"
+    if augmentation_path.is_file():
         validate_full_dependency_augmentation(run, launch_recorded, expected)
+    elif launch_recorded != expected:
+        raise ValueError("full dependency augmentation is missing")
     return expected
 
 
 def verify_run(
     run_directory: Path, weight_path: Path, spec: WeightSpec
 ) -> dict[str, object]:
+    canonical = spec_for_fold(
+        load_pinned_manifest(PINNED_MANIFEST_PATH), spec.fold_id
+    )
+    if spec != canonical:
+        raise ValueError("caller spec differs from canonical pinned manifest spec")
+    spec = canonical
     run = run_directory.resolve()
     weight = weight_path.resolve()
     if (
@@ -627,7 +689,6 @@ def verify_run(
         raise ValueError("released-weight path is not the pinned fold cache path")
     validate_local_weight(weight, spec)
     raw_before = capture_weight_raw_manifest(run, weight)
-    retrospective = verify_retrospective_markers(run)
     result = json.loads((run / "weight-result.json").read_text(encoding="utf-8"))
     preflight = json.loads((run / "preflight.json").read_text(encoding="utf-8"))
     effective = json.loads(
@@ -677,8 +738,14 @@ def verify_run(
         expected_command,
         command_hash,
     )
-    provenance = _verify_weight_runtime_provenance(run, effective, preflight)
+    provenance = _verify_weight_runtime_provenance(run, effective, preflight, spec)
     full_dependency = _verify_full_dependency(run, preflight)
+    retrospective = verify_retrospective_markers(
+        run,
+        filename_manifest=filename_manifest,
+        launch_recorded_dependency=preflight.get("full_run_dependency"),
+        current_dependency=full_dependency,
+    )
     before = json.loads((run / "source-data-pre.json").read_text(encoding="utf-8"))
     after = json.loads((run / "source-data-post.json").read_text(encoding="utf-8"))
     live = rebuild_live_source_inventory(FIXED_DATA_ROOT)
@@ -766,6 +833,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--weight-path", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     arguments = parser.parse_args(argv)
+    expected_output = arguments.run_directory.resolve() / "independent-verification.json"
+    if arguments.output.resolve() != expected_output:
+        raise ValueError("verifier output must be inside the selected run")
     spec = spec_for_fold(
         load_pinned_manifest(PINNED_MANIFEST_PATH), arguments.fold_id
     )

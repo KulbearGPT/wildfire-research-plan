@@ -231,3 +231,273 @@ def test_retrospective_markers_are_optional_but_validated_when_present(
     )
     with pytest.raises(ValueError, match="first verifier failure"):
         verifier.verify_retrospective_markers(run)
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def test_finalize_existing_rejects_cross_fold_saved_lineage_before_writing_result(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    fold0 = contract.spec_for_fold(specs, 0)
+    fold5 = contract.spec_for_fold(specs, 5)
+    artifact_root = tmp_path / "artifacts"
+    cache_root = tmp_path / "weights"
+    run = artifact_root / "fold5-weight-copied"
+    run.mkdir(parents=True)
+    command = controller.build_weight_command(
+        spec=fold0,
+        run_directory=run,
+        weight_path=cache_root / fold0.filename,
+    )
+    command_hash = hashlib.sha256(
+        json.dumps(command, ensure_ascii=False, separators=(",", ":")).encode()
+    ).hexdigest()
+    launch = {
+        "command": command,
+        "command_sha256": command_hash,
+        "run_directory": str(run.resolve()),
+        "test_only": True,
+        "single_launch_no_retry": True,
+    }
+    _write_json(artifact_root / "fold5-weight-evaluation.lock.json", launch)
+    _write_json(run / "launch.lock.json", launch)
+    _write_json(
+        run / "preflight.json",
+        {
+            **launch,
+            **controller.build_fold_claims(
+                spec=fold0, weight_path=cache_root / fold0.filename
+            ),
+        },
+    )
+    _write_json(
+        run / "started.json",
+        {"command": command, "command_sha256": command_hash, "pid": 7},
+    )
+    _write_json(
+        run / "effective-command.json",
+        {"command": command, "command_sha256": command_hash},
+    )
+    _write_json(run / "completed.json", {"status": "pass", "exit_code": 0, "pid": 7})
+    (run / "exit-code.txt").write_text("0\n", encoding="utf-8")
+    monkeypatch.setattr(controller, "WEIGHT_ARTIFACTS_ROOT", artifact_root)
+    monkeypatch.setattr(controller, "WEIGHT_CACHE_ROOT", cache_root)
+    monkeypatch.setattr(controller, "validate_download", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        controller,
+        "parse_weight_run",
+        lambda *_args, **_kwargs: {"filename_manifest": controller.build_filename_manifest_evidence()},
+    )
+
+    with pytest.raises(ValueError, match="saved launch lineage"):
+        controller.finalize_existing_weight(run, fold5)
+    assert not (run / "weight-result.json").exists()
+
+
+def test_verify_run_rejects_noncanonical_caller_spec_before_artifact_reads(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    canonical = contract.spec_for_fold(specs, 5)
+    tampered = replace(canonical, sha256="f" * 64)
+    root = tmp_path / "artifacts"
+    reproduction = tmp_path / "reproduction"
+    run = root / "fold5-weight-run"
+    weight = reproduction / ".local" / "released-weights" / tampered.filename
+    run.mkdir(parents=True)
+    weight.parent.mkdir(parents=True)
+    weight.write_bytes(b"tampered")
+    monkeypatch.setattr(verifier, "EXPECTED_WEIGHT_ROOT", root)
+    monkeypatch.setattr(verifier, "REPRODUCTION_ROOT", reproduction)
+    monkeypatch.setattr(verifier, "validate_local_weight", lambda *_args: None)
+
+    with pytest.raises(ValueError, match="canonical pinned manifest spec"):
+        verifier.verify_run(run, weight, tampered)
+
+
+def test_non_fold2_provenance_rejects_legacy_controller_hash(
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    fold5 = contract.spec_for_fold(specs, 5)
+
+    authoritative, launch_time = verifier.build_weight_provenance_contract(fold5)
+
+    assert authoritative["evaluate_released_weight.py"] == Path(
+        verifier.__file__
+    ).with_name("evaluate_released_weight.py")
+    assert "evaluate_released_weight.py" not in launch_time
+
+
+def test_verifier_cli_rejects_output_outside_run_without_rewriting_target(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run = tmp_path / "fold2-weight-run"
+    run.mkdir()
+    output = tmp_path / "other-run" / "independent-verification.json"
+    output.parent.mkdir()
+    output.write_text("sentinel\n", encoding="utf-8")
+    called = False
+
+    def fake_verify(*_args) -> dict[str, object]:
+        nonlocal called
+        called = True
+        return {"status": "pass"}
+
+    monkeypatch.setattr(verifier, "verify_run", fake_verify)
+
+    with pytest.raises(ValueError, match="output must be inside the selected run"):
+        verifier.main(
+            [
+                "--fold-id",
+                "2",
+                "--run-directory",
+                str(run),
+                "--weight-path",
+                str(tmp_path / "fold2_testAP0.571.pth"),
+                "--output",
+                str(output),
+            ]
+        )
+    assert called is False
+    assert output.read_text(encoding="utf-8") == "sentinel\n"
+
+
+@pytest.mark.parametrize(
+    ("filename", "payload", "message"),
+    [
+        (
+            "offline-preflight-augmentation.json",
+            {
+                "status": "pass",
+                "augmentation_scope": "offline filename-manifest provenance only",
+                "launch_preflight_sha256": "wrong-run",
+                "filename_manifest": {},
+                "scientific_child_relaunched": False,
+            },
+            "preflight augmentation",
+        ),
+        (
+            "offline-full-dependency-augmentation.json",
+            {
+                "status": "pass",
+                "augmentation_scope": "offline current full-run dependency hashes only",
+                "launch_recorded_dependency": {"run_directory": "wrong-run"},
+                "current_dependency": {"run_directory": "wrong-run"},
+                "scientific_child_relaunched": False,
+            },
+            "full dependency augmentation",
+        ),
+        (
+            "offline-finalization.json",
+            {
+                "status": "pass",
+                "finalization_scope": "existing scientific output only",
+                "weight_result_sha256": "wrong-result",
+                "scientific_child_relaunched": False,
+            },
+            "offline finalization",
+        ),
+    ],
+)
+def test_present_offline_markers_fail_closed_on_cross_run_payloads(
+    tmp_path: Path, filename: str, payload: dict[str, object], message: str
+) -> None:
+    run = tmp_path / "fold2-weight-run"
+    run.mkdir()
+    preflight = run / "preflight.json"
+    result = run / "weight-result.json"
+    _write_json(preflight, {"full_run_dependency": {"run_directory": "launch-run"}})
+    _write_json(result, {"status": "pass"})
+    _write_json(run / filename, payload)
+
+    with pytest.raises(ValueError, match=message):
+        verifier.verify_retrospective_markers(
+            run,
+            filename_manifest=verifier.derive_filename_manifest_evidence(),
+            launch_recorded_dependency={"run_directory": "launch-run"},
+            current_dependency={"run_directory": "current-run"},
+        )
+
+
+def test_public_verify_run_rejects_tampered_present_finalization_marker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    spec = contract.spec_for_fold(specs, 5)
+    root = tmp_path / "artifacts"
+    reproduction = tmp_path / "reproduction"
+    derived = tmp_path / "derived"
+    run = root / "fold5-weight-run"
+    weight = reproduction / ".local" / "released-weights" / spec.filename
+    run.mkdir(parents=True)
+    weight.parent.mkdir(parents=True)
+    weight.write_bytes(b"weight")
+    command = verifier.build_expected_weight_command(run, derived, weight, spec)
+    command_hash = hashlib.sha256(
+        json.dumps(command, ensure_ascii=False, separators=(",", ":")).encode()
+    ).hexdigest()
+    launch = {"command": command, "command_sha256": command_hash}
+    claims = {
+        "fold_id": spec.fold_id,
+        "train_years": list(spec.train_years),
+        "validation_year": spec.validation_year,
+        "test_year": spec.test_year,
+        "weight_path": str(weight.resolve()),
+        "weight_filename": spec.filename,
+        "weight_size": spec.size,
+        "weight_sha256": spec.sha256,
+        "filename_ap": spec.filename_ap,
+    }
+    filename_manifest = verifier.derive_filename_manifest_evidence()
+    current_dependency = {"run_directory": "current"}
+    _write_json(root / "fold5-weight-evaluation.lock.json", launch)
+    _write_json(run / "launch.lock.json", launch)
+    _write_json(
+        run / "preflight.json",
+        {
+            **launch,
+            **claims,
+            "filename_manifest": filename_manifest,
+            "full_run_dependency": current_dependency,
+        },
+    )
+    _write_json(run / "started.json", {**launch, "pid": 7})
+    _write_json(run / "effective-command.json", launch)
+    _write_json(run / "weight-result.json", {**claims, "command_sha256": command_hash})
+    _write_json(run / "completed.json", {"status": "pass", "exit_code": 0, "pid": 7})
+    _write_json(
+        run / "offline-finalization.json",
+        {
+            "status": "pass",
+            "finalization_scope": "existing scientific output only",
+            "weight_result_sha256": "cross-run-result",
+            "scientific_child_relaunched": False,
+        },
+    )
+    monkeypatch.setattr(verifier, "EXPECTED_WEIGHT_ROOT", root)
+    monkeypatch.setattr(verifier, "REPRODUCTION_ROOT", reproduction)
+    monkeypatch.setattr(verifier, "EXPECTED_DERIVED_UPSTREAM", derived)
+    monkeypatch.setattr(verifier, "validate_local_weight", lambda *_args: None)
+    monkeypatch.setattr(
+        verifier,
+        "capture_weight_raw_manifest",
+        lambda *_args: {"schema_version": 1, "entry_count": 0, "entries": []},
+    )
+    monkeypatch.setattr(
+        verifier,
+        "_verify_weight_runtime_provenance",
+        lambda *_args: {"provenance_copies_verified": True},
+    )
+    monkeypatch.setattr(
+        verifier, "_verify_full_dependency", lambda *_args: current_dependency
+    )
+
+    with pytest.raises(ValueError, match="offline finalization"):
+        verifier.verify_run(run, weight, spec)

@@ -495,8 +495,38 @@ def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_prefli
     artifact_root = tmp_path / "wsts-res18-t1-official-weight"
     run = artifact_root / "fold2-weight-terminal"
     run.mkdir(parents=True)
+    spec = weight_controller._fold2_spec()
+    weight = weight_controller.weight_cache_path(spec)
+    command = weight_controller.build_weight_command(
+        spec=spec, run_directory=run, weight_path=weight
+    )
+    command_hash = hashlib.sha256(
+        json.dumps(command, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    launch = {
+        "command": command,
+        "command_sha256": command_hash,
+        "run_directory": str(run.resolve()),
+        "test_only": True,
+        "single_launch_no_retry": True,
+    }
+    (artifact_root / "fold2-weight-evaluation.lock.json").write_text(
+        json.dumps(launch), encoding="utf-8"
+    )
+    (run / "launch.lock.json").write_text(json.dumps(launch), encoding="utf-8")
     preflight = run / "preflight.json"
-    preflight.write_text(json.dumps({"status": "pass"}), encoding="utf-8")
+    preflight.write_text(
+        json.dumps(
+            {
+                **launch,
+                "status": "pass",
+                "weight_path": str(weight.resolve()),
+                "weight_sha256": spec.sha256,
+                "filename_ap": spec.filename_ap,
+            }
+        ),
+        encoding="utf-8",
+    )
     preflight_before = preflight.read_bytes()
     (run / "completed.json").write_text(
         json.dumps({"status": "pass", "exit_code": 0, "pid": 37668}),
@@ -504,10 +534,14 @@ def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_prefli
     )
     (run / "exit-code.txt").write_text("0\n", encoding="utf-8")
     (run / "started.json").write_text(
-        json.dumps({"pid": 37668, "command_sha256": "command-sha"}), encoding="utf-8"
+        json.dumps(
+            {"pid": 37668, "command": command, "command_sha256": command_hash}
+        ),
+        encoding="utf-8",
     )
     (run / "effective-command.json").write_text(
-        json.dumps({"command_sha256": "command-sha"}), encoding="utf-8"
+        json.dumps({"command": command, "command_sha256": command_hash}),
+        encoding="utf-8",
     )
     result = {
         "status": "pass",
@@ -533,7 +567,7 @@ def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_prefli
 
     expected = {
         **result,
-        "command_sha256": "command-sha",
+        "command_sha256": command_hash,
         "child_pid": 37668,
     }
     finalized = weight_controller.finalize_existing_weight(run)
