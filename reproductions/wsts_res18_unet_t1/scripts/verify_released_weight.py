@@ -26,6 +26,11 @@ from verify_calibration import (
     validate_source_inventory_lineage,
 )
 from verify_full_fold import validate_provenance_copies
+from released_weight_contract import (
+    RELEASED_WEIGHT_FILENAMES as EXPECTED_RELEASED_WEIGHT_FILENAMES,
+    REVISION as EXPECTED_REVISION,
+    WEIGHT_PREFIX,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
@@ -60,22 +65,6 @@ EXPECTED_WEIGHT_ROOT = (
     / "reproductions"
     / "wsts-res18-t1-official-weight"
 )
-EXPECTED_RELEASED_WEIGHT_FILENAMES = (
-    "fold0_testAP0.528.pth",
-    "fold1_testAP0.426.pth",
-    "fold2_testAP0.571.pth",
-    "fold3_testAP0.307.pth",
-    "fold4_testAP0.483.pth",
-    "fold5_testAP0.322.pth",
-    "fold6_testAP0.577.pth",
-    "fold7_testAP0.474.pth",
-    "fold8_testAP0.478.pth",
-    "fold9_testAP0.471.pth",
-    "fold10_testAP0.324.pth",
-    "fold11_testAP0.474.pth",
-)
-WEIGHT_PREFIX = "trained_model_weights/Res18Unet_T1/All/"
-EXPECTED_REVISION = "acf70a37394849f4ec8d108a51d6f4325a554d0a"
 FILENAME_PROVENANCE = (
     "derived only from filenames in the pinned official All/T=1 weight manifest; "
     "not provenance for the paper table"

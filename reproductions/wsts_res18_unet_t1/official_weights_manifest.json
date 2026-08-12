@@ -1,0 +1,176 @@
+{
+  "repo_id": "saadlahrichi/WSTSPlus",
+  "revision": "acf70a37394849f4ec8d108a51d6f4325a554d0a",
+  "schema_version": 1,
+  "weight_prefix": "trained_model_weights/Res18Unet_T1/All/",
+  "weights": [
+    {
+      "filename": "fold0_testAP0.528.pth",
+      "filename_ap": 0.528,
+      "fold_id": 0,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold0_testAP0.528.pth",
+      "sha256": "be33d244916d71158dab42b3aa607395a49989f862165529f38cabd735dd69eb",
+      "size": 57889221,
+      "test_year": 2021,
+      "train_years": [
+        2018,
+        2019
+      ],
+      "validation_year": 2020
+    },
+    {
+      "filename": "fold1_testAP0.426.pth",
+      "filename_ap": 0.426,
+      "fold_id": 1,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold1_testAP0.426.pth",
+      "sha256": "367cdec7a9a0f5729d2c01db1c195345aaf78768976293277b5386e7bcc0e36f",
+      "size": 57889221,
+      "test_year": 2020,
+      "train_years": [
+        2018,
+        2019
+      ],
+      "validation_year": 2021
+    },
+    {
+      "filename": "fold2_testAP0.571.pth",
+      "filename_ap": 0.571,
+      "fold_id": 2,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold2_testAP0.571.pth",
+      "sha256": "e17cd58e29ee7b91f6a8ba85ddcb5783ec69b9541e2de93298ba3241e785a9ec",
+      "size": 57889221,
+      "test_year": 2021,
+      "train_years": [
+        2018,
+        2020
+      ],
+      "validation_year": 2019
+    },
+    {
+      "filename": "fold3_testAP0.307.pth",
+      "filename_ap": 0.307,
+      "fold_id": 3,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold3_testAP0.307.pth",
+      "sha256": "41e24f55dd0270566351fa5b52d50c77a45d01074805f18a591791b29860ab81",
+      "size": 57889221,
+      "test_year": 2019,
+      "train_years": [
+        2018,
+        2020
+      ],
+      "validation_year": 2021
+    },
+    {
+      "filename": "fold4_testAP0.483.pth",
+      "filename_ap": 0.483,
+      "fold_id": 4,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold4_testAP0.483.pth",
+      "sha256": "aa8e512a63bdcc229dedb358a0e8cf9e40c6559ae3b2504adbd3e30ccc97fd3d",
+      "size": 57889221,
+      "test_year": 2020,
+      "train_years": [
+        2018,
+        2021
+      ],
+      "validation_year": 2019
+    },
+    {
+      "filename": "fold5_testAP0.322.pth",
+      "filename_ap": 0.322,
+      "fold_id": 5,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold5_testAP0.322.pth",
+      "sha256": "0b31b3749c239123de159171fc0f60390a14ae25bd986b713135b73f5faecda9",
+      "size": 57889221,
+      "test_year": 2019,
+      "train_years": [
+        2018,
+        2021
+      ],
+      "validation_year": 2020
+    },
+    {
+      "filename": "fold6_testAP0.577.pth",
+      "filename_ap": 0.577,
+      "fold_id": 6,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold6_testAP0.577.pth",
+      "sha256": "e83c49de0bf7524c92946a205e3eadd2ffce76d04502e23ffcab9a3593e8afd9",
+      "size": 57889221,
+      "test_year": 2021,
+      "train_years": [
+        2019,
+        2020
+      ],
+      "validation_year": 2018
+    },
+    {
+      "filename": "fold7_testAP0.474.pth",
+      "filename_ap": 0.474,
+      "fold_id": 7,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold7_testAP0.474.pth",
+      "sha256": "5ed6e8c59a57d6d948522efd4f90c64596f4292f16a18f96610b310faa30d41a",
+      "size": 57889221,
+      "test_year": 2018,
+      "train_years": [
+        2019,
+        2020
+      ],
+      "validation_year": 2021
+    },
+    {
+      "filename": "fold8_testAP0.478.pth",
+      "filename_ap": 0.478,
+      "fold_id": 8,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold8_testAP0.478.pth",
+      "sha256": "6004ab1060a6cfed1ffa70174dcf0c68717e75ea5b96ebde0e60a63297f45ab4",
+      "size": 57889221,
+      "test_year": 2020,
+      "train_years": [
+        2019,
+        2021
+      ],
+      "validation_year": 2018
+    },
+    {
+      "filename": "fold9_testAP0.471.pth",
+      "filename_ap": 0.471,
+      "fold_id": 9,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold9_testAP0.471.pth",
+      "sha256": "7237244ce4a5ee5f3084985fc074275e69caca853b9bde2e1ada7000c5f5d3d0",
+      "size": 57889221,
+      "test_year": 2018,
+      "train_years": [
+        2019,
+        2021
+      ],
+      "validation_year": 2020
+    },
+    {
+      "filename": "fold10_testAP0.324.pth",
+      "filename_ap": 0.324,
+      "fold_id": 10,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold10_testAP0.324.pth",
+      "sha256": "2c9247afccdab53cda6bb3da00b4ba414ce963e6ad0e3e43bcf4623e431d3e96",
+      "size": 57889405,
+      "test_year": 2019,
+      "train_years": [
+        2020,
+        2021
+      ],
+      "validation_year": 2018
+    },
+    {
+      "filename": "fold11_testAP0.474.pth",
+      "filename_ap": 0.474,
+      "fold_id": 11,
+      "hub_path": "trained_model_weights/Res18Unet_T1/All/fold11_testAP0.474.pth",
+      "sha256": "9ecc0ee9e5908dff4f242a6b6a58060c4bfdd9ceb6857c4a12e13b633fa4c709",
+      "size": 57889405,
+      "test_year": 2018,
+      "train_years": [
+        2020,
+        2021
+      ],
+      "validation_year": 2019
+    }
+  ]
+}

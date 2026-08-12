@@ -1,4 +1,4 @@
-"""Fetch and evaluate the pinned official Fold-2 Res18-U-Net raw state dict."""
+"""Freeze or evaluate the pinned official Res18-U-Net T=1 weight release."""
 
 from __future__ import annotations
 
@@ -45,16 +45,28 @@ from run_calibration import (
     write_json_atomic,
 )
 from run_full_fold import FULL_ARTIFACTS_ROOT, parse_test_metrics
+from released_weight_contract import (
+    RELEASED_WEIGHT_FILENAMES,
+    REPO_ID,
+    REVISION,
+    WEIGHT_PREFIX,
+    WeightSpec,
+    load_pinned_manifest,
+    parse_pinned_tree,
+    spec_for_fold,
+    validate_local_weight,
+    write_manifest_atomic,
+)
 from verify_released_weight import validate_weight_result
 
 
-REVISION = "acf70a37394849f4ec8d108a51d6f4325a554d0a"
-REPO_ID = "saadlahrichi/WSTSPlus"
-WEIGHT_PREFIX = "trained_model_weights/Res18Unet_T1/All/"
-FOLD2_PATH = WEIGHT_PREFIX + "fold2_testAP0.571.pth"
-FOLD2_SIZE = 57_889_221
-FOLD2_SHA256 = "e17cd58e29ee7b91f6a8ba85ddcb5783ec69b9541e2de93298ba3241e785a9ec"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+PINNED_MANIFEST_PATH = (
+    REPOSITORY_ROOT
+    / "reproductions"
+    / "wsts_res18_unet_t1"
+    / "official_weights_manifest.json"
+)
 WEIGHT_CACHE = (
     REPOSITORY_ROOT
     / "reproductions"
@@ -70,24 +82,14 @@ WEIGHT_ARTIFACTS_ROOT = (
     / "wsts-res18-t1-official-weight"
 )
 GLOBAL_WEIGHT_LOCK = WEIGHT_ARTIFACTS_ROOT / "fold2-weight-evaluation.lock.json"
-RELEASED_WEIGHT_FILENAMES = (
-    "fold0_testAP0.528.pth",
-    "fold1_testAP0.426.pth",
-    "fold2_testAP0.571.pth",
-    "fold3_testAP0.307.pth",
-    "fold4_testAP0.483.pth",
-    "fold5_testAP0.322.pth",
-    "fold6_testAP0.577.pth",
-    "fold7_testAP0.474.pth",
-    "fold8_testAP0.478.pth",
-    "fold9_testAP0.471.pth",
-    "fold10_testAP0.324.pth",
-    "fold11_testAP0.474.pth",
-)
 FILENAME_PROVENANCE = (
     "derived only from filenames in the pinned official All/T=1 weight manifest; "
     "not provenance for the paper table"
 )
+
+
+def _fold2_spec() -> WeightSpec:
+    return spec_for_fold(load_pinned_manifest(PINNED_MANIFEST_PATH), 2)
 
 
 def summarize_filename_aps(filenames: Sequence[str]) -> dict[str, float | int]:
@@ -134,54 +136,48 @@ def build_filename_manifest_evidence(
 def validate_weight_manifest(
     items: Sequence[Mapping[str, object]],
 ) -> dict[str, object]:
-    matches = [
-        item
-        for item in items
-        if item.get("type") == "file"
-        and isinstance(item.get("path"), str)
-        and str(item["path"]).startswith(WEIGHT_PREFIX)
-    ]
-    if len(matches) != 12:
-        raise ValueError("All/T=1 manifest must contain exactly twelve released weights")
-    filenames = [Path(str(item["path"])).name for item in matches]
-    try:
-        aggregate = summarize_filename_aps(filenames)
-    except ValueError as error:
-        if "unique folds" in str(error):
-            raise
-        raise ValueError(f"released weight manifest is invalid: {error}") from error
-    filename_manifest = build_filename_manifest_evidence(filenames)
-    if filename_manifest["filenames"] != list(RELEASED_WEIGHT_FILENAMES):
-        raise ValueError("released weight filenames differ from the pinned manifest")
-    selected = [item for item in matches if item.get("path") == FOLD2_PATH]
-    if len(selected) != 1:
-        raise ValueError("Fold 2 weight is missing or ambiguous")
-    item = selected[0]
-    lfs = item.get("lfs")
-    sha = lfs.get("oid") if isinstance(lfs, Mapping) else None
-    if item.get("size") != FOLD2_SIZE or sha != FOLD2_SHA256:
+    specs = parse_pinned_tree(items)
+    selected = spec_for_fold(specs, 2)
+    expected = _fold2_spec()
+    if selected.size != expected.size or selected.sha256 != expected.sha256:
         raise ValueError("Fold 2 weight size or LFS SHA-256 differs from the pinned revision")
+    aggregate = summarize_filename_aps([spec.filename for spec in specs])
+    filename_manifest = build_filename_manifest_evidence(
+        [spec.filename for spec in specs]
+    )
     return {
-        "path": FOLD2_PATH,
-        "size": FOLD2_SIZE,
-        "lfs_sha256": FOLD2_SHA256,
-        "filename_ap": 0.571,
+        "path": selected.hub_path,
+        "size": selected.size,
+        "lfs_sha256": selected.sha256,
+        "filename_ap": selected.filename_ap,
         "filename_aggregate": aggregate,
         "filename_manifest": filename_manifest,
     }
 
 
 def validate_download(
-    path: Path, *, expected_size: int = FOLD2_SIZE, expected_sha256: str = FOLD2_SHA256
+    path: Path,
+    *,
+    spec: WeightSpec | None = None,
+    expected_size: int | None = None,
+    expected_sha256: str | None = None,
 ) -> None:
-    if not path.is_file() or path.stat().st_size != expected_size:
-        raise ValueError("released weight download size mismatch")
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    if digest.hexdigest() != expected_sha256:
-        raise ValueError("released weight download SHA-256 mismatch")
+    if spec is None:
+        if expected_size is None or expected_sha256 is None:
+            spec = _fold2_spec()
+        else:
+            spec = WeightSpec(
+                2,
+                "fold2_testAP0.571.pth",
+                WEIGHT_PREFIX + "fold2_testAP0.571.pth",
+                expected_size,
+                expected_sha256,
+                0.571,
+                (2018, 2020),
+                2019,
+                2021,
+            )
+    validate_local_weight(path, spec)
 
 
 def query_manifest() -> list[dict[str, object]]:
@@ -196,13 +192,42 @@ def query_manifest() -> list[dict[str, object]]:
     return payload
 
 
+def pin_manifest(path: Path) -> dict[str, object]:
+    """Query the pinned Hub tree and publish its twelve-weight contract."""
+    specs = parse_pinned_tree(query_manifest())
+    write_manifest_atomic(path, specs)
+    return {
+        "manifest_path": str(path.resolve()),
+        "repo_id": REPO_ID,
+        "revision": REVISION,
+        "weight_count": len(specs),
+        "weights": [
+            {"fold_id": spec.fold_id, "size": spec.size, "sha256": spec.sha256}
+            for spec in specs
+        ],
+    }
+
+
 def fetch_weight(target: Path = WEIGHT_CACHE) -> dict[str, object]:
     selected = validate_weight_manifest(query_manifest())
+    spec = WeightSpec(
+        2,
+        Path(str(selected["path"])).name,
+        str(selected["path"]),
+        int(selected["size"]),
+        str(selected["lfs_sha256"]),
+        float(selected["filename_ap"]),
+        (2018, 2020),
+        2019,
+        2021,
+    )
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists():
-        validate_download(target)
+        validate_download(target, spec=spec)
         return {**selected, "local_path": str(target.resolve()), "download_reused": True}
-    encoded = "/".join(urllib.parse.quote(part, safe="") for part in FOLD2_PATH.split("/"))
+    encoded = "/".join(
+        urllib.parse.quote(part, safe="") for part in spec.hub_path.split("/")
+    )
     url = f"https://huggingface.co/{REPO_ID}/resolve/{REVISION}/{encoded}?download=true"
     file_descriptor, temporary_name = tempfile.mkstemp(
         prefix=target.name + ".", suffix=".tmp", dir=target.parent
@@ -216,7 +241,7 @@ def fetch_weight(target: Path = WEIGHT_CACHE) -> dict[str, object]:
                 if not chunk:
                     break
                 handle.write(chunk)
-        validate_download(temporary)
+        validate_download(temporary, spec=spec)
         os.replace(temporary, target)
     finally:
         if temporary.exists():
@@ -437,7 +462,7 @@ def _preflight(
             "status": "pass",
             "purpose": "test-only evaluation of pinned official Fold-2 raw state dict",
             "weight_path": str(WEIGHT_CACHE.resolve()),
-            "weight_sha256": FOLD2_SHA256,
+            "weight_sha256": _fold2_spec().sha256,
             "filename_ap": 0.571,
             "filename_manifest": build_filename_manifest_evidence(),
             "runtime": runtime,
@@ -505,7 +530,7 @@ def parse_weight_run(run_directory: Path) -> dict[str, object]:
         "filename_ap": 0.571,
         "filename_manifest": build_filename_manifest_evidence(),
         "weight_path": str(WEIGHT_CACHE.resolve()),
-        "weight_sha256": FOLD2_SHA256,
+        "weight_sha256": _fold2_spec().sha256,
         "wall_seconds": wall,
         "peak_allocated_bytes": evidence["peak_allocated_bytes"],
         **summarize_gpu_samples(gpu_rows),
@@ -656,9 +681,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     action.add_argument("--preflight-only", action="store_true")
     action.add_argument("--launch", action="store_true")
     action.add_argument("--finalize-existing", type=Path)
+    action.add_argument("--pin-manifest", type=Path)
     arguments = parser.parse_args(argv)
     if arguments.fetch_only:
         result = fetch_weight()
+    elif arguments.pin_manifest is not None:
+        result = pin_manifest(arguments.pin_manifest)
     elif arguments.preflight_only:
         placeholder = WEIGHT_ARTIFACTS_ROOT / "preflight-placeholder"
         placeholder.mkdir(parents=True, exist_ok=True)
