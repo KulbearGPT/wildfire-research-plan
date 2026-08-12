@@ -30,6 +30,10 @@ from released_weight_contract import (
     RELEASED_WEIGHT_FILENAMES as EXPECTED_RELEASED_WEIGHT_FILENAMES,
     REVISION as EXPECTED_REVISION,
     WEIGHT_PREFIX,
+    WeightSpec,
+    load_pinned_manifest,
+    spec_for_fold,
+    validate_local_weight,
 )
 
 
@@ -51,26 +55,22 @@ EXPECTED_WORKER_SMOKE = (
 EXPECTED_FULL_ROOT = (
     REPOSITORY_ROOT / "artifacts" / "reproductions" / "wsts-res18-t1-full"
 )
-EXPECTED_WEIGHT_PATH = (
-    REPRODUCTION_ROOT
-    / ".local"
-    / "released-weights"
-    / "fold2_testAP0.571.pth"
-)
-EXPECTED_WEIGHT_SIZE = 57_889_221
-EXPECTED_WEIGHT_SHA256 = "e17cd58e29ee7b91f6a8ba85ddcb5783ec69b9541e2de93298ba3241e785a9ec"
 EXPECTED_WEIGHT_ROOT = (
     REPOSITORY_ROOT
     / "artifacts"
     / "reproductions"
     / "wsts-res18-t1-official-weight"
 )
+PINNED_MANIFEST_PATH = REPRODUCTION_ROOT / "official_weights_manifest.json"
 FILENAME_PROVENANCE = (
     "derived only from filenames in the pinned official All/T=1 weight manifest; "
     "not provenance for the paper table"
 )
 EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256 = (
     "de60464477f74d324bd2fadb451526814bc729fa71d1eeb167f53340626e080b"
+)
+EXPECTED_LAUNCH_WEIGHT_ENTRYPOINT_SHA256 = (
+    "ea024f5982e1e3d34ddb5cdc53354d837dd00b755102249635db46f5cfeb3b04"
 )
 EXPECTED_TEST_METRICS = {
     "test_AP",
@@ -122,6 +122,49 @@ def derive_filename_manifest_evidence() -> dict[str, object]:
         "paper_table_provenance": False,
         "provenance_note": FILENAME_PROVENANCE,
     }
+
+
+def _fold2_spec() -> WeightSpec:
+    return spec_for_fold(load_pinned_manifest(PINNED_MANIFEST_PATH), 2)
+
+
+def _fold_claims(spec: WeightSpec, weight_path: Path) -> dict[str, object]:
+    return {
+        "fold_id": spec.fold_id,
+        "train_years": list(spec.train_years),
+        "validation_year": spec.validation_year,
+        "test_year": spec.test_year,
+        "weight_path": str(weight_path.resolve()),
+        "weight_filename": spec.filename,
+        "weight_size": spec.size,
+        "weight_sha256": spec.sha256,
+        "filename_ap": spec.filename_ap,
+    }
+
+
+def verify_fold_claims(
+    payload: Mapping[str, object], *, spec: WeightSpec, weight_path: Path
+) -> None:
+    expected = _fold_claims(spec, weight_path)
+    if any(payload.get(field) != value for field, value in expected.items()):
+        raise ValueError("released-weight fold claims mismatch")
+
+
+def _verify_fold_claims_compatible(
+    payload: Mapping[str, object], *, spec: WeightSpec, weight_path: Path
+) -> None:
+    if "fold_id" in payload:
+        verify_fold_claims(payload, spec=spec, weight_path=weight_path)
+        return
+    if spec.fold_id != 2:
+        raise ValueError("released-weight fold claims are missing")
+    legacy = {
+        "weight_path": str(weight_path.resolve()),
+        "weight_sha256": spec.sha256,
+        "filename_ap": spec.filename_ap,
+    }
+    if any(payload.get(field) != value for field, value in legacy.items()):
+        raise ValueError("released-weight legacy Fold-2 claims mismatch")
 
 
 def validate_test_metrics(metrics: Mapping[str, object]) -> dict[str, float]:
@@ -224,23 +267,53 @@ def verify_first_verifier_failure(run_directory: Path) -> dict[str, bool]:
     return {"first_verifier_failure_preserved": True}
 
 
+def verify_retrospective_markers(run_directory: Path) -> dict[str, bool]:
+    run = run_directory.resolve()
+    first_path = run / "independent-verifier-first-failure.json"
+    first_preserved = False
+    if first_path.is_file():
+        first_preserved = verify_first_verifier_failure(run)[
+            "first_verifier_failure_preserved"
+        ]
+    augmentation_path = run / "offline-full-dependency-augmentation.json"
+    augmentation_present = augmentation_path.is_file()
+    if augmentation_present:
+        augmentation = json.loads(augmentation_path.read_text(encoding="utf-8"))
+        if (
+            not isinstance(augmentation, Mapping)
+            or augmentation.get("status") != "pass"
+            or augmentation.get("augmentation_scope")
+            != "offline current full-run dependency hashes only"
+            or augmentation.get("scientific_child_relaunched") is not False
+        ):
+            raise ValueError("full dependency augmentation mismatch")
+    return {
+        "first_verifier_failure_preserved": first_preserved,
+        "offline_full_dependency_augmentation_present": augmentation_present,
+    }
+
+
 def build_weight_provenance_contract() -> tuple[dict[str, Path], dict[str, str]]:
     return (
         {
             "upstream.lock.json": REPRODUCTION_ROOT / "upstream.lock.json",
             "smoke.json": EXPECTED_WORKER_SMOKE,
-            "official_weight_entrypoint.py": Path(__file__).with_name(
-                "official_weight_entrypoint.py"
-            ),
             "res18_import_scope.patch": EXPECTED_PATCH,
         },
-        {"evaluate_released_weight.py": EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256},
+        {
+            "official_weight_entrypoint.py": EXPECTED_LAUNCH_WEIGHT_ENTRYPOINT_SHA256,
+            "evaluate_released_weight.py": EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256,
+        },
     )
 
 
 def build_expected_weight_command(
-    run_directory: Path, derived_root: Path, weight_path: Path
+    run_directory: Path,
+    derived_root: Path,
+    weight_path: Path,
+    spec: WeightSpec | None = None,
 ) -> list[str]:
+    spec = _fold2_spec() if spec is None else spec
     run = run_directory.resolve()
     derived = derived_root.resolve()
     weight = weight_path.resolve()
@@ -256,7 +329,7 @@ def build_expected_weight_command(
         f"--trainer={(configs / 'trainer_single_gpu.yaml').as_posix()}",
         f"--data={(configs / 'data_monotemporal_full_features.yaml').as_posix()}",
         f"--data.data_dir={FIXED_DATA_ROOT.resolve()}",
-        "--data.data_fold_id=2",
+        f"--data.data_fold_id={spec.fold_id}",
         "--data.features_to_keep=null",
         "--data.n_leading_observations=1",
         "--data.remove_duplicate_features=true",
@@ -444,6 +517,24 @@ def _verify_weight_runtime_provenance(
         if runtime_patch.get(field) != expected:
             raise ValueError(f"weight preflight runtime_patch.{field} mismatch")
     authoritative_sources, launch_time_hashes = build_weight_provenance_contract()
+    copied_entrypoint = run / "provenance" / "official_weight_entrypoint.py"
+    if (
+        copied_entrypoint.is_file()
+        and _sha256(copied_entrypoint) != EXPECTED_LAUNCH_WEIGHT_ENTRYPOINT_SHA256
+    ):
+        authoritative_sources["official_weight_entrypoint.py"] = Path(
+            __file__
+        ).with_name("official_weight_entrypoint.py")
+        launch_time_hashes.pop("official_weight_entrypoint.py")
+    copied_controller = run / "provenance" / "evaluate_released_weight.py"
+    if (
+        copied_controller.is_file()
+        and _sha256(copied_controller) != EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256
+    ):
+        authoritative_sources["evaluate_released_weight.py"] = Path(__file__).with_name(
+            "evaluate_released_weight.py"
+        )
+        launch_time_hashes.pop("evaluate_released_weight.py")
     recorded_hashes = effective.get("provenance_sha256")
     if not isinstance(recorded_hashes, Mapping):
         raise ValueError("weight effective provenance hash manifest is missing")
@@ -519,30 +610,41 @@ def _verify_full_dependency(
     return expected
 
 
-def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
+def verify_run(
+    run_directory: Path, weight_path: Path, spec: WeightSpec
+) -> dict[str, object]:
     run = run_directory.resolve()
     weight = weight_path.resolve()
-    if run.parent != EXPECTED_WEIGHT_ROOT.resolve():
+    if (
+        run.parent != EXPECTED_WEIGHT_ROOT.resolve()
+        or not run.name.startswith(f"fold{spec.fold_id}-weight-")
+    ):
         raise ValueError("released-weight run directory is outside the fixed artifact root")
-    if weight != EXPECTED_WEIGHT_PATH.resolve():
-        raise ValueError("released-weight path is not the pinned Fold-2 cache path")
-    if weight.stat().st_size != EXPECTED_WEIGHT_SIZE or _sha256(
-        weight
-    ) != EXPECTED_WEIGHT_SHA256:
-        raise ValueError("released-weight bytes differ from the pinned Fold-2 weight")
+    expected_weight = (
+        REPRODUCTION_ROOT / ".local" / "released-weights" / spec.filename
+    ).resolve()
+    if weight != expected_weight:
+        raise ValueError("released-weight path is not the pinned fold cache path")
+    validate_local_weight(weight, spec)
     raw_before = capture_weight_raw_manifest(run, weight)
-    first_failure = verify_first_verifier_failure(run)
+    retrospective = verify_retrospective_markers(run)
     result = json.loads((run / "weight-result.json").read_text(encoding="utf-8"))
     preflight = json.loads((run / "preflight.json").read_text(encoding="utf-8"))
     effective = json.loads(
         (run / "effective-command.json").read_text(encoding="utf-8")
     )
     global_lock = json.loads(
-        (run.parent / "fold2-weight-evaluation.lock.json").read_text(encoding="utf-8")
+        (run.parent / f"fold{spec.fold_id}-weight-evaluation.lock.json").read_text(
+            encoding="utf-8"
+        )
     )
     run_lock = json.loads((run / "launch.lock.json").read_text(encoding="utf-8"))
     started = json.loads((run / "started.json").read_text(encoding="utf-8"))
     completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
+    _verify_fold_claims_compatible(
+        preflight, spec=spec, weight_path=weight
+    )
+    _verify_fold_claims_compatible(result, spec=spec, weight_path=weight)
     filename_manifest = derive_filename_manifest_evidence()
     if preflight.get("filename_manifest") != filename_manifest:
         augmentation_path = run / "offline-preflight-augmentation.json"
@@ -560,7 +662,7 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
             if augmentation.get(field) != expected:
                 raise ValueError(f"weight offline preflight augmentation mismatch: {field}")
     expected_command = build_expected_weight_command(
-        run, EXPECTED_DERIVED_UPSTREAM, weight
+        run, EXPECTED_DERIVED_UPSTREAM, weight, spec
     )
     command_hash = _command_sha256(expected_command)
     verify_weight_command_lineage(
@@ -596,10 +698,8 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
     independently_recorded = {
         "status": "pass",
         **evidence,
-        "filename_ap": 0.571,
+        **_fold_claims(spec, weight),
         "filename_manifest": filename_manifest,
-        "weight_path": str(weight),
-        "weight_sha256": EXPECTED_WEIGHT_SHA256,
         "command_sha256": command_hash,
         "child_pid": started.get("pid"),
         **observer,
@@ -607,7 +707,19 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
     summary = validate_weight_result(independently_recorded)
     independently_recorded.update(summary)
     for field, expected in independently_recorded.items():
-        if field == "loaded_tensor_count":
+        if field == "loaded_tensor_count" or (
+            field
+            in {
+                "fold_id",
+                "train_years",
+                "validation_year",
+                "test_year",
+                "weight_filename",
+                "weight_size",
+            }
+            and spec.fold_id == 2
+            and field not in result
+        ):
             continue
         if result.get(field) != expected:
             raise ValueError(f"released-weight result mismatch: {field}")
@@ -625,8 +737,9 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
     ).hexdigest()
     return {
         "status": "pass",
+        "fold_id": spec.fold_id,
         "command_sha256": command_hash,
-        "weight_sha256": EXPECTED_WEIGHT_SHA256,
+        "weight_sha256": spec.sha256,
         "loaded_tensor_count": evidence["loaded_tensor_count"],
         "test_metrics": evidence["test_metrics"],
         "filename_manifest": filename_manifest,
@@ -641,18 +754,22 @@ def verify_run(run_directory: Path, weight_path: Path) -> dict[str, object]:
         "full_run_dependency": full_dependency,
         **summary,
         **provenance,
-        **first_failure,
+        **retrospective,
         "independent_implementation": True,
     }
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--fold-id", type=int, choices=range(12), default=2)
     parser.add_argument("--run-directory", required=True, type=Path)
     parser.add_argument("--weight-path", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     arguments = parser.parse_args(argv)
-    result = verify_run(arguments.run_directory, arguments.weight_path)
+    spec = spec_for_fold(
+        load_pinned_manifest(PINNED_MANIFEST_PATH), arguments.fold_id
+    )
+    result = verify_run(arguments.run_directory, arguments.weight_path, spec)
     arguments.output.write_text(
         json.dumps(result, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8"
     )

@@ -21,6 +21,7 @@ from evaluate_released_weight import (  # noqa: E402
     validate_weight_output,
 )
 import evaluate_released_weight as weight_controller  # noqa: E402
+import released_weight_contract as contract  # noqa: E402
 from verify_released_weight import validate_weight_result  # noqa: E402
 import verify_released_weight as weight_verifier  # noqa: E402
 
@@ -123,7 +124,17 @@ def test_download_validation_checks_exact_size_and_sha(tmp_path: Path) -> None:
 
 
 def test_weight_command_is_test_only_on_fold2_all_t1(tmp_path: Path) -> None:
+    spec = contract.spec_for_fold(
+        contract.load_pinned_manifest(
+            REPOSITORY_ROOT
+            / "reproductions"
+            / "wsts_res18_unet_t1"
+            / "official_weights_manifest.json"
+        ),
+        2,
+    )
     command = build_weight_command(
+        spec=spec,
         run_directory=(tmp_path / "run").resolve(),
         weight_path=(tmp_path / "fold2.pth").resolve(),
         python_executable=(tmp_path / "env" / "python.exe").resolve(),
@@ -139,12 +150,20 @@ def test_weight_command_is_test_only_on_fold2_all_t1(tmp_path: Path) -> None:
     assert "--do_train=false" in command
     assert "--do_test=false" in command
     assert not any("max_steps" in item or "do_predict" in item or "do_validate" in item for item in command)
-    validate_weight_command(command, (tmp_path / "run").resolve(), (tmp_path / "fold2.pth").resolve())
+    validate_weight_command(
+        command,
+        (tmp_path / "run").resolve(),
+        (tmp_path / "fold2.pth").resolve(),
+        spec,
+    )
 
     changed = ["--do_train=true" if item == "--do_train=false" else item for item in command]
     with pytest.raises(ValueError, match="exact released-weight command"):
         validate_weight_command(
-            changed, (tmp_path / "run").resolve(), (tmp_path / "fold2.pth").resolve()
+            changed,
+            (tmp_path / "run").resolve(),
+            (tmp_path / "fold2.pth").resolve(),
+            spec,
         )
 
 
@@ -508,7 +527,9 @@ def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_prefli
         "filename_manifest": weight_controller.build_filename_manifest_evidence(),
     }
     monkeypatch.setattr(weight_controller, "WEIGHT_ARTIFACTS_ROOT", artifact_root)
-    monkeypatch.setattr(weight_controller, "parse_weight_run", lambda _: dict(result))
+    monkeypatch.setattr(
+        weight_controller, "parse_weight_run", lambda _run, **_kwargs: dict(result)
+    )
 
     expected = {
         **result,
@@ -560,6 +581,9 @@ def test_weight_provenance_classifies_controller_as_launch_time_copy() -> None:
 
     assert "evaluate_released_weight.py" not in authoritative
     assert launch_time == {
+        "official_weight_entrypoint.py": (
+            "ea024f5982e1e3d34ddb5cdc53354d837dd00b755102249635db46f5cfeb3b04"
+        ),
         "evaluate_released_weight.py": (
             "de60464477f74d324bd2fadb451526814bc729fa71d1eeb167f53340626e080b"
         )

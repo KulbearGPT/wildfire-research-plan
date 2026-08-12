@@ -15,6 +15,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 
 from run_calibration import (
@@ -67,13 +68,12 @@ PINNED_MANIFEST_PATH = (
     / "wsts_res18_unet_t1"
     / "official_weights_manifest.json"
 )
-WEIGHT_CACHE = (
+WEIGHT_CACHE_ROOT = (
     REPOSITORY_ROOT
     / "reproductions"
     / "wsts_res18_unet_t1"
     / ".local"
     / "released-weights"
-    / "fold2_testAP0.571.pth"
 )
 WEIGHT_ARTIFACTS_ROOT = (
     REPOSITORY_ROOT
@@ -81,7 +81,6 @@ WEIGHT_ARTIFACTS_ROOT = (
     / "reproductions"
     / "wsts-res18-t1-official-weight"
 )
-GLOBAL_WEIGHT_LOCK = WEIGHT_ARTIFACTS_ROOT / "fold2-weight-evaluation.lock.json"
 FILENAME_PROVENANCE = (
     "derived only from filenames in the pinned official All/T=1 weight manifest; "
     "not provenance for the paper table"
@@ -90,6 +89,53 @@ FILENAME_PROVENANCE = (
 
 def _fold2_spec() -> WeightSpec:
     return spec_for_fold(load_pinned_manifest(PINNED_MANIFEST_PATH), 2)
+
+
+def weight_cache_path(spec: WeightSpec) -> Path:
+    return WEIGHT_CACHE_ROOT / spec.filename
+
+
+def global_weight_lock_path(spec: WeightSpec) -> Path:
+    return WEIGHT_ARTIFACTS_ROOT / f"fold{spec.fold_id}-weight-evaluation.lock.json"
+
+
+def build_fold_claims(*, spec: WeightSpec, weight_path: Path) -> dict[str, object]:
+    return {
+        "fold_id": spec.fold_id,
+        "train_years": list(spec.train_years),
+        "validation_year": spec.validation_year,
+        "test_year": spec.test_year,
+        "weight_path": str(weight_path.resolve()),
+        "weight_filename": spec.filename,
+        "weight_size": spec.size,
+        "weight_sha256": spec.sha256,
+        "filename_ap": spec.filename_ap,
+    }
+
+
+def validate_fold_paths(
+    *,
+    spec: WeightSpec,
+    run_directory: Path,
+    weight_path: Path,
+    lock_path: Path,
+    artifacts_root: Path = WEIGHT_ARTIFACTS_ROOT,
+) -> None:
+    run = run_directory.resolve()
+    root = artifacts_root.resolve()
+    expected_lock = root / f"fold{spec.fold_id}-weight-evaluation.lock.json"
+    if (
+        run.parent != root
+        or not run.name.startswith(f"fold{spec.fold_id}-weight-")
+        or weight_path.name != spec.filename
+        or lock_path.resolve() != expected_lock
+    ):
+        raise ValueError("released-weight fold path identity mismatch")
+
+
+# Historical public aliases retained for callers that explicitly target Fold 2.
+WEIGHT_CACHE = weight_cache_path(_fold2_spec())
+GLOBAL_WEIGHT_LOCK = global_weight_lock_path(_fold2_spec())
 
 
 def summarize_filename_aps(filenames: Sequence[str]) -> dict[str, float | int]:
@@ -134,13 +180,15 @@ def build_filename_manifest_evidence(
 
 
 def validate_weight_manifest(
-    items: Sequence[Mapping[str, object]],
+    items: Sequence[Mapping[str, object]], spec: WeightSpec | None = None
 ) -> dict[str, object]:
     specs = parse_pinned_tree(items)
-    selected = spec_for_fold(specs, 2)
-    expected = _fold2_spec()
+    expected = _fold2_spec() if spec is None else spec
+    selected = spec_for_fold(specs, expected.fold_id)
     if selected.size != expected.size or selected.sha256 != expected.sha256:
-        raise ValueError("Fold 2 weight size or LFS SHA-256 differs from the pinned revision")
+        raise ValueError(
+            f"Fold {expected.fold_id} weight size or LFS SHA-256 differs from the pinned revision"
+        )
     aggregate = summarize_filename_aps([spec.filename for spec in specs])
     filename_manifest = build_filename_manifest_evidence(
         [spec.filename for spec in specs]
@@ -166,16 +214,8 @@ def validate_download(
         if expected_size is None or expected_sha256 is None:
             spec = _fold2_spec()
         else:
-            spec = WeightSpec(
-                2,
-                "fold2_testAP0.571.pth",
-                WEIGHT_PREFIX + "fold2_testAP0.571.pth",
-                expected_size,
-                expected_sha256,
-                0.571,
-                (2018, 2020),
-                2019,
-                2021,
+            spec = replace(
+                _fold2_spec(), size=expected_size, sha256=expected_sha256
             )
     validate_local_weight(path, spec)
 
@@ -208,19 +248,21 @@ def pin_manifest(path: Path) -> dict[str, object]:
     }
 
 
-def fetch_weight(target: Path = WEIGHT_CACHE) -> dict[str, object]:
-    selected = validate_weight_manifest(query_manifest())
-    spec = WeightSpec(
-        2,
-        Path(str(selected["path"])).name,
-        str(selected["path"]),
-        int(selected["size"]),
-        str(selected["lfs_sha256"]),
-        float(selected["filename_ap"]),
-        (2018, 2020),
-        2019,
-        2021,
-    )
+def fetch_weight(
+    spec: WeightSpec, target: Path | None = None
+) -> dict[str, object]:
+    target = weight_cache_path(spec) if target is None else target
+    selected = {
+        "fold_id": spec.fold_id,
+        "filename": spec.filename,
+        "path": spec.hub_path,
+        "size": spec.size,
+        "sha256": spec.sha256,
+        "lfs_sha256": spec.sha256,
+        "filename_ap": spec.filename_ap,
+        "filename_aggregate": summarize_filename_aps(RELEASED_WEIGHT_FILENAMES),
+        "filename_manifest": build_filename_manifest_evidence(),
+    }
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists():
         validate_download(target, spec=spec)
@@ -251,6 +293,7 @@ def fetch_weight(target: Path = WEIGHT_CACHE) -> dict[str, object]:
 
 def build_weight_command(
     *,
+    spec: WeightSpec,
     run_directory: Path,
     weight_path: Path,
     python_executable: Path = ENVIRONMENT_PYTHON,
@@ -271,7 +314,7 @@ def build_weight_command(
         f"--trainer={(configs / 'trainer_single_gpu.yaml').as_posix()}",
         f"--data={(configs / 'data_monotemporal_full_features.yaml').as_posix()}",
         f"--data.data_dir={data_root.resolve()}",
-        "--data.data_fold_id=2",
+        f"--data.data_fold_id={spec.fold_id}",
         "--data.features_to_keep=null",
         "--data.n_leading_observations=1",
         "--data.remove_duplicate_features=true",
@@ -283,11 +326,15 @@ def build_weight_command(
 
 
 def validate_weight_command(
-    command: Sequence[str], run_directory: Path, weight_path: Path
+    command: Sequence[str],
+    run_directory: Path,
+    weight_path: Path,
+    spec: WeightSpec,
 ) -> None:
     if len(command) < 6:
         raise ValueError("effective command differs from the exact released-weight command")
     expected = build_weight_command(
+        spec=spec,
         run_directory=run_directory,
         weight_path=weight_path,
         python_executable=Path(command[0]),
@@ -424,22 +471,30 @@ def _full_run_complete() -> dict[str, object]:
     )
 
 
-def _create_run_directory() -> Path:
+def _create_run_directory(spec: WeightSpec) -> Path:
     WEIGHT_ARTIFACTS_ROOT.mkdir(parents=True, exist_ok=True)
     stamp = __import__("datetime").datetime.now(
         __import__("datetime").timezone.utc
     ).strftime("%Y%m%dT%H%M%SZ")
-    run = WEIGHT_ARTIFACTS_ROOT / f"fold2-weight-{stamp}-{uuid.uuid4().hex[:8]}"
+    run = WEIGHT_ARTIFACTS_ROOT / (
+        f"fold{spec.fold_id}-weight-{stamp}-{uuid.uuid4().hex[:8]}"
+    )
     run.mkdir()
     return run.resolve()
 
 
 def _preflight(
-    run_directory: Path, *, require_full_complete: bool, require_lock_absent: bool = True
+    run_directory: Path,
+    *,
+    spec: WeightSpec,
+    require_full_complete: bool,
+    require_lock_absent: bool = True,
 ) -> tuple[dict[str, object], dict[str, object]]:
-    if require_lock_absent and GLOBAL_WEIGHT_LOCK.exists():
-        raise FileExistsError(f"released-weight launch lock already exists: {GLOBAL_WEIGHT_LOCK}")
-    validate_download(WEIGHT_CACHE)
+    weight_path = weight_cache_path(spec)
+    lock_path = global_weight_lock_path(spec)
+    if require_lock_absent and lock_path.exists():
+        raise FileExistsError(f"released-weight launch lock already exists: {lock_path}")
+    validate_download(weight_path, spec=spec)
     repo_status = _run_checked(["git", "status", "--porcelain"], cwd=REPOSITORY_ROOT)
     if repo_status.returncode != 0 or repo_status.stdout.strip():
         raise ValueError("tracked reproduction worktree must be clean before weight evaluation")
@@ -453,17 +508,19 @@ def _preflight(
     runtime_patch = _prepare_derived_runtime()
     runtime = _runtime_preflight()
     gpu = _gpu_preflight()
-    command = build_weight_command(run_directory=run_directory, weight_path=WEIGHT_CACHE)
-    validate_weight_command(command, run_directory, WEIGHT_CACHE)
+    command = build_weight_command(
+        spec=spec, run_directory=run_directory, weight_path=weight_path
+    )
+    validate_weight_command(command, run_directory, weight_path, spec)
     strict_load = _strict_load_preflight(command)
     full_dependency = _full_run_complete() if require_full_complete else {"status": "deferred"}
     return (
         {
             "status": "pass",
-            "purpose": "test-only evaluation of pinned official Fold-2 raw state dict",
-            "weight_path": str(WEIGHT_CACHE.resolve()),
-            "weight_sha256": _fold2_spec().sha256,
-            "filename_ap": 0.571,
+            "purpose": (
+                f"test-only evaluation of pinned official Fold-{spec.fold_id} raw state dict"
+            ),
+            **build_fold_claims(spec=spec, weight_path=weight_path),
             "filename_manifest": build_filename_manifest_evidence(),
             "runtime": runtime,
             "gpu": gpu,
@@ -504,7 +561,16 @@ def _copy_provenance(run: Path, preflight: Mapping[str, object]) -> dict[str, st
     return hashes
 
 
-def parse_weight_run(run_directory: Path) -> dict[str, object]:
+def parse_weight_run(
+    run_directory: Path,
+    *,
+    spec: WeightSpec | None = None,
+    weight_path: Path | None = None,
+) -> dict[str, object]:
+    spec = _fold2_spec() if spec is None else spec
+    weight_path = weight_cache_path(spec) if weight_path is None else weight_path
+    if weight_path.name != spec.filename:
+        raise ValueError("released-weight fold path identity mismatch")
     run = run_directory.resolve()
     stdout = (run / "stdout.log").read_text(encoding="utf-8", errors="replace")
     stderr = (run / "stderr.log").read_text(encoding="utf-8", errors="replace")
@@ -527,10 +593,8 @@ def parse_weight_run(run_directory: Path) -> dict[str, object]:
         "validation_invoked": False,
         "predict_invoked": False,
         "test_metrics": evidence["test_metrics"],
-        "filename_ap": 0.571,
+        **build_fold_claims(spec=spec, weight_path=weight_path),
         "filename_manifest": build_filename_manifest_evidence(),
-        "weight_path": str(WEIGHT_CACHE.resolve()),
-        "weight_sha256": _fold2_spec().sha256,
         "wall_seconds": wall,
         "peak_allocated_bytes": evidence["peak_allocated_bytes"],
         **summarize_gpu_samples(gpu_rows),
@@ -539,10 +603,21 @@ def parse_weight_run(run_directory: Path) -> dict[str, object]:
     return payload
 
 
-def finalize_existing_weight(run_directory: Path) -> dict[str, object]:
+def finalize_existing_weight(
+    run_directory: Path, spec: WeightSpec | None = None
+) -> dict[str, object]:
+    spec = _fold2_spec() if spec is None else spec
     run = run_directory.resolve()
+    validate_fold_paths(
+        spec=spec,
+        run_directory=run,
+        weight_path=weight_cache_path(spec),
+        lock_path=global_weight_lock_path(spec),
+        artifacts_root=WEIGHT_ARTIFACTS_ROOT,
+    )
+    validate_download(weight_cache_path(spec), spec=spec)
     if run.parent != WEIGHT_ARTIFACTS_ROOT.resolve() or not run.name.startswith(
-        "fold2-weight-"
+        f"fold{spec.fold_id}-weight-"
     ):
         raise ValueError("finalize-existing weight run is outside the fixed artifact root")
     completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
@@ -564,7 +639,9 @@ def finalize_existing_weight(run_directory: Path) -> dict[str, object]:
         or started["command_sha256"] != effective.get("command_sha256")
     ):
         raise ValueError("finalize-existing weight launch lineage mismatch")
-    result = parse_weight_run(run)
+    result = parse_weight_run(
+        run, spec=spec, weight_path=weight_cache_path(spec)
+    )
     result["command_sha256"] = started["command_sha256"]
     result["child_pid"] = started["pid"]
     if result.get("filename_manifest") != build_filename_manifest_evidence():
@@ -611,10 +688,19 @@ def finalize_existing_weight(run_directory: Path) -> dict[str, object]:
     return result
 
 
-def _launch_once() -> tuple[Path, dict[str, object]]:
-    run = _create_run_directory()
+def _launch_once(spec: WeightSpec) -> tuple[Path, dict[str, object]]:
+    run = _create_run_directory(spec)
     try:
-        preflight, source_before = _preflight(run, require_full_complete=True)
+        validate_fold_paths(
+            spec=spec,
+            run_directory=run,
+            weight_path=weight_cache_path(spec),
+            lock_path=global_weight_lock_path(spec),
+            artifacts_root=WEIGHT_ARTIFACTS_ROOT,
+        )
+        preflight, source_before = _preflight(
+            run, spec=spec, require_full_complete=True
+        )
         write_json_atomic(run / "preflight.json", preflight)
         write_json_atomic(run / "source-data-pre.json", source_before)
         provenance = _copy_provenance(run, preflight)
@@ -630,7 +716,7 @@ def _launch_once() -> tuple[Path, dict[str, object]]:
             "test_only": True,
             "single_launch_no_retry": True,
         }
-        acquire_launch_lock(GLOBAL_WEIGHT_LOCK, launch)
+        acquire_launch_lock(global_weight_lock_path(spec), launch)
         acquire_launch_lock(run / "launch.lock.json", launch)
         write_json_atomic(
             run / "effective-command.json",
@@ -656,7 +742,9 @@ def _launch_once() -> tuple[Path, dict[str, object]]:
         write_json_atomic(run / "source-data-post.json", build_source_inventory(DATA_ROOT))
         if observation["gpu_errors"]:
             raise ValueError("GPU observer errors: " + "; ".join(observation["gpu_errors"]))
-        result = parse_weight_run(run)
+        result = parse_weight_run(
+            run, spec=spec, weight_path=weight_cache_path(spec)
+        )
         result["command_sha256"] = command_hash
         result["child_pid"] = observation["pid"]
         write_json_atomic(run / "weight-result.json", result)
@@ -674,27 +762,34 @@ def _launch_once() -> tuple[Path, dict[str, object]]:
         raise
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--fold-id", type=int, choices=range(12), default=2)
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--fetch-only", action="store_true")
     action.add_argument("--preflight-only", action="store_true")
     action.add_argument("--launch", action="store_true")
     action.add_argument("--finalize-existing", type=Path)
-    action.add_argument("--pin-manifest", type=Path)
-    arguments = parser.parse_args(argv)
+    return parser.parse_args(argv)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    arguments = parse_arguments(argv)
+    spec = spec_for_fold(
+        load_pinned_manifest(PINNED_MANIFEST_PATH), arguments.fold_id
+    )
     if arguments.fetch_only:
-        result = fetch_weight()
-    elif arguments.pin_manifest is not None:
-        result = pin_manifest(arguments.pin_manifest)
+        result = fetch_weight(spec)
     elif arguments.preflight_only:
-        placeholder = WEIGHT_ARTIFACTS_ROOT / "preflight-placeholder"
+        placeholder = WEIGHT_ARTIFACTS_ROOT / f"fold{spec.fold_id}-preflight-placeholder"
         placeholder.mkdir(parents=True, exist_ok=True)
-        result, _ = _preflight(placeholder, require_full_complete=False)
+        result, _ = _preflight(
+            placeholder, spec=spec, require_full_complete=False
+        )
     elif arguments.finalize_existing is not None:
-        result = finalize_existing_weight(arguments.finalize_existing)
+        result = finalize_existing_weight(arguments.finalize_existing, spec)
     else:
-        run, result = _launch_once()
+        run, result = _launch_once(spec)
         result = {"run_directory": str(run), **result}
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0

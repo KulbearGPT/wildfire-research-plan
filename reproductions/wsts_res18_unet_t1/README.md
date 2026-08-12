@@ -44,31 +44,39 @@ raw observer files. A later no-launch seal found identical before/after hashes
 for the fixed 14-entry raw set; this current-state check is not presented as
 retrospective proof about the first parser recovery.
 
-## Released Fold-2 weight
+## Released official weights (folds 0 through 11)
 
-The pinned Hub revision contains the raw state dictionary
-`trained_model_weights/Res18Unet_T1/All/fold2_testAP0.571.pth`. Fetching is
-separate from evaluation and verifies 57,889,221 bytes plus SHA-256
-`e17cd58e29ee7b91f6a8ba85ddcb5783ec69b9541e2de93298ba3241e785a9ec`:
+The tracked manifest freezes all twelve raw state dictionaries at Hub revision
+`acf70a37394849f4ec8d108a51d6f4325a554d0a`. Select a fold with `--fold-id`
+(`0` through `11`); omitting it retains the historical Fold 2 behavior. Fetching
+is separate from evaluation and verifies the selected manifest entry's exact
+filename, byte count, and SHA-256:
 
 ```powershell
-python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --fetch-only
+python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --fold-id 0 --fetch-only
 ```
 
 The preflight instantiates the official model and applies the raw state dict
 with `strict=True`, but does not call any loader:
 
 ```powershell
-python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --preflight-only
+python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --fold-id 0 --preflight-only
 ```
 
-The launch action is gated on a completed full Fold-2 run. It invokes only
+The launch action is gated on the completed full Fold-2 run. It invokes only
 `Trainer.test`; train, validation, prediction, and Lightning checkpoint-resume
 paths are forbidden:
 
 ```powershell
-python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --launch
+python reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py --fold-id 0 --launch
 ```
+
+Each fold has a separate cache filename, run-directory prefix, and global/run
+lock. A run must be finalized with the same `--fold-id` used at launch. The
+independent verifier also requires that fold ID and reconstructs the command,
+official split years, filename AP, size, and SHA exclusively from the tracked
+manifest. The sealed Fold 2 artifact remains independently verifiable with the
+default fold or explicit `--fold-id 2`.
 
 The sole completed release evaluation strict-loaded 182 tensors and finished
 all 3,337 official test batches without train, validation, predict, resume, or

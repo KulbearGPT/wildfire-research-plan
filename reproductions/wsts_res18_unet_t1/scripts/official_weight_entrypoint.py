@@ -40,7 +40,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     raw_state = torch.load(weights_path, map_location="cpu")
     if not isinstance(raw_state, dict) or "state_dict" in raw_state:
-        raise ValueError("released Fold-2 weight must be a raw state_dict")
+        raise ValueError("released weight must be a raw state_dict")
     cli.model.load_state_dict(raw_state, strict=True)
     print(
         f"WSTS_OFFICIAL_WEIGHT_STRICT_LOAD=1 tensors={len(raw_state)}",
