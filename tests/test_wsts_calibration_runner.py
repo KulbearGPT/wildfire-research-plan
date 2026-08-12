@@ -692,6 +692,34 @@ def test_nvidia_sampler_parses_real_seven_column_gpu_row_and_child_pid(
     }
 
 
+@pytest.mark.parametrize(
+    ("memory_free_mib", "accepted"),
+    [(19_999, False), (20_000, True)],
+)
+def test_gpu_preflight_default_preserves_twenty_gibibyte_scientific_gate(
+    monkeypatch: pytest.MonkeyPatch,
+    memory_free_mib: int,
+    accepted: bool,
+) -> None:
+    monkeypatch.setattr(
+        calibration_runner,
+        "_run_checked",
+        lambda _command: subprocess.CompletedProcess(
+            [],
+            0,
+            f"0, NVIDIA GeForce RTX 3090, 24576, {memory_free_mib}, 0, 610.74\n",
+            "",
+        ),
+    )
+
+    if not accepted:
+        with pytest.raises(ValueError, match="requires at least 20000 MiB"):
+            calibration_runner._gpu_preflight()
+        return
+
+    assert calibration_runner._gpu_preflight()["memory_free_mib"] == 20_000.0
+
+
 def test_observe_process_preserves_raw_streams_and_records_pid_without_retry(
     tmp_path: Path,
 ) -> None:

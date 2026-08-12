@@ -68,6 +68,7 @@ PINNED_MANIFEST_PATH = (
     / "wsts_res18_unet_t1"
     / "official_weights_manifest.json"
 )
+MINIMUM_WEIGHT_EVALUATION_GPU_FREE_MIB = 16_000
 WEIGHT_CACHE_ROOT = (
     REPOSITORY_ROOT
     / "reproductions"
@@ -560,7 +561,9 @@ def _preflight(
     verify_upstream(UPSTREAM_ROOT, EXPECTED_CODE_COMMIT)
     runtime_patch = _prepare_derived_runtime()
     runtime = _runtime_preflight()
-    gpu = _gpu_preflight()
+    gpu = _gpu_preflight(
+        minimum_free_mib=MINIMUM_WEIGHT_EVALUATION_GPU_FREE_MIB
+    )
     command = build_weight_command(
         spec=spec, run_directory=run_directory, weight_path=weight_path
     )

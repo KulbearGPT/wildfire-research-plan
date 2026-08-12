@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -22,6 +23,7 @@ from evaluate_released_weight import (  # noqa: E402
 )
 import evaluate_released_weight as weight_controller  # noqa: E402
 import released_weight_contract as contract  # noqa: E402
+import run_calibration as calibration_runner  # noqa: E402
 from verify_released_weight import validate_weight_result  # noqa: E402
 import verify_released_weight as weight_verifier  # noqa: E402
 
@@ -40,6 +42,109 @@ FILENAMES = [
     "fold10_testAP0.324.pth",
     "fold11_testAP0.474.pth",
 ]
+
+
+@pytest.mark.parametrize(
+    ("memory_free_mib", "accepted"),
+    [(15_999, False), (16_000, True)],
+)
+def test_weight_preflight_uses_empirical_test_only_gpu_boundary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    memory_free_mib: int,
+    accepted: bool,
+) -> None:
+    spec = weight_controller._fold2_spec()
+    run = tmp_path / "weight-preflight"
+    run.mkdir()
+    weight = tmp_path / "weights" / spec.filename
+    smoke = tmp_path / "worker-smoke.json"
+    smoke.write_text("{}\n", encoding="utf-8")
+    inventory = {
+        "root": str(tmp_path / "data"),
+        "file_count": 607,
+        "total_bytes": 24_242_259_023,
+        "files": [],
+    }
+
+    monkeypatch.setattr(weight_controller, "weight_cache_path", lambda _spec: weight)
+    monkeypatch.setattr(
+        weight_controller,
+        "global_weight_lock_path",
+        lambda _spec: tmp_path / "weight-evaluation.lock.json",
+    )
+    monkeypatch.setattr(weight_controller, "validate_download", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        weight_controller,
+        "_run_checked",
+        lambda *_args, **_kwargs: subprocess.CompletedProcess([], 0, "", ""),
+    )
+    monkeypatch.setattr(weight_controller, "WORKER_SMOKE_PATH", smoke)
+    monkeypatch.setattr(
+        weight_controller,
+        "validate_train_validation_smoke_evidence",
+        lambda _smoke: None,
+    )
+    monkeypatch.setattr(weight_controller, "verify_inventory", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(weight_controller, "build_source_inventory", lambda _root: inventory)
+    monkeypatch.setattr(
+        weight_controller,
+        "verify_upstream",
+        lambda *_args, **_kwargs: calibration_runner.EXPECTED_CODE_COMMIT,
+    )
+    monkeypatch.setattr(
+        weight_controller,
+        "_prepare_derived_runtime",
+        lambda: {"git_diff_exact_match": True},
+    )
+    monkeypatch.setattr(
+        weight_controller,
+        "_runtime_preflight",
+        lambda: {"cuda_available": True},
+    )
+    monkeypatch.setattr(
+        calibration_runner,
+        "_run_checked",
+        lambda _command: subprocess.CompletedProcess(
+            [],
+            0,
+            f"0, NVIDIA GeForce RTX 3090, 24576, {memory_free_mib}, 0, 610.74\n",
+            "",
+        ),
+    )
+    monkeypatch.setattr(
+        weight_controller,
+        "_strict_load_preflight",
+        lambda _command: {"status": "pass", "loaded_tensor_count": 182},
+    )
+
+    def reject_scientific_child(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("released-weight preflight must not start a scientific child")
+
+    monkeypatch.setattr(weight_controller, "observe_process", reject_scientific_child)
+
+    if not accepted:
+        with pytest.raises(ValueError, match="requires at least 16000 MiB"):
+            weight_controller._preflight(
+                run,
+                spec=spec,
+                require_full_complete=False,
+            )
+        return
+
+    preflight, source_inventory = weight_controller._preflight(
+        run,
+        spec=spec,
+        require_full_complete=False,
+    )
+    assert preflight["gpu"]["memory_free_mib"] == 16_000.0
+    assert preflight["strict_load_preflight"] == {
+        "status": "pass",
+        "loaded_tensor_count": 182,
+    }
+    assert "--data.num_workers=8" in preflight["command"]
+    assert "--do_train=false" in preflight["command"]
+    assert source_inventory == inventory
 
 
 def test_strict_load_preflight_propagates_disabled_wandb_environment(

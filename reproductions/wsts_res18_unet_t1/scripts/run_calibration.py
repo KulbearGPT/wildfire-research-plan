@@ -1229,7 +1229,9 @@ def _runtime_preflight() -> dict[str, object]:
     return runtime
 
 
-def _gpu_preflight() -> dict[str, object]:
+def _gpu_preflight(
+    *, minimum_free_mib: int = MINIMUM_GPU_FREE_MIB
+) -> dict[str, object]:
     result = _run_checked(
         [
             "nvidia-smi",
@@ -1256,10 +1258,10 @@ def _gpu_preflight() -> dict[str, object]:
     if len(matching) != 1:
         raise ValueError(f"expected exactly one RTX 3090, found {len(matching)}")
     selected = matching[0]
-    if float(selected["memory_free_mib"]) < MINIMUM_GPU_FREE_MIB:
+    if float(selected["memory_free_mib"]) < minimum_free_mib:
         raise ValueError(
             f"RTX 3090 has only {selected['memory_free_mib']} MiB free; "
-            f"requires at least {MINIMUM_GPU_FREE_MIB} MiB"
+            f"requires at least {minimum_free_mib} MiB"
         )
     return selected
 
