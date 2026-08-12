@@ -161,9 +161,9 @@ def test_aggregate_uses_raw_metrics_population_std_and_exact_provenance(
     result = verifier.verify_campaign(campaign_directory)
 
     values = [float(row["metrics"]["test_AP"]) for row in expected]
-    summary = json.loads(
-        (campaign_directory / verifier.SUMMARY_FILENAME).read_text(encoding="utf-8")
-    )
+    publication = verifier.load_committed_publication(campaign_directory)
+    generation = campaign_directory / publication["generation"]
+    summary = json.loads((generation / verifier.SUMMARY_FILENAME).read_text(encoding="utf-8"))
     assert result["status"] == "pass"
     assert summary["fold_count"] == 12
     assert summary["ap_mean"] == statistics.fmean(values)
@@ -177,7 +177,7 @@ def test_aggregate_uses_raw_metrics_population_std_and_exact_provenance(
         summary["ap_mean"] - summary["filename_ap_mean"]
     )
     assert summary["ap_mean_minus_paper_mean"] == summary["ap_mean"] - 0.460
-    with (campaign_directory / verifier.RESULTS_FILENAME).open(encoding="utf-8", newline="") as handle:
+    with (generation / verifier.RESULTS_FILENAME).open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     assert [int(row["fold_id"]) for row in rows] == list(range(12))
     assert [int(row["test_year"]) for row in rows] == [spec.test_year for spec in specs]
@@ -185,6 +185,11 @@ def test_aggregate_uses_raw_metrics_population_std_and_exact_provenance(
     assert float(rows[0]["test_AP"]) != 0.999
     assert float(rows[2]["test_AP_minus_filename_ap"]) == values[2] - specs[2].filename_ap
     assert not list(campaign_directory.glob("*.tmp"))
+    assert publication["status"] == "pass"
+    assert publication["generation"].startswith("generations/")
+    assert not (campaign_directory / verifier.RESULTS_FILENAME).exists()
+    assert not (campaign_directory / verifier.SUMMARY_FILENAME).exists()
+    assert not (campaign_directory / verifier.INDEPENDENT_FILENAME).exists()
 
 
 def test_verifier_rejects_controller_only_summary_without_raw_table(
@@ -197,7 +202,7 @@ def test_verifier_rejects_controller_only_summary_without_raw_table(
 
     with pytest.raises((ValueError, FileNotFoundError)):
         verifier.verify_campaign(campaign_directory)
-    assert not (campaign_directory / verifier.RESULTS_FILENAME).exists()
+    assert not (campaign_directory / verifier.PUBLICATION_FILENAME).exists()
 
 
 @pytest.mark.parametrize("case", ["missing", "duplicate"])
@@ -310,3 +315,39 @@ def test_verifier_rejects_generic_verifier_metric_disagreement(
 
     with pytest.raises(ValueError, match="raw metrics disagree"):
         verifier.verify_campaign(campaign_directory)
+
+
+@pytest.mark.parametrize("replace_number", [1, 2, 3, 4])
+def test_publication_fault_never_commits_a_partial_generation_and_rerun_switches_atomically(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+    replace_number: int,
+) -> None:
+    campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
+    verifier.verify_campaign(campaign_directory)
+    publication_path = campaign_directory / verifier.PUBLICATION_FILENAME
+    previous_bytes = publication_path.read_bytes()
+    previous = verifier.load_committed_publication(campaign_directory)
+    real_replace = verifier.os.replace
+    calls = 0
+
+    def fail_replace(source: Path, target: Path) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == replace_number:
+            raise OSError(f"synthetic publication replace {replace_number}")
+        real_replace(source, target)
+
+    monkeypatch.setattr(verifier.os, "replace", fail_replace)
+    with pytest.raises(OSError, match="synthetic publication replace"):
+        verifier.verify_campaign(campaign_directory)
+
+    assert publication_path.read_bytes() == previous_bytes
+    assert verifier.load_committed_publication(campaign_directory) == previous
+
+    monkeypatch.setattr(verifier.os, "replace", real_replace)
+    result = verifier.verify_campaign(campaign_directory)
+    current = verifier.load_committed_publication(campaign_directory)
+    assert current["generation"] != previous["generation"]
+    assert result["generation"] == current["generation"]

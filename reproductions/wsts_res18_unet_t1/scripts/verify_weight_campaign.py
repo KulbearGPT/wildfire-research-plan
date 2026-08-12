@@ -11,6 +11,7 @@ import os
 import re
 import statistics
 import tempfile
+import uuid
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -41,6 +42,7 @@ CAMPAIGN_ARTIFACTS_ROOT = (
 RESULTS_FILENAME = "official-weight-12fold-results.csv"
 SUMMARY_FILENAME = "official-weight-12fold-summary.json"
 INDEPENDENT_FILENAME = "independent-verification.json"
+PUBLICATION_FILENAME = "publication.json"
 ADOPTED_FOLD2_RUN = (
     WEIGHT_ARTIFACTS_ROOT
     / "fold2-weight-20260810T133336Z-2e071197"
@@ -117,6 +119,59 @@ def _write_csv_atomic(path: Path, rows: Sequence[Mapping[str, object]]) -> None:
         os.replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
+
+
+def load_committed_publication(campaign_directory: Path) -> dict[str, object]:
+    """Load the sole commit point and verify every referenced generation file."""
+    campaign = campaign_directory.resolve()
+    publication_path = campaign / PUBLICATION_FILENAME
+    payload = json.loads(publication_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, Mapping):
+        raise ValueError("campaign publication marker must be an object")
+    generation = payload.get("generation")
+    if (
+        payload.get("schema_version") != 1
+        or payload.get("status") != "pass"
+        or payload.get("fold_count") != 12
+        or not isinstance(generation, str)
+        or re.fullmatch(r"generations/[0-9a-f]{32}", generation) is None
+    ):
+        raise ValueError("campaign publication marker identity mismatch")
+    outputs = payload.get("outputs")
+    expected_names = {RESULTS_FILENAME, SUMMARY_FILENAME, INDEPENDENT_FILENAME}
+    if not isinstance(outputs, Mapping) or set(outputs) != expected_names:
+        raise ValueError("campaign publication output manifest mismatch")
+    generation_directory = (campaign / generation).resolve()
+    if generation_directory.parent != (campaign / "generations").resolve():
+        raise ValueError("campaign publication generation path escapes its root")
+    for name in expected_names:
+        seal = outputs[name]
+        expected_relative = f"{generation}/{name}"
+        if not isinstance(seal, Mapping) or set(seal) != {"path", "sha256"}:
+            raise ValueError(f"campaign publication seal is invalid: {name}")
+        path = (campaign / str(seal.get("path", ""))).resolve()
+        if (
+            seal.get("path") != expected_relative
+            or path.parent != generation_directory
+            or not path.is_file()
+            or seal.get("sha256") != _sha256(path)
+        ):
+            raise ValueError(f"campaign publication file seal mismatch: {name}")
+    independent = json.loads(
+        (generation_directory / INDEPENDENT_FILENAME).read_text(encoding="utf-8")
+    )
+    if (
+        not isinstance(independent, Mapping)
+        or independent.get("status") != "pass"
+        or independent.get("fold_count") != 12
+        or independent.get("generation") != generation
+        or independent.get("results_sha256")
+        != outputs[RESULTS_FILENAME]["sha256"]
+        or independent.get("summary_sha256")
+        != outputs[SUMMARY_FILENAME]["sha256"]
+    ):
+        raise ValueError("campaign committed independent result mismatch")
+    return dict(payload)
 
 
 def _paper_reference() -> tuple[float, float]:
@@ -395,14 +450,19 @@ def verify_campaign(campaign_directory: Path) -> dict[str, object]:
             )
 
     summary = summarize_verified_rows(rows)
-    results_path = campaign / RESULTS_FILENAME
-    summary_path = campaign / SUMMARY_FILENAME
+    generation_relative = Path("generations") / uuid.uuid4().hex
+    generation_directory = campaign / generation_relative
+    generation_directory.mkdir(parents=True, exist_ok=False)
+    generation_name = generation_relative.as_posix()
+    results_path = generation_directory / RESULTS_FILENAME
+    summary_path = generation_directory / SUMMARY_FILENAME
     _write_csv_atomic(results_path, rows)
     _write_json_atomic(summary_path, summary)
     result = {
         "schema_version": 1,
         "status": "pass",
         "fold_count": 12,
+        "generation": generation_name,
         "independent_implementation": True,
         "controller_metric_summaries_used": False,
         "raw_evidence_unchanged_during_verification": True,
@@ -410,8 +470,31 @@ def verify_campaign(campaign_directory: Path) -> dict[str, object]:
         "summary_sha256": _sha256(summary_path),
         "fold_seals": fold_seals,
     }
-    _write_json_atomic(campaign / INDEPENDENT_FILENAME, result)
-    return result
+    independent_path = generation_directory / INDEPENDENT_FILENAME
+    _write_json_atomic(independent_path, result)
+    output_paths = {
+        RESULTS_FILENAME: results_path,
+        SUMMARY_FILENAME: summary_path,
+        INDEPENDENT_FILENAME: independent_path,
+    }
+    publication = {
+        "schema_version": 1,
+        "status": "pass",
+        "fold_count": 12,
+        "generation": generation_name,
+        "outputs": {
+            name: {
+                "path": f"{generation_name}/{name}",
+                "sha256": _sha256(path),
+            }
+            for name, path in output_paths.items()
+        },
+    }
+    _write_json_atomic(campaign / PUBLICATION_FILENAME, publication)
+    committed = load_committed_publication(campaign)
+    if committed != publication:
+        raise ValueError("campaign publication commit marker changed after write")
+    return committed
 
 
 def main(argv: Sequence[str] | None = None) -> int:

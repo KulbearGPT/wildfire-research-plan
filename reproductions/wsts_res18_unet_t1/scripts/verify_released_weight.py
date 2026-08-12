@@ -7,9 +7,11 @@ import csv
 import hashlib
 import json
 import math
+import os
 import re
 import statistics
 import subprocess
+import tempfile
 from collections.abc import Mapping
 from collections.abc import Sequence
 from datetime import datetime
@@ -512,6 +514,23 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _write_json_atomic(path: Path, payload: Mapping[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=path.name + ".", suffix=".tmp", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as handle:
+            json.dump(payload, handle, sort_keys=True, separators=(",", ":"))
+            handle.write(os.linesep)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def _git(root: Path, *arguments: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(root.resolve()), *arguments],
@@ -840,9 +859,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         load_pinned_manifest(PINNED_MANIFEST_PATH), arguments.fold_id
     )
     result = verify_run(arguments.run_directory, arguments.weight_path, spec)
-    arguments.output.write_text(
-        json.dumps(result, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8"
-    )
+    _write_json_atomic(arguments.output, result)
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0
 

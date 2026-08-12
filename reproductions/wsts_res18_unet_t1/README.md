@@ -104,19 +104,24 @@ The twelve-fold campaign controller fixes the order to folds `0` through `11`.
 It adopts only the sealed Fold 2 run
 `fold2-weight-20260810T133336Z-2e071197`, after a fresh pass by the generic
 independent fold verifier, and launches each of the other eleven folds once and
-sequentially. Before acquiring its immutable global, campaign, and per-fold
-locks, it validates the adopted run and fetches or verifies every missing
-weight. A child or verifier failure stops the campaign before the next fold;
-there is no automatic retry or partial aggregation. A future authorized
-campaign is launched with a new directory directly under the fixed campaign
-artifact root:
+sequentially. Every fetch, launch, finalization, and independent verification
+uses the existing single-fold scripts through their formal CLIs under the fixed
+environment Python. The unique immutable root lock is the transaction authority
+and identifies its campaign directory; every later immutable fold lock belongs
+to that authority. Any qualification, download, lock, child, or verifier failure
+writes campaign-owned failure provenance and stops before the next fold. Locks
+are preserved fail-closed; there is no automatic retry or partial aggregation.
+A future authorized campaign is launched with a new directory directly under
+the fixed campaign artifact root:
 
 ```powershell
 python reproductions/wsts_res18_unet_t1/scripts/run_weight_campaign.py --launch --campaign-directory artifacts/reproductions/wsts-res18-t1-official-weight-12fold/official-weight-12fold-<timestamp>
 ```
 
-Preserved child output can be finalized without launching a process by pairing
-the original run with its exact fold:
+Preserved child output can be finalized without starting or restarting a
+scientific evaluation child by pairing the original run with its exact fold.
+The finalizer and independent verifier may still run provenance-checking helper
+subprocesses such as Git:
 
 ```powershell
 python reproductions/wsts_res18_unet_t1/scripts/run_weight_campaign.py --fold-id 5 --finalize-existing artifacts/reproductions/wsts-res18-t1-official-weight/fold5-weight-<timestamp>
@@ -128,7 +133,9 @@ fold, reparses the sealed raw Lightning stdout/stderr for all six metrics,
 compares the two reconstructions exactly, and seals all fold-verifier files and
 raw manifests across the complete verification window. It writes the ordered
 per-fold CSV, aggregate JSON (population standard deviations), and independent
-verification JSON atomically:
+verification JSON inside a new immutable generation. Only the final atomic
+`publication.json` marker commits that generation and its exact file hashes;
+uncommitted generation files are never a successful aggregate:
 
 ```powershell
 python reproductions/wsts_res18_unet_t1/scripts/verify_weight_campaign.py --campaign-directory artifacts/reproductions/wsts-res18-t1-official-weight-12fold/official-weight-12fold-<timestamp>
