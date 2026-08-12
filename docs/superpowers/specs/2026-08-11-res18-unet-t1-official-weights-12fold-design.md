@@ -43,8 +43,9 @@ absolute differences against both reference aggregates must be reported.
 - Model/config: Res18-U-Net, `T=1`, all 40 features, batch 64, crop 128,
   FP32, seed 0, and the official data/config/model YAML files already frozen by
   the Fold 2 reproduction.
-- Folds: exactly `0..11`, using the official `kfolds.json` mapping and the
-  unchanged 607-file source-data inventory totaling 24,242,259,023 bytes.
+- Folds: exactly `0..11`, using the twelve tuples hard-coded by the official
+  `FireSpreadDataModule.split_fires` implementation and the unchanged 607-file
+  source-data inventory totaling 24,242,259,023 bytes.
 - Weight set: exactly one file for each fold under
   `trained_model_weights/Res18Unet_T1/All/`:
 
