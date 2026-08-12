@@ -100,6 +100,43 @@ from raw markers/CSV, requires six finite legal metrics, and confirms the fixed
 Windows-table parser failure remains documented separately; the scientific
 child had already exited 0 and was never relaunched.
 
+The twelve-fold campaign controller fixes the order to folds `0` through `11`.
+It adopts only the sealed Fold 2 run
+`fold2-weight-20260810T133336Z-2e071197`, after a fresh pass by the generic
+independent fold verifier, and launches each of the other eleven folds once and
+sequentially. Before acquiring its immutable global, campaign, and per-fold
+locks, it validates the adopted run and fetches or verifies every missing
+weight. A child or verifier failure stops the campaign before the next fold;
+there is no automatic retry or partial aggregation. A future authorized
+campaign is launched with a new directory directly under the fixed campaign
+artifact root:
+
+```powershell
+python reproductions/wsts_res18_unet_t1/scripts/run_weight_campaign.py --launch --campaign-directory artifacts/reproductions/wsts-res18-t1-official-weight-12fold/official-weight-12fold-<timestamp>
+```
+
+Preserved child output can be finalized without launching a process by pairing
+the original run with its exact fold:
+
+```powershell
+python reproductions/wsts_res18_unet_t1/scripts/run_weight_campaign.py --fold-id 5 --finalize-existing artifacts/reproductions/wsts-res18-t1-official-weight/fold5-weight-<timestamp>
+```
+
+After all twelve fold states pass, the separate campaign verifier ignores any
+controller-authored metric fields. It invokes the generic verifier for each
+fold, reparses the sealed raw Lightning stdout/stderr for all six metrics,
+compares the two reconstructions exactly, and seals all fold-verifier files and
+raw manifests across the complete verification window. It writes the ordered
+per-fold CSV, aggregate JSON (population standard deviations), and independent
+verification JSON atomically:
+
+```powershell
+python reproductions/wsts_res18_unet_t1/scripts/verify_weight_campaign.py --campaign-directory artifacts/reproductions/wsts-res18-t1-official-weight-12fold/official-weight-12fold-<timestamp>
+```
+
+No twelve-fold campaign has been scientifically executed by this software-only
+gate. The outputs above exist only after a separately authorized campaign.
+
 This directory controls a provenance-checked timing calibration of the authors'
 released Res18-U-Net, `T=1`, All-features configuration on official WSTS fold 2.
 The 500-step timing run is **not a scientific reproduction result**: it does not

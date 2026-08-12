@@ -1,0 +1,427 @@
+"""Independently reconstruct and aggregate a sealed twelve-fold weight campaign."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import math
+import os
+import re
+import statistics
+import tempfile
+from collections.abc import Mapping, Sequence
+from pathlib import Path
+
+from released_weight_contract import WeightSpec, load_pinned_manifest, spec_for_fold
+from verify_released_weight import (
+    EXPECTED_TEST_METRICS,
+    capture_weight_raw_manifest as capture_fold_raw_manifest,
+    verify_run as verify_fold_run,
+)
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+REPRODUCTION_ROOT = Path(__file__).resolve().parents[1]
+PINNED_MANIFEST_PATH = REPRODUCTION_ROOT / "official_weights_manifest.json"
+UPSTREAM_LOCK_PATH = REPRODUCTION_ROOT / "upstream.lock.json"
+WEIGHT_ARTIFACTS_ROOT = (
+    REPOSITORY_ROOT
+    / "artifacts"
+    / "reproductions"
+    / "wsts-res18-t1-official-weight"
+)
+CAMPAIGN_ARTIFACTS_ROOT = (
+    REPOSITORY_ROOT
+    / "artifacts"
+    / "reproductions"
+    / "wsts-res18-t1-official-weight-12fold"
+)
+RESULTS_FILENAME = "official-weight-12fold-results.csv"
+SUMMARY_FILENAME = "official-weight-12fold-summary.json"
+INDEPENDENT_FILENAME = "independent-verification.json"
+ADOPTED_FOLD2_RUN = (
+    WEIGHT_ARTIFACTS_ROOT
+    / "fold2-weight-20260810T133336Z-2e071197"
+).resolve()
+CSV_FIELDS = (
+    "fold_id",
+    "train_years",
+    "validation_year",
+    "test_year",
+    "weight_filename",
+    "weight_sha256",
+    "filename_ap",
+    "test_AP",
+    "test_f1",
+    "test_iou",
+    "test_loss",
+    "test_precision",
+    "test_recall",
+    "test_AP_minus_filename_ap",
+    "test_AP_absolute_difference_from_filename_ap",
+    "wall_seconds",
+    "run_directory",
+    "fold_verifier_sha256",
+    "raw_evidence_manifest_sha256",
+)
+_METRIC_NAME = r"test_(?:AP|f1|iou|loss|precision|recall)"
+_FINITE_SCALAR = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _manifest_sha256(payload: Mapping[str, object]) -> str:
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def _write_json_atomic(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=path.name + ".", suffix=".tmp", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            json.dump(payload, handle, sort_keys=True, separators=(",", ":"))
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _write_csv_atomic(path: Path, rows: Sequence[Mapping[str, object]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=path.name + ".", suffix=".tmp", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=CSV_FIELDS, extrasaction="raise")
+            writer.writeheader()
+            writer.writerows(rows)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _paper_reference() -> tuple[float, float]:
+    payload = json.loads(UPSTREAM_LOCK_PATH.read_text(encoding="utf-8"))
+    target = payload.get("paper", {}).get("target") if isinstance(payload, Mapping) else None
+    match = re.fullmatch(r"(0\.\d+) \+/- (0\.\d+)", str(target))
+    if match is None:
+        raise ValueError("paper AP reference is missing from the pinned upstream lock")
+    return float(match.group(1)), float(match.group(2))
+
+
+def _validate_metrics(metrics: object) -> dict[str, float]:
+    if not isinstance(metrics, Mapping) or set(metrics) != EXPECTED_TEST_METRICS:
+        raise ValueError("campaign verifier requires six finite metrics in [0,1]")
+    if any(isinstance(value, bool) for value in metrics.values()):
+        raise ValueError("campaign verifier requires six finite metrics in [0,1]")
+    try:
+        values = {name: float(value) for name, value in metrics.items()}
+    except (TypeError, ValueError) as error:
+        raise ValueError(
+            "campaign verifier requires six finite metrics in [0,1]"
+        ) from error
+    if any(
+        not math.isfinite(value) or not 0.0 <= value <= 1.0
+        for value in values.values()
+    ):
+        raise ValueError("campaign verifier requires six finite metrics in [0,1]")
+    return values
+
+
+def summarize_verified_rows(rows: Sequence[Mapping[str, object]]) -> dict[str, object]:
+    if len(rows) != 12 or {int(row["fold_id"]) for row in rows} != set(range(12)):
+        raise ValueError("campaign rows must cover folds exactly 0 through 11")
+    ordered = sorted(rows, key=lambda row: int(row["fold_id"]))
+    for row in ordered:
+        _validate_metrics({name: row.get(name) for name in EXPECTED_TEST_METRICS})
+    metric_summaries: dict[str, dict[str, object]] = {}
+    for name in sorted(EXPECTED_TEST_METRICS):
+        values = [float(row[name]) for row in ordered]
+        minimum = min(values)
+        maximum = max(values)
+        metric_summaries[name] = {
+            "mean": statistics.fmean(values),
+            "population_std": statistics.pstdev(values),
+            "min": minimum,
+            "min_fold_id": int(ordered[values.index(minimum)]["fold_id"]),
+            "max": maximum,
+            "max_fold_id": int(ordered[values.index(maximum)]["fold_id"]),
+        }
+    ap = metric_summaries["test_AP"]
+    filename_values = [float(row["filename_ap"]) for row in ordered]
+    filename_mean = statistics.fmean(filename_values)
+    filename_std = statistics.pstdev(filename_values)
+    paper_mean, paper_std = _paper_reference()
+    runtimes = [float(row["wall_seconds"]) for row in ordered]
+    if any(not math.isfinite(value) or value <= 0 for value in runtimes):
+        raise ValueError("campaign runtimes must be finite and positive")
+    return {
+        "schema_version": 1,
+        "status": "pass",
+        "fold_count": 12,
+        "metrics": metric_summaries,
+        "ap_mean": ap["mean"],
+        "ap_population_std": ap["population_std"],
+        "ap_min": ap["min"],
+        "ap_min_fold_id": ap["min_fold_id"],
+        "ap_max": ap["max"],
+        "ap_max_fold_id": ap["max_fold_id"],
+        "runtime_total_seconds": math.fsum(runtimes),
+        "runtime_median_seconds": statistics.median(runtimes),
+        "filename_ap_mean": filename_mean,
+        "filename_ap_population_std": filename_std,
+        "paper_ap_mean": paper_mean,
+        "paper_ap_population_std": paper_std,
+        "paper_ap_reported_std": paper_std,
+        "filename_reference": {
+            "source": "official_weights_manifest.json filename labels",
+            "manifest_sha256": _sha256(PINNED_MANIFEST_PATH),
+            "paper_table_provenance": False,
+            "mean": filename_mean,
+            "population_std": filename_std,
+        },
+        "paper_reference": {
+            "source": "upstream.lock.json paper.target",
+            "upstream_lock_sha256": _sha256(UPSTREAM_LOCK_PATH),
+            "reported": f"{paper_mean:.3f} +/- {paper_std:.3f}",
+            "mean": paper_mean,
+            "reported_std": paper_std,
+        },
+        "ap_mean_minus_filename_mean": float(ap["mean"]) - filename_mean,
+        "ap_mean_absolute_difference_from_filename_mean": abs(
+            float(ap["mean"]) - filename_mean
+        ),
+        "ap_population_std_minus_filename_population_std": (
+            float(ap["population_std"]) - filename_std
+        ),
+        "ap_population_std_absolute_difference_from_filename_population_std": abs(
+            float(ap["population_std"]) - filename_std
+        ),
+        "ap_mean_minus_paper_mean": float(ap["mean"]) - paper_mean,
+        "ap_mean_absolute_difference_from_paper_mean": abs(
+            float(ap["mean"]) - paper_mean
+        ),
+        "ap_population_std_minus_paper_population_std": (
+            float(ap["population_std"]) - paper_std
+        ),
+        "ap_population_std_minus_paper_reported_std": (
+            float(ap["population_std"]) - paper_std
+        ),
+        "ap_population_std_absolute_difference_from_paper_reported_std": abs(
+            float(ap["population_std"]) - paper_std
+        ),
+    }
+
+
+def _state_rows(campaign: Path) -> list[Mapping[str, object]]:
+    paths = sorted(
+        campaign.glob("fold*.json"),
+        key=lambda path: path.name,
+    )
+    states: list[Mapping[str, object]] = []
+    for path in paths:
+        if re.fullmatch(r"fold\d+\.json", path.name) is None:
+            continue
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, Mapping):
+            raise ValueError("campaign fold state must be a JSON object")
+        states.append(payload)
+    fold_ids = [state.get("fold_id") for state in states]
+    if (
+        len(states) != 12
+        or any(type(fold_id) is not int for fold_id in fold_ids)
+        or sorted(fold_ids) != list(range(12))
+    ):
+        raise ValueError("campaign fold states must cover folds exactly 0 through 11")
+    return sorted(states, key=lambda state: int(state["fold_id"]))
+
+
+def _validate_run_path(run_directory: Path, spec: WeightSpec) -> Path:
+    run = run_directory.resolve()
+    root = WEIGHT_ARTIFACTS_ROOT.resolve()
+    if run.parent != root or not run.name.startswith(f"fold{spec.fold_id}-weight-"):
+        raise ValueError("campaign fold run is outside the fixed raw artifact root")
+    return run
+
+
+def weight_path_for_spec(spec: WeightSpec) -> Path:
+    return (REPRODUCTION_ROOT / ".local" / "released-weights" / spec.filename).resolve()
+
+
+def _raw_metrics(run: Path) -> dict[str, float]:
+    output = (run / "stdout.log").read_text(encoding="utf-8", errors="replace")
+    output += "\n" + (run / "stderr.log").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    exit_code = int((run / "exit-code.txt").read_text(encoding="utf-8").strip())
+    if exit_code != 0:
+        raise ValueError("campaign fold child exit code is not zero")
+    metrics: dict[str, float] = {}
+    patterns = (
+        rf"(?m)[│|]\s*({_METRIC_NAME})\s*[│|]\s*({_FINITE_SCALAR})",
+        rf"(?m)(?:^|[\r\n])[ \t]*({_METRIC_NAME})[ \t]{{2,}}({_FINITE_SCALAR})"
+        r"(?=[ \t]*(?:[\r\n]|$))",
+    )
+    for pattern in patterns:
+        for name, raw in re.findall(pattern, output):
+            if name in metrics:
+                raise ValueError("campaign raw table contains duplicate test metrics")
+            metrics[name] = float(raw)
+    return _validate_metrics(metrics)
+
+
+def verify_campaign(campaign_directory: Path) -> dict[str, object]:
+    """Rebuild every result from raw fold evidence, then atomically publish aggregates."""
+    campaign = campaign_directory.resolve()
+    if campaign.parent != CAMPAIGN_ARTIFACTS_ROOT.resolve() or not campaign.name.startswith(
+        "official-weight-12fold-"
+    ):
+        raise ValueError("campaign directory is outside the fixed artifact root")
+    specs = load_pinned_manifest(PINNED_MANIFEST_PATH)
+    states = _state_rows(campaign)
+    sealed_inputs: dict[int, dict[str, object]] = {}
+    for state in states:
+        fold_id = int(state["fold_id"])
+        spec = spec_for_fold(specs, fold_id)
+        if state.get("status") != "pass":
+            raise ValueError(f"campaign fold {fold_id} state did not pass")
+        expected_mode = "adopt" if fold_id == 2 else "launch"
+        if state.get("mode") != expected_mode:
+            raise ValueError(f"campaign fold {fold_id} mode mismatch")
+        run = _validate_run_path(Path(str(state.get("run_directory", ""))), spec)
+        if fold_id == 2 and run != ADOPTED_FOLD2_RUN.resolve():
+            raise ValueError("campaign did not adopt the fixed sealed Fold 2 run")
+        independent_path = run / "independent-verification.json"
+        verifier_sha = _sha256(independent_path)
+        if state.get("independent_verification_sha256") != verifier_sha:
+            raise ValueError(f"fold {fold_id} verifier seal mismatch")
+        sealed_inputs[fold_id] = {
+            "run": run,
+            "fold_verifier_sha256": verifier_sha,
+            "raw_evidence_manifest": capture_fold_raw_manifest(
+                run, weight_path_for_spec(spec)
+            ),
+        }
+
+    rows: list[dict[str, object]] = []
+    fold_seals: list[dict[str, object]] = []
+    for state in states:
+        fold_id = int(state["fold_id"])
+        spec = spec_for_fold(specs, fold_id)
+        sealed = sealed_inputs[fold_id]
+        run = Path(str(sealed["run"]))
+        independent_path = run / "independent-verification.json"
+        verifier_sha_before = str(sealed["fold_verifier_sha256"])
+        raw_before = sealed["raw_evidence_manifest"]
+        if not isinstance(raw_before, Mapping):
+            raise ValueError(f"fold {fold_id} raw evidence manifest is invalid")
+        raw_metrics = _raw_metrics(run)
+        verified = verify_fold_run(run, weight_path_for_spec(spec), spec)
+        if verified.get("status") != "pass" or verified.get("fold_id") != fold_id:
+            raise ValueError(f"fold {fold_id} generic independent verifier did not pass")
+        generic_metrics = _validate_metrics(verified.get("test_metrics"))
+        if raw_metrics != generic_metrics:
+            raise ValueError(f"fold {fold_id} raw metrics disagree with generic verifier")
+        if verified.get("raw_evidence_manifest") != raw_before:
+            raise ValueError(f"fold {fold_id} generic raw evidence manifest mismatch")
+        if verified.get("raw_evidence_unchanged_during_verification") is not True:
+            raise ValueError(f"fold {fold_id} generic verifier did not seal raw evidence")
+        recorded = json.loads(independent_path.read_text(encoding="utf-8"))
+        if not isinstance(recorded, Mapping) or dict(recorded) != dict(verified):
+            raise ValueError(f"fold {fold_id} sealed verifier result mismatch")
+        wall_seconds = float(verified.get("wall_seconds", math.nan))
+        if not math.isfinite(wall_seconds) or wall_seconds <= 0:
+            raise ValueError(f"fold {fold_id} runtime is invalid")
+        row: dict[str, object] = {
+            "fold_id": fold_id,
+            "train_years": ";".join(str(year) for year in spec.train_years),
+            "validation_year": spec.validation_year,
+            "test_year": spec.test_year,
+            "weight_filename": spec.filename,
+            "weight_sha256": spec.sha256,
+            "filename_ap": spec.filename_ap,
+            **raw_metrics,
+            "test_AP_minus_filename_ap": raw_metrics["test_AP"] - spec.filename_ap,
+            "test_AP_absolute_difference_from_filename_ap": abs(
+                raw_metrics["test_AP"] - spec.filename_ap
+            ),
+            "wall_seconds": wall_seconds,
+            "run_directory": str(run),
+            "fold_verifier_sha256": verifier_sha_before,
+            "raw_evidence_manifest_sha256": _manifest_sha256(raw_before),
+        }
+        rows.append(row)
+        fold_seals.append(
+            {
+                "fold_id": fold_id,
+                "fold_verifier_sha256": verifier_sha_before,
+                "raw_evidence_manifest": raw_before,
+                "raw_evidence_manifest_sha256": _manifest_sha256(raw_before),
+            }
+        )
+
+    for state in states:
+        fold_id = int(state["fold_id"])
+        spec = spec_for_fold(specs, fold_id)
+        sealed = sealed_inputs[fold_id]
+        run = Path(str(sealed["run"]))
+        raw_after = capture_fold_raw_manifest(run, weight_path_for_spec(spec))
+        verifier_sha_after = _sha256(run / "independent-verification.json")
+        if (
+            sealed["raw_evidence_manifest"] != raw_after
+            or sealed["fold_verifier_sha256"] != verifier_sha_after
+        ):
+            raise ValueError(
+                f"fold {fold_id} raw evidence changed during campaign verification"
+            )
+
+    summary = summarize_verified_rows(rows)
+    results_path = campaign / RESULTS_FILENAME
+    summary_path = campaign / SUMMARY_FILENAME
+    _write_csv_atomic(results_path, rows)
+    _write_json_atomic(summary_path, summary)
+    result = {
+        "schema_version": 1,
+        "status": "pass",
+        "fold_count": 12,
+        "independent_implementation": True,
+        "controller_metric_summaries_used": False,
+        "raw_evidence_unchanged_during_verification": True,
+        "results_sha256": _sha256(results_path),
+        "summary_sha256": _sha256(summary_path),
+        "fold_seals": fold_seals,
+    }
+    _write_json_atomic(campaign / INDEPENDENT_FILENAME, result)
+    return result
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--campaign-directory", required=True, type=Path)
+    arguments = parser.parse_args(argv)
+    result = verify_campaign(arguments.campaign_directory)
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
