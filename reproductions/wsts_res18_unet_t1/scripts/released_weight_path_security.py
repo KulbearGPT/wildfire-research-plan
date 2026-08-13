@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import os
 import stat
+import hashlib
+import json
+import re
+import subprocess
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Sequence
 
 
 def _is_reparse_or_link(path: Path) -> bool:
@@ -115,3 +119,115 @@ def require_pairwise_distinct_files(paths: Iterable[Path], *, description: str) 
                     raise ValueError(f"{description} files are aliased")
             except OSError as error:
                 raise ValueError(f"{description} identity is inaccessible") from error
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def validate_reviewed_authorization_manifest(
+    path: Path,
+    *,
+    expected_path: Path,
+    repository_root: Path,
+    campaign_directory: Path,
+    run_directory: Path,
+    reviewed_paths: Sequence[Path],
+) -> dict[str, object]:
+    """Validate an externally created approval against one clean reviewed commit."""
+    repository = require_sealed_directory(
+        repository_root,
+        checked_root=repository_root,
+        description="reviewed authorization repository",
+    )
+    campaign = require_sealed_directory(
+        campaign_directory,
+        checked_root=campaign_directory,
+        description="reviewed authorization campaign",
+    )
+    run = require_sealed_directory(
+        run_directory,
+        checked_root=run_directory,
+        description="reviewed authorization run",
+    )
+    expected = expected_path.absolute()
+    approval = require_sealed_regular_file(
+        path,
+        checked_root=campaign,
+        description="reviewed authorization manifest",
+    )
+    if approval != expected or approval.parent != campaign:
+        raise ValueError("reviewed authorization manifest path mismatch")
+    status = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=all"],
+        cwd=repository,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if status.returncode != 0 or status.stdout.splitlines():
+        raise ValueError("reviewed authorization requires an entirely clean worktree")
+    revision = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repository,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    commit = revision.stdout.strip()
+    if revision.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        raise ValueError("reviewed authorization commit is invalid")
+    sealed_files: list[dict[str, object]] = []
+    lexical_paths: list[Path] = []
+    for item in reviewed_paths:
+        reviewed = require_sealed_regular_file(
+            item,
+            checked_root=repository,
+            description="reviewed authorization code file",
+        )
+        try:
+            relative = reviewed.relative_to(repository)
+        except ValueError as error:
+            raise ValueError("reviewed authorization code path escapes repository") from error
+        tracked = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", "--", relative.as_posix()],
+            cwd=repository,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if tracked.returncode != 0:
+            raise ValueError("reviewed authorization code file is not tracked")
+        lexical_paths.append(reviewed)
+        sealed_files.append(
+            {
+                "path": str(reviewed),
+                "bytes": reviewed.stat().st_size,
+                "sha256": _sha256(reviewed),
+            }
+        )
+    require_pairwise_distinct_files(
+        [approval, *lexical_paths], description="reviewed authorization"
+    )
+    expected_payload = {
+        "schema_version": 1,
+        "status": "APPROVED",
+        "approval_scope": "exact Fold 0 offline recovery code after independent review",
+        "campaign_id": campaign.name,
+        "campaign_directory": str(campaign),
+        "fold_id": 0,
+        "run_directory": str(run),
+        "reviewed_commit": commit,
+        "reviewed_files": sealed_files,
+    }
+    try:
+        payload = json.loads(approval.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ValueError("reviewed authorization manifest is invalid JSON") from error
+    if type(payload) is not dict or payload != expected_payload:
+        raise ValueError("reviewed authorization manifest schema or identity mismatch")
+    return payload

@@ -13,6 +13,7 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 import released_weight_contract as contract  # noqa: E402
 import run_weight_campaign as campaign  # noqa: E402
+import released_weight_path_security as path_security  # noqa: E402
 import verify_released_weight as fold_verifier  # noqa: E402
 
 
@@ -43,6 +44,105 @@ def test_schedule_is_exact_and_adopts_only_fold2(
     )
     assert schedule[2].run_directory == adopted
     assert all(item.run_directory is None for item in schedule if item.spec.fold_id != 2)
+
+
+@pytest.mark.parametrize("tamper", ["valid", "wrong-commit", "extra", "file-sha", "untracked-python"])
+def test_external_reviewed_authorization_requires_exact_approved_clean_commit(
+    tmp_path: Path, tamper: str
+) -> None:
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repository, check=True)
+    subprocess.run(["git", "config", "user.email", "tests@example.invalid"], cwd=repository, check=True)
+    subprocess.run(["git", "config", "user.name", "Tests"], cwd=repository, check=True)
+    (repository / ".gitignore").write_text("artifacts/\n", encoding="utf-8")
+    scripts = repository / "scripts"
+    scripts.mkdir()
+    reviewed_paths = []
+    for name in (
+        "run_weight_campaign.py",
+        "evaluate_released_weight.py",
+        "verify_released_weight.py",
+        "released_weight_path_security.py",
+    ):
+        path = scripts / name
+        path.write_text(f"# reviewed {name}\n", encoding="utf-8")
+        reviewed_paths.append(path.absolute())
+    subprocess.run(["git", "add", "."], cwd=repository, check=True)
+    subprocess.run(["git", "commit", "-qm", "reviewed"], cwd=repository, check=True)
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repository, text=True, capture_output=True, check=True
+    ).stdout.strip()
+    campaign_directory = repository / "artifacts" / "campaign"
+    run = repository / "artifacts" / "run"
+    campaign_directory.mkdir(parents=True)
+    run.mkdir()
+    approval_path = campaign_directory / "fold0-recovery-reviewed-authorization.json"
+    payload = {
+        "schema_version": 1,
+        "status": "APPROVED",
+        "approval_scope": "exact Fold 0 offline recovery code after independent review",
+        "campaign_id": campaign_directory.name,
+        "campaign_directory": str(campaign_directory.absolute()),
+        "fold_id": 0,
+        "run_directory": str(run.absolute()),
+        "reviewed_commit": commit,
+        "reviewed_files": [
+            {
+                "path": str(path),
+                "bytes": path.stat().st_size,
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+            for path in reviewed_paths
+        ],
+    }
+    if tamper == "wrong-commit":
+        payload["reviewed_commit"] = "f" * 40
+    elif tamper == "extra":
+        payload["self_approved"] = True
+    elif tamper == "file-sha":
+        payload["reviewed_files"][0]["sha256"] = "0" * 64
+    approval_path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+    if tamper == "untracked-python":
+        (scripts / "injected.py").write_text("raise SystemExit(9)\n", encoding="utf-8")
+
+    if tamper == "valid":
+        assert path_security.validate_reviewed_authorization_manifest(
+            approval_path,
+            expected_path=approval_path,
+            repository_root=repository,
+            campaign_directory=campaign_directory,
+            run_directory=run,
+            reviewed_paths=reviewed_paths,
+        ) == payload
+    else:
+        with pytest.raises(ValueError, match="reviewed authorization"):
+            path_security.validate_reviewed_authorization_manifest(
+                approval_path,
+                expected_path=approval_path,
+                repository_root=repository,
+                campaign_directory=campaign_directory,
+                run_directory=run,
+                reviewed_paths=reviewed_paths,
+            )
+
+
+def test_resume_cli_requires_explicit_reviewed_authorization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    called = False
+
+    def resume(*_args: object, **_kwargs: object) -> dict[str, object]:
+        nonlocal called
+        called = True
+        return {"status": "pass"}
+
+    monkeypatch.setattr(campaign, "resume_existing_campaign", resume)
+
+    with pytest.raises(ValueError, match="reviewed authorization"):
+        campaign.main(["--resume-existing", str(tmp_path / "campaign")])
+
+    assert called is False
 
 
 @pytest.mark.parametrize("adopted", [{}, {1: Path("wrong")}, {2: Path("a"), 3: Path("b")}])
@@ -202,6 +302,25 @@ def _authorize_fake_resume_incident(
     )
     monkeypatch.setattr(
         campaign, "_recovery_code_commit", lambda: "f" * 40, raising=False
+    )
+    reviewed_path = campaign_directory / campaign.RECOVERY_REVIEWED_AUTHORIZATION_NAME
+    reviewed_payload = {
+        "schema_version": 1,
+        "status": "APPROVED",
+        "approval_scope": "exact Fold 0 offline recovery code after independent review",
+        "campaign_id": campaign_directory.name,
+        "campaign_directory": str(campaign_directory.absolute()),
+        "fold_id": 0,
+        "run_directory": str(fold0_run.absolute()),
+        "reviewed_commit": "f" * 40,
+        "reviewed_files": [],
+    }
+    reviewed_path.write_text(json.dumps(reviewed_payload) + "\n", encoding="utf-8")
+    monkeypatch.setattr(
+        campaign,
+        "_validate_reviewed_authorization",
+        lambda *_args, **_kwargs: dict(reviewed_payload),
+        raising=False,
     )
     return source
 
@@ -417,6 +536,78 @@ def test_finalize_existing_fold_never_launches_a_process(
     )
 
 
+def test_generic_finalize_main_preserves_task2_interface_without_recovery_token(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    called: list[tuple[Path, int, Path | None]] = []
+
+    def finalize(
+        run: Path,
+        spec: contract.WeightSpec,
+        authorization: Path | None = None,
+    ) -> dict[str, object]:
+        called.append((run, spec.fold_id, authorization))
+        return {"status": "pass", "fold_id": spec.fold_id}
+
+    monkeypatch.setattr(campaign, "finalize_existing_fold", finalize)
+    monkeypatch.setattr(campaign, "load_pinned_manifest", lambda _path: specs)
+
+    assert campaign.main(
+        ["--fold-id", "5", "--finalize-existing", str(tmp_path / "run")]
+    ) == 0
+    assert called == [(tmp_path / "run", 5, None)]
+
+
+def test_generic_finalize_subprocess_omits_recovery_authorization(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    run = tmp_path / "fold5-weight-existing"
+    run.mkdir()
+    commands: list[list[str]] = []
+
+    def cli(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        payload = {"status": "pass", "fold_id": 5}
+        if Path(command[1]).name == "verify_released_weight.py":
+            output = Path(command[command.index("--output") + 1])
+            output.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+        return subprocess.CompletedProcess(command, 0, json.dumps(payload) + "\n", "")
+
+    monkeypatch.setattr(campaign.subprocess, "run", cli)
+
+    result = campaign.finalize_existing_fold(run, contract.spec_for_fold(specs, 5))
+
+    assert result["status"] == "pass"
+    assert "--recovery-authorization" not in commands[0]
+
+
+def test_campaign_main_rejects_fold0_finalize_without_external_token(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    called = False
+
+    def finalize(*_args: object, **_kwargs: object) -> dict[str, object]:
+        nonlocal called
+        called = True
+        return {"status": "pass"}
+
+    monkeypatch.setattr(campaign, "finalize_existing_fold", finalize)
+    monkeypatch.setattr(campaign, "load_pinned_manifest", lambda _path: specs)
+
+    with pytest.raises(ValueError, match="Fold 0 recovery"):
+        campaign.main(
+            ["--fold-id", "0", "--finalize-existing", str(tmp_path / "run")]
+        )
+
+    assert called is False
+
+
 def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_schedule(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -495,12 +686,11 @@ def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_sche
     assert authorization["original_failure"]["sha256"] == campaign.sha256_file(
         campaign_directory / "failure.json"
     )
-    assert [Path(item["path"]).name for item in authorization["reviewed_code"]["files"]] == [
-        "run_weight_campaign.py",
-        "evaluate_released_weight.py",
-        "verify_released_weight.py",
-        "released_weight_path_security.py",
-    ]
+    reviewed_path = campaign_directory / campaign.RECOVERY_REVIEWED_AUTHORIZATION_NAME
+    assert authorization["reviewed_authorization"]["payload"]["status"] == "APPROVED"
+    assert authorization["reviewed_authorization"]["seal"] == campaign._exact_file_seal(
+        reviewed_path
+    )
     assert resumed_launches == [1, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     assert scientific_folds == [0]
     assert result == {"status": "pass", "fold_count": 12, "next_fold": None}
@@ -531,6 +721,116 @@ def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_sche
     }
     with pytest.raises(FileExistsError, match="resume lock already exists"):
         campaign.resume_existing_campaign(campaign_directory)
+
+
+@pytest.mark.parametrize("failure_mode", ["interrupted-after-first-lock", "resume-lock-race"])
+def test_resume_never_leaves_a_consumable_token_without_winning_resume_lock(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure_mode: str,
+) -> None:
+    campaign_directory, _, _, _ = _configure_fake_campaign(
+        tmp_path, monkeypatch, verifier_failure=0
+    )
+    with pytest.raises(ValueError):
+        campaign.run_campaign(campaign_directory)
+    _authorize_fake_resume_incident(tmp_path, monkeypatch, campaign_directory)
+    original_acquire = campaign._acquire_immutable_json
+    acquired: list[str] = []
+
+    def acquire(path: Path, payload: object) -> None:
+        acquired.append(path.name)
+        if failure_mode == "resume-lock-race":
+            path.write_text('{"competitor":true}\n', encoding="utf-8")
+            original_acquire(path, payload)
+            return
+        original_acquire(path, payload)
+        raise RuntimeError("synthetic interruption after first immutable lock")
+
+    monkeypatch.setattr(campaign, "_acquire_immutable_json", acquire)
+
+    with pytest.raises((FileExistsError, RuntimeError)):
+        campaign.resume_existing_campaign(campaign_directory)
+
+    assert acquired == ["resume.lock.json"]
+    assert not (
+        campaign_directory / campaign.EXTERNAL_RECOVERY_AUTHORIZATION_NAME
+    ).exists()
+
+
+def test_external_recovery_token_exactly_seals_preexisting_resume_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    campaign_directory, _, _, _ = _configure_fake_campaign(
+        tmp_path, monkeypatch, verifier_failure=0
+    )
+    with pytest.raises(ValueError):
+        campaign.run_campaign(campaign_directory)
+    _authorize_fake_resume_incident(tmp_path, monkeypatch, campaign_directory)
+    captured: dict[str, object] = {}
+
+    def stop_before_finalize(
+        _run: Path, _spec: contract.WeightSpec, authorization: Path
+    ) -> dict[str, object]:
+        captured.update(json.loads(authorization.read_text(encoding="utf-8")))
+        raise RuntimeError("stop after token creation")
+
+    monkeypatch.setattr(campaign, "finalize_existing_fold", stop_before_finalize)
+
+    with pytest.raises(RuntimeError, match="stop after token"):
+        campaign.resume_existing_campaign(campaign_directory)
+
+    resume_path = campaign_directory / "resume.lock.json"
+    resume_bytes = resume_path.read_bytes()
+    assert captured["resume_lock"] == {
+        "path": str(resume_path.absolute()),
+        "bytes_hex": resume_bytes.hex(),
+        "size": len(resume_bytes),
+        "sha256": hashlib.sha256(resume_bytes).hexdigest(),
+    }
+
+
+@pytest.mark.parametrize("tamper_at", ["before-token", "after-token", "before-evaluator"])
+def test_resume_revalidates_incident_around_token_and_evaluator(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    tamper_at: str,
+) -> None:
+    campaign_directory, _, _, _ = _configure_fake_campaign(
+        tmp_path, monkeypatch, verifier_failure=0
+    )
+    with pytest.raises(ValueError):
+        campaign.run_campaign(campaign_directory)
+    source = _authorize_fake_resume_incident(tmp_path, monkeypatch, campaign_directory)
+    original_assert = campaign._assert_recovery_incident_state
+    checks = 0
+    finalized = False
+
+    def assert_incident(*args: object) -> None:
+        nonlocal checks
+        checks += 1
+        target_check = {"before-token": 1, "after-token": 2, "before-evaluator": 3}[tamper_at]
+        if checks == target_check:
+            source.write_bytes(b"changed between recovery boundaries")
+        original_assert(*args)
+
+    def finalize(*_args: object) -> dict[str, object]:
+        nonlocal finalized
+        finalized = True
+        return {}
+
+    monkeypatch.setattr(campaign, "_assert_recovery_incident_state", assert_incident)
+    monkeypatch.setattr(campaign, "finalize_existing_fold", finalize)
+
+    with pytest.raises(ValueError, match="source seal"):
+        campaign.resume_existing_campaign(campaign_directory)
+
+    assert checks == {"before-token": 1, "after-token": 2, "before-evaluator": 3}[tamper_at]
+    assert finalized is False
+    if tamper_at == "before-token":
+        assert not (
+            campaign_directory / campaign.EXTERNAL_RECOVERY_AUTHORIZATION_NAME
+        ).exists()
 
 
 @pytest.mark.parametrize("tamper_at", ["before-fold1", "before-fold3", "before-complete"])
@@ -618,7 +918,7 @@ def test_resume_revalidates_original_failure_at_every_scientific_boundary(
         "source",
         "campaign-id",
         "run-id",
-        "dirty-code",
+        "approval-tamper",
     ],
 )
 def test_resume_existing_fails_closed_before_finalize_on_tampered_campaign(
@@ -662,15 +962,17 @@ def test_resume_existing_fails_closed_before_finalize_on_tampered_campaign(
     elif tamper == "run-id":
         monkeypatch.setattr(campaign, "RECOVERY_FOLD0_RUN_NAME", "other-fold0-run")
     else:
+        reviewed = campaign_directory / campaign.RECOVERY_REVIEWED_AUTHORIZATION_NAME
+        reviewed.write_text('{"status":"SELF-APPROVED"}\n', encoding="utf-8")
         monkeypatch.setattr(
             campaign,
-            "_recovery_code_commit",
-            lambda: (_ for _ in ()).throw(
-                ValueError("campaign resume recovery code worktree is dirty")
+            "_validate_reviewed_authorization",
+            lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                ValueError("reviewed authorization manifest mismatch")
             ),
         )
 
-    with pytest.raises(ValueError, match="resume|future fold state"):
+    with pytest.raises(ValueError, match="resume|future fold state|reviewed authorization"):
         campaign.resume_existing_campaign(campaign_directory)
     assert called is False
     assert scientific_folds == [0]

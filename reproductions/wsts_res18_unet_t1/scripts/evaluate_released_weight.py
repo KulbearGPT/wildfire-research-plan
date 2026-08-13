@@ -64,6 +64,7 @@ from released_weight_path_security import (
     require_pairwise_distinct_files,
     require_sealed_directory,
     require_sealed_regular_file,
+    validate_reviewed_authorization_manifest,
 )
 from verify_released_weight import validate_weight_result
 
@@ -108,9 +109,16 @@ CAMPAIGN_ARTIFACTS_ROOT = (
 )
 RECOVERY_CAMPAIGN_ID = "official-weight-12fold-20260812T052555Z"
 EXTERNAL_RECOVERY_AUTHORIZATION_NAME = "fold0-recovery-authorization.json"
+RECOVERY_REVIEWED_AUTHORIZATION_NAME = "fold0-recovery-reviewed-authorization.json"
 CAMPAIGN_CONTROLLER_PATH = Path(__file__).with_name("run_weight_campaign.py")
 INDEPENDENT_VERIFIER_PATH = Path(__file__).with_name("verify_released_weight.py")
 PATH_SECURITY_MODULE = Path(__file__).with_name("released_weight_path_security.py")
+RECOVERY_REVIEWED_FILES = (
+    CAMPAIGN_CONTROLLER_PATH.absolute(),
+    Path(__file__).absolute(),
+    INDEPENDENT_VERIFIER_PATH.absolute(),
+    PATH_SECURITY_MODULE.absolute(),
+)
 RECOVERY_AUTHORIZATION_RAW_RELATIVE_PATHS = (
     "stdout.log",
     "stderr.log",
@@ -603,27 +611,17 @@ def _file_seal(path: Path) -> dict[str, object]:
     }
 
 
-def _current_code_commit() -> str:
-    status = subprocess.run(
-        ["git", "status", "--porcelain", "--untracked-files=no"],
-        cwd=REPOSITORY_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
+def _exact_file_seal(path: Path) -> dict[str, object]:
+    target = require_sealed_regular_file(
+        path, checked_root=path.parent, description="recovery authorization exact sealed file"
     )
-    if status.returncode != 0 or status.stdout.splitlines():
-        raise ValueError("external recovery authorization code worktree is dirty")
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=REPOSITORY_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    commit = result.stdout.strip()
-    if result.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
-        raise ValueError("external recovery authorization code commit is invalid")
-    return commit
+    raw = target.read_bytes()
+    return {
+        "path": str(target),
+        "bytes_hex": raw.hex(),
+        "size": len(raw),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+    }
 
 
 def validate_external_recovery_authorization(
@@ -659,7 +657,8 @@ def validate_external_recovery_authorization(
         "original_failure",
         "source_output",
         "target_output",
-        "reviewed_code",
+        "resume_lock",
+        "reviewed_authorization",
     }
     if type(payload) is not dict or set(payload) != expected_keys:
         raise ValueError("external recovery authorization schema mismatch")
@@ -678,15 +677,27 @@ def validate_external_recovery_authorization(
         "ctime_ns": source_candidate["ctime_ns"],
         "mtime_ns": source_candidate["mtime_ns"],
     }
-    reviewed_code = {
-        "commit": _current_code_commit(),
-        "files": [
-            _file_seal(CAMPAIGN_CONTROLLER_PATH),
-            _file_seal(Path(__file__)),
-            _file_seal(INDEPENDENT_VERIFIER_PATH),
-            _file_seal(PATH_SECURITY_MODULE),
-        ],
-    }
+    resume_path = campaign / "resume.lock.json"
+    reviewed_path = campaign / RECOVERY_REVIEWED_AUTHORIZATION_NAME
+    resume_payload = json.loads(resume_path.read_text(encoding="utf-8"))
+    reviewed = payload.get("reviewed_authorization")
+    if (
+        type(resume_payload) is not dict
+        or type(reviewed) is not dict
+        or set(reviewed) != {"seal", "payload"}
+        or reviewed.get("seal") != _exact_file_seal(reviewed_path)
+    ):
+        raise ValueError("external recovery authorization reviewed approval mismatch")
+    reviewed_payload = validate_reviewed_authorization_manifest(
+        reviewed_path,
+        expected_path=reviewed_path,
+        repository_root=REPOSITORY_ROOT,
+        campaign_directory=campaign,
+        run_directory=run,
+        reviewed_paths=RECOVERY_REVIEWED_FILES,
+    )
+    if reviewed.get("payload") != reviewed_payload:
+        raise ValueError("external recovery authorization reviewed approval mismatch")
     expected_identity = {
         "schema_version": 1,
         "status": "authorized",
@@ -697,12 +708,32 @@ def validate_external_recovery_authorization(
         "run_directory": str(run),
         "source_output": expected_source,
         "target_output": {"path": str(target), "absent": True},
-        "reviewed_code": reviewed_code,
+        "resume_lock": _exact_file_seal(resume_path),
+        "reviewed_authorization": reviewed,
     }
     if spec.fold_id != 0 or any(
         payload[field] != expected for field, expected in expected_identity.items()
     ):
         raise ValueError("external recovery authorization identity mismatch")
+    if (
+        resume_payload.get("campaign_id") != campaign.name
+        or resume_payload.get("campaign_directory") != str(campaign)
+        or resume_payload.get("fold0_run_directory") != str(run)
+        or resume_payload.get("fold0_scientific_child_relaunched") is not False
+        or resume_payload.get("automatic_retry_performed") is not False
+        or resume_payload.get("recovery_code_commit")
+        != reviewed_payload.get("reviewed_commit")
+        or resume_payload.get("original_failure") != payload["original_failure"]
+        or resume_payload.get("source_output") != payload["source_output"]
+        or resume_payload.get("target_output") != str(target)
+        or resume_payload.get("target_output_absent_before_resume") is not True
+        or resume_payload.get("reviewed_authorization") != reviewed
+    ):
+        raise ValueError("external recovery authorization resume lock mismatch")
+    require_pairwise_distinct_files(
+        [token_path, resume_path, reviewed_path],
+        description="external recovery authorization chain",
+    )
     return payload
 
 

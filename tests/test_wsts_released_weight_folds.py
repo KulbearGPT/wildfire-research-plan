@@ -369,6 +369,138 @@ def _fake_external_recovery_authorization(
     return authorization
 
 
+@pytest.mark.parametrize("tamper", ["valid", "resume-bytes", "reviewed-bytes"])
+def test_evaluator_reconstructs_resume_and_reviewed_authorization_seals(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+    tamper: str,
+) -> None:
+    campaign_root = tmp_path / "campaigns"
+    campaign_directory = campaign_root / "campaign"
+    run = tmp_path / "run"
+    derived = tmp_path / "derived"
+    campaign_directory.mkdir(parents=True)
+    run.mkdir()
+    derived.mkdir()
+    source = derived / controller.OFFICIAL_TEST_OUTPUT_SOURCE_NAME
+    source.write_bytes(b"exact-source")
+    target = run / controller.OFFICIAL_TEST_OUTPUT_TARGET_NAME
+    for path in (
+        campaign_directory / "schedule.json",
+        campaign_root / "official-weight-12fold-campaign.lock.json",
+        campaign_directory / "fold0.lock.json",
+        campaign_directory / "failure.json",
+    ):
+        path.write_text(f"sealed {path.name}\n", encoding="utf-8")
+    reviewed_path = campaign_directory / "fold0-recovery-reviewed-authorization.json"
+    reviewed_payload = {"status": "APPROVED", "reviewed_commit": "f" * 40}
+    reviewed_path.write_text(json.dumps(reviewed_payload) + "\n", encoding="utf-8")
+    source_stat = source.stat()
+    source_identity = {
+        "path": str(source.absolute()),
+        "bytes": source_stat.st_size,
+        "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "ctime_ns": source_stat.st_ctime_ns,
+        "mtime_ns": source_stat.st_mtime_ns,
+    }
+    reviewed = {
+        "seal": {
+            "path": str(reviewed_path.absolute()),
+            "bytes_hex": reviewed_path.read_bytes().hex(),
+            "size": reviewed_path.stat().st_size,
+            "sha256": hashlib.sha256(reviewed_path.read_bytes()).hexdigest(),
+        },
+        "payload": reviewed_payload,
+    }
+    resume_path = campaign_directory / "resume.lock.json"
+    resume_payload = {
+        "schema_version": 2,
+        "campaign_id": campaign_directory.name,
+        "campaign_directory": str(campaign_directory.absolute()),
+        "resume_scope": "Fold 0 offline finalization then exact remaining schedule",
+        "fold0_run_directory": str(run.absolute()),
+        "fold0_scientific_child_relaunched": False,
+        "automatic_retry_performed": False,
+        "recovery_code_commit": "f" * 40,
+        "original_failure": controller._file_seal(campaign_directory / "failure.json"),
+        "source_output": source_identity,
+        "target_output": str(target.absolute()),
+        "target_output_absent_before_resume": True,
+        "reviewed_authorization": reviewed,
+    }
+    resume_path.write_text(json.dumps(resume_payload) + "\n", encoding="utf-8")
+    resume = {
+        "path": str(resume_path.absolute()),
+        "bytes_hex": resume_path.read_bytes().hex(),
+        "size": resume_path.stat().st_size,
+        "sha256": hashlib.sha256(resume_path.read_bytes()).hexdigest(),
+    }
+    token = {
+        "schema_version": 1,
+        "status": "authorized",
+        "authorized_action": "one-time Fold 0 output recovery without scientific relaunch",
+        "campaign_id": campaign_directory.name,
+        "campaign_directory": str(campaign_directory.absolute()),
+        "fold_id": 0,
+        "run_directory": str(run.absolute()),
+        "schedule": controller._file_seal(campaign_directory / "schedule.json"),
+        "root_lock": controller._file_seal(
+            campaign_root / "official-weight-12fold-campaign.lock.json"
+        ),
+        "fold0_lock": controller._file_seal(campaign_directory / "fold0.lock.json"),
+        "original_failure": controller._file_seal(campaign_directory / "failure.json"),
+        "source_output": source_identity,
+        "target_output": {"path": str(target.absolute()), "absent": True},
+        "resume_lock": resume,
+        "reviewed_authorization": reviewed,
+    }
+    token_path = campaign_directory / controller.EXTERNAL_RECOVERY_AUTHORIZATION_NAME
+    token_path.write_text(json.dumps(token) + "\n", encoding="utf-8")
+    monkeypatch.setattr(controller, "CAMPAIGN_ARTIFACTS_ROOT", campaign_root)
+    monkeypatch.setattr(controller, "RECOVERY_CAMPAIGN_ID", campaign_directory.name)
+    monkeypatch.setattr(
+        controller,
+        "validate_reviewed_authorization_manifest",
+        lambda *_args, **_kwargs: dict(reviewed_payload),
+        raising=False,
+    )
+    if tamper == "resume-bytes":
+        resume_path.write_text('{"changed":true}\n', encoding="utf-8")
+    elif tamper == "reviewed-bytes":
+        reviewed_path.write_text('{"changed":true}\n', encoding="utf-8")
+
+    if tamper == "valid":
+        assert controller.validate_external_recovery_authorization(
+            token_path,
+            run=run,
+            spec=contract.spec_for_fold(specs, 0),
+            source=source,
+            target=target,
+            source_candidate={
+                "bytes": source_stat.st_size,
+                "sha256": source_identity["sha256"],
+                "ctime_ns": source_stat.st_ctime_ns,
+                "mtime_ns": source_stat.st_mtime_ns,
+            },
+        ) == token
+    else:
+        with pytest.raises(ValueError, match="authorization"):
+            controller.validate_external_recovery_authorization(
+                token_path,
+                run=run,
+                spec=contract.spec_for_fold(specs, 0),
+                source=source,
+                target=target,
+                source_candidate={
+                    "bytes": source_stat.st_size,
+                    "sha256": source_identity["sha256"],
+                    "ctime_ns": source_stat.st_ctime_ns,
+                    "mtime_ns": source_stat.st_mtime_ns,
+                },
+            )
+
+
 def test_live_output_collection_refuses_orphan_then_atomically_attributes_exact_npz(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

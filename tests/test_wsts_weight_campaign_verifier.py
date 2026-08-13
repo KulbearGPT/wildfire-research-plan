@@ -239,6 +239,7 @@ def _install_synthetic_recovery_chain(
         "fold0_lock": campaign_directory / "fold0.lock.json",
         "failure": campaign_directory / "failure.json",
         "authorization": campaign_directory / verifier.EXTERNAL_RECOVERY_AUTHORIZATION_NAME,
+        "reviewed": campaign_directory / verifier.RECOVERY_REVIEWED_AUTHORIZATION_NAME,
         "resume": campaign_directory / "resume.lock.json",
         "receipt": run / verifier.RECOVERY_RECEIPT_NAME,
         "provenance": run / verifier.RECOVERY_PROVENANCE_NAME,
@@ -271,12 +272,39 @@ def _install_synthetic_recovery_chain(
         "ctime_ns": 100,
         "mtime_ns": 200,
     }
-    code_files = [
-        _seal(verifier.CAMPAIGN_CONTROLLER_PATH),
-        _seal(verifier.EVALUATOR_PATH),
-        _seal(verifier.FOLD_VERIFIER_PATH),
-        _seal(verifier.PATH_SECURITY_MODULE),
-    ]
+    reviewed_payload = {"status": "APPROVED", "reviewed_commit": "f" * 40}
+    paths["reviewed"].write_text(json.dumps(reviewed_payload) + "\n", encoding="utf-8")
+    reviewed = {
+        "seal": {
+            "path": str(paths["reviewed"].absolute()),
+            "bytes_hex": paths["reviewed"].read_bytes().hex(),
+            "size": paths["reviewed"].stat().st_size,
+            "sha256": _sha256(paths["reviewed"]),
+        },
+        "payload": reviewed_payload,
+    }
+    resume = {
+        **root_lock,
+        "schema_version": 2,
+        "resume_scope": "Fold 0 offline finalization then exact remaining schedule",
+        "original_failure_sha256": _sha256(paths["failure"]),
+        "fold0_run_directory": str(run.absolute()),
+        "fold0_scientific_child_relaunched": False,
+        "automatic_retry_performed": False,
+        "recovery_code_commit": "f" * 40,
+        "original_failure": _seal(paths["failure"]),
+        "source_output": source_identity,
+        "target_output": str(paths["target"].absolute()),
+        "target_output_absent_before_resume": True,
+        "reviewed_authorization": reviewed,
+    }
+    paths["resume"].write_text(json.dumps(resume) + "\n", encoding="utf-8")
+    resume_seal = {
+        "path": str(paths["resume"].absolute()),
+        "bytes_hex": paths["resume"].read_bytes().hex(),
+        "size": paths["resume"].stat().st_size,
+        "sha256": _sha256(paths["resume"]),
+    }
     authorization = {
         "schema_version": 1,
         "status": "authorized",
@@ -291,24 +319,10 @@ def _install_synthetic_recovery_chain(
         "original_failure": _seal(paths["failure"]),
         "source_output": source_identity,
         "target_output": {"path": str(paths["target"].absolute()), "absent": True},
-        "reviewed_code": {"commit": "f" * 40, "files": code_files},
+        "resume_lock": resume_seal,
+        "reviewed_authorization": reviewed,
     }
     paths["authorization"].write_text(json.dumps(authorization) + "\n", encoding="utf-8")
-    resume = {
-        **root_lock,
-        "schema_version": 2,
-        "resume_scope": "Fold 0 offline finalization then exact remaining schedule",
-        "original_failure_sha256": _sha256(paths["failure"]),
-        "fold0_run_directory": str(run.absolute()),
-        "fold0_scientific_child_relaunched": False,
-        "automatic_retry_performed": False,
-        "recovery_code_commit": "f" * 40,
-        "original_failure": _seal(paths["failure"]),
-        "source_output": source_identity,
-        "target_output": str(paths["target"].absolute()),
-        "target_output_absent_before_resume": True,
-    }
-    paths["resume"].write_text(json.dumps(resume) + "\n", encoding="utf-8")
     receipt = {
         "schema_version": 1,
         "status": "pass",
@@ -372,11 +386,38 @@ def test_campaign_recovery_chain_binds_all_incident_seals(
 ) -> None:
     campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
     state, _ = _install_synthetic_recovery_chain(tmp_path, campaign_directory)
+    monkeypatch.setattr(
+        verifier,
+        "validate_reviewed_authorization_manifest",
+        lambda *_args, **_kwargs: {"status": "APPROVED", "reviewed_commit": "f" * 40},
+        raising=False,
+    )
 
     verifier._verify_recovery_chain(campaign_directory, state)
 
 
-@pytest.mark.parametrize("tamper", ["failure", "resume-extra", "receipt-authorization"])
+def test_campaign_recovery_chain_revalidates_external_reviewed_manifest(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
+    state, _ = _install_synthetic_recovery_chain(tmp_path, campaign_directory)
+    monkeypatch.setattr(
+        verifier,
+        "validate_reviewed_authorization_manifest",
+        lambda *_args, **_kwargs: {"status": "REJECTED", "reviewed_commit": "f" * 40},
+        raising=False,
+    )
+
+    with pytest.raises(ValueError, match="reviewed authorization"):
+        verifier._verify_recovery_chain(campaign_directory, state)
+
+
+@pytest.mark.parametrize(
+    "tamper",
+    ["failure", "resume-extra", "resume-bytes", "reviewed-bytes", "receipt-authorization"],
+)
 def test_campaign_recovery_chain_rejects_cross_seal_tamper(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -385,12 +426,22 @@ def test_campaign_recovery_chain_rejects_cross_seal_tamper(
 ) -> None:
     campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
     state, paths = _install_synthetic_recovery_chain(tmp_path, campaign_directory)
+    monkeypatch.setattr(
+        verifier,
+        "validate_reviewed_authorization_manifest",
+        lambda *_args, **_kwargs: {"status": "APPROVED", "reviewed_commit": "f" * 40},
+        raising=False,
+    )
     if tamper == "failure":
         paths["failure"].write_text('{"status":"changed"}\n', encoding="utf-8")
     elif tamper == "resume-extra":
         payload = json.loads(paths["resume"].read_text(encoding="utf-8"))
         payload["unreviewed"] = True
         paths["resume"].write_text(json.dumps(payload) + "\n", encoding="utf-8")
+    elif tamper == "resume-bytes":
+        paths["resume"].write_text('{"changed":true}\n', encoding="utf-8")
+    elif tamper == "reviewed-bytes":
+        paths["reviewed"].write_text('{"changed":true}\n', encoding="utf-8")
     else:
         payload = json.loads(paths["receipt"].read_text(encoding="utf-8"))
         payload["external_authorization"]["status"] = "changed"

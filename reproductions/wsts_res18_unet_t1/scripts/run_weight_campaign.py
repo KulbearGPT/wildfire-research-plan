@@ -24,6 +24,7 @@ from released_weight_path_security import (
     require_pairwise_distinct_files,
     require_sealed_directory,
     require_sealed_regular_file,
+    validate_reviewed_authorization_manifest,
 )
 from run_calibration import ENVIRONMENT_PYTHON as FIXED_ENVIRONMENT_PYTHON
 
@@ -51,6 +52,12 @@ GLOBAL_LOCK_NAME = "official-weight-12fold-campaign.lock.json"
 EVALUATOR_CLI = Path(__file__).with_name("evaluate_released_weight.py").absolute()
 VERIFIER_CLI = Path(__file__).with_name("verify_released_weight.py").absolute()
 PATH_SECURITY_MODULE = Path(__file__).with_name("released_weight_path_security.py").absolute()
+RECOVERY_REVIEWED_FILES = (
+    Path(__file__).absolute(),
+    EVALUATOR_CLI,
+    VERIFIER_CLI,
+    PATH_SECURITY_MODULE,
+)
 RECOVERY_CAMPAIGN_ID = "official-weight-12fold-20260812T052555Z"
 RECOVERY_FOLD0_RUN_NAME = "fold0-weight-20260812T053209Z-e7c067f5"
 RECOVERY_FAILURE_BYTES = 539
@@ -73,6 +80,7 @@ RECOVERY_OUTPUT_TARGET_NAME = "official-test-pr-curve-data.npz"
 RECOVERY_AUTHORIZATION_NAME = "official-test-output-recovery-authorization.json"
 RECOVERY_PROVENANCE_NAME = "official-test-output-provenance.json"
 EXTERNAL_RECOVERY_AUTHORIZATION_NAME = "fold0-recovery-authorization.json"
+RECOVERY_REVIEWED_AUTHORIZATION_NAME = "fold0-recovery-reviewed-authorization.json"
 RECOVERED_FOLD0_RAW_RELATIVE_PATHS = (
     "stdout.log",
     "stderr.log",
@@ -160,6 +168,19 @@ def _file_seal(path: Path) -> dict[str, object]:
         "path": str(target),
         "bytes": target.stat().st_size,
         "sha256": sha256_file(target),
+    }
+
+
+def _exact_file_seal(path: Path) -> dict[str, object]:
+    target = require_sealed_regular_file(
+        path, checked_root=path.parent, description="campaign recovery exact sealed file"
+    )
+    raw = target.read_bytes()
+    return {
+        "path": str(target),
+        "bytes_hex": raw.hex(),
+        "size": len(raw),
+        "sha256": hashlib.sha256(raw).hexdigest(),
     }
 
 
@@ -475,9 +496,21 @@ def verify_one_fold(run_directory: Path, spec: WeightSpec) -> dict[str, object]:
 
 
 def finalize_existing_fold(
-    run_directory: Path, spec: WeightSpec, recovery_authorization: Path
+    run_directory: Path,
+    spec: WeightSpec,
+    recovery_authorization: Path | None = None,
 ) -> dict[str, object]:
     """Finalize preserved output and verify it, without calling the launch path."""
+    if spec.fold_id == 0 and recovery_authorization is None:
+        raise ValueError("canonical Fold 0 recovery requires external authorization")
+    recovery_arguments = (
+        []
+        if recovery_authorization is None
+        else [
+            "--recovery-authorization",
+            str(recovery_authorization.resolve()),
+        ]
+    )
     finalized = _terminal_json(
         [
             str(FIXED_ENVIRONMENT_PYTHON.resolve()),
@@ -486,8 +519,7 @@ def finalize_existing_fold(
             str(spec.fold_id),
             "--finalize-existing",
             str(run_directory.resolve()),
-            "--recovery-authorization",
-            str(recovery_authorization.resolve()),
+            *recovery_arguments,
         ]
     )
     if finalized.get("status") != "pass" or finalized.get("fold_id") != spec.fold_id:
@@ -627,27 +659,17 @@ def _read_json_object(path: Path, message: str) -> dict[str, object]:
     return dict(payload)
 
 
-def _recovery_code_commit() -> str:
-    status = subprocess.run(
-        ["git", "status", "--porcelain", "--untracked-files=no"],
-        cwd=REPOSITORY_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
+def _validate_reviewed_authorization(
+    path: Path, *, campaign: Path, fold0_run: Path
+) -> dict[str, object]:
+    return validate_reviewed_authorization_manifest(
+        path,
+        expected_path=campaign / RECOVERY_REVIEWED_AUTHORIZATION_NAME,
+        repository_root=REPOSITORY_ROOT,
+        campaign_directory=campaign,
+        run_directory=fold0_run,
+        reviewed_paths=RECOVERY_REVIEWED_FILES,
     )
-    if status.returncode != 0 or status.stdout.splitlines():
-        raise ValueError("campaign resume recovery code worktree is dirty")
-    revision = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=REPOSITORY_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    commit = revision.stdout.strip()
-    if revision.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", commit):
-        raise ValueError("campaign resume recovery code commit is invalid")
-    return commit
 
 
 def _assert_original_failure_seal(
@@ -666,8 +688,54 @@ def _assert_original_failure_seal(
         raise ValueError("campaign original failure seal changed")
 
 
+def _assert_recovery_incident_state(
+    campaign: Path, fold0_run: Path, incident: Mapping[str, object]
+) -> None:
+    failure = incident["original_failure"]
+    source = incident["source_output"]
+    if not isinstance(failure, Mapping) or not isinstance(source, Mapping):
+        raise ValueError("campaign recovery incident seal is invalid")
+    _assert_original_failure_seal(campaign / "failure.json", failure)
+    source_path = require_sealed_regular_file(
+        Path(str(source.get("path", ""))).absolute(),
+        checked_root=RECOVERY_OUTPUT_SOURCE.parent,
+        description="Fold 0 recovery source output",
+    )
+    source_stat = source_path.stat()
+    if (
+        source.get("bytes") != source_stat.st_size
+        or source.get("sha256") != sha256_file(source_path)
+        or source.get("ctime_ns") != source_stat.st_ctime_ns
+        or source.get("mtime_ns") != source_stat.st_mtime_ns
+    ):
+        raise ValueError("campaign Fold 0 recovery source seal changed")
+    target = Path(str(incident.get("target_output", ""))).absolute()
+    require_absent_recovery_path(
+        target, checked_root=fold0_run, description="Fold 0 recovery target output"
+    )
+
+
+def _assert_reviewed_authorization(
+    campaign: Path, fold0_run: Path, incident: Mapping[str, object]
+) -> None:
+    reviewed = incident.get("reviewed_authorization")
+    if not isinstance(reviewed, Mapping):
+        raise ValueError("campaign reviewed authorization incident seal is invalid")
+    seal = reviewed.get("seal")
+    payload = reviewed.get("payload")
+    if not isinstance(seal, Mapping) or not isinstance(payload, Mapping):
+        raise ValueError("campaign reviewed authorization incident seal is invalid")
+    path = Path(str(seal.get("path", ""))).absolute()
+    actual = _validate_reviewed_authorization(
+        path, campaign=campaign, fold0_run=fold0_run
+    )
+    if actual != payload or _exact_file_seal(path) != seal:
+        raise ValueError("campaign reviewed authorization changed")
+
+
 def _validate_resume_state(
     campaign_directory: Path,
+    reviewed_authorization: Path | None = None,
 ) -> tuple[
     Path,
     tuple[CampaignFold, ...],
@@ -797,6 +865,14 @@ def _validate_resume_state(
         checked_root=WEIGHT_ARTIFACTS_ROOT,
         description="Fold 0 run directory",
     )
+    reviewed_path = (
+        campaign / RECOVERY_REVIEWED_AUTHORIZATION_NAME
+        if reviewed_authorization is None
+        else reviewed_authorization.absolute()
+    )
+    reviewed_payload = _validate_reviewed_authorization(
+        reviewed_path, campaign=campaign, fold0_run=fold0_run
+    )
     source = RECOVERY_OUTPUT_SOURCE.absolute()
     source = require_sealed_regular_file(
         source,
@@ -838,12 +914,16 @@ def _validate_resume_state(
             EVALUATOR_CLI,
             VERIFIER_CLI,
             PATH_SECURITY_MODULE,
+            reviewed_path,
         ],
         description="campaign recovery seals",
     )
-    recovery_code_commit = _recovery_code_commit()
     incident = {
-        "recovery_code_commit": recovery_code_commit,
+        "recovery_code_commit": reviewed_payload["reviewed_commit"],
+        "reviewed_authorization": {
+            "seal": _exact_file_seal(reviewed_path),
+            "payload": reviewed_payload,
+        },
         "original_failure": {
             "path": str(failure_path.resolve()),
             "bytes": failure_stat.st_size,
@@ -862,14 +942,30 @@ def _validate_resume_state(
     return campaign, schedule, expected_root_lock, fold0_run, incident
 
 
-def resume_existing_campaign(campaign_directory: Path) -> dict[str, object]:
+def resume_existing_campaign(
+    campaign_directory: Path, reviewed_authorization: Path | None = None
+) -> dict[str, object]:
     """Continue the one stopped campaign after offline Fold 0 finalization."""
     campaign, schedule, root_lock, fold0_run, incident = _validate_resume_state(
-        campaign_directory
+        campaign_directory, reviewed_authorization
     )
     original_failure_path = campaign / "failure.json"
     original_failure_sha256 = sha256_file(original_failure_path)
     authorization_path = campaign / EXTERNAL_RECOVERY_AUTHORIZATION_NAME
+    resume_path = campaign / "resume.lock.json"
+    resume_payload = {
+        **root_lock,
+        "schema_version": 2,
+        "resume_scope": "Fold 0 offline finalization then exact remaining schedule",
+        "original_failure_sha256": original_failure_sha256,
+        "fold0_run_directory": str(fold0_run),
+        "fold0_scientific_child_relaunched": False,
+        "automatic_retry_performed": False,
+        **incident,
+    }
+    _acquire_immutable_json(resume_path, resume_payload)
+    _assert_recovery_incident_state(campaign, fold0_run, incident)
+    _assert_reviewed_authorization(campaign, fold0_run, incident)
     authorization = {
         "schema_version": 1,
         "status": "authorized",
@@ -887,34 +983,18 @@ def resume_existing_campaign(campaign_directory: Path) -> dict[str, object]:
             "path": incident["target_output"],
             "absent": incident["target_output_absent_before_resume"],
         },
-        "reviewed_code": {
-            "commit": incident["recovery_code_commit"],
-            "files": [
-                _file_seal(Path(__file__)),
-                _file_seal(EVALUATOR_CLI),
-                _file_seal(VERIFIER_CLI),
-                _file_seal(PATH_SECURITY_MODULE),
-            ],
-        },
+        "resume_lock": _exact_file_seal(resume_path),
+        "reviewed_authorization": incident["reviewed_authorization"],
     }
     _acquire_immutable_json(authorization_path, authorization)
-    _acquire_immutable_json(
-        campaign / "resume.lock.json",
-        {
-            **root_lock,
-            "schema_version": 2,
-            "resume_scope": "Fold 0 offline finalization then exact remaining schedule",
-            "original_failure_sha256": original_failure_sha256,
-            "fold0_run_directory": str(fold0_run),
-            "fold0_scientific_child_relaunched": False,
-            "automatic_retry_performed": False,
-            **incident,
-        },
-    )
+    _assert_recovery_incident_state(campaign, fold0_run, incident)
+    _assert_reviewed_authorization(campaign, fold0_run, incident)
     completed = 0
     fold_id: int | None = 0
     stage = "finalize_existing_fold0"
     try:
+        _assert_recovery_incident_state(campaign, fold0_run, incident)
+        _assert_reviewed_authorization(campaign, fold0_run, incident)
         fold0_record = finalize_existing_fold(
             fold0_run, schedule[0].spec, authorization_path
         )
@@ -1016,6 +1096,8 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     action.add_argument("--finalize-existing", type=Path)
     action.add_argument("--resume-existing", type=Path)
     parser.add_argument("--campaign-directory", type=Path)
+    parser.add_argument("--reviewed-authorization", type=Path)
+    parser.add_argument("--recovery-authorization", type=Path)
     return parser.parse_args(argv)
 
 
@@ -1029,13 +1111,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         if arguments.fold_id is None or arguments.campaign_directory is not None:
             raise ValueError("finalize-existing requires exactly one --fold-id")
         specs = load_pinned_manifest(PINNED_MANIFEST_PATH)
+        if arguments.fold_id == 0 and arguments.recovery_authorization is None:
+            raise ValueError("canonical Fold 0 recovery requires external authorization")
         result = finalize_existing_fold(
-            arguments.finalize_existing, spec_for_fold(specs, arguments.fold_id)
+            arguments.finalize_existing,
+            spec_for_fold(specs, arguments.fold_id),
+            arguments.recovery_authorization,
         )
     else:
-        if arguments.fold_id is not None or arguments.campaign_directory is not None:
-            raise ValueError("resume-existing requires exactly one campaign path")
-        result = resume_existing_campaign(arguments.resume_existing)
+        if (
+            arguments.fold_id is not None
+            or arguments.campaign_directory is not None
+            or arguments.reviewed_authorization is None
+        ):
+            raise ValueError(
+                "resume-existing requires one campaign path and explicit reviewed authorization"
+            )
+        result = resume_existing_campaign(
+            arguments.resume_existing, arguments.reviewed_authorization
+        )
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0
 
