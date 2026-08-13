@@ -891,9 +891,253 @@ def test_post_qualification_continuation_skips_fold0_and_reuses_formal_fold2_res
     ] == campaign.sha256_file(
         campaign.ADOPTED_FOLD2_RUN / "independent-verification.json"
     )
-    assert (campaign_directory / "continuation.lock.json").is_file()
+    continuation_lock = campaign_directory / "continuation.lock.json"
+    assert continuation_lock.is_file()
+    continuation_lock_seal = campaign._exact_file_seal(continuation_lock)
+    for name in ("resume-completed.json", "continuation-completed.json"):
+        completion = json.loads((campaign_directory / name).read_text(encoding="utf-8"))
+        assert completion["continuation_lock"] == continuation_lock_seal
+        assert completion["continuation_lock_sha256"] == continuation_lock_seal["sha256"]
     with pytest.raises(FileExistsError, match="continuation lock"):
         campaign.continue_after_qualification_failure(campaign_directory, approval)
+
+
+@pytest.mark.parametrize("failure_boundary", ["incident", "approval"])
+def test_post_lock_continuation_failure_is_exact_and_launch_free(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure_boundary: str,
+) -> None:
+    campaign_directory = tmp_path / "campaigns" / "official-weight-12fold-test"
+    fold0_run = tmp_path / "runs" / "fold0-weight-test"
+    campaign_directory.mkdir(parents=True)
+    fold0_run.mkdir(parents=True)
+    failure_path = campaign_directory / "failure.json"
+    failure_path.write_text('{"status":"fail"}\n', encoding="utf-8")
+    original_failure = campaign._exact_file_seal(failure_path)
+    incident = {
+        "schema_version": 1,
+        "campaign_id": campaign_directory.name,
+        "fold0_scientific_child_relaunched": False,
+        "new_scientific_child_started": False,
+        "consumed_source_absent": True,
+        "evidence": {"original_failure": original_failure},
+    }
+    root_lock = {
+        "schema_version": 1,
+        "campaign_id": campaign_directory.name,
+        "campaign_directory": str(campaign_directory.absolute()),
+        "schedule_sha256": "a" * 64,
+        "single_campaign_no_retry": True,
+        "sequential": True,
+    }
+    collected = (
+        campaign_directory.absolute(),
+        (),
+        root_lock,
+        fold0_run.absolute(),
+        incident,
+        {"status": "pass", "fold_id": 2},
+    )
+    collect_calls = 0
+
+    def collect(*_args: object, **_kwargs: object) -> object:
+        nonlocal collect_calls
+        collect_calls += 1
+        if failure_boundary == "incident" and collect_calls == 2:
+            raise OSError("synthetic post-lock incident read failure")
+        return collected
+
+    approval = campaign_directory / campaign.CONTINUATION_REVIEWED_AUTHORIZATION_NAME
+    approval.write_text('{"status":"APPROVED"}\n', encoding="utf-8")
+    approval_calls = 0
+
+    def validate(*_args: object, **_kwargs: object) -> dict[str, object]:
+        nonlocal approval_calls
+        approval_calls += 1
+        if failure_boundary == "approval" and approval_calls == 2:
+            raise ValueError("synthetic post-lock approval read failure")
+        return {"status": "APPROVED", "reviewed_commit": "e" * 40}
+
+    launched: list[int] = []
+    monkeypatch.setattr(campaign, "_collect_post_qualification_incident", collect)
+    monkeypatch.setattr(campaign, "_validate_continuation_reviewed_authorization", validate)
+    monkeypatch.setattr(
+        campaign,
+        "launch_one_fold_cli",
+        lambda spec: launched.append(spec.fold_id),
+    )
+
+    expected_message = f"synthetic post-lock {failure_boundary} read failure"
+    with pytest.raises((OSError, ValueError), match=expected_message):
+        campaign.continue_after_qualification_failure(campaign_directory, approval)
+
+    lock_path = campaign_directory / campaign.CONTINUATION_LOCK_NAME
+    lock_seal = campaign._exact_file_seal(lock_path)
+    recorded = json.loads(
+        (campaign_directory / "continuation-failure.json").read_text(encoding="utf-8")
+    )
+    assert recorded == {
+        "schema_version": 1,
+        "status": "fail",
+        "campaign_id": campaign_directory.name,
+        "stage": f"revalidate_post_lock_{failure_boundary}",
+        "fold_id": 0,
+        "error": (
+            f"{'OSError' if failure_boundary == 'incident' else 'ValueError'}: "
+            f"{expected_message}"
+        ),
+        "completed_fold_count": 1,
+        "original_failure_preserved": True,
+        "continuation_lock": lock_seal,
+        "continuation_lock_sha256": lock_seal["sha256"],
+        "continuation_lock_preserved": True,
+        "fold0_scientific_child_relaunched": False,
+        "fold0_finalized_again": False,
+        "fold2_qualified_again": False,
+        "automatic_retry_performed": False,
+        "partial_aggregate_written": False,
+    }
+    assert launched == []
+
+
+@pytest.mark.parametrize(
+    ("tamper_at", "expected_launches"),
+    [
+        ("before-fold1", []),
+        ("before-fold3", [1]),
+        ("before-complete", [1, 3]),
+    ],
+)
+def test_continuation_revalidates_created_lock_at_every_boundary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+    tamper_at: str,
+    expected_launches: list[int],
+) -> None:
+    campaign_directory = tmp_path / "campaigns" / "official-weight-12fold-test"
+    fold0_run = tmp_path / "runs" / "fold0-weight-test"
+    campaign_directory.mkdir(parents=True)
+    fold0_run.mkdir(parents=True)
+    failure_path = campaign_directory / "failure.json"
+    failure_path.write_text('{"status":"fail"}\n', encoding="utf-8")
+    incident = {
+        "schema_version": 1,
+        "campaign_id": campaign_directory.name,
+        "fold0_scientific_child_relaunched": False,
+        "new_scientific_child_started": False,
+        "consumed_source_absent": True,
+        "evidence": {"original_failure": campaign._exact_file_seal(failure_path)},
+    }
+    root_lock = {
+        "schema_version": 1,
+        "campaign_id": campaign_directory.name,
+        "campaign_directory": str(campaign_directory.absolute()),
+        "schedule_sha256": "a" * 64,
+        "single_campaign_no_retry": True,
+        "sequential": True,
+    }
+    selected = (
+        campaign.CampaignFold(
+            spec=contract.spec_for_fold(specs, 0),
+            mode="adopt",
+            run_directory=fold0_run.absolute(),
+        ),
+        *(
+            campaign.CampaignFold(
+                spec=contract.spec_for_fold(specs, fold_id),
+                mode="launch",
+                run_directory=None,
+            )
+            for fold_id in (1, 3)
+        ),
+    )
+    fold2_record = {
+        "status": "pass",
+        "fold_id": 2,
+        "run_directory": str((tmp_path / "fold2").absolute()),
+        "independent_verification_sha256": "b" * 64,
+    }
+    collected = (
+        campaign_directory.absolute(),
+        selected,
+        root_lock,
+        fold0_run.absolute(),
+        incident,
+        fold2_record,
+    )
+    monkeypatch.setattr(
+        campaign,
+        "_collect_post_qualification_incident",
+        lambda *_args, **_kwargs: collected,
+    )
+    approval = campaign_directory / campaign.CONTINUATION_REVIEWED_AUTHORIZATION_NAME
+    approval.write_text('{"status":"APPROVED"}\n', encoding="utf-8")
+    monkeypatch.setattr(
+        campaign,
+        "_validate_continuation_reviewed_authorization",
+        lambda *_args, **_kwargs: {"status": "APPROVED", "reviewed_commit": "e" * 40},
+    )
+    monkeypatch.setattr(campaign, "prepare_weight_cli", lambda _spec: {"status": "pass"})
+    monkeypatch.setattr(campaign, "_assert_post_qualification_incident_seals", lambda *_args: None)
+    launched: list[int] = []
+
+    def tamper_lock() -> None:
+        (campaign_directory / campaign.CONTINUATION_LOCK_NAME).write_text(
+            '{"tampered":true}\n', encoding="utf-8"
+        )
+
+    def launch(spec: contract.WeightSpec) -> Path:
+        launched.append(spec.fold_id)
+        if tamper_at == "before-fold3" and spec.fold_id == 1:
+            tamper_lock()
+        return (tmp_path / "runs" / f"fold{spec.fold_id}").absolute()
+
+    def verify(run: Path, spec: contract.WeightSpec) -> dict[str, object]:
+        run.mkdir(parents=True, exist_ok=True)
+        independent = run / "independent-verification.json"
+        independent.write_text(
+            json.dumps({"status": "pass", "fold_id": spec.fold_id}) + "\n",
+            encoding="utf-8",
+        )
+        if tamper_at == "before-complete" and spec.fold_id == 3:
+            tamper_lock()
+        return {
+            "status": "pass",
+            "fold_id": spec.fold_id,
+            "run_directory": str(run),
+            "independent_verification_sha256": campaign.sha256_file(independent),
+        }
+
+    monkeypatch.setattr(campaign, "launch_one_fold_cli", launch)
+    monkeypatch.setattr(campaign, "verify_one_fold_cli", verify)
+    if tamper_at == "before-fold1":
+        original_prepare = campaign.prepare_weight_cli
+        calls = 0
+
+        def prepare(spec: contract.WeightSpec) -> dict[str, object]:
+            nonlocal calls
+            calls += 1
+            result = original_prepare(spec)
+            if calls == len(selected) - 1:
+                tamper_lock()
+            return result
+
+        monkeypatch.setattr(campaign, "prepare_weight_cli", prepare)
+
+    with pytest.raises(ValueError, match="continuation lock"):
+        campaign.continue_after_qualification_failure(campaign_directory, approval)
+
+    failure = json.loads(
+        (campaign_directory / "continuation-failure.json").read_text(encoding="utf-8")
+    )
+    assert launched == expected_launches
+    assert failure["continuation_lock_preserved"] is False
+    assert failure["continuation_lock"] != campaign._exact_file_seal(
+        campaign_directory / campaign.CONTINUATION_LOCK_NAME
+    )
+    assert not (campaign_directory / "completed.json").exists()
 
 
 @pytest.mark.parametrize("failure_mode", ["interrupted-after-first-lock", "resume-lock-race"])

@@ -48,6 +48,16 @@ def _seal(path: Path) -> dict[str, object]:
     return {"path": str(path.absolute()), "bytes": path.stat().st_size, "sha256": _sha256(path)}
 
 
+def _exact_seal(path: Path) -> dict[str, object]:
+    raw = path.read_bytes()
+    return {
+        "path": str(path.absolute()),
+        "bytes_hex": raw.hex(),
+        "size": len(raw),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+    }
+
+
 def _build_synthetic_campaign(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -506,6 +516,7 @@ def test_final_verifier_binds_post_qualification_continuation_chain(
         "fold0_scientific_child_relaunched": False,
         "fold0_finalized_again": False,
         "fold2_qualified_again": False,
+        "continuation_lock": _exact_seal(continuation),
         "continuation_lock_sha256": _sha256(continuation),
     }
     recovery["resume_completed"].write_text(

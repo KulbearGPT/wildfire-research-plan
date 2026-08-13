@@ -321,7 +321,7 @@ def _is_sha256(value: object) -> bool:
 
 def _is_aware_iso8601(value: object) -> bool:
     if type(value) is not str or re.fullmatch(
-        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})",
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|\+00:00)",
         value,
     ) is None:
         return False

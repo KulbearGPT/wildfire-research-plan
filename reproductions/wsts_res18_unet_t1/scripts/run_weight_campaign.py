@@ -196,6 +196,34 @@ def _exact_file_seal(path: Path) -> dict[str, object]:
     }
 
 
+def _immutable_json_seal(path: Path, payload: object) -> dict[str, object]:
+    raw = (
+        json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+    return {
+        "path": str(path.absolute()),
+        "bytes_hex": raw.hex(),
+        "size": len(raw),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+    }
+
+
+def _exact_file_seal_matches(
+    path: Path, expected: Mapping[str, object]
+) -> bool:
+    try:
+        return _exact_file_seal(path) == expected
+    except (OSError, ValueError):
+        return False
+
+
+def _assert_continuation_lock_seal(
+    path: Path, expected: Mapping[str, object]
+) -> None:
+    if not _exact_file_seal_matches(path, expected):
+        raise ValueError("continuation lock exact seal changed")
+
+
 def _write_json_atomic(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
@@ -975,7 +1003,12 @@ def _collect_post_qualification_incident(
             )
         except ValueError as error:
             raise FileExistsError("campaign continuation lock already exists") from error
-    for name in ("completed.json", "resume-completed.json", "continuation-completed.json"):
+    for name in (
+        "completed.json",
+        "resume-completed.json",
+        "continuation-completed.json",
+        "continuation-failure.json",
+    ):
         require_absent_recovery_path(
             campaign / name,
             checked_root=campaign,
@@ -1404,27 +1437,45 @@ def continue_after_qualification_failure(
         "fold2_qualified_again": False,
         "next_fold": 1,
     }
-    _acquire_immutable_json(continuation_path, continuation_payload)
-    current = _collect_post_qualification_incident(
-        campaign, continuation_lock_may_exist=True
+    continuation_lock_seal = _immutable_json_seal(
+        continuation_path, continuation_payload
     )
-    if current[4] != incident or current[5] != fold2_record:
-        raise ValueError("continuation incident changed after lock acquisition")
-    if _validate_continuation_reviewed_authorization(
-        reviewed_path, campaign=campaign, fold0_run=fold0_run, incident=incident
-    ) != reviewed:
-        raise ValueError("continuation reviewed authorization changed")
-
     completed = 1
     fold_id: int | None = 0
-    stage = "prepare_weight"
+    stage = "acquire_continuation_lock"
     original_failure_exact = incident["evidence"]["original_failure"]
     original_failure = {
         "path": original_failure_exact["path"],
         "bytes": original_failure_exact["size"],
         "sha256": original_failure_exact["sha256"],
     }
+    _acquire_immutable_json(continuation_path, continuation_payload)
     try:
+        stage = "seal_continuation_lock"
+        _assert_continuation_lock_seal(continuation_path, continuation_lock_seal)
+        stage = "revalidate_post_lock_incident"
+        current = _collect_post_qualification_incident(
+            campaign, continuation_lock_may_exist=True
+        )
+        if current[4] != incident or current[5] != fold2_record:
+            raise ValueError("continuation incident changed after lock acquisition")
+        stage = "revalidate_post_lock_approval"
+        if (
+            not _exact_file_seal_matches(
+                reviewed_path,
+                continuation_payload["reviewed_authorization"]["seal"],
+            )
+            or _validate_continuation_reviewed_authorization(
+                reviewed_path,
+                campaign=campaign,
+                fold0_run=fold0_run,
+                incident=incident,
+            )
+            != reviewed
+        ):
+            raise ValueError("continuation reviewed authorization changed")
+
+        stage = "prepare_weight"
         for item in schedule[1:]:
             if item.mode == "launch":
                 fold_id = item.spec.fold_id
@@ -1442,13 +1493,18 @@ def continue_after_qualification_failure(
                 _require_campaign_record(record, 2)
             else:
                 stage = "launch_fold"
+                _assert_continuation_lock_seal(
+                    continuation_path, continuation_lock_seal
+                )
                 _assert_original_failure_seal(
                     campaign / "failure.json", original_failure
                 )
                 _assert_post_qualification_incident_seals(incident)
                 if (
-                    _exact_file_seal(reviewed_path)
-                    != continuation_payload["reviewed_authorization"]["seal"]
+                    not _exact_file_seal_matches(
+                        reviewed_path,
+                        continuation_payload["reviewed_authorization"]["seal"],
+                    )
                     or _validate_continuation_reviewed_authorization(
                         reviewed_path,
                         campaign=campaign,
@@ -1473,6 +1529,7 @@ def continue_after_qualification_failure(
             completed += 1
         _assert_original_failure_seal(campaign / "failure.json", original_failure)
         _assert_post_qualification_incident_seals(incident)
+        _assert_continuation_lock_seal(continuation_path, continuation_lock_seal)
         result = {"status": "pass", "fold_count": 12, "next_fold": None}
         _write_json_atomic(campaign / "completed.json", result)
         completion = {
@@ -1481,7 +1538,8 @@ def continue_after_qualification_failure(
             "fold0_scientific_child_relaunched": False,
             "fold0_finalized_again": False,
             "fold2_qualified_again": False,
-            "continuation_lock_sha256": sha256_file(continuation_path),
+            "continuation_lock": continuation_lock_seal,
+            "continuation_lock_sha256": continuation_lock_seal["sha256"],
         }
         _write_json_atomic(campaign / "resume-completed.json", completion)
         _write_json_atomic(campaign / "continuation-completed.json", completion)
@@ -1490,14 +1548,20 @@ def continue_after_qualification_failure(
         _write_json_atomic(
             campaign / "continuation-failure.json",
             {
+                "schema_version": 1,
                 "status": "fail",
                 "campaign_id": campaign.name,
                 "stage": stage,
                 "fold_id": fold_id,
                 "error": f"{type(error).__name__}: {error}",
                 "completed_fold_count": completed,
-                "original_failure_preserved": (
-                    _file_seal(campaign / "failure.json") == original_failure
+                "original_failure_preserved": _exact_file_seal_matches(
+                    campaign / "failure.json", original_failure_exact
+                ),
+                "continuation_lock": continuation_lock_seal,
+                "continuation_lock_sha256": continuation_lock_seal["sha256"],
+                "continuation_lock_preserved": _exact_file_seal_matches(
+                    continuation_path, continuation_lock_seal
                 ),
                 "fold0_scientific_child_relaunched": False,
                 "fold0_finalized_again": False,

@@ -300,6 +300,11 @@ def _verify_continuation_chain(campaign: Path, fold0_run: Path) -> None:
         "fold0_scientific_child_relaunched": False,
         "fold0_finalized_again": False,
         "fold2_qualified_again": False,
+        "continuation_lock": _exact_file_seal(
+            lock_path,
+            checked_root=campaign,
+            description="campaign continuation lock completion seal",
+        ),
         "continuation_lock_sha256": _sha256(lock_path),
     }
     if continuation_completed != expected_completion or resume_completed != expected_completion:
@@ -529,6 +534,11 @@ def _verify_recovery_chain(campaign: Path, fold0_state: Mapping[str, object]) ->
             "fold0_scientific_child_relaunched": False,
             "fold0_finalized_again": False,
             "fold2_qualified_again": False,
+            "continuation_lock": _exact_file_seal(
+                campaign / CONTINUATION_LOCK_NAME,
+                checked_root=campaign,
+                description="recovery chain continuation lock completion seal",
+            ),
             "continuation_lock_sha256": _sha256(campaign / CONTINUATION_LOCK_NAME),
         }
         if continued
