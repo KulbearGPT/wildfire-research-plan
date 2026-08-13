@@ -37,6 +37,12 @@ from released_weight_contract import (
     spec_for_fold,
     validate_local_weight,
 )
+from released_weight_path_security import (
+    require_absent_recovery_path,
+    require_pairwise_distinct_files,
+    require_sealed_directory,
+    require_sealed_regular_file,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
@@ -309,13 +315,176 @@ def _exact_json_value(actual: object, expected: object) -> bool:
     return actual == expected
 
 
+def _is_sha256(value: object) -> bool:
+    return type(value) is str and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def _is_aware_iso8601(value: object) -> bool:
+    if type(value) is not str or re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})",
+        value,
+    ) is None:
+        return False
+    try:
+        parsed = datetime.fromisoformat(value[:-1] + "+00:00" if value.endswith("Z") else value)
+    except ValueError:
+        return False
+    return parsed.tzinfo is not None and parsed.utcoffset() is not None
+
+
+def _validate_inventory_schema(
+    inventory: object, *, expected_source: Path, candidate_count: int
+) -> list[dict[str, object]]:
+    if type(inventory) is not dict or set(inventory) != {"cwd", "candidates"}:
+        raise ValueError("official test output provenance inventory schema mismatch")
+    candidates = inventory["candidates"]
+    if (
+        type(inventory["cwd"]) is not str
+        or inventory["cwd"] != str(EXPECTED_DERIVED_UPSTREAM.absolute())
+        or type(candidates) is not list
+        or len(candidates) != candidate_count
+    ):
+        raise ValueError("official test output provenance inventory schema mismatch")
+    validated: list[dict[str, object]] = []
+    for candidate in candidates:
+        if (
+            type(candidate) is not dict
+            or set(candidate)
+            != {"path", "name", "bytes", "sha256", "ctime_ns", "mtime_ns"}
+            or type(candidate["path"]) is not str
+            or candidate["path"] != str(expected_source)
+            or type(candidate["name"]) is not str
+            or candidate["name"] != OFFICIAL_TEST_OUTPUT_SOURCE_NAME
+            or type(candidate["bytes"]) is not int
+            or candidate["bytes"] < 0
+            or not _is_sha256(candidate["sha256"])
+            or type(candidate["ctime_ns"]) is not int
+            or candidate["ctime_ns"] < 0
+            or type(candidate["mtime_ns"]) is not int
+            or candidate["mtime_ns"] < 0
+        ):
+            raise ValueError("official test output provenance inventory candidate schema mismatch")
+        validated.append(candidate)
+    return validated
+
+
+def _validate_schema_v2_marker(
+    marker: object, *, expected_source: Path
+) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+    keys = {
+        "schema_version", "status", "collection_mode", "atomic_move",
+        "scientific_child_relaunched", "run_directory", "source", "target",
+        "bytes", "sha256", "source_mtime_ns", "child_pid", "command",
+        "command_sha256", "started_utc", "exit_marker_mtime_ns", "pre_inventory",
+        "post_inventory", "recovery_authorization_sha256", "collected_utc",
+    }
+    if type(marker) is not dict or set(marker) != keys:
+        raise ValueError("official test output provenance schema-v2 mismatch")
+    if (
+        type(marker["schema_version"]) is not int
+        or marker["schema_version"] != 2
+        or type(marker["status"]) is not str
+        or type(marker["collection_mode"]) is not str
+        or type(marker["atomic_move"]) is not bool
+        or type(marker["scientific_child_relaunched"]) is not bool
+        or type(marker["run_directory"]) is not str
+        or type(marker["source"]) is not str
+        or type(marker["target"]) is not str
+        or type(marker["bytes"]) is not int
+        or marker["bytes"] < 0
+        or not _is_sha256(marker["sha256"])
+        or type(marker["source_mtime_ns"]) is not int
+        or marker["source_mtime_ns"] < 0
+        or type(marker["child_pid"]) is not int
+        or marker["child_pid"] <= 0
+        or type(marker["command"]) is not list
+        or any(type(item) is not str for item in marker["command"])
+        or not _is_sha256(marker["command_sha256"])
+        or not _is_aware_iso8601(marker["started_utc"])
+        or type(marker["exit_marker_mtime_ns"]) is not int
+        or marker["exit_marker_mtime_ns"] < 0
+        or (
+            marker["recovery_authorization_sha256"] is not None
+            and not _is_sha256(marker["recovery_authorization_sha256"])
+        )
+        or not _is_aware_iso8601(marker["collected_utc"])
+    ):
+        raise ValueError("official test output provenance schema-v2 type mismatch")
+    pre = marker["pre_inventory"]
+    post = marker["post_inventory"]
+    if type(pre) is not dict or type(post) is not dict:
+        raise ValueError("official test output provenance inventory schema mismatch")
+    mode = marker["collection_mode"]
+    pre_key = (
+        "pre_inventory_sha256" if mode == "live-postprocess" else "launch_preflight_sha256"
+    )
+    if (
+        mode not in {"live-postprocess", "offline-finalize-existing"}
+        or set(pre) != {"cwd", "candidates", "mode", pre_key}
+        or type(pre["cwd"]) is not str
+        or pre["cwd"] != str(EXPECTED_DERIVED_UPSTREAM.absolute())
+        or type(pre["candidates"]) is not list
+        or pre["candidates"] != []
+        or type(pre["mode"]) is not str
+        or not _is_sha256(pre[pre_key])
+    ):
+        raise ValueError("official test output provenance pre-inventory schema mismatch")
+    candidates = _validate_inventory_schema(
+        post, expected_source=expected_source, candidate_count=1
+    )
+    return marker, pre, candidates[0]
+
+
+def _validate_legacy_fold2_marker(marker: object) -> dict[str, object]:
+    keys = {
+        "bytes", "child_pid", "command_sha256", "moved_utc", "reason", "sha256",
+        "source", "status", "target",
+    }
+    if (
+        type(marker) is not dict
+        or set(marker) != keys
+        or type(marker["bytes"]) is not int
+        or marker["bytes"] < 0
+        or type(marker["child_pid"]) is not int
+        or marker["child_pid"] <= 0
+        or not _is_sha256(marker["command_sha256"])
+        or not _is_aware_iso8601(marker["moved_utc"])
+        or type(marker["reason"]) is not str
+        or not _is_sha256(marker["sha256"])
+        or type(marker["source"]) is not str
+        or type(marker["status"]) is not str
+        or type(marker["target"]) is not str
+    ):
+        raise ValueError("official test output provenance legacy contract mismatch")
+    return marker
+
+
 def verify_official_test_output_provenance(
     run_directory: Path, *, fold_id: int
 ) -> dict[str, object]:
     """Independently bind the collected official NPZ to one child lineage."""
-    run = run_directory.resolve()
+    run = require_sealed_directory(
+        run_directory.absolute(),
+        checked_root=run_directory.absolute(),
+        description="official test output provenance run",
+    )
     target = run / OFFICIAL_TEST_OUTPUT_TARGET_NAME
     marker_path = run / OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME
+    lineage_paths = [
+        target,
+        marker_path,
+        run / "started.json",
+        run / "effective-command.json",
+        run / "completed.json",
+        run / "exit-code.txt",
+    ]
+    for path in lineage_paths:
+        require_sealed_regular_file(
+            path, checked_root=run, description="official test output provenance evidence"
+        )
+    require_pairwise_distinct_files(
+        lineage_paths, description="official test output provenance evidence"
+    )
     marker = json.loads(marker_path.read_text(encoding="utf-8"))
     started = json.loads((run / "started.json").read_text(encoding="utf-8"))
     effective = json.loads(
@@ -324,9 +493,15 @@ def verify_official_test_output_provenance(
     completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
     if not all(isinstance(value, Mapping) for value in (marker, started, effective, completed)):
         raise ValueError("official test output provenance is invalid")
-    if not target.is_file():
-        raise ValueError("official test output provenance target is missing")
-    expected_source = EXPECTED_DERIVED_UPSTREAM.resolve() / OFFICIAL_TEST_OUTPUT_SOURCE_NAME
+    expected_source = EXPECTED_DERIVED_UPSTREAM.absolute() / OFFICIAL_TEST_OUTPUT_SOURCE_NAME
+    if type(marker) is not dict:
+        raise ValueError("official test output provenance is invalid")
+    if "schema_version" not in marker:
+        marker = _validate_legacy_fold2_marker(marker)
+    else:
+        marker, pre, candidate = _validate_schema_v2_marker(
+            marker, expected_source=expected_source
+        )
     if (
         marker.get("source") != str(expected_source)
         or marker.get("target") != str(target)
@@ -342,7 +517,7 @@ def verify_official_test_output_provenance(
         or completed.get("pid") != started.get("pid")
     ):
         raise ValueError("official test output provenance lineage mismatch")
-    if marker.get("schema_version") != 2:
+    if "schema_version" not in marker:
         if (
             fold_id != 2
             or marker.get("status") != "preserved-official-test-output"
@@ -359,8 +534,7 @@ def verify_official_test_output_provenance(
             "official_test_output_sha256": _sha256(target),
             "official_test_output_provenance_sha256": _sha256(marker_path),
         }
-    pre = marker.get("pre_inventory")
-    post = marker.get("post_inventory")
+    post = marker["post_inventory"]
     if (
         marker.get("status") != "pass"
         or marker.get("atomic_move") is not True
@@ -368,15 +542,10 @@ def verify_official_test_output_provenance(
         or marker.get("run_directory") != str(run)
         or marker.get("command") != started.get("command")
         or marker.get("started_utc") != started.get("started_utc")
-        or not isinstance(pre, Mapping)
-        or not isinstance(post, Mapping)
-        or post.get("cwd") != str(EXPECTED_DERIVED_UPSTREAM.resolve())
-        or not isinstance(post.get("candidates"), list)
-        or len(post["candidates"]) != 1
-        or post["candidates"][0].get("name") != OFFICIAL_TEST_OUTPUT_SOURCE_NAME
-        or post["candidates"][0].get("sha256") != _sha256(target)
-        or post["candidates"][0].get("bytes") != target.stat().st_size
-        or post["candidates"][0].get("mtime_ns") != marker.get("source_mtime_ns")
+        or post.get("cwd") != str(EXPECTED_DERIVED_UPSTREAM.absolute())
+        or candidate.get("sha256") != _sha256(target)
+        or candidate.get("bytes") != target.stat().st_size
+        or candidate.get("mtime_ns") != marker.get("source_mtime_ns")
     ):
         raise ValueError("official test output provenance inventory mismatch")
     try:
@@ -391,7 +560,7 @@ def verify_official_test_output_provenance(
         exit_ns != (run / "exit-code.txt").stat().st_mtime_ns
         or target.stat().st_mtime_ns != source_mtime_ns
         or not start_ns <= source_mtime_ns <= exit_ns + 2_000_000_000
-        or expected_source.exists()
+        or os.path.lexists(expected_source)
     ):
         raise ValueError("official test output provenance time or move mismatch")
     mode = marker.get("collection_mode")
@@ -416,7 +585,30 @@ def verify_official_test_output_provenance(
             raise ValueError("official test output provenance live pre-inventory mismatch")
     elif mode == "offline-finalize-existing":
         authorization_path = run / OFFICIAL_TEST_OUTPUT_RECOVERY_AUTHORIZATION_NAME
+        require_sealed_regular_file(
+            authorization_path,
+            checked_root=run,
+            description="official test output recovery authorization",
+        )
         authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+        if type(authorization) is not dict:
+            raise ValueError("official test output provenance recovery authorization mismatch")
+        external_path_value = authorization.get("external_authorization_path")
+        if type(external_path_value) is not str:
+            raise ValueError("official test output provenance recovery authorization mismatch")
+        external_path = Path(external_path_value).absolute()
+        require_sealed_regular_file(
+            external_path,
+            checked_root=external_path.parent,
+            description="external recovery authorization",
+        )
+        external_authorization = json.loads(external_path.read_text(encoding="utf-8"))
+        if type(external_authorization) is not dict:
+            raise ValueError("official test output provenance recovery authorization mismatch")
+        require_pairwise_distinct_files(
+            [authorization_path, marker_path, target, external_path],
+            description="official test output recovery authorization",
+        )
         raw_manifest = _capture_recovery_raw_manifest(run)
         spec = spec_for_fold(load_pinned_manifest(PINNED_MANIFEST_PATH), fold_id)
         weight_path = (
@@ -447,6 +639,9 @@ def verify_official_test_output_provenance(
             "raw_evidence_manifest_sha256": _json_sha256(raw_manifest),
             "launch_provenance_sha256": launch_provenance,
             "launch_provenance_manifest_sha256": _json_sha256(launch_provenance),
+            "external_authorization_path": str(external_path),
+            "external_authorization_sha256": _sha256(external_path),
+            "external_authorization": external_authorization,
         }
         if (
             fold_id != 0

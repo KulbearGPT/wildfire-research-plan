@@ -44,6 +44,10 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _seal(path: Path) -> dict[str, object]:
+    return {"path": str(path.absolute()), "bytes": path.stat().st_size, "sha256": _sha256(path)}
+
+
 def _build_synthetic_campaign(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -193,6 +197,207 @@ def test_aggregate_uses_raw_metrics_population_std_and_exact_provenance(
     assert not (campaign_directory / verifier.RESULTS_FILENAME).exists()
     assert not (campaign_directory / verifier.SUMMARY_FILENAME).exists()
     assert not (campaign_directory / verifier.INDEPENDENT_FILENAME).exists()
+
+
+def test_campaign_verifier_requires_recovery_chain_for_recovered_fold0(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
+    fold0_path = campaign_directory / "fold0.json"
+    fold0 = json.loads(fold0_path.read_text(encoding="utf-8"))
+    fold0.update(
+        {
+            "recovered_via_finalize_existing": True,
+            "scientific_child_relaunched": False,
+        }
+    )
+    fold0_path.write_text(json.dumps(fold0) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="recovery chain"):
+        verifier.verify_campaign(campaign_directory)
+
+
+def _install_synthetic_recovery_chain(
+    tmp_path: Path,
+    campaign_directory: Path,
+) -> tuple[dict[str, object], dict[str, Path]]:
+    fold0_path = campaign_directory / "fold0.json"
+    state = json.loads(fold0_path.read_text(encoding="utf-8"))
+    state.update(
+        {
+            "recovered_via_finalize_existing": True,
+            "scientific_child_relaunched": False,
+        }
+    )
+    fold0_path.write_text(json.dumps(state) + "\n", encoding="utf-8")
+    run = Path(state["run_directory"])
+    paths = {
+        "schedule": campaign_directory / "schedule.json",
+        "root_lock": campaign_directory.parent / verifier.GLOBAL_LOCK_NAME,
+        "fold0_lock": campaign_directory / "fold0.lock.json",
+        "failure": campaign_directory / "failure.json",
+        "authorization": campaign_directory / verifier.EXTERNAL_RECOVERY_AUTHORIZATION_NAME,
+        "resume": campaign_directory / "resume.lock.json",
+        "receipt": run / verifier.RECOVERY_RECEIPT_NAME,
+        "provenance": run / verifier.RECOVERY_PROVENANCE_NAME,
+        "target": run / verifier.RECOVERY_TARGET_NAME,
+        "completed": campaign_directory / "completed.json",
+        "resume_completed": campaign_directory / "resume-completed.json",
+    }
+    paths["schedule"].write_text('{"schedule":"exact"}\n', encoding="utf-8")
+    root_lock = {
+        "schema_version": 1,
+        "campaign_id": campaign_directory.name,
+        "campaign_directory": str(campaign_directory.absolute()),
+        "schedule_sha256": _sha256(paths["schedule"]),
+        "single_campaign_no_retry": True,
+        "sequential": True,
+    }
+    paths["root_lock"].write_text(json.dumps(root_lock) + "\n", encoding="utf-8")
+    paths["fold0_lock"].write_text(
+        json.dumps({**root_lock, "fold_id": 0, "mode": "launch"}) + "\n",
+        encoding="utf-8",
+    )
+    paths["failure"].write_text('{"status":"fail","fold_id":0}\n', encoding="utf-8")
+    source = tmp_path / "derived" / "test_pr_curve_data.npz"
+    source.parent.mkdir()
+    paths["target"].write_bytes(b"sealed-fold0-output")
+    source_identity = {
+        "path": str(source.absolute()),
+        "bytes": paths["target"].stat().st_size,
+        "sha256": _sha256(paths["target"]),
+        "ctime_ns": 100,
+        "mtime_ns": 200,
+    }
+    code_files = [
+        _seal(verifier.CAMPAIGN_CONTROLLER_PATH),
+        _seal(verifier.EVALUATOR_PATH),
+        _seal(verifier.FOLD_VERIFIER_PATH),
+        _seal(verifier.PATH_SECURITY_MODULE),
+    ]
+    authorization = {
+        "schema_version": 1,
+        "status": "authorized",
+        "authorized_action": "one-time Fold 0 output recovery without scientific relaunch",
+        "campaign_id": campaign_directory.name,
+        "campaign_directory": str(campaign_directory.absolute()),
+        "fold_id": 0,
+        "run_directory": str(run.absolute()),
+        "schedule": _seal(paths["schedule"]),
+        "root_lock": _seal(paths["root_lock"]),
+        "fold0_lock": _seal(paths["fold0_lock"]),
+        "original_failure": _seal(paths["failure"]),
+        "source_output": source_identity,
+        "target_output": {"path": str(paths["target"].absolute()), "absent": True},
+        "reviewed_code": {"commit": "f" * 40, "files": code_files},
+    }
+    paths["authorization"].write_text(json.dumps(authorization) + "\n", encoding="utf-8")
+    resume = {
+        **root_lock,
+        "schema_version": 2,
+        "resume_scope": "Fold 0 offline finalization then exact remaining schedule",
+        "original_failure_sha256": _sha256(paths["failure"]),
+        "fold0_run_directory": str(run.absolute()),
+        "fold0_scientific_child_relaunched": False,
+        "automatic_retry_performed": False,
+        "recovery_code_commit": "f" * 40,
+        "original_failure": _seal(paths["failure"]),
+        "source_output": source_identity,
+        "target_output": str(paths["target"].absolute()),
+        "target_output_absent_before_resume": True,
+    }
+    paths["resume"].write_text(json.dumps(resume) + "\n", encoding="utf-8")
+    receipt = {
+        "schema_version": 1,
+        "status": "pass",
+        "authorized_action": "one-time atomic adoption of the existing completed child output only",
+        "scientific_child_relaunched": False,
+        "fold_id": 0,
+        "run_directory": str(run.absolute()),
+        "weight": {},
+        "source": source_identity["path"],
+        "target": str(paths["target"].absolute()),
+        "child_pid": 1,
+        "command_sha256": "a" * 64,
+        "source_sha256": source_identity["sha256"],
+        "source_bytes": source_identity["bytes"],
+        "source_ctime_ns": source_identity["ctime_ns"],
+        "source_mtime_ns": source_identity["mtime_ns"],
+        "started_utc": "2026-08-12T05:00:00+00:00",
+        "exit_marker_mtime_ns": 300,
+        "raw_evidence_manifest": {},
+        "raw_evidence_manifest_sha256": "b" * 64,
+        "launch_provenance_sha256": {},
+        "launch_provenance_manifest_sha256": "c" * 64,
+        "external_authorization_path": str(paths["authorization"].absolute()),
+        "external_authorization_sha256": _sha256(paths["authorization"]),
+        "external_authorization": authorization,
+    }
+    paths["receipt"].write_text(json.dumps(receipt) + "\n", encoding="utf-8")
+    paths["provenance"].write_text(
+        json.dumps(
+            {
+                "recovery_authorization_sha256": _sha256(paths["receipt"]),
+                "target": str(paths["target"].absolute()),
+                "sha256": source_identity["sha256"],
+                "bytes": source_identity["bytes"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    completed = {"status": "pass", "fold_count": 12, "next_fold": None}
+    paths["completed"].write_text(json.dumps(completed) + "\n", encoding="utf-8")
+    paths["resume_completed"].write_text(
+        json.dumps(
+            {
+                **completed,
+                "original_failure_sha256": _sha256(paths["failure"]),
+                "fold0_scientific_child_relaunched": False,
+                "same_campaign_directory": True,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return state, paths
+
+
+def test_campaign_recovery_chain_binds_all_incident_seals(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
+    state, _ = _install_synthetic_recovery_chain(tmp_path, campaign_directory)
+
+    verifier._verify_recovery_chain(campaign_directory, state)
+
+
+@pytest.mark.parametrize("tamper", ["failure", "resume-extra", "receipt-authorization"])
+def test_campaign_recovery_chain_rejects_cross_seal_tamper(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+    tamper: str,
+) -> None:
+    campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
+    state, paths = _install_synthetic_recovery_chain(tmp_path, campaign_directory)
+    if tamper == "failure":
+        paths["failure"].write_text('{"status":"changed"}\n', encoding="utf-8")
+    elif tamper == "resume-extra":
+        payload = json.loads(paths["resume"].read_text(encoding="utf-8"))
+        payload["unreviewed"] = True
+        paths["resume"].write_text(json.dumps(payload) + "\n", encoding="utf-8")
+    else:
+        payload = json.loads(paths["receipt"].read_text(encoding="utf-8"))
+        payload["external_authorization"]["status"] = "changed"
+        paths["receipt"].write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="recovery chain"):
+        verifier._verify_recovery_chain(campaign_directory, state)
 
 
 def test_verifier_rejects_controller_only_summary_without_raw_table(

@@ -388,6 +388,8 @@ def test_finalize_existing_fold_never_launches_a_process(
     spec = contract.spec_for_fold(specs, 5)
     run = tmp_path / "fold5-weight-existing"
     run.mkdir()
+    authorization = tmp_path / "external-recovery-authorization.json"
+    authorization.write_text("{}\n", encoding="utf-8")
     commands: list[list[str]] = []
 
     def cli(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
@@ -401,7 +403,7 @@ def test_finalize_existing_fold_never_launches_a_process(
 
     monkeypatch.setattr(campaign.subprocess, "run", cli)
 
-    result = campaign.finalize_existing_fold(run, spec)
+    result = campaign.finalize_existing_fold(run, spec, authorization)
 
     assert result["status"] == "pass"
     assert result["fold_id"] == 5
@@ -409,6 +411,10 @@ def test_finalize_existing_fold_never_launches_a_process(
         "evaluate_released_weight.py",
         "verify_released_weight.py",
     ]
+    evaluator = commands[0]
+    assert evaluator[evaluator.index("--recovery-authorization") + 1] == str(
+        authorization.resolve()
+    )
 
 
 def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_schedule(
@@ -428,7 +434,7 @@ def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_sche
         )
     )
     fold0_run = Path(fold0_lock["run_directory"]).resolve()
-    finalized: list[int] = []
+    finalized: list[tuple[int, Path]] = []
     resumed_launches: list[int] = []
 
     def record(run: Path, spec: contract.WeightSpec) -> dict[str, object]:
@@ -445,8 +451,11 @@ def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_sche
             "independent_verification_sha256": campaign.sha256_file(independent),
         }
 
-    def finalize(run: Path, spec: contract.WeightSpec) -> dict[str, object]:
-        finalized.append(spec.fold_id)
+    def finalize(
+        run: Path, spec: contract.WeightSpec, authorization: Path
+    ) -> dict[str, object]:
+        assert authorization.is_file()
+        finalized.append((spec.fold_id, authorization.resolve()))
         return record(run.resolve(), spec)
 
     def launch(spec: contract.WeightSpec) -> Path:
@@ -471,7 +480,27 @@ def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_sche
 
     result = campaign.resume_existing_campaign(campaign_directory)
 
-    assert finalized == [0]
+    assert len(finalized) == 1
+    assert finalized[0][0] == 0
+    authorization_path = finalized[0][1]
+    assert authorization_path == (
+        campaign_directory / "fold0-recovery-authorization.json"
+    ).resolve()
+    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+    assert authorization["campaign_id"] == campaign_directory.name
+    assert authorization["run_directory"] == str(fold0_run)
+    assert authorization["schedule"]["sha256"] == campaign.sha256_file(
+        campaign_directory / "schedule.json"
+    )
+    assert authorization["original_failure"]["sha256"] == campaign.sha256_file(
+        campaign_directory / "failure.json"
+    )
+    assert [Path(item["path"]).name for item in authorization["reviewed_code"]["files"]] == [
+        "run_weight_campaign.py",
+        "evaluate_released_weight.py",
+        "verify_released_weight.py",
+        "released_weight_path_security.py",
+    ]
     assert resumed_launches == [1, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     assert scientific_folds == [0]
     assert result == {"status": "pass", "fold_count": 12, "next_fold": None}
@@ -502,6 +531,81 @@ def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_sche
     }
     with pytest.raises(FileExistsError, match="resume lock already exists"):
         campaign.resume_existing_campaign(campaign_directory)
+
+
+@pytest.mark.parametrize("tamper_at", ["before-fold1", "before-fold3", "before-complete"])
+def test_resume_revalidates_original_failure_at_every_scientific_boundary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    tamper_at: str,
+) -> None:
+    campaign_directory, _, _, _ = _configure_fake_campaign(
+        tmp_path, monkeypatch, verifier_failure=0
+    )
+    with pytest.raises(ValueError):
+        campaign.run_campaign(campaign_directory)
+    _authorize_fake_resume_incident(tmp_path, monkeypatch, campaign_directory)
+    failure = campaign_directory / "failure.json"
+    fold0_lock = json.loads(
+        (
+            campaign.WEIGHT_ARTIFACTS_ROOT / "fold0-weight-evaluation.lock.json"
+        ).read_text(encoding="utf-8")
+    )
+    fold0_run = Path(fold0_lock["run_directory"]).resolve()
+    launched: list[int] = []
+
+    def record(run: Path, spec: contract.WeightSpec) -> dict[str, object]:
+        run.mkdir(parents=True, exist_ok=True)
+        independent = run / "independent-verification.json"
+        independent.write_text(
+            json.dumps({"status": "pass", "fold_id": spec.fold_id}) + "\n",
+            encoding="utf-8",
+        )
+        if tamper_at == "before-fold3" and spec.fold_id == 1:
+            failure.write_bytes(b"tampered after Fold 1\n")
+        if tamper_at == "before-complete" and spec.fold_id == 11:
+            failure.write_bytes(b"tampered after Fold 11\n")
+        return {
+            "status": "pass",
+            "fold_id": spec.fold_id,
+            "run_directory": str(run.resolve()),
+            "independent_verification_sha256": campaign.sha256_file(independent),
+        }
+
+    def prepare(spec: contract.WeightSpec) -> dict[str, object]:
+        if tamper_at == "before-fold1" and spec.fold_id == 11:
+            failure.write_bytes(b"tampered before Fold 1\n")
+        return {"status": "pass"}
+
+    def launch(spec: contract.WeightSpec) -> Path:
+        launched.append(spec.fold_id)
+        return (campaign.WEIGHT_ARTIFACTS_ROOT / f"fold{spec.fold_id}-resumed").resolve()
+
+    monkeypatch.setattr(
+        campaign,
+        "finalize_existing_fold",
+        lambda _run, spec, _authorization: record(fold0_run, spec),
+    )
+    monkeypatch.setattr(campaign, "_validate_recovered_fold0_result", lambda *_args: None)
+    monkeypatch.setattr(campaign, "prepare_weight_cli", prepare)
+    monkeypatch.setattr(campaign, "launch_one_fold_cli", launch)
+    monkeypatch.setattr(campaign, "verify_one_fold_cli", record)
+    monkeypatch.setattr(
+        campaign,
+        "qualify_existing_fold2",
+        lambda run, spec: record(run.resolve(), spec),
+    )
+
+    with pytest.raises(ValueError, match="original failure"):
+        campaign.resume_existing_campaign(campaign_directory)
+
+    if tamper_at == "before-fold1":
+        assert launched == []
+    elif tamper_at == "before-fold3":
+        assert launched == [1]
+    else:
+        assert launched == [1, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        assert not (campaign_directory / "completed.json").exists()
 
 
 @pytest.mark.parametrize(
@@ -566,7 +670,7 @@ def test_resume_existing_fails_closed_before_finalize_on_tampered_campaign(
             ),
         )
 
-    with pytest.raises(ValueError, match="resume"):
+    with pytest.raises(ValueError, match="resume|future fold state"):
         campaign.resume_existing_campaign(campaign_directory)
     assert called is False
     assert scientific_folds == [0]

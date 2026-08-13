@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from dataclasses import replace
@@ -239,6 +240,66 @@ def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def test_recovery_path_security_rejects_hardlinks(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    sealed = root / "sealed.json"
+    sealed.write_text("sealed\n", encoding="utf-8")
+    hardlink = root / "hardlink.json"
+    os.link(sealed, hardlink)
+
+    with pytest.raises(ValueError, match="hardlink"):
+        controller.require_sealed_regular_file(
+            sealed, checked_root=root, description="sealed test file"
+        )
+
+
+def test_recovery_path_security_rejects_dangling_symlink(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    dangling = root / "dangling-target"
+    try:
+        os.symlink(root / "missing", dangling)
+    except OSError as error:
+        pytest.skip(f"symlink creation unavailable: {error}")
+    with pytest.raises(ValueError, match="aliased|reparse"):
+        controller.require_absent_recovery_path(
+            dangling, checked_root=root, description="absent target"
+        )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows junction capability test")
+def test_recovery_path_security_rejects_windows_junction(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    actual = tmp_path / "actual"
+    actual.mkdir()
+    junction = root / "junction"
+    result = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(junction), str(actual)],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        pytest.skip("junction creation unavailable")
+    sealed = actual / "sealed.json"
+    sealed.write_text("sealed\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="aliased|reparse"):
+        controller.require_sealed_regular_file(
+            junction / "sealed.json",
+            checked_root=root,
+            description="junction-backed file",
+        )
+
+
 def _write_output_collection_lineage(
     run: Path, derived: Path, *, pid: int = 7
 ) -> tuple[list[str], str]:
@@ -295,6 +356,19 @@ def _write_output_collection_lineage(
     return command, command_hash
 
 
+def _fake_external_recovery_authorization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Path:
+    authorization = tmp_path / "external-recovery-authorization.json"
+    authorization.write_text('{"schema_version":1}\n', encoding="utf-8")
+    monkeypatch.setattr(
+        controller,
+        "validate_external_recovery_authorization",
+        lambda *_args, **_kwargs: {"schema_version": 1},
+    )
+    return authorization
+
+
 def test_live_output_collection_refuses_orphan_then_atomically_attributes_exact_npz(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -347,8 +421,9 @@ def test_recovery_output_collection_requires_exact_lineage_and_one_time_authoriz
     os.utime(source, ns=(source_ns, source_ns))
 
     fold0 = contract.spec_for_fold(specs, 0)
+    external = _fake_external_recovery_authorization(tmp_path, monkeypatch)
     provenance = controller.collect_official_test_output(
-        run, recovery=True, spec=fold0
+        run, recovery=True, spec=fold0, recovery_authorization=external
     )
 
     authorization = json.loads(
@@ -375,7 +450,9 @@ def test_recovery_output_collection_requires_exact_lineage_and_one_time_authoriz
         run / "official-test-output-recovery-authorization.json"
     )
     with pytest.raises((FileExistsError, ValueError), match="already|one-time"):
-        controller.collect_official_test_output(run, recovery=True, spec=fold0)
+        controller.collect_official_test_output(
+            run, recovery=True, spec=fold0, recovery_authorization=external
+        )
 
 
 def test_output_collection_rejects_ambiguous_candidate_and_target_overwrite(
@@ -432,6 +509,103 @@ def test_independent_verifier_validates_output_collection_provenance(
         verifier.verify_official_test_output_provenance(run, fold_id=5)
 
 
+@pytest.mark.parametrize(
+    "tamper",
+    [
+        "top-extra",
+        "schema-float",
+        "collected-invalid",
+        "pre-extra",
+        "post-extra",
+        "candidate-extra",
+        "candidate-bytes-float",
+        "candidate-ctime-bool",
+        "candidate-path",
+    ],
+)
+def test_schema_v2_provenance_requires_exact_nested_schema_and_types(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tamper: str
+) -> None:
+    derived = tmp_path / "derived"
+    run = tmp_path / "run"
+    derived.mkdir()
+    run.mkdir()
+    monkeypatch.setattr(controller, "DERIVED_UPSTREAM_ROOT", derived)
+    monkeypatch.setattr(verifier, "EXPECTED_DERIVED_UPSTREAM", derived)
+    controller.write_official_test_output_pre_inventory(run)
+    _write_output_collection_lineage(run, derived)
+    source = derived / "test_pr_curve_data.npz"
+    source.write_bytes(b"exact-schema-v2")
+    source_ns = int(datetime(2026, 8, 12, 5, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+    os.utime(source, ns=(source_ns, source_ns))
+    controller.collect_official_test_output(run, recovery=False)
+    marker_path = run / "official-test-output-provenance.json"
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    candidate = marker["post_inventory"]["candidates"][0]
+    if tamper == "top-extra":
+        marker["unreviewed"] = True
+    elif tamper == "schema-float":
+        marker["schema_version"] = 2.0
+    elif tamper == "collected-invalid":
+        marker["collected_utc"] = "not-a-time"
+    elif tamper == "pre-extra":
+        marker["pre_inventory"]["unreviewed"] = True
+    elif tamper == "post-extra":
+        marker["post_inventory"]["unreviewed"] = True
+    elif tamper == "candidate-extra":
+        candidate["unreviewed"] = True
+    elif tamper == "candidate-bytes-float":
+        candidate["bytes"] = float(candidate["bytes"])
+    elif tamper == "candidate-ctime-bool":
+        candidate["ctime_ns"] = True
+    else:
+        candidate["path"] = str(tmp_path / "another.npz")
+    _write_json(marker_path, marker)
+
+    with pytest.raises(ValueError, match="provenance.*schema|inventory"):
+        verifier.verify_official_test_output_provenance(run, fold_id=5)
+
+
+@pytest.mark.parametrize("tamper", ["extra", "bytes-float", "moved-invalid"])
+def test_legacy_fold2_provenance_requires_exact_schema_types_and_time(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tamper: str
+) -> None:
+    derived = tmp_path / "derived"
+    run = tmp_path / "run"
+    derived.mkdir()
+    run.mkdir()
+    monkeypatch.setattr(verifier, "EXPECTED_DERIVED_UPSTREAM", derived)
+    _, command_hash = _write_output_collection_lineage(run, derived, pid=37668)
+    target = run / "official-test-pr-curve-data.npz"
+    target.write_bytes(b"legacy-fold2")
+    marker_path = run / "official-test-output-provenance.json"
+    marker = {
+        "bytes": target.stat().st_size,
+        "child_pid": 37668,
+        "command_sha256": command_hash,
+        "moved_utc": "2026-08-10T13:44:23.2709753Z",
+        "reason": (
+            "official test emitted evaluation output in the derived runtime cwd; "
+            "preserved unchanged inside the immutable run evidence directory so "
+            "source-integrity verification can require the exact authorized patch only"
+        ),
+        "sha256": verifier._sha256(target),
+        "source": str(derived.resolve() / "test_pr_curve_data.npz"),
+        "status": "preserved-official-test-output",
+        "target": str(target.resolve()),
+    }
+    if tamper == "extra":
+        marker["unreviewed"] = True
+    elif tamper == "bytes-float":
+        marker["bytes"] = float(marker["bytes"])
+    else:
+        marker["moved_utc"] = "not-a-time"
+    _write_json(marker_path, marker)
+
+    with pytest.raises(ValueError, match="legacy contract"):
+        verifier.verify_official_test_output_provenance(run, fold_id=2)
+
+
 def test_independent_verifier_requires_exact_live_pre_inventory_marker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -479,9 +653,16 @@ def test_independent_verifier_requires_exact_recovery_authorization_marker(
     source.write_bytes(b"recovery-authorization")
     source_ns = int(datetime(2026, 8, 12, 5, 1, tzinfo=timezone.utc).timestamp() * 1e9)
     os.utime(source, ns=(source_ns, source_ns))
+    external = _fake_external_recovery_authorization(tmp_path, monkeypatch)
     controller.collect_official_test_output(
-        run, recovery=True, spec=contract.spec_for_fold(specs, 0)
+        run,
+        recovery=True,
+        spec=contract.spec_for_fold(specs, 0),
+        recovery_authorization=external,
     )
+    assert verifier.verify_official_test_output_provenance(run, fold_id=0)[
+        "official_test_output_provenance_verified"
+    ] is True
     authorization_path = run / "official-test-output-recovery-authorization.json"
     authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
     if tamper == "status":

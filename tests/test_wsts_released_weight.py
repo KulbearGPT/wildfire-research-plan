@@ -672,7 +672,9 @@ def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_prefli
     monkeypatch.setattr(
         weight_controller,
         "collect_official_test_output",
-        lambda _run, *, recovery, spec: {"collection_mode": "offline-finalize-existing"}
+        lambda _run, *, recovery, spec, recovery_authorization: {
+            "collection_mode": "offline-finalize-existing"
+        }
         if recovery
         else {},
     )
@@ -682,7 +684,9 @@ def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_prefli
         "command_sha256": command_hash,
         "child_pid": 37668,
     }
-    finalized = weight_controller.finalize_existing_weight(run)
+    finalized = weight_controller.finalize_existing_weight(
+        run, recovery_authorization=tmp_path / "authorization.json"
+    )
 
     assert finalized == expected
     assert preflight.read_bytes() == preflight_before
@@ -694,6 +698,25 @@ def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_prefli
     assert augmentation["launch_preflight_sha256"] == hashlib.sha256(
         preflight_before
     ).hexdigest()
+
+
+def test_weight_finalize_existing_cli_requires_external_recovery_authorization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    called = False
+
+    def finalize(*_args: object, **_kwargs: object) -> dict[str, object]:
+        nonlocal called
+        called = True
+        return {"status": "pass"}
+
+    monkeypatch.setattr(weight_controller, "finalize_existing_weight", finalize)
+
+    with pytest.raises(ValueError, match="recovery authorization"):
+        weight_controller.main(
+            ["--fold-id", "0", "--finalize-existing", str(tmp_path / "run")]
+        )
+    assert called is False
 
 
 def test_weight_verifier_requires_preserved_first_parser_failure(tmp_path: Path) -> None:

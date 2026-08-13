@@ -59,6 +59,12 @@ from released_weight_contract import (
     validate_local_weight,
     write_manifest_atomic,
 )
+from released_weight_path_security import (
+    require_absent_recovery_path,
+    require_pairwise_distinct_files,
+    require_sealed_directory,
+    require_sealed_regular_file,
+)
 from verify_released_weight import validate_weight_result
 
 
@@ -94,6 +100,17 @@ OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME = "official-test-output-provenance.json"
 OFFICIAL_TEST_OUTPUT_RECOVERY_AUTHORIZATION_NAME = (
     "official-test-output-recovery-authorization.json"
 )
+CAMPAIGN_ARTIFACTS_ROOT = (
+    REPOSITORY_ROOT
+    / "artifacts"
+    / "reproductions"
+    / "wsts-res18-t1-official-weight-12fold"
+)
+RECOVERY_CAMPAIGN_ID = "official-weight-12fold-20260812T052555Z"
+EXTERNAL_RECOVERY_AUTHORIZATION_NAME = "fold0-recovery-authorization.json"
+CAMPAIGN_CONTROLLER_PATH = Path(__file__).with_name("run_weight_campaign.py")
+INDEPENDENT_VERIFIER_PATH = Path(__file__).with_name("verify_released_weight.py")
+PATH_SECURITY_MODULE = Path(__file__).with_name("released_weight_path_security.py")
 RECOVERY_AUTHORIZATION_RAW_RELATIVE_PATHS = (
     "stdout.log",
     "stderr.log",
@@ -424,13 +441,22 @@ def validate_saved_weight_lineage(
 
 
 def _official_test_output_inventory() -> dict[str, object]:
-    root = DERIVED_UPSTREAM_ROOT.resolve()
+    root = require_sealed_directory(
+        DERIVED_UPSTREAM_ROOT,
+        checked_root=DERIVED_UPSTREAM_ROOT,
+        description="derived runtime cwd",
+    )
     candidates = []
     for path in sorted(root.glob("test_pr_curve_data*.npz")):
+        path = require_sealed_regular_file(
+            path,
+            checked_root=root,
+            description="derived runtime official test output candidate",
+        )
         stat = path.stat()
         candidates.append(
             {
-                "path": str(path.resolve()),
+                "path": str(path),
                 "name": path.name,
                 "bytes": stat.st_size,
                 "sha256": _sha256(path),
@@ -443,12 +469,25 @@ def _official_test_output_inventory() -> dict[str, object]:
 
 def write_official_test_output_pre_inventory(run_directory: Path) -> dict[str, object]:
     """Freeze an empty cwd-output inventory immediately before a scientific child."""
-    run = run_directory.resolve()
+    run = require_sealed_directory(
+        run_directory,
+        checked_root=run_directory,
+        description="official test output run directory",
+    )
     target = run / OFFICIAL_TEST_OUTPUT_TARGET_NAME
     provenance = run / OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME
     marker = run / OFFICIAL_TEST_OUTPUT_PRE_INVENTORY_NAME
-    if target.exists() or provenance.exists() or marker.exists():
-        raise FileExistsError("official test output collection marker already exists")
+    for path in (target, provenance, marker):
+        try:
+            require_absent_recovery_path(
+                path,
+                checked_root=run,
+                description="official test output pre-launch path",
+            )
+        except ValueError as error:
+            raise FileExistsError(
+                "official test output collection marker already exists"
+            ) from error
     inventory = _official_test_output_inventory()
     if inventory["candidates"]:
         raise ValueError("preexisting official test output exists in the derived cwd")
@@ -465,6 +504,19 @@ def write_official_test_output_pre_inventory(run_directory: Path) -> dict[str, o
 
 
 def _load_output_collection_lineage(run: Path) -> dict[str, object]:
+    lineage_paths = [
+        run / "started.json",
+        run / "effective-command.json",
+        run / "completed.json",
+        run / "exit-code.txt",
+    ]
+    for path in lineage_paths:
+        require_sealed_regular_file(
+            path, checked_root=run, description="official test output lineage"
+        )
+    require_pairwise_distinct_files(
+        lineage_paths, description="official test output lineage"
+    )
     started = json.loads((run / "started.json").read_text(encoding="utf-8"))
     effective = json.loads(
         (run / "effective-command.json").read_text(encoding="utf-8")
@@ -523,8 +575,11 @@ def _recovery_raw_manifest(run: Path) -> dict[str, object]:
     entries = []
     for relative in RECOVERY_AUTHORIZATION_RAW_RELATIVE_PATHS:
         path = run / relative
-        if not path.is_file():
-            raise ValueError(f"official test output recovery raw evidence is missing: {relative}")
+        require_sealed_regular_file(
+            path,
+            checked_root=run,
+            description=f"official test output recovery raw evidence: {relative}",
+        )
         entries.append(
             {"path": relative, "bytes": path.stat().st_size, "sha256": _sha256(path)}
         )
@@ -537,20 +592,150 @@ def _json_sha256(payload: object) -> str:
     ).hexdigest()
 
 
+def _file_seal(path: Path) -> dict[str, object]:
+    target = require_sealed_regular_file(
+        path, checked_root=path.parent, description="recovery authorization sealed file"
+    )
+    return {
+        "path": str(target),
+        "bytes": target.stat().st_size,
+        "sha256": _sha256(target),
+    }
+
+
+def _current_code_commit() -> str:
+    status = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=no"],
+        cwd=REPOSITORY_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if status.returncode != 0 or status.stdout.splitlines():
+        raise ValueError("external recovery authorization code worktree is dirty")
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=REPOSITORY_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    commit = result.stdout.strip()
+    if result.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        raise ValueError("external recovery authorization code commit is invalid")
+    return commit
+
+
+def validate_external_recovery_authorization(
+    authorization_path: Path,
+    *,
+    run: Path,
+    spec: WeightSpec,
+    source: Path,
+    target: Path,
+    source_candidate: Mapping[str, object],
+) -> dict[str, object]:
+    campaign = (CAMPAIGN_ARTIFACTS_ROOT / RECOVERY_CAMPAIGN_ID).resolve()
+    expected_path = campaign / EXTERNAL_RECOVERY_AUTHORIZATION_NAME
+    token_path = require_sealed_regular_file(
+        authorization_path,
+        checked_root=CAMPAIGN_ARTIFACTS_ROOT,
+        description="external recovery authorization",
+    )
+    if token_path != expected_path:
+        raise ValueError("external recovery authorization path mismatch")
+    payload = json.loads(token_path.read_text(encoding="utf-8"))
+    expected_keys = {
+        "schema_version",
+        "status",
+        "authorized_action",
+        "campaign_id",
+        "campaign_directory",
+        "fold_id",
+        "run_directory",
+        "schedule",
+        "root_lock",
+        "fold0_lock",
+        "original_failure",
+        "source_output",
+        "target_output",
+        "reviewed_code",
+    }
+    if type(payload) is not dict or set(payload) != expected_keys:
+        raise ValueError("external recovery authorization schema mismatch")
+    file_seals = {
+        "schedule": campaign / "schedule.json",
+        "root_lock": CAMPAIGN_ARTIFACTS_ROOT / "official-weight-12fold-campaign.lock.json",
+        "fold0_lock": campaign / "fold0.lock.json",
+        "original_failure": campaign / "failure.json",
+    }
+    if any(payload[label] != _file_seal(path) for label, path in file_seals.items()):
+        raise ValueError("external recovery authorization evidence seal mismatch")
+    expected_source = {
+        "path": str(source.resolve()),
+        "bytes": source_candidate["bytes"],
+        "sha256": source_candidate["sha256"],
+        "ctime_ns": source_candidate["ctime_ns"],
+        "mtime_ns": source_candidate["mtime_ns"],
+    }
+    reviewed_code = {
+        "commit": _current_code_commit(),
+        "files": [
+            _file_seal(CAMPAIGN_CONTROLLER_PATH),
+            _file_seal(Path(__file__)),
+            _file_seal(INDEPENDENT_VERIFIER_PATH),
+            _file_seal(PATH_SECURITY_MODULE),
+        ],
+    }
+    expected_identity = {
+        "schema_version": 1,
+        "status": "authorized",
+        "authorized_action": "one-time Fold 0 output recovery without scientific relaunch",
+        "campaign_id": RECOVERY_CAMPAIGN_ID,
+        "campaign_directory": str(campaign),
+        "fold_id": 0,
+        "run_directory": str(run),
+        "source_output": expected_source,
+        "target_output": {"path": str(target), "absent": True},
+        "reviewed_code": reviewed_code,
+    }
+    if spec.fold_id != 0 or any(
+        payload[field] != expected for field, expected in expected_identity.items()
+    ):
+        raise ValueError("external recovery authorization identity mismatch")
+    return payload
+
+
 def collect_official_test_output(
-    run_directory: Path, *, recovery: bool, spec: WeightSpec | None = None
+    run_directory: Path,
+    *,
+    recovery: bool,
+    spec: WeightSpec | None = None,
+    recovery_authorization: Path | None = None,
 ) -> dict[str, object]:
     """Atomically adopt the one output attributable to an exit-zero test child."""
-    run = run_directory.resolve()
+    run = run_directory.absolute()
+    run = require_sealed_directory(
+        run, checked_root=run, description="official test output run directory"
+    )
     target = run / OFFICIAL_TEST_OUTPUT_TARGET_NAME
     provenance_path = run / OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME
     authorization_path = run / OFFICIAL_TEST_OUTPUT_RECOVERY_AUTHORIZATION_NAME
     if recovery and authorization_path.exists():
         raise FileExistsError("one-time official test output recovery already authorized")
-    if target.exists():
-        raise FileExistsError("official test output collection refuses to overwrite target")
-    if provenance_path.exists():
-        raise FileExistsError("official test output provenance already exists")
+    try:
+        require_absent_recovery_path(
+            target, checked_root=run, description="official test output target"
+        )
+    except ValueError as error:
+        raise FileExistsError(
+            "official test output collection refuses to overwrite target"
+        ) from error
+    require_absent_recovery_path(
+        provenance_path,
+        checked_root=run,
+        description="official test output provenance",
+    )
     lineage = _load_output_collection_lineage(run)
     post_inventory = _official_test_output_inventory()
     candidates = post_inventory["candidates"]
@@ -561,7 +746,12 @@ def collect_official_test_output(
     ):
         raise ValueError("official test output requires exactly one newly created NPZ")
     candidate = candidates[0]
-    source = Path(str(candidate["path"])).resolve()
+    source = Path(str(candidate["path"])).absolute()
+    source = require_sealed_regular_file(
+        source,
+        checked_root=DERIVED_UPSTREAM_ROOT,
+        description="official test output source",
+    )
     started_ns = int(lineage["started_ns"])
     exit_ns = int(lineage["exit_marker_mtime_ns"])
     mtime_ns = int(candidate["mtime_ns"])
@@ -571,8 +761,18 @@ def collect_official_test_output(
     if recovery:
         if spec is None or _canonical_spec(spec).fold_id != 0:
             raise ValueError("official test output recovery is authorized only for Fold 0")
-        if pre_path.exists():
-            raise ValueError("recovery output collection found an unexpected live pre-inventory")
+        if recovery_authorization is None:
+            raise ValueError("external recovery authorization is required")
+        require_absent_recovery_path(
+            pre_path,
+            checked_root=run,
+            description="recovery live pre-inventory",
+        )
+        require_absent_recovery_path(
+            authorization_path,
+            checked_root=run,
+            description="run-local recovery receipt",
+        )
         preflight = json.loads((run / "preflight.json").read_text(encoding="utf-8"))
         runtime_patch = preflight.get("runtime_patch")
         if (
@@ -591,6 +791,14 @@ def collect_official_test_output(
         source_ctime_ns = int(candidate["ctime_ns"])
         raw_manifest = _recovery_raw_manifest(run)
         weight = build_fold_claims(spec=spec, weight_path=weight_cache_path(spec))
+        external_authorization = validate_external_recovery_authorization(
+            recovery_authorization,
+            run=run,
+            spec=spec,
+            source=source,
+            target=target,
+            source_candidate=candidate,
+        )
         authorization = {
             "schema_version": 1,
             "status": "pass",
@@ -617,13 +825,19 @@ def collect_official_test_output(
             "launch_provenance_manifest_sha256": _json_sha256(
                 lineage["launch_provenance_sha256"]
             ),
+            "external_authorization_path": str(recovery_authorization.resolve()),
+            "external_authorization_sha256": _sha256(recovery_authorization),
+            "external_authorization": external_authorization,
         }
         acquire_launch_lock(authorization_path, authorization)
         authorization_sha256: str | None = _sha256(authorization_path)
         collection_mode = "offline-finalize-existing"
     else:
-        if not pre_path.is_file():
-            raise ValueError("official test output live pre-inventory is missing")
+        require_sealed_regular_file(
+            pre_path,
+            checked_root=run,
+            description="official test output live pre-inventory",
+        )
         pre_marker = json.loads(pre_path.read_text(encoding="utf-8"))
         expected_pre = {
             "schema_version": 1,
@@ -644,9 +858,21 @@ def collect_official_test_output(
         collection_mode = "live-postprocess"
     if source.anchor.casefold() != target.anchor.casefold():
         raise ValueError("official test output atomic adoption requires one volume")
+    evidence_paths = [
+        source,
+        *(run / relative for relative in RECOVERY_AUTHORIZATION_RAW_RELATIVE_PATHS),
+    ]
+    if recovery_authorization is not None:
+        evidence_paths.append(recovery_authorization)
+    require_pairwise_distinct_files(
+        evidence_paths, description="official test output recovery evidence"
+    )
     os.rename(source, target)
-    if source.exists() or not target.is_file():
+    if os.path.lexists(source):
         raise ValueError("official test output atomic adoption did not complete")
+    require_sealed_regular_file(
+        target, checked_root=run, description="official test output target"
+    )
     provenance_payload: dict[str, object] = {
         "schema_version": 2,
         "status": "pass",
@@ -900,7 +1126,11 @@ def parse_weight_run(
     weight_path = weight_cache_path(spec) if weight_path is None else weight_path
     if weight_path.name != spec.filename:
         raise ValueError("released-weight fold path identity mismatch")
-    run = run_directory.resolve()
+    run = require_sealed_directory(
+        run_directory.absolute(),
+        checked_root=WEIGHT_ARTIFACTS_ROOT,
+        description="released-weight parsed run",
+    )
     stdout = (run / "stdout.log").read_text(encoding="utf-8", errors="replace")
     stderr = (run / "stderr.log").read_text(encoding="utf-8", errors="replace")
     exit_code = int((run / "exit-code.txt").read_text(encoding="utf-8").strip())
@@ -933,10 +1163,16 @@ def parse_weight_run(
 
 
 def finalize_existing_weight(
-    run_directory: Path, spec: WeightSpec | None = None
+    run_directory: Path,
+    spec: WeightSpec | None = None,
+    recovery_authorization: Path | None = None,
 ) -> dict[str, object]:
     spec = _canonical_spec(_fold2_spec() if spec is None else spec)
-    run = run_directory.resolve()
+    run = require_sealed_directory(
+        run_directory.absolute(),
+        checked_root=WEIGHT_ARTIFACTS_ROOT,
+        description="finalize-existing weight run",
+    )
     validate_fold_paths(
         spec=spec,
         run_directory=run,
@@ -974,7 +1210,12 @@ def finalize_existing_weight(
     if output_target.is_file() and output_provenance.is_file():
         pass
     elif not output_target.exists() and not output_provenance.exists():
-        collect_official_test_output(run, recovery=True, spec=spec)
+        collect_official_test_output(
+            run,
+            recovery=True,
+            spec=spec,
+            recovery_authorization=recovery_authorization,
+        )
     else:
         raise ValueError("finalize-existing official test output evidence is incomplete")
     result = parse_weight_run(
@@ -1110,6 +1351,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     action.add_argument("--preflight-only", action="store_true")
     action.add_argument("--launch", action="store_true")
     action.add_argument("--finalize-existing", type=Path)
+    parser.add_argument("--recovery-authorization", type=Path)
     return parser.parse_args(argv)
 
 
@@ -1127,7 +1369,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             placeholder, spec=spec, require_full_complete=False
         )
     elif arguments.finalize_existing is not None:
-        result = finalize_existing_weight(arguments.finalize_existing, spec)
+        if spec.fold_id == 0 and arguments.recovery_authorization is None:
+            raise ValueError("Fold 0 recovery authorization is required")
+        result = finalize_existing_weight(
+            arguments.finalize_existing,
+            spec,
+            arguments.recovery_authorization,
+        )
     else:
         run, result = _launch_once(spec)
         result = {"run_directory": str(run), **result}

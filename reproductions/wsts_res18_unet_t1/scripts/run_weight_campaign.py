@@ -19,6 +19,12 @@ from released_weight_contract import (
     load_pinned_manifest,
     spec_for_fold,
 )
+from released_weight_path_security import (
+    require_absent_recovery_path,
+    require_pairwise_distinct_files,
+    require_sealed_directory,
+    require_sealed_regular_file,
+)
 from run_calibration import ENVIRONMENT_PYTHON as FIXED_ENVIRONMENT_PYTHON
 
 
@@ -42,8 +48,9 @@ ADOPTED_FOLD2_RUN = (
     / "fold2-weight-20260810T133336Z-2e071197"
 ).resolve()
 GLOBAL_LOCK_NAME = "official-weight-12fold-campaign.lock.json"
-EVALUATOR_CLI = Path(__file__).with_name("evaluate_released_weight.py").resolve()
-VERIFIER_CLI = Path(__file__).with_name("verify_released_weight.py").resolve()
+EVALUATOR_CLI = Path(__file__).with_name("evaluate_released_weight.py").absolute()
+VERIFIER_CLI = Path(__file__).with_name("verify_released_weight.py").absolute()
+PATH_SECURITY_MODULE = Path(__file__).with_name("released_weight_path_security.py").absolute()
 RECOVERY_CAMPAIGN_ID = "official-weight-12fold-20260812T052555Z"
 RECOVERY_FOLD0_RUN_NAME = "fold0-weight-20260812T053209Z-e7c067f5"
 RECOVERY_FAILURE_BYTES = 539
@@ -55,7 +62,7 @@ RECOVERY_OUTPUT_SOURCE = (
     / ".local"
     / "WildfireSpreadTS-res18-runtime"
     / "test_pr_curve_data.npz"
-).resolve()
+).absolute()
 RECOVERY_OUTPUT_BYTES = 1_976
 RECOVERY_OUTPUT_SHA256 = (
     "2bd718e71a22e3723e2a307c2ebdbf9fda5d18e30d3da6b61d9e611f49f671fb"
@@ -65,6 +72,7 @@ RECOVERY_OUTPUT_MTIME_NS = 1_786_513_307_459_353_300
 RECOVERY_OUTPUT_TARGET_NAME = "official-test-pr-curve-data.npz"
 RECOVERY_AUTHORIZATION_NAME = "official-test-output-recovery-authorization.json"
 RECOVERY_PROVENANCE_NAME = "official-test-output-provenance.json"
+EXTERNAL_RECOVERY_AUTHORIZATION_NAME = "fold0-recovery-authorization.json"
 RECOVERED_FOLD0_RAW_RELATIVE_PATHS = (
     "stdout.log",
     "stderr.log",
@@ -142,6 +150,17 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _file_seal(path: Path) -> dict[str, object]:
+    target = require_sealed_regular_file(
+        path, checked_root=path.parent, description="campaign recovery sealed file"
+    )
+    return {
+        "path": str(target),
+        "bytes": target.stat().st_size,
+        "sha256": sha256_file(target),
+    }
 
 
 def _write_json_atomic(path: Path, payload: object) -> None:
@@ -456,7 +475,7 @@ def verify_one_fold(run_directory: Path, spec: WeightSpec) -> dict[str, object]:
 
 
 def finalize_existing_fold(
-    run_directory: Path, spec: WeightSpec
+    run_directory: Path, spec: WeightSpec, recovery_authorization: Path
 ) -> dict[str, object]:
     """Finalize preserved output and verify it, without calling the launch path."""
     finalized = _terminal_json(
@@ -467,6 +486,8 @@ def finalize_existing_fold(
             str(spec.fold_id),
             "--finalize-existing",
             str(run_directory.resolve()),
+            "--recovery-authorization",
+            str(recovery_authorization.resolve()),
         ]
     )
     if finalized.get("status") != "pass" or finalized.get("fold_id") != spec.fold_id:
@@ -475,8 +496,8 @@ def finalize_existing_fold(
 
 
 def _validate_campaign_directory(campaign_directory: Path) -> Path:
-    campaign = campaign_directory.resolve()
-    root = CAMPAIGN_ARTIFACTS_ROOT.resolve()
+    campaign = campaign_directory.absolute()
+    root = CAMPAIGN_ARTIFACTS_ROOT.absolute()
     if campaign.parent != root or not campaign.name.startswith(
         "official-weight-12fold-"
     ):
@@ -629,6 +650,22 @@ def _recovery_code_commit() -> str:
     return commit
 
 
+def _assert_original_failure_seal(
+    failure_path: Path, expected: Mapping[str, object]
+) -> None:
+    path = require_sealed_regular_file(
+        failure_path,
+        checked_root=failure_path.parent,
+        description="campaign original failure",
+    )
+    if (
+        expected != _file_seal(path)
+        or expected.get("bytes") != path.stat().st_size
+        or expected.get("sha256") != sha256_file(path)
+    ):
+        raise ValueError("campaign original failure seal changed")
+
+
 def _validate_resume_state(
     campaign_directory: Path,
 ) -> tuple[
@@ -639,21 +676,41 @@ def _validate_resume_state(
     dict[str, object],
 ]:
     campaign = _validate_campaign_directory(campaign_directory)
-    if not campaign.is_dir():
-        raise ValueError("campaign resume directory does not exist")
-    if (campaign / "resume.lock.json").exists():
-        raise FileExistsError("campaign resume lock already exists")
-    if (campaign / "completed.json").exists():
-        raise ValueError("campaign resume refuses an already completed campaign")
+    campaign = require_sealed_directory(
+        campaign,
+        checked_root=CAMPAIGN_ARTIFACTS_ROOT,
+        description="campaign resume directory",
+    )
+    try:
+        require_absent_recovery_path(
+            campaign / "resume.lock.json",
+            checked_root=campaign,
+            description="campaign resume lock",
+        )
+    except ValueError as error:
+        raise FileExistsError("campaign resume lock already exists") from error
+    require_absent_recovery_path(
+        campaign / "completed.json",
+        checked_root=campaign,
+        description="campaign completed marker",
+    )
     if campaign.name != RECOVERY_CAMPAIGN_ID:
         raise ValueError("campaign resume is authorized only for the exact incident")
     specs = load_pinned_manifest(PINNED_MANIFEST_PATH)
     schedule = build_campaign_schedule(specs, {2: ADOPTED_FOLD2_RUN})
     expected_schedule = _schedule_payload(schedule)
     schedule_path = campaign / "schedule.json"
+    require_sealed_regular_file(
+        schedule_path, checked_root=campaign, description="campaign schedule"
+    )
     if _read_json_object(schedule_path, "campaign resume schedule is invalid") != expected_schedule:
         raise ValueError("campaign resume schedule differs from the exact campaign")
-    root_lock_path = CAMPAIGN_ARTIFACTS_ROOT.resolve() / GLOBAL_LOCK_NAME
+    root_lock_path = CAMPAIGN_ARTIFACTS_ROOT.absolute() / GLOBAL_LOCK_NAME
+    require_sealed_regular_file(
+        root_lock_path,
+        checked_root=CAMPAIGN_ARTIFACTS_ROOT,
+        description="campaign root lock",
+    )
     root_lock = _read_json_object(
         root_lock_path, "campaign resume root lock is invalid"
     )
@@ -668,6 +725,9 @@ def _validate_resume_state(
     if root_lock != expected_root_lock:
         raise ValueError("campaign resume root lock mismatch")
     failure_path = campaign / "failure.json"
+    require_sealed_regular_file(
+        failure_path, checked_root=campaign, description="campaign original failure"
+    )
     failure_stat = failure_path.stat()
     failure_sha256 = sha256_file(failure_path)
     if (
@@ -691,32 +751,58 @@ def _validate_resume_state(
     }
     if failure != expected_failure_fields:
         raise ValueError("campaign resume is authorized only for the exact Fold 0 verifier failure")
+    fold0_lock_path = campaign / "fold0.lock.json"
+    require_sealed_regular_file(
+        fold0_lock_path, checked_root=campaign, description="campaign Fold 0 lock"
+    )
     fold0_lock = _read_json_object(
-        campaign / "fold0.lock.json", "campaign resume Fold 0 lock is invalid"
+        fold0_lock_path, "campaign resume Fold 0 lock is invalid"
     )
     if fold0_lock != {**expected_root_lock, "fold_id": 0, "mode": "launch"}:
         raise ValueError("campaign resume Fold 0 lock mismatch")
-    if (campaign / "fold0.json").exists():
-        raise ValueError("campaign resume Fold 0 state already exists")
+    require_absent_recovery_path(
+        campaign / "fold0.json",
+        checked_root=campaign,
+        description="campaign Fold 0 state",
+    )
     for fold_id in range(1, 12):
-        if (campaign / f"fold{fold_id}.lock.json").exists() or (
-            campaign / f"fold{fold_id}.json"
-        ).exists():
-            raise ValueError("campaign resume found an unexpected future fold state")
+        for future in (
+            campaign / f"fold{fold_id}.lock.json",
+            campaign / f"fold{fold_id}.json",
+        ):
+            require_absent_recovery_path(
+                future,
+                checked_root=campaign,
+                description="campaign future fold state",
+            )
+    evaluator_lock_path = WEIGHT_ARTIFACTS_ROOT / "fold0-weight-evaluation.lock.json"
+    require_sealed_regular_file(
+        evaluator_lock_path,
+        checked_root=WEIGHT_ARTIFACTS_ROOT,
+        description="Fold 0 evaluator lock",
+    )
     evaluator_lock = _read_json_object(
-        WEIGHT_ARTIFACTS_ROOT / "fold0-weight-evaluation.lock.json",
+        evaluator_lock_path,
         "campaign resume Fold 0 evaluator lock is invalid",
     )
-    fold0_run = Path(str(evaluator_lock.get("run_directory", ""))).resolve()
+    fold0_run = Path(str(evaluator_lock.get("run_directory", ""))).absolute()
     if (
         fold0_run.parent != WEIGHT_ARTIFACTS_ROOT.resolve()
         or not fold0_run.name.startswith("fold0-weight-")
         or fold0_run.name != RECOVERY_FOLD0_RUN_NAME
     ):
         raise ValueError("campaign resume Fold 0 run identity mismatch")
-    source = RECOVERY_OUTPUT_SOURCE.resolve()
-    if not source.is_file():
-        raise ValueError("campaign resume Fold 0 source output is missing")
+    fold0_run = require_sealed_directory(
+        fold0_run,
+        checked_root=WEIGHT_ARTIFACTS_ROOT,
+        description="Fold 0 run directory",
+    )
+    source = RECOVERY_OUTPUT_SOURCE.absolute()
+    source = require_sealed_regular_file(
+        source,
+        checked_root=RECOVERY_OUTPUT_SOURCE.parent,
+        description="Fold 0 recovery source output",
+    )
     source_stat = source.stat()
     if (
         source_stat.st_size != RECOVERY_OUTPUT_BYTES
@@ -726,11 +812,35 @@ def _validate_resume_state(
     ):
         raise ValueError("campaign resume Fold 0 source output identity mismatch")
     target = fold0_run / RECOVERY_OUTPUT_TARGET_NAME
-    if target.exists():
-        raise ValueError("campaign resume Fold 0 target output already exists")
+    require_absent_recovery_path(
+        target, checked_root=fold0_run, description="Fold 0 recovery target output"
+    )
     for marker_name in (RECOVERY_AUTHORIZATION_NAME, RECOVERY_PROVENANCE_NAME):
-        if (fold0_run / marker_name).exists():
-            raise ValueError("campaign resume found preexisting recovery evidence")
+        require_absent_recovery_path(
+            fold0_run / marker_name,
+            checked_root=fold0_run,
+            description="Fold 0 recovery evidence",
+        )
+    require_absent_recovery_path(
+        campaign / EXTERNAL_RECOVERY_AUTHORIZATION_NAME,
+        checked_root=campaign,
+        description="external recovery authorization",
+    )
+    require_pairwise_distinct_files(
+        [
+            schedule_path,
+            root_lock_path,
+            failure_path,
+            fold0_lock_path,
+            evaluator_lock_path,
+            source,
+            Path(__file__),
+            EVALUATOR_CLI,
+            VERIFIER_CLI,
+            PATH_SECURITY_MODULE,
+        ],
+        description="campaign recovery seals",
+    )
     recovery_code_commit = _recovery_code_commit()
     incident = {
         "recovery_code_commit": recovery_code_commit,
@@ -759,6 +869,35 @@ def resume_existing_campaign(campaign_directory: Path) -> dict[str, object]:
     )
     original_failure_path = campaign / "failure.json"
     original_failure_sha256 = sha256_file(original_failure_path)
+    authorization_path = campaign / EXTERNAL_RECOVERY_AUTHORIZATION_NAME
+    authorization = {
+        "schema_version": 1,
+        "status": "authorized",
+        "authorized_action": "one-time Fold 0 output recovery without scientific relaunch",
+        "campaign_id": campaign.name,
+        "campaign_directory": str(campaign),
+        "fold_id": 0,
+        "run_directory": str(fold0_run),
+        "schedule": _file_seal(campaign / "schedule.json"),
+        "root_lock": _file_seal(CAMPAIGN_ARTIFACTS_ROOT / GLOBAL_LOCK_NAME),
+        "fold0_lock": _file_seal(campaign / "fold0.lock.json"),
+        "original_failure": incident["original_failure"],
+        "source_output": incident["source_output"],
+        "target_output": {
+            "path": incident["target_output"],
+            "absent": incident["target_output_absent_before_resume"],
+        },
+        "reviewed_code": {
+            "commit": incident["recovery_code_commit"],
+            "files": [
+                _file_seal(Path(__file__)),
+                _file_seal(EVALUATOR_CLI),
+                _file_seal(VERIFIER_CLI),
+                _file_seal(PATH_SECURITY_MODULE),
+            ],
+        },
+    }
+    _acquire_immutable_json(authorization_path, authorization)
     _acquire_immutable_json(
         campaign / "resume.lock.json",
         {
@@ -776,7 +915,9 @@ def resume_existing_campaign(campaign_directory: Path) -> dict[str, object]:
     fold_id: int | None = 0
     stage = "finalize_existing_fold0"
     try:
-        fold0_record = finalize_existing_fold(fold0_run, schedule[0].spec)
+        fold0_record = finalize_existing_fold(
+            fold0_run, schedule[0].spec, authorization_path
+        )
         _validate_recovered_fold0_result(
             fold0_run, schedule[0].spec, fold0_record
         )
@@ -813,6 +954,9 @@ def resume_existing_campaign(campaign_directory: Path) -> dict[str, object]:
                 _require_campaign_record(record, fold_id)
             else:
                 stage = "launch_fold"
+                _assert_original_failure_seal(
+                    original_failure_path, incident["original_failure"]
+                )
                 run = launch_one_fold_cli(item.spec)
                 try:
                     stage = "verify_fold"
@@ -826,6 +970,9 @@ def resume_existing_campaign(campaign_directory: Path) -> dict[str, object]:
                 campaign / f"fold{fold_id}.json", {"mode": item.mode, **record}
             )
             completed += 1
+        _assert_original_failure_seal(
+            original_failure_path, incident["original_failure"]
+        )
         result = {"status": "pass", "fold_count": 12, "next_fold": None}
         _write_json_atomic(campaign / "completed.json", result)
         _write_json_atomic(

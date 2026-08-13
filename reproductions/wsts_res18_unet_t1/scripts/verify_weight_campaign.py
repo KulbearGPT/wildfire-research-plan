@@ -17,6 +17,12 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from released_weight_contract import WeightSpec, load_pinned_manifest, spec_for_fold
+from released_weight_path_security import (
+    require_absent_recovery_path,
+    require_pairwise_distinct_files,
+    require_sealed_directory,
+    require_sealed_regular_file,
+)
 from verify_released_weight import (
     EXPECTED_TEST_METRICS,
     capture_weight_raw_manifest as capture_fold_raw_manifest,
@@ -44,6 +50,15 @@ RESULTS_FILENAME = "official-weight-12fold-results.csv"
 SUMMARY_FILENAME = "official-weight-12fold-summary.json"
 INDEPENDENT_FILENAME = "independent-verification.json"
 PUBLICATION_FILENAME = "publication.json"
+GLOBAL_LOCK_NAME = "official-weight-12fold-campaign.lock.json"
+EXTERNAL_RECOVERY_AUTHORIZATION_NAME = "fold0-recovery-authorization.json"
+RECOVERY_RECEIPT_NAME = "official-test-output-recovery-authorization.json"
+RECOVERY_PROVENANCE_NAME = "official-test-output-provenance.json"
+RECOVERY_TARGET_NAME = "official-test-pr-curve-data.npz"
+CAMPAIGN_CONTROLLER_PATH = Path(__file__).with_name("run_weight_campaign.py").absolute()
+EVALUATOR_PATH = Path(__file__).with_name("evaluate_released_weight.py").absolute()
+FOLD_VERIFIER_PATH = Path(__file__).with_name("verify_released_weight.py").absolute()
+PATH_SECURITY_MODULE = Path(__file__).with_name("released_weight_path_security.py").absolute()
 ADOPTED_FOLD2_RUN = (
     WEIGHT_ARTIFACTS_ROOT
     / "fold2-weight-20260810T133336Z-2e071197"
@@ -85,6 +100,254 @@ def _manifest_sha256(payload: Mapping[str, object]) -> str:
     return hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
+
+
+def _exact_json_value(actual: object, expected: object) -> bool:
+    if type(actual) is not type(expected):
+        return False
+    if isinstance(expected, dict):
+        return set(actual) == set(expected) and all(
+            _exact_json_value(actual[key], value) for key, value in expected.items()
+        )
+    if isinstance(expected, list):
+        return len(actual) == len(expected) and all(
+            _exact_json_value(left, right) for left, right in zip(actual, expected)
+        )
+    return actual == expected
+
+
+def _file_seal(path: Path, *, checked_root: Path, description: str) -> dict[str, object]:
+    sealed = require_sealed_regular_file(
+        path, checked_root=checked_root, description=description
+    )
+    return {
+        "path": str(sealed),
+        "bytes": sealed.stat().st_size,
+        "sha256": _sha256(sealed),
+    }
+
+
+def _read_json_object(path: Path, *, checked_root: Path, description: str) -> dict[str, object]:
+    sealed = require_sealed_regular_file(
+        path, checked_root=checked_root, description=description
+    )
+    payload = json.loads(sealed.read_text(encoding="utf-8"))
+    if type(payload) is not dict:
+        raise ValueError(f"{description} must be an exact JSON object")
+    return payload
+
+
+def _verify_recovery_chain(campaign: Path, fold0_state: Mapping[str, object]) -> None:
+    """Bind the final campaign result to the one reviewed Fold 0 recovery incident."""
+    if (
+        fold0_state.get("recovered_via_finalize_existing") is not True
+        or fold0_state.get("scientific_child_relaunched") is not False
+        or fold0_state.get("fold_id") != 0
+        or fold0_state.get("mode") != "launch"
+    ):
+        raise ValueError("campaign Fold 0 recovery chain state mismatch")
+    run = Path(str(fold0_state.get("run_directory", ""))).absolute()
+    run = require_sealed_directory(
+        run, checked_root=WEIGHT_ARTIFACTS_ROOT, description="recovery chain Fold 0 run"
+    )
+    paths = {
+        "schedule": campaign / "schedule.json",
+        "root_lock": CAMPAIGN_ARTIFACTS_ROOT / GLOBAL_LOCK_NAME,
+        "fold0_lock": campaign / "fold0.lock.json",
+        "original_failure": campaign / "failure.json",
+        "resume_lock": campaign / "resume.lock.json",
+        "authorization": campaign / EXTERNAL_RECOVERY_AUTHORIZATION_NAME,
+        "completed": campaign / "completed.json",
+        "resume_completed": campaign / "resume-completed.json",
+        "receipt": run / RECOVERY_RECEIPT_NAME,
+        "provenance": run / RECOVERY_PROVENANCE_NAME,
+        "target": run / RECOVERY_TARGET_NAME,
+    }
+    checked_roots = {
+        "root_lock": CAMPAIGN_ARTIFACTS_ROOT,
+        "receipt": run,
+        "provenance": run,
+        "target": run,
+    }
+    for name, path in paths.items():
+        require_sealed_regular_file(
+            path,
+            checked_root=checked_roots.get(name, campaign),
+            description=f"recovery chain {name}",
+        )
+    require_pairwise_distinct_files(paths.values(), description="recovery chain")
+
+    schedule_seal = _file_seal(
+        paths["schedule"], checked_root=campaign, description="recovery chain schedule"
+    )
+    root_seal = _file_seal(
+        paths["root_lock"],
+        checked_root=CAMPAIGN_ARTIFACTS_ROOT,
+        description="recovery chain root lock",
+    )
+    fold0_lock_seal = _file_seal(
+        paths["fold0_lock"], checked_root=campaign, description="recovery chain Fold 0 lock"
+    )
+    failure_seal = _file_seal(
+        paths["original_failure"],
+        checked_root=campaign,
+        description="recovery chain original failure",
+    )
+    authorization = _read_json_object(
+        paths["authorization"], checked_root=campaign, description="recovery chain authorization"
+    )
+    authorization_keys = {
+        "schema_version", "status", "authorized_action", "campaign_id",
+        "campaign_directory", "fold_id", "run_directory", "schedule", "root_lock",
+        "fold0_lock", "original_failure", "source_output", "target_output", "reviewed_code",
+    }
+    if set(authorization) != authorization_keys:
+        raise ValueError("campaign Fold 0 recovery chain authorization schema mismatch")
+    reviewed = authorization.get("reviewed_code")
+    if type(reviewed) is not dict or set(reviewed) != {"commit", "files"}:
+        raise ValueError("campaign Fold 0 recovery chain reviewed code mismatch")
+    code_files = [
+        _file_seal(
+            CAMPAIGN_CONTROLLER_PATH,
+            checked_root=REPOSITORY_ROOT,
+            description="recovery chain campaign controller",
+        ),
+        _file_seal(
+            EVALUATOR_PATH,
+            checked_root=REPOSITORY_ROOT,
+            description="recovery chain evaluator",
+        ),
+        _file_seal(
+            FOLD_VERIFIER_PATH,
+            checked_root=REPOSITORY_ROOT,
+            description="recovery chain fold verifier",
+        ),
+        _file_seal(
+            PATH_SECURITY_MODULE,
+            checked_root=REPOSITORY_ROOT,
+            description="recovery chain path security module",
+        ),
+    ]
+    source = authorization.get("source_output")
+    target = authorization.get("target_output")
+    if (
+        authorization.get("schema_version") != 1
+        or authorization.get("status") != "authorized"
+        or authorization.get("authorized_action")
+        != "one-time Fold 0 output recovery without scientific relaunch"
+        or authorization.get("campaign_id") != campaign.name
+        or authorization.get("campaign_directory") != str(campaign)
+        or authorization.get("fold_id") != 0
+        or authorization.get("run_directory") != str(run)
+        or authorization.get("schedule") != schedule_seal
+        or authorization.get("root_lock") != root_seal
+        or authorization.get("fold0_lock") != fold0_lock_seal
+        or authorization.get("original_failure") != failure_seal
+        or type(source) is not dict
+        or set(source) != {"path", "bytes", "sha256", "ctime_ns", "mtime_ns"}
+        or any(type(source[key]) is not int for key in ("bytes", "ctime_ns", "mtime_ns"))
+        or not isinstance(source.get("path"), str)
+        or re.fullmatch(r"[0-9a-f]{64}", str(source.get("sha256"))) is None
+        or target != {"path": str(paths["target"]), "absent": True}
+        or not isinstance(reviewed.get("commit"), str)
+        or re.fullmatch(r"[0-9a-f]{40}", reviewed["commit"]) is None
+        or reviewed.get("files") != code_files
+    ):
+        raise ValueError("campaign Fold 0 recovery chain authorization mismatch")
+
+    resume = _read_json_object(
+        paths["resume_lock"], checked_root=campaign, description="recovery chain resume lock"
+    )
+    root_lock = _read_json_object(
+        paths["root_lock"],
+        checked_root=CAMPAIGN_ARTIFACTS_ROOT,
+        description="recovery chain root lock",
+    )
+    expected_resume = {
+        **root_lock,
+        "schema_version": 2,
+        "resume_scope": "Fold 0 offline finalization then exact remaining schedule",
+        "original_failure_sha256": failure_seal["sha256"],
+        "fold0_run_directory": str(run),
+        "fold0_scientific_child_relaunched": False,
+        "automatic_retry_performed": False,
+        "recovery_code_commit": reviewed["commit"],
+        "original_failure": failure_seal,
+        "source_output": source,
+        "target_output": str(paths["target"]),
+        "target_output_absent_before_resume": True,
+    }
+    if not _exact_json_value(resume, expected_resume):
+        raise ValueError("campaign Fold 0 recovery chain resume lock mismatch")
+
+    receipt = _read_json_object(
+        paths["receipt"], checked_root=run, description="recovery chain receipt"
+    )
+    provenance = _read_json_object(
+        paths["provenance"], checked_root=run, description="recovery chain provenance"
+    )
+    source_path = Path(str(source["path"]))
+    try:
+        require_absent_recovery_path(
+            source_path,
+            checked_root=source_path.parent,
+            description="recovery chain consumed source",
+        )
+    except ValueError as error:
+        raise ValueError("campaign Fold 0 recovery chain source was not consumed") from error
+    receipt_expected_keys = {
+        "schema_version", "status", "authorized_action", "scientific_child_relaunched",
+        "fold_id", "run_directory", "weight", "source", "target", "child_pid",
+        "command_sha256", "source_sha256", "source_bytes", "source_ctime_ns",
+        "source_mtime_ns", "started_utc", "exit_marker_mtime_ns",
+        "raw_evidence_manifest", "raw_evidence_manifest_sha256",
+        "launch_provenance_sha256", "launch_provenance_manifest_sha256",
+        "external_authorization_path", "external_authorization_sha256",
+        "external_authorization",
+    }
+    if (
+        set(receipt) != receipt_expected_keys
+        or receipt.get("schema_version") != 1
+        or receipt.get("status") != "pass"
+        or receipt.get("fold_id") != 0
+        or receipt.get("run_directory") != str(run)
+        or receipt.get("scientific_child_relaunched") is not False
+        or receipt.get("source") != source["path"]
+        or receipt.get("target") != str(paths["target"])
+        or receipt.get("source_sha256") != source["sha256"]
+        or receipt.get("source_bytes") != source["bytes"]
+        or receipt.get("source_ctime_ns") != source["ctime_ns"]
+        or receipt.get("source_mtime_ns") != source["mtime_ns"]
+        or receipt.get("external_authorization_path") != str(paths["authorization"])
+        or receipt.get("external_authorization_sha256") != _sha256(paths["authorization"])
+        or not _exact_json_value(receipt.get("external_authorization"), authorization)
+        or provenance.get("recovery_authorization_sha256") != _sha256(paths["receipt"])
+        or provenance.get("target") != str(paths["target"])
+        or provenance.get("sha256") != source["sha256"]
+        or provenance.get("bytes") != source["bytes"]
+        or _sha256(paths["target"]) != source["sha256"]
+        or paths["target"].stat().st_size != source["bytes"]
+    ):
+        raise ValueError("campaign Fold 0 recovery chain receipt or provenance mismatch")
+    completed = _read_json_object(
+        paths["completed"], checked_root=campaign, description="recovery chain completion"
+    )
+    resume_completed = _read_json_object(
+        paths["resume_completed"],
+        checked_root=campaign,
+        description="recovery chain resume completion",
+    )
+    expected_completed = {"status": "pass", "fold_count": 12, "next_fold": None}
+    expected_resume_completed = {
+        **expected_completed,
+        "original_failure_sha256": failure_seal["sha256"],
+        "fold0_scientific_child_relaunched": False,
+        "same_campaign_directory": True,
+    }
+    if not _exact_json_value(completed, expected_completed) or not _exact_json_value(
+        resume_completed, expected_resume_completed
+    ):
+        raise ValueError("campaign Fold 0 recovery chain completion mismatch")
 
 
 def _write_json_atomic(path: Path, payload: object) -> None:
@@ -404,13 +667,23 @@ def _raw_metrics(run: Path) -> dict[str, float]:
 
 def verify_campaign(campaign_directory: Path) -> dict[str, object]:
     """Rebuild every result from raw fold evidence, then atomically publish aggregates."""
-    campaign = campaign_directory.resolve()
-    if campaign.parent != CAMPAIGN_ARTIFACTS_ROOT.resolve() or not campaign.name.startswith(
+    campaign = campaign_directory.absolute()
+    if campaign.parent != CAMPAIGN_ARTIFACTS_ROOT.absolute() or not campaign.name.startswith(
         "official-weight-12fold-"
     ):
         raise ValueError("campaign directory is outside the fixed artifact root")
+    campaign = require_sealed_directory(
+        campaign,
+        checked_root=CAMPAIGN_ARTIFACTS_ROOT,
+        description="campaign verifier directory",
+    )
     specs = load_pinned_manifest(PINNED_MANIFEST_PATH)
     states = _state_rows(campaign)
+    fold0_state = states[0]
+    if fold0_state.get("recovered_via_finalize_existing") is True:
+        _verify_recovery_chain(campaign, fold0_state)
+    elif "recovered_via_finalize_existing" in fold0_state:
+        raise ValueError("campaign Fold 0 recovery chain state mismatch")
     sealed_inputs: dict[int, dict[str, object]] = {}
     for state in states:
         fold_id = int(state["fold_id"])
