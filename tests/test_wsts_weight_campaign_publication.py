@@ -1,6 +1,7 @@
 """Publication contract for the committed twelve-fold released-weight result."""
 
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 
 
@@ -51,6 +52,101 @@ def _translation_pairs(path: Path) -> set[tuple[str, str]]:
             r'\["([^"]*)", "([^"]*)"\]', text
         )
     }
+
+
+class _Element:
+    def __init__(self, tag: str, attributes: dict[str, str]) -> None:
+        self.tag = tag
+        self.attributes = attributes
+        self.children: list[_Element | str] = []
+
+
+class _DocumentParser(HTMLParser):
+    _VOID_TAGS = {
+        "area", "base", "br", "col", "embed", "hr", "img", "input",
+        "link", "meta", "param", "source", "track", "wbr",
+    }
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.root = _Element("document", {})
+        self.stack = [self.root]
+
+    def handle_starttag(
+        self, tag: str, attributes: list[tuple[str, str | None]]
+    ) -> None:
+        element = _Element(tag, {key: value or "" for key, value in attributes})
+        self.stack[-1].children.append(element)
+        if tag not in self._VOID_TAGS:
+            self.stack.append(element)
+
+    def handle_startendtag(
+        self, tag: str, attributes: list[tuple[str, str | None]]
+    ) -> None:
+        self.handle_starttag(tag, attributes)
+        if tag not in self._VOID_TAGS:
+            self.stack.pop()
+
+    def handle_endtag(self, tag: str) -> None:
+        for index in range(len(self.stack) - 1, 0, -1):
+            if self.stack[index].tag == tag:
+                del self.stack[index:]
+                return
+
+    def handle_data(self, data: str) -> None:
+        self.stack[-1].children.append(data)
+
+
+def _descendant_text_nodes(element: _Element) -> list[str]:
+    nodes: list[str] = []
+    for child in element.children:
+        if isinstance(child, str):
+            nodes.append(child)
+        else:
+            nodes.extend(_descendant_text_nodes(child))
+    return nodes
+
+
+def _find_publication_callout(element: _Element) -> _Element:
+    classes = set(element.attributes.get("class", "").split())
+    text = "".join(_descendant_text_nodes(element))
+    if (
+        element.tag == "div"
+        and {"callout", "info"} <= classes
+        and "官方发布权重十二折测试评估（2026-08-12）" in text
+    ):
+        return element
+    for child in element.children:
+        if not isinstance(child, str):
+            try:
+                return _find_publication_callout(child)
+            except LookupError:
+                pass
+    raise LookupError("published twelve-fold callout is missing")
+
+
+def _render_like_index_runtime(text: str, translations: dict[str, str]) -> str:
+    trimmed = text.strip()
+    leading = re.match(r"^\s*", text).group(0)
+    trailing = re.search(r"\s*$", text).group(0)
+    translated = translations.get(trimmed)
+    if translated is not None:
+        return (
+            (leading if "\n" in leading else "")
+            + translated
+            + (trailing if "\n" in trailing else "")
+        )
+    return (
+        text.replace("。", ".")
+        .replace("；", ";")
+        .replace("，", ",")
+        .replace("：", ":")
+        .replace("（", "(")
+        .replace("）", ")")
+        .replace("“", '"')
+        .replace("”", '"')
+        .replace("、", ", ")
+    )
 
 
 def test_experiment_evidence_publishes_the_committed_twelve_fold_result() -> None:
@@ -128,18 +224,20 @@ def test_website_has_the_matching_english_translation_binding() -> None:
             "Published twelve-fold released-weight test evaluation (2026-08-12)",
         ),
         (
-            " 的发布权重测试结果。仅对发布权重进行测试评估，并非十二次新的训练运行。AP（Fold 0--11）依次为：0.5276636481285095、0.4256492853164673、0.5709022879600525、0.3066331744194031、0.483346164226532、0.3223552405834198、0.5765069723129272、0.4736124575138092、0.4777773916721344、0.4709045886993408、0.3237844705581665、0.47403237223625183。",
+            "的发布权重测试结果。仅对发布权重进行测试评估，并非十二次新的训练运行。AP（Fold 0--11）依次为：0.5276636481285095、0.4256492853164673、0.5709022879600525、0.3066331744194031、0.483346164226532、0.3223552405834198、0.5765069723129272、0.4736124575138092、0.4777773916721344、0.4709045886993408、0.3237844705581665、0.47403237223625183。",
             " is a published released-weight result. This is a test-only evaluation of released weights, not twelve new training runs. AP (Fold 0--11), in order: 0.5276636481285095, 0.4256492853164673, 0.5709022879600525, 0.3066331744194031, 0.483346164226532, 0.3223552405834198, 0.5765069723129272, 0.4736124575138092, 0.4777773916721344, 0.4709045886993408, 0.3237844705581665, 0.47403237223625183.",
         ),
+        ("已提交 campaign", "Committed campaign "),
+        ("、generation", ", generation "),
         ("均值", "Mean"),
         ("总体标准差", "Population std"),
         ("最小值（折）", "Min (fold)"),
         ("最大值（折）", "Max (fold)"),
         ("总计 5749.570263385773", "Total 5749.570263385773"),
         ("每折中位数 549.7098723649979", "Median per fold 549.7098723649979"),
-        ("论文参考为 ", "The paper reference is "),
-        ("，provenance 为 ", ", with provenance "),
-        ("。文件名参考为 ", ". The filename reference is "),
+        ("论文参考为", "The paper reference is "),
+        ("，provenance 为", ", with provenance "),
+        ("。文件名参考为", ". The filename reference is "),
         (
             "，provenance 为 official weight manifest filename labels，明确不证明论文表格来源身份一致。GPU 观测边界为 5,756 个样本和 15,525--19,976 MiB 的采样峰值；WDDM 子进程归因不可用，观测样本最大值可能遗漏瞬态。",
             ", with provenance official weight manifest filename labels; it is explicitly not paper-table provenance. The GPU observation boundary is 5,756 samples and sampled peaks of 15,525--19,976 MiB; WDDM child attribution is unavailable and observed sample maxima may miss transients.",
@@ -150,3 +248,38 @@ def test_website_has_the_matching_english_translation_binding() -> None:
         ),
     }
     assert expected_pairs <= pairs, f"website English translation pairs are missing: {expected_pairs - pairs}"
+
+
+def test_website_runtime_reaches_and_cleanly_joins_every_publication_translation() -> None:
+    """Exercise the real text-node trim/lookup/join contract used by index.html."""
+    path = REPOSITORY_ROOT / "index.html"
+    translations = dict(_translation_pairs(path))
+    parser = _DocumentParser()
+    parser.feed(path.read_text(encoding="utf-8"))
+    text_nodes = _descendant_text_nodes(_find_publication_callout(parser.root))
+
+    chinese_nodes = {
+        text.strip()
+        for text in text_nodes
+        if re.search(r"[\u3400-\u9fff]", text)
+    }
+    unreachable = sorted(chinese_nodes - translations.keys())
+    assert not unreachable, f"publication text nodes miss trimmed Map keys: {unreachable}"
+
+    rendered = re.sub(
+        r"\s+",
+        " ",
+        "".join(_render_like_index_runtime(text, translations) for text in text_nodes),
+    ).strip()
+    assert not re.search(r"[\u3400-\u9fff]", rendered), rendered
+    assert (
+        f"Committed campaign {CAMPAIGN}, generation {GENERATION} is a published "
+        "released-weight result. This is a test-only evaluation of released "
+        "weights, not twelve new training runs."
+    ) in rendered
+    assert (
+        "The paper reference is 0.460 +/- 0.084, with provenance "
+        "upstream.lock.json paper.target. The filename reference is "
+        "0.45291666666666663 +/- 0.08827179460179917, with provenance "
+        "official weight manifest filename labels"
+    ) in rendered
