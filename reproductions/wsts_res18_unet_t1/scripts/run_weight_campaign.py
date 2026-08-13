@@ -52,10 +52,22 @@ GLOBAL_LOCK_NAME = "official-weight-12fold-campaign.lock.json"
 EVALUATOR_CLI = Path(__file__).with_name("evaluate_released_weight.py").absolute()
 VERIFIER_CLI = Path(__file__).with_name("verify_released_weight.py").absolute()
 PATH_SECURITY_MODULE = Path(__file__).with_name("released_weight_path_security.py").absolute()
+CAMPAIGN_VERIFIER_CLI = Path(__file__).with_name("verify_weight_campaign.py").absolute()
 RECOVERY_REVIEWED_FILES = (
     Path(__file__).absolute(),
     EVALUATOR_CLI,
     VERIFIER_CLI,
+    PATH_SECURITY_MODULE,
+)
+CONTINUATION_REVIEWED_AUTHORIZATION_NAME = (
+    "post-qualification-reviewed-authorization.json"
+)
+CONTINUATION_LOCK_NAME = "continuation.lock.json"
+CONTINUATION_REVIEWED_FILES = (
+    Path(__file__).absolute(),
+    EVALUATOR_CLI,
+    VERIFIER_CLI,
+    CAMPAIGN_VERIFIER_CLI,
     PATH_SECURITY_MODULE,
 )
 RECOVERY_CAMPAIGN_ID = "official-weight-12fold-20260812T052555Z"
@@ -942,6 +954,282 @@ def _validate_resume_state(
     return campaign, schedule, expected_root_lock, fold0_run, incident
 
 
+def _collect_post_qualification_incident(
+    campaign_directory: Path, *, continuation_lock_may_exist: bool
+) -> tuple[Path, tuple[CampaignFold, ...], dict[str, object], Path, dict[str, object], dict[str, object]]:
+    """Reconstruct the exact stopped post-Fold0/pre-Fold1 incident."""
+    campaign = require_sealed_directory(
+        _validate_campaign_directory(campaign_directory),
+        checked_root=CAMPAIGN_ARTIFACTS_ROOT,
+        description="post-qualification continuation campaign",
+    )
+    if campaign.name != RECOVERY_CAMPAIGN_ID:
+        raise ValueError("continuation is authorized only for the exact campaign")
+    continuation_lock = campaign / CONTINUATION_LOCK_NAME
+    if not continuation_lock_may_exist:
+        try:
+            require_absent_recovery_path(
+                continuation_lock,
+                checked_root=campaign,
+                description="campaign continuation lock",
+            )
+        except ValueError as error:
+            raise FileExistsError("campaign continuation lock already exists") from error
+    for name in ("completed.json", "resume-completed.json", "continuation-completed.json"):
+        require_absent_recovery_path(
+            campaign / name,
+            checked_root=campaign,
+            description="campaign premature completion marker",
+        )
+
+    specs = load_pinned_manifest(PINNED_MANIFEST_PATH)
+    schedule = build_campaign_schedule(specs, {2: ADOPTED_FOLD2_RUN})
+    schedule_path = campaign / "schedule.json"
+    require_sealed_regular_file(
+        schedule_path, checked_root=campaign, description="continuation schedule"
+    )
+    if _read_json_object(schedule_path, "continuation schedule is invalid") != _schedule_payload(schedule):
+        raise ValueError("continuation schedule mismatch")
+    root_path = CAMPAIGN_ARTIFACTS_ROOT.absolute() / GLOBAL_LOCK_NAME
+    root_lock = _read_json_object(root_path, "continuation root lock is invalid")
+    expected_root = {
+        "schema_version": 1,
+        "campaign_id": campaign.name,
+        "campaign_directory": str(campaign),
+        "schedule_sha256": sha256_file(schedule_path),
+        "single_campaign_no_retry": True,
+        "sequential": True,
+    }
+    if root_lock != expected_root:
+        raise ValueError("continuation root lock mismatch")
+    failure_path = campaign / "failure.json"
+    failure_stat = failure_path.stat()
+    if (
+        failure_stat.st_size != RECOVERY_FAILURE_BYTES
+        or sha256_file(failure_path) != RECOVERY_FAILURE_SHA256
+    ):
+        raise ValueError("continuation original failure seal mismatch")
+    failure = _read_json_object(failure_path, "continuation original failure invalid")
+    if (
+        failure.get("status") != "fail"
+        or failure.get("campaign_id") != campaign.name
+        or failure.get("stage") != "verify_fold"
+        or failure.get("fold_id") != 0
+        or failure.get("completed_fold_count") != 0
+    ):
+        raise ValueError("continuation original failure identity mismatch")
+    fold0_lock_path = campaign / "fold0.lock.json"
+    if _read_json_object(fold0_lock_path, "continuation Fold 0 lock invalid") != {
+        **expected_root,
+        "fold_id": 0,
+        "mode": "launch",
+    }:
+        raise ValueError("continuation Fold 0 lock mismatch")
+    evaluator_lock_path = WEIGHT_ARTIFACTS_ROOT / "fold0-weight-evaluation.lock.json"
+    evaluator_lock = _read_json_object(
+        evaluator_lock_path, "continuation Fold 0 evaluator lock invalid"
+    )
+    fold0_run = require_sealed_directory(
+        Path(str(evaluator_lock.get("run_directory", ""))).absolute(),
+        checked_root=WEIGHT_ARTIFACTS_ROOT,
+        description="continuation Fold 0 run",
+    )
+    if fold0_run.name != RECOVERY_FOLD0_RUN_NAME:
+        raise ValueError("continuation Fold 0 run mismatch")
+
+    resume_path = campaign / "resume.lock.json"
+    token_path = campaign / EXTERNAL_RECOVERY_AUTHORIZATION_NAME
+    old_reviewed_path = campaign / RECOVERY_REVIEWED_AUTHORIZATION_NAME
+    resume = _read_json_object(resume_path, "continuation resume lock invalid")
+    token = _read_json_object(token_path, "continuation recovery token invalid")
+    old_reviewed = _read_json_object(
+        old_reviewed_path, "continuation recovery reviewed approval invalid"
+    )
+    old_reviewed_seal = _exact_file_seal(old_reviewed_path)
+    failure_seal = _file_seal(failure_path)
+    if (
+        resume.get("schema_version") != 2
+        or resume.get("campaign_id") != campaign.name
+        or resume.get("campaign_directory") != str(campaign)
+        or resume.get("original_failure") != failure_seal
+        or resume.get("fold0_run_directory") != str(fold0_run)
+        or resume.get("fold0_scientific_child_relaunched") is not False
+        or resume.get("automatic_retry_performed") is not False
+        or resume.get("reviewed_authorization")
+        != {"seal": old_reviewed_seal, "payload": old_reviewed}
+        or token.get("resume_lock") != _exact_file_seal(resume_path)
+        or token.get("reviewed_authorization") != resume.get("reviewed_authorization")
+        or token.get("original_failure") != failure_seal
+        or token.get("campaign_id") != campaign.name
+        or token.get("fold_id") != 0
+        or token.get("run_directory") != str(fold0_run)
+    ):
+        raise ValueError("continuation recovery chain mismatch")
+
+    source = Path(str(resume.get("source_output", {}).get("path", ""))).absolute()
+    require_absent_recovery_path(
+        source,
+        checked_root=source.parent,
+        description="continuation consumed Fold 0 source",
+    )
+    fold0_state_path = campaign / "fold0.json"
+    fold0_state = _read_json_object(fold0_state_path, "continuation Fold 0 state invalid")
+    if set(fold0_state) != {
+        "status", "fold_id", "run_directory", "independent_verification_sha256",
+        "mode", "recovered_via_finalize_existing", "scientific_child_relaunched",
+    }:
+        raise ValueError("continuation Fold 0 state schema mismatch")
+    if (
+        fold0_state.get("status") != "pass"
+        or fold0_state.get("fold_id") != 0
+        or fold0_state.get("run_directory") != str(fold0_run)
+        or fold0_state.get("mode") != "launch"
+        or fold0_state.get("recovered_via_finalize_existing") is not True
+        or fold0_state.get("scientific_child_relaunched") is not False
+    ):
+        raise ValueError("continuation Fold 0 recovered state mismatch")
+    fold0_record = {
+        key: fold0_state[key]
+        for key in ("status", "fold_id", "run_directory", "independent_verification_sha256")
+    }
+    _validate_recovered_fold0_result(fold0_run, schedule[0].spec, fold0_record)
+
+    resume_failure_path = campaign / "resume-failure.json"
+    resume_failure = _read_json_object(
+        resume_failure_path, "continuation resume failure invalid"
+    )
+    if (
+        set(resume_failure)
+        != {
+            "status", "campaign_id", "stage", "fold_id", "error",
+            "completed_fold_count", "original_failure_sha256",
+            "original_failure_preserved", "immutable_locks_preserved",
+            "automatic_retry_performed", "fold0_scientific_child_relaunched",
+            "partial_aggregate_written",
+        }
+        or resume_failure.get("status") != "fail"
+        or resume_failure.get("campaign_id") != campaign.name
+        or resume_failure.get("stage") != "qualify_fold2"
+        or resume_failure.get("fold_id") != 0
+        or resume_failure.get("completed_fold_count") != 1
+        or "official test output provenance legacy contract mismatch"
+        not in str(resume_failure.get("error"))
+        or resume_failure.get("original_failure_sha256") != failure_seal["sha256"]
+        or resume_failure.get("original_failure_preserved") is not True
+        or resume_failure.get("automatic_retry_performed") is not False
+        or resume_failure.get("fold0_scientific_child_relaunched") is not False
+        or resume_failure.get("partial_aggregate_written") is not False
+    ):
+        raise ValueError("continuation is not the exact Fold 2 parser-only failure")
+
+    for fold_id in range(1, 12):
+        for suffix in (".lock.json", ".json"):
+            require_absent_recovery_path(
+                campaign / f"fold{fold_id}{suffix}",
+                checked_root=campaign,
+                description="continuation future campaign state",
+            )
+        if fold_id != 2:
+            require_absent_recovery_path(
+                WEIGHT_ARTIFACTS_ROOT / f"fold{fold_id}-weight-evaluation.lock.json",
+                checked_root=WEIGHT_ARTIFACTS_ROOT,
+                description="continuation future evaluator lock",
+            )
+            if any(
+                child.name.startswith(f"fold{fold_id}-weight-")
+                for child in WEIGHT_ARTIFACTS_ROOT.iterdir()
+            ):
+                raise ValueError("continuation future scientific run already exists")
+
+    fold2_path = ADOPTED_FOLD2_RUN / "independent-verification.json"
+    fold2_payload = _read_json_object(
+        fold2_path, "continuation Fold 2 formal verifier result invalid"
+    )
+    _require_generic_pass(fold2_payload, 2)
+    if fold2_payload.get("raw_evidence_unchanged_during_verification") is not True:
+        raise ValueError("continuation Fold 2 formal verifier raw seal missing")
+    fold2_record = _verification_record(ADOPTED_FOLD2_RUN, schedule[2].spec, fold2_payload)
+
+    evidence_paths = {
+        "schedule": schedule_path,
+        "root_lock": root_path,
+        "original_failure": failure_path,
+        "fold0_lock": fold0_lock_path,
+        "fold0_evaluator_lock": evaluator_lock_path,
+        "resume_lock": resume_path,
+        "recovery_token": token_path,
+        "recovery_reviewed_authorization": old_reviewed_path,
+        "fold0_state": fold0_state_path,
+        "resume_failure": resume_failure_path,
+        "fold0_independent": fold0_run / "independent-verification.json",
+        "fold0_target": fold0_run / RECOVERY_OUTPUT_TARGET_NAME,
+        "fold0_provenance": fold0_run / RECOVERY_PROVENANCE_NAME,
+        "fold0_receipt": fold0_run / "official-test-output-recovery-authorization.json",
+        "fold0_offline_finalization": fold0_run / "offline-finalization.json",
+        "fold0_result": fold0_run / "weight-result.json",
+        "fold2_independent": fold2_path,
+    }
+    for path in evidence_paths.values():
+        require_sealed_regular_file(
+            path,
+            checked_root=(CAMPAIGN_ARTIFACTS_ROOT if path == root_path else path.parent),
+            description="continuation incident evidence",
+        )
+    require_pairwise_distinct_files(
+        evidence_paths.values(), description="continuation incident evidence"
+    )
+    incident = {
+        "schema_version": 1,
+        "campaign_id": campaign.name,
+        "fold0_scientific_child_relaunched": False,
+        "new_scientific_child_started": False,
+        "consumed_source_absent": True,
+        "evidence": {name: _exact_file_seal(path) for name, path in evidence_paths.items()},
+    }
+    return campaign, schedule, expected_root, fold0_run, incident, fold2_record
+
+
+def _validate_continuation_reviewed_authorization(
+    path: Path, *, campaign: Path, fold0_run: Path, incident: Mapping[str, object]
+) -> dict[str, object]:
+    return validate_reviewed_authorization_manifest(
+        path,
+        expected_path=campaign / CONTINUATION_REVIEWED_AUTHORIZATION_NAME,
+        repository_root=REPOSITORY_ROOT,
+        campaign_directory=campaign,
+        run_directory=fold0_run,
+        reviewed_paths=CONTINUATION_REVIEWED_FILES,
+        approval_scope="exact post-qualification continuation code after independent review",
+        fold_id=0,
+        additional_payload={"incident": dict(incident)},
+    )
+
+
+def _assert_post_qualification_incident_seals(
+    incident: Mapping[str, object]
+) -> None:
+    evidence = incident.get("evidence")
+    if type(evidence) is not dict:
+        raise ValueError("continuation incident evidence is invalid")
+    for expected in evidence.values():
+        if type(expected) is not dict or set(expected) != {
+            "path", "bytes_hex", "size", "sha256"
+        }:
+            raise ValueError("continuation incident evidence schema mismatch")
+        path = Path(str(expected["path"])).absolute()
+        if _exact_file_seal(path) != expected:
+            raise ValueError("continuation incident evidence changed")
+    resume = json.loads(
+        bytes.fromhex(evidence["resume_lock"]["bytes_hex"]).decode("utf-8")
+    )
+    source = Path(str(resume.get("source_output", {}).get("path", ""))).absolute()
+    require_absent_recovery_path(
+        source,
+        checked_root=source.parent,
+        description="continuation consumed Fold 0 source",
+    )
+
+
 def resume_existing_campaign(
     campaign_directory: Path, reviewed_authorization: Path | None = None
 ) -> dict[str, object]:
@@ -1088,6 +1376,139 @@ def resume_existing_campaign(
         raise
 
 
+def continue_after_qualification_failure(
+    campaign_directory: Path, reviewed_authorization: Path
+) -> dict[str, object]:
+    """Continue once after the reviewed Fold 2 parser-only qualification stop."""
+    campaign, schedule, root_lock, fold0_run, incident, fold2_record = (
+        _collect_post_qualification_incident(
+            campaign_directory, continuation_lock_may_exist=False
+        )
+    )
+    reviewed_path = reviewed_authorization.absolute()
+    reviewed = _validate_continuation_reviewed_authorization(
+        reviewed_path, campaign=campaign, fold0_run=fold0_run, incident=incident
+    )
+    continuation_path = campaign / CONTINUATION_LOCK_NAME
+    continuation_payload = {
+        **root_lock,
+        "schema_version": 1,
+        "continuation_scope": "post-Fold0 qualification-parser recovery from Fold 1",
+        "incident": incident,
+        "reviewed_authorization": {
+            "seal": _exact_file_seal(reviewed_path),
+            "payload": reviewed,
+        },
+        "fold0_finalized_again": False,
+        "fold0_scientific_child_relaunched": False,
+        "fold2_qualified_again": False,
+        "next_fold": 1,
+    }
+    _acquire_immutable_json(continuation_path, continuation_payload)
+    current = _collect_post_qualification_incident(
+        campaign, continuation_lock_may_exist=True
+    )
+    if current[4] != incident or current[5] != fold2_record:
+        raise ValueError("continuation incident changed after lock acquisition")
+    if _validate_continuation_reviewed_authorization(
+        reviewed_path, campaign=campaign, fold0_run=fold0_run, incident=incident
+    ) != reviewed:
+        raise ValueError("continuation reviewed authorization changed")
+
+    completed = 1
+    fold_id: int | None = 0
+    stage = "prepare_weight"
+    original_failure_exact = incident["evidence"]["original_failure"]
+    original_failure = {
+        "path": original_failure_exact["path"],
+        "bytes": original_failure_exact["size"],
+        "sha256": original_failure_exact["sha256"],
+    }
+    try:
+        for item in schedule[1:]:
+            if item.mode == "launch":
+                fold_id = item.spec.fold_id
+                prepare_weight_cli(item.spec)
+        for item in schedule[1:]:
+            fold_id = item.spec.fold_id
+            stage = "acquire_fold_lock"
+            _acquire_immutable_json(
+                campaign / f"fold{fold_id}.lock.json",
+                {**root_lock, "fold_id": fold_id, "mode": item.mode},
+            )
+            if item.mode == "adopt":
+                stage = "adopt_fold"
+                record = fold2_record
+                _require_campaign_record(record, 2)
+            else:
+                stage = "launch_fold"
+                _assert_original_failure_seal(
+                    campaign / "failure.json", original_failure
+                )
+                _assert_post_qualification_incident_seals(incident)
+                if (
+                    _exact_file_seal(reviewed_path)
+                    != continuation_payload["reviewed_authorization"]["seal"]
+                    or _validate_continuation_reviewed_authorization(
+                        reviewed_path,
+                        campaign=campaign,
+                        fold0_run=fold0_run,
+                        incident=incident,
+                    )
+                    != reviewed
+                ):
+                    raise ValueError("continuation reviewed authorization changed")
+                run = launch_one_fold_cli(item.spec)
+                try:
+                    stage = "verify_fold"
+                    record = verify_one_fold_cli(run, item.spec)
+                    _require_campaign_record(record, fold_id)
+                except BaseException as error:
+                    raise ValueError(
+                        f"fold {fold_id} independent verification failed"
+                    ) from error
+            _write_json_atomic(
+                campaign / f"fold{fold_id}.json", {"mode": item.mode, **record}
+            )
+            completed += 1
+        _assert_original_failure_seal(campaign / "failure.json", original_failure)
+        _assert_post_qualification_incident_seals(incident)
+        result = {"status": "pass", "fold_count": 12, "next_fold": None}
+        _write_json_atomic(campaign / "completed.json", result)
+        completion = {
+            **result,
+            "same_campaign_directory": True,
+            "fold0_scientific_child_relaunched": False,
+            "fold0_finalized_again": False,
+            "fold2_qualified_again": False,
+            "continuation_lock_sha256": sha256_file(continuation_path),
+        }
+        _write_json_atomic(campaign / "resume-completed.json", completion)
+        _write_json_atomic(campaign / "continuation-completed.json", completion)
+        return result
+    except BaseException as error:
+        _write_json_atomic(
+            campaign / "continuation-failure.json",
+            {
+                "status": "fail",
+                "campaign_id": campaign.name,
+                "stage": stage,
+                "fold_id": fold_id,
+                "error": f"{type(error).__name__}: {error}",
+                "completed_fold_count": completed,
+                "original_failure_preserved": (
+                    _file_seal(campaign / "failure.json") == original_failure
+                ),
+                "fold0_scientific_child_relaunched": False,
+                "fold0_finalized_again": False,
+                "fold2_qualified_again": False,
+                "automatic_retry_performed": False,
+                "partial_aggregate_written": False,
+            },
+        )
+        raise
+
+
 def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fold-id", type=int, choices=range(12))
@@ -1095,6 +1516,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     action.add_argument("--launch", action="store_true")
     action.add_argument("--finalize-existing", type=Path)
     action.add_argument("--resume-existing", type=Path)
+    action.add_argument("--continue-after-qualification", type=Path)
     parser.add_argument("--campaign-directory", type=Path)
     parser.add_argument("--reviewed-authorization", type=Path)
     parser.add_argument("--recovery-authorization", type=Path)
@@ -1118,7 +1540,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             spec_for_fold(specs, arguments.fold_id),
             arguments.recovery_authorization,
         )
-    else:
+    elif arguments.resume_existing is not None:
         if (
             arguments.fold_id is not None
             or arguments.campaign_directory is not None
@@ -1129,6 +1551,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         result = resume_existing_campaign(
             arguments.resume_existing, arguments.reviewed_authorization
+        )
+    else:
+        if (
+            arguments.fold_id is not None
+            or arguments.campaign_directory is not None
+            or arguments.reviewed_authorization is None
+        ):
+            raise ValueError(
+                "continue-after-qualification requires one campaign path and explicit reviewed authorization"
+            )
+        result = continue_after_qualification_failure(
+            arguments.continue_after_qualification,
+            arguments.reviewed_authorization,
         )
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0

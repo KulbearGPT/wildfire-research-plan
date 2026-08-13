@@ -738,6 +738,55 @@ def test_legacy_fold2_provenance_requires_exact_schema_types_and_time(
         verifier.verify_official_test_output_provenance(run, fold_id=2)
 
 
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "2026-08-10T13:44:23.2Z",
+        "2026-08-10T13:44:23.270975Z",
+        "2026-08-10T13:44:23.2709753Z",
+        "2026-08-10T13:44:23.270975300Z",
+        "2026-08-10T07:44:23.2709753-06:00",
+    ],
+)
+def test_iso8601_validator_accepts_one_to_nine_fractional_digits(
+    timestamp: str,
+) -> None:
+    assert verifier._is_aware_iso8601(timestamp) is True
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "2026-08-10T13:44:23.2709753000Z",
+        "2026-08-10T13:44:23.2709753",
+        "2026-02-30T13:44:23.2709753Z",
+        "not-a-time",
+    ],
+)
+def test_iso8601_validator_rejects_invalid_or_unaware_timestamps(
+    timestamp: str,
+) -> None:
+    assert verifier._is_aware_iso8601(timestamp) is False
+
+
+def test_iso8601_validator_accepts_seven_fractional_digits_in_fixed_runtime() -> None:
+    code = (
+        "import sys;"
+        f"sys.path.insert(0,{str(SCRIPTS_DIR)!r});"
+        "import verify_released_weight as verifier;"
+        "print(verifier._is_aware_iso8601('2026-08-10T13:44:23.2709753Z'))"
+    )
+    result = subprocess.run(
+        [str(controller.ENVIRONMENT_PYTHON), "-c", code],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "True"
+
+
 def test_independent_verifier_requires_exact_live_pre_inventory_marker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

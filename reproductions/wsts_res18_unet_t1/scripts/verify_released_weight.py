@@ -326,7 +326,12 @@ def _is_aware_iso8601(value: object) -> bool:
     ) is None:
         return False
     try:
-        parsed = datetime.fromisoformat(value[:-1] + "+00:00" if value.endswith("Z") else value)
+        normalized = re.sub(
+            r"(\.\d{6})\d{1,3}(?=Z|[+-]\d{2}:\d{2}$)", r"\1", value
+        )
+        parsed = datetime.fromisoformat(
+            normalized[:-1] + "+00:00" if normalized.endswith("Z") else normalized
+        )
     except ValueError:
         return False
     return parsed.tzinfo is not None and parsed.utcoffset() is not None

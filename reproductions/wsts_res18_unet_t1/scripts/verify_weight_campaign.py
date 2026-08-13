@@ -67,6 +67,22 @@ RECOVERY_REVIEWED_FILES = (
     FOLD_VERIFIER_PATH,
     PATH_SECURITY_MODULE,
 )
+CONTINUATION_REVIEWED_AUTHORIZATION_NAME = "post-qualification-reviewed-authorization.json"
+CONTINUATION_LOCK_NAME = "continuation.lock.json"
+CONTINUATION_REVIEWED_FILES = (
+    CAMPAIGN_CONTROLLER_PATH,
+    EVALUATOR_PATH,
+    FOLD_VERIFIER_PATH,
+    Path(__file__).absolute(),
+    PATH_SECURITY_MODULE,
+)
+CONTINUATION_INCIDENT_EVIDENCE_NAMES = {
+    "schedule", "root_lock", "original_failure", "fold0_lock",
+    "fold0_evaluator_lock", "resume_lock", "recovery_token",
+    "recovery_reviewed_authorization", "fold0_state", "resume_failure",
+    "fold0_independent", "fold0_target", "fold0_provenance", "fold0_receipt",
+    "fold0_offline_finalization", "fold0_result", "fold2_independent",
+}
 ADOPTED_FOLD2_RUN = (
     WEIGHT_ARTIFACTS_ROOT
     / "fold2-weight-20260810T133336Z-2e071197"
@@ -160,6 +176,136 @@ def _read_json_object(path: Path, *, checked_root: Path, description: str) -> di
     return payload
 
 
+def _verify_continuation_chain(campaign: Path, fold0_run: Path) -> None:
+    lock_path = campaign / CONTINUATION_LOCK_NAME
+    approval_path = campaign / CONTINUATION_REVIEWED_AUTHORIZATION_NAME
+    completion_path = campaign / "continuation-completed.json"
+    resume_completion_path = campaign / "resume-completed.json"
+    for path in (lock_path, approval_path, completion_path, resume_completion_path):
+        require_sealed_regular_file(
+            path, checked_root=campaign, description="campaign continuation chain"
+        )
+    require_absent_recovery_path(
+        campaign / "continuation-failure.json",
+        checked_root=campaign,
+        description="campaign continuation failure marker",
+    )
+    lock = _read_json_object(
+        lock_path, checked_root=campaign, description="campaign continuation lock"
+    )
+    if set(lock) != {
+        "schema_version", "campaign_id", "campaign_directory", "schedule_sha256",
+        "single_campaign_no_retry", "sequential", "continuation_scope", "incident",
+        "reviewed_authorization", "fold0_finalized_again",
+        "fold0_scientific_child_relaunched", "fold2_qualified_again", "next_fold",
+    }:
+        raise ValueError("campaign continuation lock schema mismatch")
+    incident = lock.get("incident")
+    reviewed = lock.get("reviewed_authorization")
+    if (
+        type(incident) is not dict
+        or set(incident) != {
+            "schema_version", "campaign_id", "fold0_scientific_child_relaunched",
+            "new_scientific_child_started", "consumed_source_absent", "evidence",
+        }
+        or incident.get("schema_version") != 1
+        or incident.get("campaign_id") != campaign.name
+        or incident.get("fold0_scientific_child_relaunched") is not False
+        or incident.get("new_scientific_child_started") is not False
+        or incident.get("consumed_source_absent") is not True
+        or type(reviewed) is not dict
+        or set(reviewed) != {"seal", "payload"}
+        or reviewed.get("seal")
+        != _exact_file_seal(
+            approval_path,
+            checked_root=campaign,
+            description="campaign continuation reviewed authorization",
+        )
+        or lock.get("continuation_scope")
+        != "post-Fold0 qualification-parser recovery from Fold 1"
+        or lock.get("fold0_finalized_again") is not False
+        or lock.get("fold0_scientific_child_relaunched") is not False
+        or lock.get("fold2_qualified_again") is not False
+        or lock.get("next_fold") != 1
+    ):
+        raise ValueError("campaign continuation identity mismatch")
+    evidence = incident.get("evidence")
+    if type(evidence) is not dict or set(evidence) != CONTINUATION_INCIDENT_EVIDENCE_NAMES:
+        raise ValueError("campaign continuation incident evidence is invalid")
+    expected_paths = {
+        "schedule": campaign / "schedule.json",
+        "root_lock": CAMPAIGN_ARTIFACTS_ROOT / GLOBAL_LOCK_NAME,
+        "original_failure": campaign / "failure.json",
+        "fold0_lock": campaign / "fold0.lock.json",
+        "fold0_evaluator_lock": WEIGHT_ARTIFACTS_ROOT / "fold0-weight-evaluation.lock.json",
+        "resume_lock": campaign / "resume.lock.json",
+        "recovery_token": campaign / EXTERNAL_RECOVERY_AUTHORIZATION_NAME,
+        "recovery_reviewed_authorization": campaign / RECOVERY_REVIEWED_AUTHORIZATION_NAME,
+        "fold0_state": campaign / "fold0.json",
+        "resume_failure": campaign / "resume-failure.json",
+        "fold0_independent": fold0_run / "independent-verification.json",
+        "fold0_target": fold0_run / RECOVERY_TARGET_NAME,
+        "fold0_provenance": fold0_run / RECOVERY_PROVENANCE_NAME,
+        "fold0_receipt": fold0_run / RECOVERY_RECEIPT_NAME,
+        "fold0_offline_finalization": fold0_run / "offline-finalization.json",
+        "fold0_result": fold0_run / "weight-result.json",
+        "fold2_independent": ADOPTED_FOLD2_RUN / "independent-verification.json",
+    }
+    for name, expected in evidence.items():
+        if type(expected) is not dict or set(expected) != {
+            "path", "bytes_hex", "size", "sha256"
+        }:
+            raise ValueError("campaign continuation incident seal schema mismatch")
+        path = Path(str(expected.get("path", ""))).absolute()
+        if path != expected_paths[name].absolute():
+            raise ValueError("campaign continuation incident path mismatch")
+        checked_root = CAMPAIGN_ARTIFACTS_ROOT if name == "root_lock" else path.parent
+        if _exact_file_seal(
+            path,
+            checked_root=checked_root,
+            description="campaign continuation incident seal",
+        ) != expected:
+            raise ValueError("campaign continuation incident evidence changed")
+    approved = validate_reviewed_authorization_manifest(
+        approval_path,
+        expected_path=approval_path,
+        repository_root=REPOSITORY_ROOT,
+        campaign_directory=campaign,
+        run_directory=fold0_run,
+        reviewed_paths=CONTINUATION_REVIEWED_FILES,
+        approval_scope="exact post-qualification continuation code after independent review",
+        fold_id=0,
+        additional_payload={"incident": incident},
+    )
+    if approved != reviewed.get("payload"):
+        raise ValueError("campaign continuation reviewed authorization mismatch")
+    completed = _read_json_object(
+        campaign / "completed.json",
+        checked_root=campaign,
+        description="campaign continuation completion",
+    )
+    continuation_completed = _read_json_object(
+        completion_path,
+        checked_root=campaign,
+        description="campaign continuation completion",
+    )
+    resume_completed = _read_json_object(
+        resume_completion_path,
+        checked_root=campaign,
+        description="campaign resumed completion",
+    )
+    expected_completion = {
+        **completed,
+        "same_campaign_directory": True,
+        "fold0_scientific_child_relaunched": False,
+        "fold0_finalized_again": False,
+        "fold2_qualified_again": False,
+        "continuation_lock_sha256": _sha256(lock_path),
+    }
+    if continuation_completed != expected_completion or resume_completed != expected_completion:
+        raise ValueError("campaign continuation completion mismatch")
+
+
 def _verify_recovery_chain(campaign: Path, fold0_state: Mapping[str, object]) -> None:
     """Bind the final campaign result to the one reviewed Fold 0 recovery incident."""
     if (
@@ -173,6 +319,7 @@ def _verify_recovery_chain(campaign: Path, fold0_state: Mapping[str, object]) ->
     run = require_sealed_directory(
         run, checked_root=WEIGHT_ARTIFACTS_ROOT, description="recovery chain Fold 0 run"
     )
+    continued = os.path.lexists(campaign / CONTINUATION_LOCK_NAME)
     paths = {
         "schedule": campaign / "schedule.json",
         "root_lock": CAMPAIGN_ARTIFACTS_ROOT / GLOBAL_LOCK_NAME,
@@ -247,14 +394,18 @@ def _verify_recovery_chain(campaign: Path, fold0_state: Mapping[str, object]) ->
     ):
         raise ValueError("campaign Fold 0 recovery chain reviewed authorization mismatch")
     reviewed_payload = reviewed["payload"]
-    independently_reviewed = validate_reviewed_authorization_manifest(
-        paths["reviewed"],
-        expected_path=paths["reviewed"],
-        repository_root=REPOSITORY_ROOT,
-        campaign_directory=campaign,
-        run_directory=run,
-        reviewed_paths=RECOVERY_REVIEWED_FILES,
-    )
+    if continued:
+        _verify_continuation_chain(campaign, run)
+        independently_reviewed = reviewed_payload
+    else:
+        independently_reviewed = validate_reviewed_authorization_manifest(
+            paths["reviewed"],
+            expected_path=paths["reviewed"],
+            repository_root=REPOSITORY_ROOT,
+            campaign_directory=campaign,
+            run_directory=run,
+            reviewed_paths=RECOVERY_REVIEWED_FILES,
+        )
     if independently_reviewed != reviewed_payload:
         raise ValueError("campaign Fold 0 recovery chain reviewed authorization mismatch")
     source = authorization.get("source_output")
@@ -371,12 +522,23 @@ def _verify_recovery_chain(campaign: Path, fold0_state: Mapping[str, object]) ->
         description="recovery chain resume completion",
     )
     expected_completed = {"status": "pass", "fold_count": 12, "next_fold": None}
-    expected_resume_completed = {
-        **expected_completed,
-        "original_failure_sha256": failure_seal["sha256"],
-        "fold0_scientific_child_relaunched": False,
-        "same_campaign_directory": True,
-    }
+    expected_resume_completed = (
+        {
+            **expected_completed,
+            "same_campaign_directory": True,
+            "fold0_scientific_child_relaunched": False,
+            "fold0_finalized_again": False,
+            "fold2_qualified_again": False,
+            "continuation_lock_sha256": _sha256(campaign / CONTINUATION_LOCK_NAME),
+        }
+        if continued
+        else {
+            **expected_completed,
+            "original_failure_sha256": failure_seal["sha256"],
+            "fold0_scientific_child_relaunched": False,
+            "same_campaign_directory": True,
+        }
+    )
     if not _exact_json_value(completed, expected_completed) or not _exact_json_value(
         resume_completed, expected_resume_completed
     ):

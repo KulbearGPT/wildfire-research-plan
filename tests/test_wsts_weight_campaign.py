@@ -115,6 +115,50 @@ def test_external_reviewed_authorization_requires_exact_approved_clean_commit(
             run_directory=run,
             reviewed_paths=reviewed_paths,
         ) == payload
+        continuation_payload = {
+            **payload,
+            "approval_scope": (
+                "exact post-qualification continuation code after independent review"
+            ),
+            "incident": {"schema_version": 1, "resume_failure_sha256": "a" * 64},
+        }
+        approval_path.write_text(
+            json.dumps(continuation_payload) + "\n", encoding="utf-8"
+        )
+        assert path_security.validate_reviewed_authorization_manifest(
+            approval_path,
+            expected_path=approval_path,
+            repository_root=repository,
+            campaign_directory=campaign_directory,
+            run_directory=run,
+            reviewed_paths=reviewed_paths,
+            approval_scope=(
+                "exact post-qualification continuation code after independent review"
+            ),
+            additional_payload={"incident": continuation_payload["incident"]},
+        ) == continuation_payload
+        continuation_payload["incident"]["resume_failure_sha256"] = "b" * 64
+        approval_path.write_text(
+            json.dumps(continuation_payload) + "\n", encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="reviewed authorization"):
+            path_security.validate_reviewed_authorization_manifest(
+                approval_path,
+                expected_path=approval_path,
+                repository_root=repository,
+                campaign_directory=campaign_directory,
+                run_directory=run,
+                reviewed_paths=reviewed_paths,
+                approval_scope=(
+                    "exact post-qualification continuation code after independent review"
+                ),
+                additional_payload={
+                    "incident": {
+                        "schema_version": 1,
+                        "resume_failure_sha256": "a" * 64,
+                    }
+                },
+            )
     else:
         with pytest.raises(ValueError, match="reviewed authorization"):
             path_security.validate_reviewed_authorization_manifest(
@@ -143,6 +187,38 @@ def test_resume_cli_requires_explicit_reviewed_authorization(
         campaign.main(["--resume-existing", str(tmp_path / "campaign")])
 
     assert called is False
+
+
+def test_post_qualification_continuation_cli_requires_explicit_reviewed_authorization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    called: list[tuple[Path, Path]] = []
+
+    def continue_campaign(campaign_path: Path, approval: Path) -> dict[str, object]:
+        called.append((campaign_path, approval))
+        return {"status": "pass"}
+
+    monkeypatch.setattr(
+        campaign,
+        "continue_after_qualification_failure",
+        continue_campaign,
+        raising=False,
+    )
+    campaign_path = tmp_path / "campaign"
+    approval_path = campaign_path / "post-qualification-reviewed-authorization.json"
+
+    with pytest.raises(ValueError, match="reviewed authorization"):
+        campaign.main(["--continue-after-qualification", str(campaign_path)])
+
+    assert campaign.main(
+        [
+            "--continue-after-qualification",
+            str(campaign_path),
+            "--reviewed-authorization",
+            str(approval_path),
+        ]
+    ) == 0
+    assert called == [(campaign_path, approval_path)]
 
 
 @pytest.mark.parametrize("adopted", [{}, {1: Path("wrong")}, {2: Path("a"), 3: Path("b")}])
@@ -721,6 +797,103 @@ def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_sche
     }
     with pytest.raises(FileExistsError, match="resume lock already exists"):
         campaign.resume_existing_campaign(campaign_directory)
+
+
+def test_post_qualification_continuation_skips_fold0_and_reuses_formal_fold2_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    campaign_directory, scientific_folds, _, _ = _configure_fake_campaign(
+        tmp_path, monkeypatch, verifier_failure=0
+    )
+    with pytest.raises(ValueError, match="fold 0 independent verification failed"):
+        campaign.run_campaign(campaign_directory)
+    source = _authorize_fake_resume_incident(tmp_path, monkeypatch, campaign_directory)
+    fold0_lock = json.loads(
+        (campaign.WEIGHT_ARTIFACTS_ROOT / "fold0-weight-evaluation.lock.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    fold0_run = Path(fold0_lock["run_directory"]).resolve()
+
+    def record(run: Path, spec: contract.WeightSpec) -> dict[str, object]:
+        run.mkdir(parents=True, exist_ok=True)
+        payload = {"status": "pass", "fold_id": spec.fold_id}
+        independent = run / "independent-verification.json"
+        independent.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+        return {
+            "status": "pass",
+            "fold_id": spec.fold_id,
+            "run_directory": str(run.resolve()),
+            "independent_verification_sha256": campaign.sha256_file(independent),
+        }
+
+    def finalize(
+        run: Path, spec: contract.WeightSpec, _authorization: Path
+    ) -> dict[str, object]:
+        source.unlink()
+        for name in (
+            campaign.RECOVERY_OUTPUT_TARGET_NAME,
+            campaign.RECOVERY_PROVENANCE_NAME,
+            "official-test-output-recovery-authorization.json",
+            "offline-finalization.json",
+            "weight-result.json",
+        ):
+            (run / name).write_text(f"sealed {name}\n", encoding="utf-8")
+        return record(run, spec)
+
+    monkeypatch.setattr(campaign, "finalize_existing_fold", finalize)
+    monkeypatch.setattr(campaign, "_validate_recovered_fold0_result", lambda *_args: None)
+    monkeypatch.setattr(
+        campaign,
+        "qualify_existing_fold2",
+        lambda *_args: (_ for _ in ()).throw(
+            ValueError("official test output provenance legacy contract mismatch")
+        ),
+    )
+    with pytest.raises(ValueError, match="legacy contract mismatch"):
+        campaign.resume_existing_campaign(campaign_directory)
+
+    fold2_payload = {
+        "status": "pass",
+        "fold_id": 2,
+        "test_AP": 0.5709022879600525,
+        "raw_evidence_unchanged_during_verification": True,
+    }
+    (campaign.ADOPTED_FOLD2_RUN / "independent-verification.json").write_text(
+        json.dumps(fold2_payload) + "\n", encoding="utf-8"
+    )
+    approval = campaign_directory / "post-qualification-reviewed-authorization.json"
+    approval.write_text('{"status":"APPROVED"}\n', encoding="utf-8")
+    monkeypatch.setattr(
+        campaign,
+        "_validate_continuation_reviewed_authorization",
+        lambda *_args, **_kwargs: {"status": "APPROVED", "reviewed_commit": "e" * 40},
+        raising=False,
+    )
+    monkeypatch.setattr(campaign, "prepare_weight_cli", lambda _spec: {"status": "pass"})
+    continuation_launches: list[int] = []
+
+    def launch(spec: contract.WeightSpec) -> Path:
+        continuation_launches.append(spec.fold_id)
+        return (campaign.WEIGHT_ARTIFACTS_ROOT / f"fold{spec.fold_id}-continued").resolve()
+
+    monkeypatch.setattr(campaign, "launch_one_fold_cli", launch)
+    monkeypatch.setattr(campaign, "verify_one_fold_cli", record)
+    result = campaign.continue_after_qualification_failure(
+        campaign_directory, approval
+    )
+
+    assert scientific_folds == [0]
+    assert continuation_launches == [1, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    assert result == {"status": "pass", "fold_count": 12, "next_fold": None}
+    assert json.loads((campaign_directory / "fold2.json").read_text(encoding="utf-8"))[
+        "independent_verification_sha256"
+    ] == campaign.sha256_file(
+        campaign.ADOPTED_FOLD2_RUN / "independent-verification.json"
+    )
+    assert (campaign_directory / "continuation.lock.json").is_file()
+    with pytest.raises(FileExistsError, match="continuation lock"):
+        campaign.continue_after_qualification_failure(campaign_directory, approval)
 
 
 @pytest.mark.parametrize("failure_mode", ["interrupted-after-first-lock", "resume-lock-race"])

@@ -9,7 +9,7 @@ import json
 import re
 import subprocess
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 
 def _is_reparse_or_link(path: Path) -> bool:
@@ -137,6 +137,9 @@ def validate_reviewed_authorization_manifest(
     campaign_directory: Path,
     run_directory: Path,
     reviewed_paths: Sequence[Path],
+    approval_scope: str = "exact Fold 0 offline recovery code after independent review",
+    fold_id: int = 0,
+    additional_payload: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     """Validate an externally created approval against one clean reviewed commit."""
     repository = require_sealed_directory(
@@ -216,13 +219,14 @@ def validate_reviewed_authorization_manifest(
     expected_payload = {
         "schema_version": 1,
         "status": "APPROVED",
-        "approval_scope": "exact Fold 0 offline recovery code after independent review",
+        "approval_scope": approval_scope,
         "campaign_id": campaign.name,
         "campaign_directory": str(campaign),
-        "fold_id": 0,
+        "fold_id": fold_id,
         "run_directory": str(run),
         "reviewed_commit": commit,
         "reviewed_files": sealed_files,
+        **({} if additional_payload is None else dict(additional_payload)),
     }
     try:
         payload = json.loads(approval.read_text(encoding="utf-8"))

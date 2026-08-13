@@ -414,6 +414,119 @@ def test_campaign_recovery_chain_revalidates_external_reviewed_manifest(
         verifier._verify_recovery_chain(campaign_directory, state)
 
 
+def test_final_verifier_binds_post_qualification_continuation_chain(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    campaign_directory, _ = _build_synthetic_campaign(tmp_path, monkeypatch, specs)
+    state, recovery = _install_synthetic_recovery_chain(tmp_path, campaign_directory)
+    fold0_run = Path(state["run_directory"])
+    fold2_run = verifier.ADOPTED_FOLD2_RUN
+    evaluator_lock = verifier.WEIGHT_ARTIFACTS_ROOT / "fold0-weight-evaluation.lock.json"
+    evaluator_lock.write_text(
+        json.dumps({"run_directory": str(fold0_run)}) + "\n", encoding="utf-8"
+    )
+    resume_failure = campaign_directory / "resume-failure.json"
+    resume_failure.write_text(
+        '{"status":"fail","stage":"qualify_fold2"}\n', encoding="utf-8"
+    )
+    for name in (
+        "official-test-output-recovery-authorization.json",
+        "offline-finalization.json",
+        "weight-result.json",
+    ):
+        path = fold0_run / name
+        if not path.exists():
+            path.write_text(f"sealed {name}\n", encoding="utf-8")
+    evidence_paths = {
+        "schedule": recovery["schedule"],
+        "root_lock": recovery["root_lock"],
+        "original_failure": recovery["failure"],
+        "fold0_lock": recovery["fold0_lock"],
+        "fold0_evaluator_lock": evaluator_lock,
+        "resume_lock": recovery["resume"],
+        "recovery_token": recovery["authorization"],
+        "recovery_reviewed_authorization": recovery["reviewed"],
+        "fold0_state": campaign_directory / "fold0.json",
+        "resume_failure": resume_failure,
+        "fold0_independent": fold0_run / "independent-verification.json",
+        "fold0_target": recovery["target"],
+        "fold0_provenance": recovery["provenance"],
+        "fold0_receipt": recovery["receipt"],
+        "fold0_offline_finalization": fold0_run / "offline-finalization.json",
+        "fold0_result": fold0_run / "weight-result.json",
+        "fold2_independent": fold2_run / "independent-verification.json",
+    }
+    incident = {
+        "schema_version": 1,
+        "campaign_id": campaign_directory.name,
+        "fold0_scientific_child_relaunched": False,
+        "new_scientific_child_started": False,
+        "consumed_source_absent": True,
+        "evidence": {
+            name: {
+                "path": str(path.absolute()),
+                "bytes_hex": path.read_bytes().hex(),
+                "size": path.stat().st_size,
+                "sha256": _sha256(path),
+            }
+            for name, path in evidence_paths.items()
+        },
+    }
+    approval = campaign_directory / verifier.CONTINUATION_REVIEWED_AUTHORIZATION_NAME
+    approval_payload = {"status": "APPROVED", "incident": incident}
+    approval.write_text(json.dumps(approval_payload) + "\n", encoding="utf-8")
+    root_lock = json.loads(recovery["root_lock"].read_text(encoding="utf-8"))
+    lock = {
+        **root_lock,
+        "schema_version": 1,
+        "continuation_scope": "post-Fold0 qualification-parser recovery from Fold 1",
+        "incident": incident,
+        "reviewed_authorization": {
+            "seal": {
+                "path": str(approval.absolute()),
+                "bytes_hex": approval.read_bytes().hex(),
+                "size": approval.stat().st_size,
+                "sha256": _sha256(approval),
+            },
+            "payload": approval_payload,
+        },
+        "fold0_finalized_again": False,
+        "fold0_scientific_child_relaunched": False,
+        "fold2_qualified_again": False,
+        "next_fold": 1,
+    }
+    continuation = campaign_directory / verifier.CONTINUATION_LOCK_NAME
+    continuation.write_text(json.dumps(lock) + "\n", encoding="utf-8")
+    completed = json.loads(recovery["completed"].read_text(encoding="utf-8"))
+    continuation_completed = {
+        **completed,
+        "same_campaign_directory": True,
+        "fold0_scientific_child_relaunched": False,
+        "fold0_finalized_again": False,
+        "fold2_qualified_again": False,
+        "continuation_lock_sha256": _sha256(continuation),
+    }
+    recovery["resume_completed"].write_text(
+        json.dumps(continuation_completed) + "\n", encoding="utf-8"
+    )
+    (campaign_directory / "continuation-completed.json").write_text(
+        json.dumps(continuation_completed) + "\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        verifier,
+        "validate_reviewed_authorization_manifest",
+        lambda *_args, **_kwargs: approval_payload,
+    )
+
+    verifier._verify_recovery_chain(campaign_directory, state)
+
+    resume_failure.write_text('{"status":"changed"}\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="continuation incident"):
+        verifier._verify_recovery_chain(campaign_directory, state)
+
+
 @pytest.mark.parametrize(
     "tamper",
     ["failure", "resume-extra", "resume-bytes", "reviewed-bytes", "receipt-authorization"],
