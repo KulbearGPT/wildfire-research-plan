@@ -141,8 +141,59 @@ uncommitted generation files are never a successful aggregate:
 python reproductions/wsts_res18_unet_t1/scripts/verify_weight_campaign.py --campaign-directory artifacts/reproductions/wsts-res18-t1-official-weight-12fold/official-weight-12fold-<timestamp>
 ```
 
-No twelve-fold campaign has been scientifically executed by this software-only
-gate. The outputs above exist only after a separately authorized campaign.
+The software gate itself does not execute a campaign. A separately authorized,
+committed **test-only evaluation of released weights** is published below; it is
+not twelve new training runs.
+
+## Committed twelve-fold released-weight publication
+
+Campaign `official-weight-12fold-20260812T052555Z` committed generation
+`generations/3c076108f46e4b519e65f8603b9d97a5`. The atomic publication marker
+SHA-256 is `31547d503f4217d7a2654aebbb7d46f14798c9cd515beb1544e8ad8bb279a2c1`.
+The CSV, summary, and independent artifact SHA-256 values are
+`55f90d2d6fe4ff175d888873188d7db7e86f0f9f7026e52a782816973b78605b`,
+`769412aa56b3d972422a58771fa3fdcd82640959557b8d7c5bd5a15ed7557ff5`, and
+`a24a444783440b1d65ee7620e26b1476ca56d654fe70c2c12b871b6a07841542`.
+
+| Fold | AP | F1 | IoU | Precision | Recall | Loss | AP minus filename AP |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 0.5276636481285095 | 0.3984317481517792 | 0.24877601861953735 | 0.7460055351257324 | 0.27179765701293945 | 0.006696981843560934 | -0.0003363518714905034 |
+| 1 | 0.4256492853164673 | 0.3436006009578705 | 0.20743824541568756 | 0.6813897490501404 | 0.2297201305627823 | 0.008592699654400349 | -0.00035071468353270463 |
+| 2 | 0.5709022879600525 | 0.433401882648468 | 0.27665162086486816 | 0.7646416425704956 | 0.3024023771286011 | 0.005918989889323711 | -9.77120399474618e-05 |
+| 3 | 0.3066331744194031 | 0.3074829876422882 | 0.18167202174663544 | 0.5418749451637268 | 0.21463923156261444 | 0.002553164027631283 | -0.00036682558059691894 |
+| 4 | 0.483346164226532 | 0.4384116232395172 | 0.2807472348213196 | 0.6878276467323303 | 0.32174304127693176 | 0.008048299700021744 | 0.0003461642265319975 |
+| 5 | 0.3223552405834198 | 0.31128206849098206 | 0.18433041870594025 | 0.5684785842895508 | 0.2143182009458542 | 0.002759539522230625 | 0.00035524058341979137 |
+| 6 | 0.5765069723129272 | 0.49881884455680847 | 0.33228424191474915 | 0.7197784781455994 | 0.3816567361354828 | 0.005978269036859274 | -0.0004930276870727113 |
+| 7 | 0.4736124575138092 | 0.3464559018611908 | 0.20952323079109192 | 0.7017239928245544 | 0.23000779747962952 | 0.005102857947349548 | -0.0003875424861907728 |
+| 8 | 0.4777773916721344 | 0.4322243332862854 | 0.27569273114204407 | 0.6997684240341187 | 0.3126775920391083 | 0.00949658639729023 | -0.00022260832786558105 |
+| 9 | 0.4709045886993408 | 0.3679426908493042 | 0.2254471629858017 | 0.7005905508995056 | 0.24948470294475555 | 0.005510237999260426 | -9.541130065915393e-05 |
+| 10 | 0.3237844705581665 | 0.2595313787460327 | 0.14911580085754395 | 0.608970582485199 | 0.16490542888641357 | 0.0026944933924824 | -0.0002155294418335063 |
+| 11 | 0.47403237223625183 | 0.4335690140724182 | 0.27678781747817993 | 0.6478978395462036 | 0.32579419016838074 | 0.005694412160664797 | 3.237223625185415e-05 |
+
+| Metric | Mean | Population std | Min (fold) | Max (fold) |
+|---|---:|---:|---:|---:|
+| AP | 0.45276400446891785 | 0.08821731990844857 | 0.3066331744194031 (Fold 3) | 0.5765069723129272 (Fold 6) |
+| F1 | 0.3809294228752454 | 0.06670647249234603 | 0.2595313787460327 (Fold 10) | 0.49881884455680847 (Fold 6) |
+| IoU | 0.23737221211194992 | 0.0509113682276183 | 0.14911580085754395 (Fold 10) | 0.33228424191474915 (Fold 6) |
+| Precision | 0.6724123309055964 | 0.06541761579107148 | 0.5418749451637268 (Fold 3) | 0.7646416425704956 (Fold 2) |
+| Recall | 0.26826225717862445 | 0.059124666341402274 | 0.16490542888641357 (Fold 10) | 0.3816567361354828 (Fold 6) |
+| Loss | 0.005753877630922943 | 0.0021862333356973012 | 0.002553164027631283 (Fold 3) | 0.00949658639729023 (Fold 8) |
+| Runtime (s) | total 5749.570263385773 | median per fold 549.7098723649979 | — | — |
+
+The paper reference is `0.460 +/- 0.084`, with provenance
+`upstream.lock.json paper.target`. The filename reference is
+`0.45291666666666663 +/- 0.08827179460179917`, with provenance official weight manifest filename labels, explicitly not paper-table provenance. GPU sampling
+recorded 5,756 samples and sampled peaks of 15,525--19,976 MiB; WDDM child
+attribution was unavailable and observed sample maxima may miss transients.
+
+The preserved Fold 0 failure was resolved by an approved offline Fold 0 recovery of the existing output; no scientific evaluation child was relaunched.
+The Fold 2 legacy/offline parser qualification is a provenance boundary rather
+than a scientific retry. The preserved failures and one-time reviewed
+continuation remain in campaign evidence.
+
+The agreement supports released-weight executable reproducibility but does not
+prove paper-table provenance identity. The official focal-alpha behavior is a
+separate future training ablation and is not part of this baseline claim.
 
 This directory controls a provenance-checked timing calibration of the authors'
 released Res18-U-Net, `T=1`, All-features configuration on official WSTS fold 2.

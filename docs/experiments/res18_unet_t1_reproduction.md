@@ -4,9 +4,11 @@ Status: **PASS for the 500-step timing calibration, the single full Fold-2
 official-code-path run, and the released Fold-2 weight test.** The calibration
 did not invoke test or predict. The later full run reached exactly 10,000
 optimizer steps and the separate released-weight run invoked only official
-`Trainer.test`. These are single-fold observations, not a reproduction of the
-paper's 12-fold aggregate `0.460 +/- 0.084`; the official 236-versus-608.465
-positive-weight discrepancy below also remains unresolved as to paper intent.
+`Trainer.test`. Those earlier calibration, full-run, and Fold-2 released-weight
+results are single-fold observations, not a reproduction of the paper's
+12-fold aggregate `0.460 +/- 0.084`. This document also reports a separate twelve-fold released-weight test aggregate below; it supports released-weight executable reproducibility but does not prove paper-table provenance identity.
+The official 236-versus-608.465 positive-weight discrepancy below also remains
+unresolved as to paper intent.
 
 ## Completed full Fold-2 run
 
@@ -289,3 +291,56 @@ and diff SHA-256. It parses the pinned `train.py` AST to establish that
 the model config, then combines that observation with source YAML 236 and saved
 effective config 608.4653828020165; the dynamic-override conclusion is derived,
 not asserted as a constant.
+
+## Committed twelve-fold released-weight publication
+
+The separately authorized, **test-only evaluation of released weights** is now
+committed at campaign `official-weight-12fold-20260812T052555Z`, generation
+`generations/3c076108f46e4b519e65f8603b9d97a5`. It is not twelve new training
+runs: every fold used the released state dictionary and official test path.
+The atomic publication marker SHA-256 is
+`31547d503f4217d7a2654aebbb7d46f14798c9cd515beb1544e8ad8bb279a2c1`;
+the committed CSV, summary, and independent artifact SHA-256 values are,
+respectively,
+`55f90d2d6fe4ff175d888873188d7db7e86f0f9f7026e52a782816973b78605b`,
+`769412aa56b3d972422a58771fa3fdcd82640959557b8d7c5bd5a15ed7557ff5`, and
+`a24a444783440b1d65ee7620e26b1476ca56d654fe70c2c12b871b6a07841542`.
+
+| Fold | AP | F1 | IoU | Precision | Recall | Loss | AP minus filename AP |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 0.5276636481285095 | 0.3984317481517792 | 0.24877601861953735 | 0.7460055351257324 | 0.27179765701293945 | 0.006696981843560934 | -0.0003363518714905034 |
+| 1 | 0.4256492853164673 | 0.3436006009578705 | 0.20743824541568756 | 0.6813897490501404 | 0.2297201305627823 | 0.008592699654400349 | -0.00035071468353270463 |
+| 2 | 0.5709022879600525 | 0.433401882648468 | 0.27665162086486816 | 0.7646416425704956 | 0.3024023771286011 | 0.005918989889323711 | -9.77120399474618e-05 |
+| 3 | 0.3066331744194031 | 0.3074829876422882 | 0.18167202174663544 | 0.5418749451637268 | 0.21463923156261444 | 0.002553164027631283 | -0.00036682558059691894 |
+| 4 | 0.483346164226532 | 0.4384116232395172 | 0.2807472348213196 | 0.6878276467323303 | 0.32174304127693176 | 0.008048299700021744 | 0.0003461642265319975 |
+| 5 | 0.3223552405834198 | 0.31128206849098206 | 0.18433041870594025 | 0.5684785842895508 | 0.2143182009458542 | 0.002759539522230625 | 0.00035524058341979137 |
+| 6 | 0.5765069723129272 | 0.49881884455680847 | 0.33228424191474915 | 0.7197784781455994 | 0.3816567361354828 | 0.005978269036859274 | -0.0004930276870727113 |
+| 7 | 0.4736124575138092 | 0.3464559018611908 | 0.20952323079109192 | 0.7017239928245544 | 0.23000779747962952 | 0.005102857947349548 | -0.0003875424861907728 |
+| 8 | 0.4777773916721344 | 0.4322243332862854 | 0.27569273114204407 | 0.6997684240341187 | 0.3126775920391083 | 0.00949658639729023 | -0.00022260832786558105 |
+| 9 | 0.4709045886993408 | 0.3679426908493042 | 0.2254471629858017 | 0.7005905508995056 | 0.24948470294475555 | 0.005510237999260426 | -9.541130065915393e-05 |
+| 10 | 0.3237844705581665 | 0.2595313787460327 | 0.14911580085754395 | 0.608970582485199 | 0.16490542888641357 | 0.0026944933924824 | -0.0002155294418335063 |
+| 11 | 0.47403237223625183 | 0.4335690140724182 | 0.27678781747817993 | 0.6478978395462036 | 0.32579419016838074 | 0.005694412160664797 | 3.237223625185415e-05 |
+
+| Metric | Mean | Population std | Min (fold) | Max (fold) |
+|---|---:|---:|---:|---:|
+| AP | 0.45276400446891785 | 0.08821731990844857 | 0.3066331744194031 (Fold 3) | 0.5765069723129272 (Fold 6) |
+| F1 | 0.3809294228752454 | 0.06670647249234603 | 0.2595313787460327 (Fold 10) | 0.49881884455680847 (Fold 6) |
+| IoU | 0.23737221211194992 | 0.0509113682276183 | 0.14911580085754395 (Fold 10) | 0.33228424191474915 (Fold 6) |
+| Precision | 0.6724123309055964 | 0.06541761579107148 | 0.5418749451637268 (Fold 3) | 0.7646416425704956 (Fold 2) |
+| Recall | 0.26826225717862445 | 0.059124666341402274 | 0.16490542888641357 (Fold 10) | 0.3816567361354828 (Fold 6) |
+| Loss | 0.005753877630922943 | 0.0021862333356973012 | 0.002553164027631283 (Fold 3) | 0.00949658639729023 (Fold 8) |
+| Runtime (s) | total 5749.570263385773 | median per fold 549.7098723649979 | — | — |
+
+The paper reference is `0.460 +/- 0.084`, with provenance
+`upstream.lock.json paper.target`. The filename reference is
+`0.45291666666666663 +/- 0.08827179460179917`, with provenance official weight manifest filename labels; it is explicitly not paper-table provenance. The
+observed GPU boundary is 5,756 samples with sampled peaks 15,525--19,976 MiB.
+WDDM child attribution was unavailable, and sampled maxima may miss transients.
+
+The preserved Fold 0 failure was resolved by an approved offline recovery of
+the existing scientific output; no scientific evaluation child was relaunched.
+Fold 2's legacy/offline parser qualification is likewise an observer and
+provenance boundary, not a scientific retry. The preserved failures and the
+one-time reviewed continuation remain in the campaign evidence.
+
+The agreement supports released-weight executable reproducibility but does not prove paper-table provenance identity. The official focal-alpha behavior is a separate future training ablation and is not part of this baseline claim.
