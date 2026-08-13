@@ -1,5 +1,6 @@
 import sys
 import json
+import hashlib
 import subprocess
 from pathlib import Path
 
@@ -149,6 +150,60 @@ def _configure_fake_campaign(
 
     monkeypatch.setattr(campaign.subprocess, "run", cli)
     return campaign_directory, scientific_folds, qualified_folds, commands
+
+
+def _authorize_fake_resume_incident(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    campaign_directory: Path,
+) -> Path:
+    failure = campaign_directory / "failure.json"
+    evaluator_lock = json.loads(
+        (
+            campaign.WEIGHT_ARTIFACTS_ROOT
+            / "fold0-weight-evaluation.lock.json"
+        ).read_text(encoding="utf-8")
+    )
+    fold0_run = Path(evaluator_lock["run_directory"]).resolve()
+    source = tmp_path / "derived" / "test_pr_curve_data.npz"
+    source.parent.mkdir()
+    source.write_bytes(b"exact-fold0-output")
+    source_stat = source.stat()
+    monkeypatch.setattr(
+        campaign, "RECOVERY_CAMPAIGN_ID", campaign_directory.name, raising=False
+    )
+    monkeypatch.setattr(
+        campaign, "RECOVERY_FOLD0_RUN_NAME", fold0_run.name, raising=False
+    )
+    monkeypatch.setattr(
+        campaign, "RECOVERY_FAILURE_BYTES", failure.stat().st_size, raising=False
+    )
+    monkeypatch.setattr(
+        campaign,
+        "RECOVERY_FAILURE_SHA256",
+        hashlib.sha256(failure.read_bytes()).hexdigest(),
+        raising=False,
+    )
+    monkeypatch.setattr(campaign, "RECOVERY_OUTPUT_SOURCE", source, raising=False)
+    monkeypatch.setattr(
+        campaign, "RECOVERY_OUTPUT_BYTES", source_stat.st_size, raising=False
+    )
+    monkeypatch.setattr(
+        campaign,
+        "RECOVERY_OUTPUT_SHA256",
+        hashlib.sha256(source.read_bytes()).hexdigest(),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        campaign, "RECOVERY_OUTPUT_CTIME_NS", source_stat.st_ctime_ns, raising=False
+    )
+    monkeypatch.setattr(
+        campaign, "RECOVERY_OUTPUT_MTIME_NS", source_stat.st_mtime_ns, raising=False
+    )
+    monkeypatch.setattr(
+        campaign, "_recovery_code_commit", lambda: "f" * 40, raising=False
+    )
+    return source
 
 
 def test_campaign_launches_eleven_folds_sequentially_and_records_no_metrics(
@@ -354,6 +409,302 @@ def test_finalize_existing_fold_never_launches_a_process(
         "evaluate_released_weight.py",
         "verify_released_weight.py",
     ]
+
+
+def test_resume_existing_recovers_fold0_without_relaunch_and_continues_same_schedule(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    campaign_directory, scientific_folds, _, _ = _configure_fake_campaign(
+        tmp_path, monkeypatch, verifier_failure=0
+    )
+    with pytest.raises(ValueError, match="fold 0 independent verification failed"):
+        campaign.run_campaign(campaign_directory)
+    source = _authorize_fake_resume_incident(tmp_path, monkeypatch, campaign_directory)
+    assert scientific_folds == [0]
+    original_failure = (campaign_directory / "failure.json").read_bytes()
+    fold0_lock = json.loads(
+        (campaign.WEIGHT_ARTIFACTS_ROOT / "fold0-weight-evaluation.lock.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    fold0_run = Path(fold0_lock["run_directory"]).resolve()
+    finalized: list[int] = []
+    resumed_launches: list[int] = []
+
+    def record(run: Path, spec: contract.WeightSpec) -> dict[str, object]:
+        run.mkdir(parents=True, exist_ok=True)
+        independent = run / "independent-verification.json"
+        independent.write_text(
+            json.dumps({"status": "pass", "fold_id": spec.fold_id}) + "\n",
+            encoding="utf-8",
+        )
+        return {
+            "status": "pass",
+            "fold_id": spec.fold_id,
+            "run_directory": str(run.resolve()),
+            "independent_verification_sha256": campaign.sha256_file(independent),
+        }
+
+    def finalize(run: Path, spec: contract.WeightSpec) -> dict[str, object]:
+        finalized.append(spec.fold_id)
+        return record(run.resolve(), spec)
+
+    def launch(spec: contract.WeightSpec) -> Path:
+        resumed_launches.append(spec.fold_id)
+        return (
+            campaign.WEIGHT_ARTIFACTS_ROOT
+            / f"fold{spec.fold_id}-weight-resumed"
+        ).resolve()
+
+    monkeypatch.setattr(campaign, "finalize_existing_fold", finalize)
+    monkeypatch.setattr(campaign, "prepare_weight_cli", lambda _spec: {"status": "pass"})
+    monkeypatch.setattr(campaign, "launch_one_fold_cli", launch)
+    monkeypatch.setattr(campaign, "verify_one_fold_cli", record)
+    monkeypatch.setattr(
+        campaign, "_validate_recovered_fold0_result", lambda *_args: None
+    )
+    monkeypatch.setattr(
+        campaign,
+        "qualify_existing_fold2",
+        lambda run, spec: record(run.resolve(), spec),
+    )
+
+    result = campaign.resume_existing_campaign(campaign_directory)
+
+    assert finalized == [0]
+    assert resumed_launches == [1, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    assert scientific_folds == [0]
+    assert result == {"status": "pass", "fold_count": 12, "next_fold": None}
+    assert (campaign_directory / "failure.json").read_bytes() == original_failure
+    fold0_state = json.loads(
+        (campaign_directory / "fold0.json").read_text(encoding="utf-8")
+    )
+    assert fold0_state["mode"] == "launch"
+    assert fold0_state["recovered_via_finalize_existing"] is True
+    recovery = json.loads(
+        (campaign_directory / "resume-completed.json").read_text(encoding="utf-8")
+    )
+    assert recovery["fold0_scientific_child_relaunched"] is False
+    assert recovery["original_failure_sha256"] == campaign.sha256_file(
+        campaign_directory / "failure.json"
+    )
+    resume_lock = json.loads(
+        (campaign_directory / "resume.lock.json").read_text(encoding="utf-8")
+    )
+    assert resume_lock["schema_version"] == 2
+    assert resume_lock["recovery_code_commit"] == "f" * 40
+    assert resume_lock["source_output"] == {
+        "path": str(source.resolve()),
+        "bytes": len(b"exact-fold0-output"),
+        "sha256": hashlib.sha256(b"exact-fold0-output").hexdigest(),
+        "ctime_ns": source.stat().st_ctime_ns,
+        "mtime_ns": source.stat().st_mtime_ns,
+    }
+    with pytest.raises(FileExistsError, match="resume lock already exists"):
+        campaign.resume_existing_campaign(campaign_directory)
+
+
+@pytest.mark.parametrize(
+    "tamper",
+    [
+        "schedule",
+        "root-lock",
+        "future-state",
+        "failure-bytes",
+        "source",
+        "campaign-id",
+        "run-id",
+        "dirty-code",
+    ],
+)
+def test_resume_existing_fails_closed_before_finalize_on_tampered_campaign(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tamper: str
+) -> None:
+    campaign_directory, scientific_folds, _, _ = _configure_fake_campaign(
+        tmp_path, monkeypatch, verifier_failure=0
+    )
+    with pytest.raises(ValueError):
+        campaign.run_campaign(campaign_directory)
+    source = _authorize_fake_resume_incident(tmp_path, monkeypatch, campaign_directory)
+    called = False
+
+    def finalize(*_args: object) -> dict[str, object]:
+        nonlocal called
+        called = True
+        return {}
+
+    monkeypatch.setattr(campaign, "finalize_existing_fold", finalize)
+    if tamper == "schedule":
+        payload = json.loads((campaign_directory / "schedule.json").read_text(encoding="utf-8"))
+        payload["folds"][1]["mode"] = "adopt"
+        (campaign_directory / "schedule.json").write_text(json.dumps(payload), encoding="utf-8")
+    elif tamper == "root-lock":
+        root_lock = campaign.CAMPAIGN_ARTIFACTS_ROOT / campaign.GLOBAL_LOCK_NAME
+        payload = json.loads(root_lock.read_text(encoding="utf-8"))
+        payload["campaign_id"] = "different-campaign"
+        root_lock.write_text(json.dumps(payload), encoding="utf-8")
+    elif tamper == "future-state":
+        (campaign_directory / "fold1.json").write_text("{}\n", encoding="utf-8")
+    elif tamper == "failure-bytes":
+        failure = campaign_directory / "failure.json"
+        failure.write_text(
+            json.dumps(json.loads(failure.read_text(encoding="utf-8")), indent=2),
+            encoding="utf-8",
+        )
+    elif tamper == "source":
+        source.write_bytes(b"tampered-output")
+    elif tamper == "campaign-id":
+        monkeypatch.setattr(campaign, "RECOVERY_CAMPAIGN_ID", "other-campaign")
+    elif tamper == "run-id":
+        monkeypatch.setattr(campaign, "RECOVERY_FOLD0_RUN_NAME", "other-fold0-run")
+    else:
+        monkeypatch.setattr(
+            campaign,
+            "_recovery_code_commit",
+            lambda: (_ for _ in ()).throw(
+                ValueError("campaign resume recovery code worktree is dirty")
+            ),
+        )
+
+    with pytest.raises(ValueError, match="resume"):
+        campaign.resume_existing_campaign(campaign_directory)
+    assert called is False
+    assert scientific_folds == [0]
+
+
+@pytest.mark.parametrize(
+    "tamper", ["valid", "extra-field", "raw", "provenance", "record"]
+)
+def test_recovered_fold0_result_requires_exact_schema_and_byte_seals(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+    tamper: str,
+) -> None:
+    run = (tmp_path / "fold0-weight-recovered").resolve()
+    run.mkdir()
+    canonical = contract.spec_for_fold(specs, 0)
+    weight = tmp_path / canonical.filename
+    weight.write_bytes(b"sealed weight")
+    spec = contract.WeightSpec(
+        fold_id=canonical.fold_id,
+        filename=canonical.filename,
+        hub_path=canonical.hub_path,
+        size=weight.stat().st_size,
+        sha256=hashlib.sha256(weight.read_bytes()).hexdigest(),
+        filename_ap=canonical.filename_ap,
+        train_years=canonical.train_years,
+        validation_year=canonical.validation_year,
+        test_year=canonical.test_year,
+    )
+    monkeypatch.setattr(campaign, "weight_cache_path", lambda _spec: weight)
+    raw_entries = []
+    for relative in campaign.RECOVERED_FOLD0_RAW_RELATIVE_PATHS:
+        path = run / relative
+        path.write_bytes(f"sealed {relative}".encode())
+        raw_entries.append(
+            {
+                "path": relative,
+                "bytes": path.stat().st_size,
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+        )
+    raw_entries.append(
+        {
+            "path": "released-weight::" + str(weight.resolve()),
+            "bytes": weight.stat().st_size,
+            "sha256": hashlib.sha256(weight.read_bytes()).hexdigest(),
+        }
+    )
+    raw_manifest = {
+        "schema_version": 1,
+        "entry_count": len(raw_entries),
+        "entries": raw_entries,
+    }
+    payload = {}
+    for key, expected_type in campaign.RECOVERED_FOLD0_INDEPENDENT_TYPES.items():
+        if expected_type is str:
+            payload[key] = "evidence"
+        elif expected_type is bool:
+            payload[key] = True
+        elif expected_type is int:
+            payload[key] = 1
+        elif expected_type is float:
+            payload[key] = 1.0
+        elif expected_type is dict:
+            payload[key] = {}
+        elif expected_type is list:
+            payload[key] = []
+        else:
+            payload[key] = None
+    target = run / "official-test-pr-curve-data.npz"
+    provenance = run / "official-test-output-provenance.json"
+    provenance.write_bytes(b"sealed provenance marker")
+    payload.update(
+        {
+            "status": "pass",
+            "fold_id": 0,
+            "weight_sha256": spec.sha256,
+            "command_sha256": "a" * 64,
+            "original_upstream_commit": "b" * 40,
+            "derived_upstream_commit": "b" * 40,
+            "patch_sha256": "c" * 64,
+            "raw_evidence_manifest": raw_manifest,
+            "raw_evidence_manifest_sha256": hashlib.sha256(
+                json.dumps(raw_manifest, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest(),
+            "raw_evidence_unchanged_during_verification": True,
+            "official_test_output_provenance_verified": True,
+            "official_test_output_collection_mode": "offline-finalize-existing",
+            "official_test_output_sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+            "official_test_output_provenance_sha256": hashlib.sha256(
+                provenance.read_bytes()
+            ).hexdigest(),
+            "independent_implementation": True,
+        }
+    )
+    independent = run / "independent-verification.json"
+    independent.write_text(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    record = {
+        "status": "pass",
+        "fold_id": 0,
+        "run_directory": str(run),
+        "independent_verification_sha256": campaign.sha256_file(independent),
+    }
+    if tamper == "valid":
+        campaign._validate_recovered_fold0_result(run, spec, record)
+        return
+    if tamper == "extra-field":
+        payload["unreviewed"] = True
+        independent.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+        record["independent_verification_sha256"] = campaign.sha256_file(independent)
+    elif tamper == "raw":
+        (run / "stdout.log").write_bytes(b"changed")
+    elif tamper == "provenance":
+        provenance.write_bytes(b"changed provenance")
+    else:
+        record["unreviewed"] = True
+
+    with pytest.raises(ValueError, match="recovered Fold 0"):
+        campaign._validate_recovered_fold0_result(run, spec, record)
+
+
+def test_resume_cli_is_mutually_exclusive_and_requires_campaign_only() -> None:
+    parsed = campaign.parse_arguments(
+        ["--resume-existing", "official-weight-12fold-existing"]
+    )
+    assert parsed.resume_existing == Path("official-weight-12fold-existing")
+    with pytest.raises(SystemExit):
+        campaign.parse_arguments(
+            [
+                "--launch",
+                "--resume-existing",
+                "official-weight-12fold-existing",
+            ]
+        )
 
 
 def test_generic_verifier_cli_preserves_previous_output_when_atomic_commit_fails(

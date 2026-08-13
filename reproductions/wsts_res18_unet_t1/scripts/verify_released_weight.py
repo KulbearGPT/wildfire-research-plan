@@ -71,6 +71,9 @@ FILENAME_PROVENANCE = (
 EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256 = (
     "de60464477f74d324bd2fadb451526814bc729fa71d1eeb167f53340626e080b"
 )
+EXPECTED_FOLD0_LAUNCH_WEIGHT_CONTROLLER_SHA256 = (
+    "84db331675557425c1af7f98173bb623ae08088476a66cc14d5d0c0d05958b23"
+)
 EXPECTED_LAUNCH_WEIGHT_ENTRYPOINT_SHA256 = (
     "ea024f5982e1e3d34ddb5cdc53354d837dd00b755102249635db46f5cfeb3b04"
 )
@@ -96,6 +99,27 @@ WEIGHT_RAW_RELATIVE_PATHS = (
     "preflight.json",
     "effective-command.json",
     "official-test-pr-curve-data.npz",
+)
+OFFICIAL_TEST_OUTPUT_SOURCE_NAME = "test_pr_curve_data.npz"
+OFFICIAL_TEST_OUTPUT_TARGET_NAME = "official-test-pr-curve-data.npz"
+OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME = "official-test-output-provenance.json"
+OFFICIAL_TEST_OUTPUT_RECOVERY_AUTHORIZATION_NAME = (
+    "official-test-output-recovery-authorization.json"
+)
+RECOVERY_AUTHORIZATION_RAW_RELATIVE_PATHS = (
+    "stdout.log",
+    "stderr.log",
+    "stream-events.jsonl",
+    "gpu.csv",
+    "exit-code.txt",
+    "started.json",
+    "config.yaml",
+    "source-data-pre.json",
+    "source-data-post.json",
+    "launch.lock.json",
+    "preflight.json",
+    "effective-command.json",
+    "completed.json",
 )
 
 
@@ -251,6 +275,199 @@ def capture_weight_raw_manifest(
     return {"schema_version": 1, "entry_count": len(entries), "entries": entries}
 
 
+def _capture_recovery_raw_manifest(run: Path) -> dict[str, object]:
+    entries = []
+    for relative in RECOVERY_AUTHORIZATION_RAW_RELATIVE_PATHS:
+        path = run / relative
+        if not path.is_file():
+            raise ValueError(
+                f"official test output recovery raw evidence is missing: {relative}"
+            )
+        entries.append(
+            {"path": relative, "bytes": path.stat().st_size, "sha256": _sha256(path)}
+        )
+    return {"schema_version": 1, "entry_count": len(entries), "entries": entries}
+
+
+def _json_sha256(payload: object) -> str:
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def _exact_json_value(actual: object, expected: object) -> bool:
+    if type(actual) is not type(expected):
+        return False
+    if isinstance(expected, dict):
+        return set(actual) == set(expected) and all(
+            _exact_json_value(actual[key], value) for key, value in expected.items()
+        )
+    if isinstance(expected, list):
+        return len(actual) == len(expected) and all(
+            _exact_json_value(left, right) for left, right in zip(actual, expected)
+        )
+    return actual == expected
+
+
+def verify_official_test_output_provenance(
+    run_directory: Path, *, fold_id: int
+) -> dict[str, object]:
+    """Independently bind the collected official NPZ to one child lineage."""
+    run = run_directory.resolve()
+    target = run / OFFICIAL_TEST_OUTPUT_TARGET_NAME
+    marker_path = run / OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    started = json.loads((run / "started.json").read_text(encoding="utf-8"))
+    effective = json.loads(
+        (run / "effective-command.json").read_text(encoding="utf-8")
+    )
+    completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
+    if not all(isinstance(value, Mapping) for value in (marker, started, effective, completed)):
+        raise ValueError("official test output provenance is invalid")
+    if not target.is_file():
+        raise ValueError("official test output provenance target is missing")
+    expected_source = EXPECTED_DERIVED_UPSTREAM.resolve() / OFFICIAL_TEST_OUTPUT_SOURCE_NAME
+    if (
+        marker.get("source") != str(expected_source)
+        or marker.get("target") != str(target)
+        or marker.get("bytes") != target.stat().st_size
+        or marker.get("sha256") != _sha256(target)
+        or marker.get("child_pid") != started.get("pid")
+        or marker.get("command_sha256") != started.get("command_sha256")
+        or effective.get("command_sha256") != started.get("command_sha256")
+        or effective.get("command") != started.get("command")
+        or effective.get("cwd") != str(EXPECTED_DERIVED_UPSTREAM.resolve())
+        or completed.get("status") != "pass"
+        or completed.get("exit_code") != 0
+        or completed.get("pid") != started.get("pid")
+    ):
+        raise ValueError("official test output provenance lineage mismatch")
+    if marker.get("schema_version") != 2:
+        if (
+            fold_id != 2
+            or marker.get("status") != "preserved-official-test-output"
+            or marker.get("reason") != (
+                "official test emitted evaluation output in the derived runtime cwd; "
+                "preserved unchanged inside the immutable run evidence directory so "
+                "source-integrity verification can require the exact authorized patch only"
+            )
+        ):
+            raise ValueError("official test output provenance legacy contract mismatch")
+        return {
+            "official_test_output_provenance_verified": True,
+            "official_test_output_collection_mode": "legacy-fold2-preservation",
+            "official_test_output_sha256": _sha256(target),
+            "official_test_output_provenance_sha256": _sha256(marker_path),
+        }
+    pre = marker.get("pre_inventory")
+    post = marker.get("post_inventory")
+    if (
+        marker.get("status") != "pass"
+        or marker.get("atomic_move") is not True
+        or marker.get("scientific_child_relaunched") is not False
+        or marker.get("run_directory") != str(run)
+        or marker.get("command") != started.get("command")
+        or marker.get("started_utc") != started.get("started_utc")
+        or not isinstance(pre, Mapping)
+        or not isinstance(post, Mapping)
+        or post.get("cwd") != str(EXPECTED_DERIVED_UPSTREAM.resolve())
+        or not isinstance(post.get("candidates"), list)
+        or len(post["candidates"]) != 1
+        or post["candidates"][0].get("name") != OFFICIAL_TEST_OUTPUT_SOURCE_NAME
+        or post["candidates"][0].get("sha256") != _sha256(target)
+        or post["candidates"][0].get("bytes") != target.stat().st_size
+        or post["candidates"][0].get("mtime_ns") != marker.get("source_mtime_ns")
+    ):
+        raise ValueError("official test output provenance inventory mismatch")
+    try:
+        start_ns = int(
+            datetime.fromisoformat(str(started["started_utc"])).timestamp() * 1e9
+        )
+        source_mtime_ns = int(marker["source_mtime_ns"])
+        exit_ns = int(marker["exit_marker_mtime_ns"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("official test output provenance timestamps are invalid") from error
+    if (
+        exit_ns != (run / "exit-code.txt").stat().st_mtime_ns
+        or target.stat().st_mtime_ns != source_mtime_ns
+        or not start_ns <= source_mtime_ns <= exit_ns + 2_000_000_000
+        or expected_source.exists()
+    ):
+        raise ValueError("official test output provenance time or move mismatch")
+    mode = marker.get("collection_mode")
+    if mode == "live-postprocess":
+        pre_path = run / "official-test-output-cwd-pre.json"
+        expected_pre_marker = {
+            "schema_version": 1,
+            "status": "pass",
+            "inventory_scope": "immediately before released-weight scientific child",
+            "cwd": str(EXPECTED_DERIVED_UPSTREAM.resolve()),
+            "candidates": [],
+        }
+        pre_marker = json.loads(pre_path.read_text(encoding="utf-8"))
+        if (
+            pre_marker != expected_pre_marker
+            or pre.get("mode") != "recorded-immediately-before-launch"
+            or pre.get("cwd") != str(EXPECTED_DERIVED_UPSTREAM.resolve())
+            or pre.get("candidates") != []
+            or pre.get("pre_inventory_sha256") != _sha256(pre_path)
+            or marker.get("recovery_authorization_sha256") is not None
+        ):
+            raise ValueError("official test output provenance live pre-inventory mismatch")
+    elif mode == "offline-finalize-existing":
+        authorization_path = run / OFFICIAL_TEST_OUTPUT_RECOVERY_AUTHORIZATION_NAME
+        authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+        raw_manifest = _capture_recovery_raw_manifest(run)
+        spec = spec_for_fold(load_pinned_manifest(PINNED_MANIFEST_PATH), fold_id)
+        weight_path = (
+            REPRODUCTION_ROOT / ".local" / "released-weights" / spec.filename
+        ).resolve()
+        launch_provenance = effective.get("provenance_sha256")
+        expected_authorization = {
+            "schema_version": 1,
+            "status": "pass",
+            "authorized_action": (
+                "one-time atomic adoption of the existing completed child output only"
+            ),
+            "scientific_child_relaunched": False,
+            "fold_id": fold_id,
+            "run_directory": str(run),
+            "weight": _fold_claims(spec, weight_path),
+            "source": str(expected_source),
+            "target": str(target),
+            "child_pid": started.get("pid"),
+            "command_sha256": started.get("command_sha256"),
+            "source_sha256": _sha256(target),
+            "source_bytes": target.stat().st_size,
+            "source_ctime_ns": post["candidates"][0].get("ctime_ns"),
+            "source_mtime_ns": source_mtime_ns,
+            "started_utc": started.get("started_utc"),
+            "exit_marker_mtime_ns": exit_ns,
+            "raw_evidence_manifest": raw_manifest,
+            "raw_evidence_manifest_sha256": _json_sha256(raw_manifest),
+            "launch_provenance_sha256": launch_provenance,
+            "launch_provenance_manifest_sha256": _json_sha256(launch_provenance),
+        }
+        if (
+            fold_id != 0
+            or pre.get("mode") != "reconstructed-from-exact-launch-preflight"
+            or pre.get("cwd") != str(EXPECTED_DERIVED_UPSTREAM.resolve())
+            or pre.get("candidates") != []
+            or pre.get("launch_preflight_sha256") != _sha256(run / "preflight.json")
+            or marker.get("recovery_authorization_sha256") != _sha256(authorization_path)
+            or not _exact_json_value(authorization, expected_authorization)
+        ):
+            raise ValueError("official test output provenance recovery authorization mismatch")
+    else:
+        raise ValueError("official test output provenance collection mode mismatch")
+    return {
+        "official_test_output_provenance_verified": True,
+        "official_test_output_collection_mode": mode,
+        "official_test_output_sha256": _sha256(target),
+        "official_test_output_provenance_sha256": _sha256(marker_path),
+    }
+
+
 def verify_first_verifier_failure(run_directory: Path) -> dict[str, bool]:
     marker_path = run_directory.resolve() / "independent-verifier-first-failure.json"
     marker = json.loads(marker_path.read_text(encoding="utf-8"))
@@ -342,15 +559,22 @@ def build_weight_provenance_contract(
         "smoke.json": EXPECTED_WORKER_SMOKE,
         "res18_import_scope.patch": EXPECTED_PATCH,
     }
-    launch_time = (
-        {
+    if spec.fold_id == 2:
+        launch_time = {
             "official_weight_entrypoint.py": EXPECTED_LAUNCH_WEIGHT_ENTRYPOINT_SHA256,
             "evaluate_released_weight.py": EXPECTED_LAUNCH_WEIGHT_CONTROLLER_SHA256,
         }
-        if spec.fold_id == 2
-        else {}
-    )
-    if spec.fold_id != 2:
+    elif spec.fold_id == 0:
+        launch_time = {
+            "evaluate_released_weight.py": (
+                EXPECTED_FOLD0_LAUNCH_WEIGHT_CONTROLLER_SHA256
+            )
+        }
+        authoritative["official_weight_entrypoint.py"] = Path(__file__).with_name(
+            "official_weight_entrypoint.py"
+        )
+    else:
+        launch_time = {}
         authoritative.update(
             {
                 "official_weight_entrypoint.py": Path(__file__).with_name(
@@ -765,6 +989,9 @@ def verify_run(
         launch_recorded_dependency=preflight.get("full_run_dependency"),
         current_dependency=full_dependency,
     )
+    output_provenance = verify_official_test_output_provenance(
+        run, fold_id=spec.fold_id
+    )
     before = json.loads((run / "source-data-pre.json").read_text(encoding="utf-8"))
     after = json.loads((run / "source-data-post.json").read_text(encoding="utf-8"))
     live = rebuild_live_source_inventory(FIXED_DATA_ROOT)
@@ -841,6 +1068,7 @@ def verify_run(
         **summary,
         **provenance,
         **retrospective,
+        **output_provenance,
         "independent_implementation": True,
     }
 

@@ -16,6 +16,7 @@ import urllib.request
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
+from datetime import datetime, timezone
 from pathlib import Path
 
 from run_calibration import (
@@ -85,6 +86,28 @@ WEIGHT_ARTIFACTS_ROOT = (
 FILENAME_PROVENANCE = (
     "derived only from filenames in the pinned official All/T=1 weight manifest; "
     "not provenance for the paper table"
+)
+OFFICIAL_TEST_OUTPUT_SOURCE_NAME = "test_pr_curve_data.npz"
+OFFICIAL_TEST_OUTPUT_TARGET_NAME = "official-test-pr-curve-data.npz"
+OFFICIAL_TEST_OUTPUT_PRE_INVENTORY_NAME = "official-test-output-cwd-pre.json"
+OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME = "official-test-output-provenance.json"
+OFFICIAL_TEST_OUTPUT_RECOVERY_AUTHORIZATION_NAME = (
+    "official-test-output-recovery-authorization.json"
+)
+RECOVERY_AUTHORIZATION_RAW_RELATIVE_PATHS = (
+    "stdout.log",
+    "stderr.log",
+    "stream-events.jsonl",
+    "gpu.csv",
+    "exit-code.txt",
+    "started.json",
+    "config.yaml",
+    "source-data-pre.json",
+    "source-data-post.json",
+    "launch.lock.json",
+    "preflight.json",
+    "effective-command.json",
+    "completed.json",
 )
 
 
@@ -400,6 +423,256 @@ def validate_saved_weight_lineage(
     return payloads
 
 
+def _official_test_output_inventory() -> dict[str, object]:
+    root = DERIVED_UPSTREAM_ROOT.resolve()
+    candidates = []
+    for path in sorted(root.glob("test_pr_curve_data*.npz")):
+        stat = path.stat()
+        candidates.append(
+            {
+                "path": str(path.resolve()),
+                "name": path.name,
+                "bytes": stat.st_size,
+                "sha256": _sha256(path),
+                "ctime_ns": stat.st_ctime_ns,
+                "mtime_ns": stat.st_mtime_ns,
+            }
+        )
+    return {"cwd": str(root), "candidates": candidates}
+
+
+def write_official_test_output_pre_inventory(run_directory: Path) -> dict[str, object]:
+    """Freeze an empty cwd-output inventory immediately before a scientific child."""
+    run = run_directory.resolve()
+    target = run / OFFICIAL_TEST_OUTPUT_TARGET_NAME
+    provenance = run / OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME
+    marker = run / OFFICIAL_TEST_OUTPUT_PRE_INVENTORY_NAME
+    if target.exists() or provenance.exists() or marker.exists():
+        raise FileExistsError("official test output collection marker already exists")
+    inventory = _official_test_output_inventory()
+    if inventory["candidates"]:
+        raise ValueError("preexisting official test output exists in the derived cwd")
+    acquire_launch_lock(
+        marker,
+        {
+            "schema_version": 1,
+            "status": "pass",
+            "inventory_scope": "immediately before released-weight scientific child",
+            **inventory,
+        },
+    )
+    return inventory
+
+
+def _load_output_collection_lineage(run: Path) -> dict[str, object]:
+    started = json.loads((run / "started.json").read_text(encoding="utf-8"))
+    effective = json.loads(
+        (run / "effective-command.json").read_text(encoding="utf-8")
+    )
+    completed = json.loads((run / "completed.json").read_text(encoding="utf-8"))
+    if not all(isinstance(item, Mapping) for item in (started, effective, completed)):
+        raise ValueError("official test output collection lineage is invalid")
+    command = started.get("command")
+    command_sha256 = started.get("command_sha256")
+    pid = started.get("pid")
+    if (
+        not isinstance(command, list)
+        or not all(isinstance(argument, str) for argument in command)
+        or type(pid) is not int
+        or not isinstance(command_sha256, str)
+        or effective.get("command") != command
+        or effective.get("command_sha256") != command_sha256
+        or effective.get("cwd") != str(DERIVED_UPSTREAM_ROOT.resolve())
+        or completed.get("status") != "pass"
+        or completed.get("exit_code") != 0
+        or completed.get("pid") != pid
+        or _command_sha256(command) != command_sha256
+    ):
+        raise ValueError("official test output collection launch lineage mismatch")
+    try:
+        started_ns = int(
+            datetime.fromisoformat(str(started["started_utc"])).timestamp() * 1e9
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("official test output collection start time is invalid") from error
+    exit_ns = (run / "exit-code.txt").stat().st_mtime_ns
+    provenance_sha256 = effective.get("provenance_sha256")
+    if (
+        not isinstance(provenance_sha256, Mapping)
+        or not provenance_sha256
+        or not all(
+            isinstance(name, str)
+            and isinstance(digest, str)
+            and re.fullmatch(r"[0-9a-f]{64}", digest)
+            for name, digest in provenance_sha256.items()
+        )
+    ):
+        raise ValueError("official test output launch provenance manifest is invalid")
+    return {
+        "command": command,
+        "command_sha256": command_sha256,
+        "child_pid": pid,
+        "started_utc": started["started_utc"],
+        "started_ns": started_ns,
+        "exit_marker_mtime_ns": exit_ns,
+        "launch_provenance_sha256": dict(provenance_sha256),
+    }
+
+
+def _recovery_raw_manifest(run: Path) -> dict[str, object]:
+    entries = []
+    for relative in RECOVERY_AUTHORIZATION_RAW_RELATIVE_PATHS:
+        path = run / relative
+        if not path.is_file():
+            raise ValueError(f"official test output recovery raw evidence is missing: {relative}")
+        entries.append(
+            {"path": relative, "bytes": path.stat().st_size, "sha256": _sha256(path)}
+        )
+    return {"schema_version": 1, "entry_count": len(entries), "entries": entries}
+
+
+def _json_sha256(payload: object) -> str:
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def collect_official_test_output(
+    run_directory: Path, *, recovery: bool, spec: WeightSpec | None = None
+) -> dict[str, object]:
+    """Atomically adopt the one output attributable to an exit-zero test child."""
+    run = run_directory.resolve()
+    target = run / OFFICIAL_TEST_OUTPUT_TARGET_NAME
+    provenance_path = run / OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME
+    authorization_path = run / OFFICIAL_TEST_OUTPUT_RECOVERY_AUTHORIZATION_NAME
+    if recovery and authorization_path.exists():
+        raise FileExistsError("one-time official test output recovery already authorized")
+    if target.exists():
+        raise FileExistsError("official test output collection refuses to overwrite target")
+    if provenance_path.exists():
+        raise FileExistsError("official test output provenance already exists")
+    lineage = _load_output_collection_lineage(run)
+    post_inventory = _official_test_output_inventory()
+    candidates = post_inventory["candidates"]
+    if (
+        not isinstance(candidates, list)
+        or len(candidates) != 1
+        or candidates[0].get("name") != OFFICIAL_TEST_OUTPUT_SOURCE_NAME
+    ):
+        raise ValueError("official test output requires exactly one newly created NPZ")
+    candidate = candidates[0]
+    source = Path(str(candidate["path"])).resolve()
+    started_ns = int(lineage["started_ns"])
+    exit_ns = int(lineage["exit_marker_mtime_ns"])
+    mtime_ns = int(candidate["mtime_ns"])
+    if not started_ns <= mtime_ns <= exit_ns + 2_000_000_000:
+        raise ValueError("official test output timestamp is outside the child run window")
+    pre_path = run / OFFICIAL_TEST_OUTPUT_PRE_INVENTORY_NAME
+    if recovery:
+        if spec is None or _canonical_spec(spec).fold_id != 0:
+            raise ValueError("official test output recovery is authorized only for Fold 0")
+        if pre_path.exists():
+            raise ValueError("recovery output collection found an unexpected live pre-inventory")
+        preflight = json.loads((run / "preflight.json").read_text(encoding="utf-8"))
+        runtime_patch = preflight.get("runtime_patch")
+        if (
+            not isinstance(runtime_patch, Mapping)
+            or runtime_patch.get("derived_root") != str(DERIVED_UPSTREAM_ROOT.resolve())
+            or runtime_patch.get("git_diff_exact_match") is not True
+            or runtime_patch.get("scientific_code_touched") is not False
+        ):
+            raise ValueError("recovery output pre-inventory reconstruction failed")
+        pre_inventory: dict[str, object] = {
+            "cwd": str(DERIVED_UPSTREAM_ROOT.resolve()),
+            "candidates": [],
+            "mode": "reconstructed-from-exact-launch-preflight",
+            "launch_preflight_sha256": _sha256(run / "preflight.json"),
+        }
+        source_ctime_ns = int(candidate["ctime_ns"])
+        raw_manifest = _recovery_raw_manifest(run)
+        weight = build_fold_claims(spec=spec, weight_path=weight_cache_path(spec))
+        authorization = {
+            "schema_version": 1,
+            "status": "pass",
+            "authorized_action": (
+                "one-time atomic adoption of the existing completed child output only"
+            ),
+            "scientific_child_relaunched": False,
+            "fold_id": 0,
+            "run_directory": str(run),
+            "weight": weight,
+            "source": str(source),
+            "target": str(target),
+            "child_pid": lineage["child_pid"],
+            "command_sha256": lineage["command_sha256"],
+            "source_sha256": candidate["sha256"],
+            "source_bytes": candidate["bytes"],
+            "source_ctime_ns": source_ctime_ns,
+            "source_mtime_ns": mtime_ns,
+            "started_utc": lineage["started_utc"],
+            "exit_marker_mtime_ns": exit_ns,
+            "raw_evidence_manifest": raw_manifest,
+            "raw_evidence_manifest_sha256": _json_sha256(raw_manifest),
+            "launch_provenance_sha256": lineage["launch_provenance_sha256"],
+            "launch_provenance_manifest_sha256": _json_sha256(
+                lineage["launch_provenance_sha256"]
+            ),
+        }
+        acquire_launch_lock(authorization_path, authorization)
+        authorization_sha256: str | None = _sha256(authorization_path)
+        collection_mode = "offline-finalize-existing"
+    else:
+        if not pre_path.is_file():
+            raise ValueError("official test output live pre-inventory is missing")
+        pre_marker = json.loads(pre_path.read_text(encoding="utf-8"))
+        expected_pre = {
+            "schema_version": 1,
+            "status": "pass",
+            "inventory_scope": "immediately before released-weight scientific child",
+            "cwd": str(DERIVED_UPSTREAM_ROOT.resolve()),
+            "candidates": [],
+        }
+        if pre_marker != expected_pre:
+            raise ValueError("official test output live pre-inventory mismatch")
+        pre_inventory = {
+            "cwd": pre_marker["cwd"],
+            "candidates": pre_marker["candidates"],
+            "mode": "recorded-immediately-before-launch",
+            "pre_inventory_sha256": _sha256(pre_path),
+        }
+        authorization_sha256 = None
+        collection_mode = "live-postprocess"
+    if source.anchor.casefold() != target.anchor.casefold():
+        raise ValueError("official test output atomic adoption requires one volume")
+    os.rename(source, target)
+    if source.exists() or not target.is_file():
+        raise ValueError("official test output atomic adoption did not complete")
+    provenance_payload: dict[str, object] = {
+        "schema_version": 2,
+        "status": "pass",
+        "collection_mode": collection_mode,
+        "atomic_move": True,
+        "scientific_child_relaunched": False,
+        "run_directory": str(run),
+        "source": str(source),
+        "target": str(target),
+        "bytes": target.stat().st_size,
+        "sha256": _sha256(target),
+        "source_mtime_ns": mtime_ns,
+        "child_pid": lineage["child_pid"],
+        "command": lineage["command"],
+        "command_sha256": lineage["command_sha256"],
+        "started_utc": lineage["started_utc"],
+        "exit_marker_mtime_ns": exit_ns,
+        "pre_inventory": pre_inventory,
+        "post_inventory": post_inventory,
+        "recovery_authorization_sha256": authorization_sha256,
+        "collected_utc": datetime.now(timezone.utc).isoformat(),
+    }
+    write_json_atomic(provenance_path, provenance_payload)
+    return provenance_payload
+
+
 def validate_weight_output(combined_output: str, exit_code: int) -> dict[str, object]:
     if exit_code != 0:
         raise ValueError(f"released-weight child exit code is not zero: {exit_code}")
@@ -696,6 +969,14 @@ def finalize_existing_weight(
         or started["command_sha256"] != effective.get("command_sha256")
     ):
         raise ValueError("finalize-existing weight launch lineage mismatch")
+    output_target = run / OFFICIAL_TEST_OUTPUT_TARGET_NAME
+    output_provenance = run / OFFICIAL_TEST_OUTPUT_PROVENANCE_NAME
+    if output_target.is_file() and output_provenance.is_file():
+        pass
+    elif not output_target.exists() and not output_provenance.exists():
+        collect_official_test_output(run, recovery=True, spec=spec)
+    else:
+        raise ValueError("finalize-existing official test output evidence is incomplete")
     result = parse_weight_run(
         run, spec=spec, weight_path=weight_cache_path(spec)
     )
@@ -785,6 +1066,7 @@ def _launch_once(spec: WeightSpec) -> tuple[Path, dict[str, object]]:
                 "provenance_sha256": provenance,
             },
         )
+        write_official_test_output_pre_inventory(run)
         print(json.dumps({"status": "launching-test-only", "run_directory": str(run)}), flush=True)
         observation = observe_process(
             command,
@@ -806,6 +1088,7 @@ def _launch_once(spec: WeightSpec) -> tuple[Path, dict[str, object]]:
         result["child_pid"] = observation["pid"]
         write_json_atomic(run / "weight-result.json", result)
         write_json_atomic(run / "completed.json", {"status": "pass", "pid": observation["pid"], "exit_code": 0})
+        collect_official_test_output(run, recovery=False, spec=spec)
         return run, result
     except BaseException as error:
         write_json_atomic(

@@ -669,6 +669,13 @@ def test_weight_finalize_existing_adds_offline_manifest_without_rewriting_prefli
     monkeypatch.setattr(
         weight_controller, "parse_weight_run", lambda _run, **_kwargs: dict(result)
     )
+    monkeypatch.setattr(
+        weight_controller,
+        "collect_official_test_output",
+        lambda _run, *, recovery, spec: {"collection_mode": "offline-finalize-existing"}
+        if recovery
+        else {},
+    )
 
     expected = {
         **result,

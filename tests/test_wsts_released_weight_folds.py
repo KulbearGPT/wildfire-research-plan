@@ -1,6 +1,8 @@
 import hashlib
 import json
+import os
 import sys
+from datetime import datetime, timezone
 from dataclasses import replace
 from pathlib import Path
 
@@ -237,6 +239,272 @@ def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def _write_output_collection_lineage(
+    run: Path, derived: Path, *, pid: int = 7
+) -> tuple[list[str], str]:
+    command = ["fixed-python", "official-entrypoint", "--test-only"]
+    command_hash = hashlib.sha256(
+        json.dumps(command, ensure_ascii=False, separators=(",", ":")).encode()
+    ).hexdigest()
+    _write_json(
+        run / "started.json",
+        {
+            "command": command,
+            "command_sha256": command_hash,
+            "pid": pid,
+            "started_utc": "2026-08-12T05:00:00+00:00",
+        },
+    )
+    _write_json(
+        run / "effective-command.json",
+        {
+            "command": command,
+            "command_sha256": command_hash,
+            "cwd": str(derived.resolve()),
+            "provenance_sha256": {
+                "evaluate_released_weight.py": "a" * 64,
+                "official_weight_entrypoint.py": "b" * 64,
+            },
+        },
+    )
+    _write_json(run / "completed.json", {"status": "pass", "exit_code": 0, "pid": pid})
+    _write_json(
+        run / "preflight.json",
+        {
+            "runtime_patch": {
+                "derived_root": str(derived.resolve()),
+                "git_diff_exact_match": True,
+                "scientific_code_touched": False,
+            }
+        },
+    )
+    (run / "exit-code.txt").write_text("0\n", encoding="utf-8")
+    for name in (
+        "stdout.log",
+        "stderr.log",
+        "stream-events.jsonl",
+        "gpu.csv",
+        "config.yaml",
+        "source-data-pre.json",
+        "source-data-post.json",
+        "launch.lock.json",
+    ):
+        (run / name).write_text(f"sealed {name}\n", encoding="utf-8")
+    exit_ns = int(datetime(2026, 8, 12, 5, 2, tzinfo=timezone.utc).timestamp() * 1e9)
+    os.utime(run / "exit-code.txt", ns=(exit_ns, exit_ns))
+    return command, command_hash
+
+
+def test_live_output_collection_refuses_orphan_then_atomically_attributes_exact_npz(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    derived = tmp_path / "derived"
+    run = tmp_path / "run"
+    derived.mkdir()
+    run.mkdir()
+    monkeypatch.setattr(controller, "DERIVED_UPSTREAM_ROOT", derived)
+    orphan = derived / "test_pr_curve_data.npz"
+    orphan.write_bytes(b"orphan")
+
+    with pytest.raises(ValueError, match="preexisting official test output"):
+        controller.write_official_test_output_pre_inventory(run)
+
+    orphan.unlink()
+    controller.write_official_test_output_pre_inventory(run)
+    _, command_hash = _write_output_collection_lineage(run, derived)
+    source = derived / "test_pr_curve_data.npz"
+    source.write_bytes(b"new-fold-output")
+    source_ns = int(datetime(2026, 8, 12, 5, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+    os.utime(source, ns=(source_ns, source_ns))
+
+    provenance = controller.collect_official_test_output(run, recovery=False)
+
+    target = run / "official-test-pr-curve-data.npz"
+    assert not source.exists()
+    assert target.read_bytes() == b"new-fold-output"
+    assert provenance["collection_mode"] == "live-postprocess"
+    assert provenance["command_sha256"] == command_hash
+    assert provenance["child_pid"] == 7
+    assert provenance["atomic_move"] is True
+    assert provenance["pre_inventory"]["candidates"] == []
+    assert len(provenance["post_inventory"]["candidates"]) == 1
+
+
+def test_recovery_output_collection_requires_exact_lineage_and_one_time_authorization(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    derived = tmp_path / "derived"
+    run = tmp_path / "run"
+    derived.mkdir()
+    run.mkdir()
+    monkeypatch.setattr(controller, "DERIVED_UPSTREAM_ROOT", derived)
+    _, command_hash = _write_output_collection_lineage(run, derived, pid=18568)
+    source = derived / "test_pr_curve_data.npz"
+    source.write_bytes(b"preserved-fold0")
+    source_ns = int(datetime(2026, 8, 12, 5, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+    os.utime(source, ns=(source_ns, source_ns))
+
+    fold0 = contract.spec_for_fold(specs, 0)
+    provenance = controller.collect_official_test_output(
+        run, recovery=True, spec=fold0
+    )
+
+    authorization = json.loads(
+        (run / "official-test-output-recovery-authorization.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert authorization["authorized_action"] == (
+        "one-time atomic adoption of the existing completed child output only"
+    )
+    assert authorization["scientific_child_relaunched"] is False
+    assert authorization["child_pid"] == 18568
+    assert authorization["command_sha256"] == command_hash
+    assert authorization["fold_id"] == 0
+    assert authorization["weight"]["weight_sha256"] == fold0.sha256
+    assert authorization["raw_evidence_manifest"]["entry_count"] == 13
+    assert len(authorization["raw_evidence_manifest_sha256"]) == 64
+    assert authorization["launch_provenance_sha256"] == {
+        "evaluate_released_weight.py": "a" * 64,
+        "official_weight_entrypoint.py": "b" * 64,
+    }
+    assert provenance["collection_mode"] == "offline-finalize-existing"
+    assert provenance["recovery_authorization_sha256"] == controller._sha256(
+        run / "official-test-output-recovery-authorization.json"
+    )
+    with pytest.raises((FileExistsError, ValueError), match="already|one-time"):
+        controller.collect_official_test_output(run, recovery=True, spec=fold0)
+
+
+def test_output_collection_rejects_ambiguous_candidate_and_target_overwrite(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    derived = tmp_path / "derived"
+    run = tmp_path / "run"
+    derived.mkdir()
+    run.mkdir()
+    monkeypatch.setattr(controller, "DERIVED_UPSTREAM_ROOT", derived)
+    controller.write_official_test_output_pre_inventory(run)
+    _write_output_collection_lineage(run, derived)
+    (derived / "test_pr_curve_data.npz").write_bytes(b"exact")
+    (derived / "test_pr_curve_data-copy.npz").write_bytes(b"ambiguous")
+    for path in derived.glob("test_pr_curve_data*.npz"):
+        source_ns = int(datetime(2026, 8, 12, 5, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+        os.utime(path, ns=(source_ns, source_ns))
+    with pytest.raises(ValueError, match="exactly one newly created"):
+        controller.collect_official_test_output(run, recovery=False)
+
+    (derived / "test_pr_curve_data-copy.npz").unlink()
+    (run / "official-test-pr-curve-data.npz").write_bytes(b"sentinel")
+    with pytest.raises(FileExistsError, match="refuses to overwrite"):
+        controller.collect_official_test_output(run, recovery=False)
+    assert (run / "official-test-pr-curve-data.npz").read_bytes() == b"sentinel"
+
+
+def test_independent_verifier_validates_output_collection_provenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    derived = tmp_path / "derived"
+    run = tmp_path / "run"
+    derived.mkdir()
+    run.mkdir()
+    monkeypatch.setattr(controller, "DERIVED_UPSTREAM_ROOT", derived)
+    monkeypatch.setattr(verifier, "EXPECTED_DERIVED_UPSTREAM", derived)
+    controller.write_official_test_output_pre_inventory(run)
+    _write_output_collection_lineage(run, derived)
+    source = derived / "test_pr_curve_data.npz"
+    source.write_bytes(b"independently-verified")
+    source_ns = int(datetime(2026, 8, 12, 5, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+    os.utime(source, ns=(source_ns, source_ns))
+    controller.collect_official_test_output(run, recovery=False)
+
+    evidence = verifier.verify_official_test_output_provenance(run, fold_id=5)
+
+    assert evidence["official_test_output_provenance_verified"] is True
+    assert evidence["official_test_output_collection_mode"] == "live-postprocess"
+    marker = run / "official-test-output-provenance.json"
+    payload = json.loads(marker.read_text(encoding="utf-8"))
+    payload["child_pid"] = 999
+    _write_json(marker, payload)
+    with pytest.raises(ValueError, match="output provenance"):
+        verifier.verify_official_test_output_provenance(run, fold_id=5)
+
+
+def test_independent_verifier_requires_exact_live_pre_inventory_marker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    derived = tmp_path / "derived"
+    run = tmp_path / "run"
+    derived.mkdir()
+    run.mkdir()
+    monkeypatch.setattr(controller, "DERIVED_UPSTREAM_ROOT", derived)
+    monkeypatch.setattr(verifier, "EXPECTED_DERIVED_UPSTREAM", derived)
+    controller.write_official_test_output_pre_inventory(run)
+    _write_output_collection_lineage(run, derived)
+    source = derived / "test_pr_curve_data.npz"
+    source.write_bytes(b"live-pre-inventory")
+    source_ns = int(datetime(2026, 8, 12, 5, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+    os.utime(source, ns=(source_ns, source_ns))
+    controller.collect_official_test_output(run, recovery=False)
+    pre_path = run / "official-test-output-cwd-pre.json"
+    pre = json.loads(pre_path.read_text(encoding="utf-8"))
+    pre["status"] = "tampered"
+    _write_json(pre_path, pre)
+    marker_path = run / "official-test-output-provenance.json"
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    marker["pre_inventory"]["pre_inventory_sha256"] = verifier._sha256(pre_path)
+    _write_json(marker_path, marker)
+
+    with pytest.raises(ValueError, match="live pre-inventory"):
+        verifier.verify_official_test_output_provenance(run, fold_id=5)
+
+
+@pytest.mark.parametrize("tamper", ["status", "extra-field", "raw", "provenance"])
+def test_independent_verifier_requires_exact_recovery_authorization_marker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    specs: tuple[contract.WeightSpec, ...],
+    tamper: str,
+) -> None:
+    derived = tmp_path / "derived"
+    run = tmp_path / "run"
+    derived.mkdir()
+    run.mkdir()
+    monkeypatch.setattr(controller, "DERIVED_UPSTREAM_ROOT", derived)
+    monkeypatch.setattr(verifier, "EXPECTED_DERIVED_UPSTREAM", derived)
+    _write_output_collection_lineage(run, derived, pid=18568)
+    source = derived / "test_pr_curve_data.npz"
+    source.write_bytes(b"recovery-authorization")
+    source_ns = int(datetime(2026, 8, 12, 5, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+    os.utime(source, ns=(source_ns, source_ns))
+    controller.collect_official_test_output(
+        run, recovery=True, spec=contract.spec_for_fold(specs, 0)
+    )
+    authorization_path = run / "official-test-output-recovery-authorization.json"
+    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+    if tamper == "status":
+        authorization["status"] = "tampered"
+    elif tamper == "extra-field":
+        authorization["unreviewed"] = True
+    elif tamper == "raw":
+        (run / "stdout.log").write_text("changed raw bytes\n", encoding="utf-8")
+    else:
+        effective_path = run / "effective-command.json"
+        effective = json.loads(effective_path.read_text(encoding="utf-8"))
+        effective["provenance_sha256"]["evaluate_released_weight.py"] = "c" * 64
+        _write_json(effective_path, effective)
+    _write_json(authorization_path, authorization)
+    marker_path = run / "official-test-output-provenance.json"
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    marker["recovery_authorization_sha256"] = verifier._sha256(authorization_path)
+    _write_json(marker_path, marker)
+
+    with pytest.raises(ValueError, match="recovery authorization"):
+        verifier.verify_official_test_output_provenance(run, fold_id=0)
+
+
 def test_finalize_existing_rejects_cross_fold_saved_lineage_before_writing_result(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -331,6 +599,24 @@ def test_non_fold2_provenance_rejects_legacy_controller_hash(
         verifier.__file__
     ).with_name("evaluate_released_weight.py")
     assert "evaluate_released_weight.py" not in launch_time
+
+
+def test_fold0_provenance_accepts_only_exact_historical_controller_copy(
+    specs: tuple[contract.WeightSpec, ...],
+) -> None:
+    fold0 = contract.spec_for_fold(specs, 0)
+
+    authoritative, launch_time = verifier.build_weight_provenance_contract(fold0)
+
+    assert authoritative["official_weight_entrypoint.py"] == Path(
+        verifier.__file__
+    ).with_name("official_weight_entrypoint.py")
+    assert "evaluate_released_weight.py" not in authoritative
+    assert launch_time == {
+        "evaluate_released_weight.py": (
+            "84db331675557425c1af7f98173bb623ae08088476a66cc14d5d0c0d05958b23"
+        )
+    }
 
 
 def test_verifier_cli_rejects_output_outside_run_without_rewriting_target(
