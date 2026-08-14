@@ -205,6 +205,15 @@
     .card.blue { border-top: 4px solid var(--blue); }
     .card.purple { border-top: 4px solid var(--purple); }
     .card.accent { border-top: 4px solid var(--accent); }
+    .compact-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; margin: 18px 0; padding: 0; list-style: none; counter-reset: compact-step; }
+    .compact-list li { position: relative; padding: 13px 0 13px 42px; border-top: 1px solid var(--line); counter-increment: compact-step; }
+    .compact-list li::before { content: counter(compact-step); position: absolute; left: 0; top: 12px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #fff; background: var(--primary); font-weight: 800; font-size: .82rem; }
+    .compact-list h3 { margin: 0 0 4px; font-size: 1rem; }
+    .compact-list p { margin: 0; color: var(--muted); }
+    .compact-definitions { margin: 18px 0; border-top: 1px solid var(--line); }
+    .compact-definitions > div { display: grid; grid-template-columns: minmax(150px, .65fr) 2fr; gap: 22px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+    .compact-definitions dt { color: var(--primary); font-weight: 800; }
+    .compact-definitions dd { margin: 0; }
 
     .callout { margin: 18px 0; padding: 15px 17px; border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--line)); border-left: 5px solid var(--primary); border-radius: 10px; background: var(--primary-soft); }
     .callout.blue { border-color: color-mix(in srgb, var(--blue) 32%, var(--line)); border-left-color: var(--blue); background: var(--blue-soft); }
@@ -271,7 +280,8 @@
       .hero-inner { padding: 58px 20px 53px; }
       .truth-banner { margin: -18px 14px 20px; }
       .section { padding: 21px 18px; }
-      .grid-2, .grid-3, .compare, .closing-grid { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .compare, .closing-grid, .compact-list { grid-template-columns: 1fr; }
+      .compact-definitions > div { grid-template-columns: 1fr; gap: 3px; }
       .brand { font-size: .9rem; }
     }
     @media (max-width: 520px) {
@@ -361,77 +371,61 @@
       <section class="section searchable" id="why-baselines">
         <div class="section-kicker">01 · Framing</div>
         <h2>Why reproduce before inventing?</h2>
-        <p class="lead">A new model is meaningful only when we know what the existing model really does, under which data split, and with which evaluation rules.</p>
+        <p class="lead">A new model is meaningful only after the existing one is understood under the same data split and evaluation rules.</p>
 
-        <div class="grid-4">
-          <article class="card primary">
-            <div class="number">1</div>
-            <h3>Make the comparison fair</h3>
-            <p>A reproduced baseline fixes the dataset, folds, inputs, target, metric, and budget that the future method must share.</p>
-          </article>
-          <article class="card blue">
-            <div class="number">2</div>
-            <h3>Expose hidden assumptions</h3>
-            <p>Configuration files, runtime overrides, checkpoint labels, and preprocessing code can disagree. Reproduction makes those differences visible.</p>
-          </article>
-          <article class="card purple">
-            <div class="number">3</div>
-            <h3>Separate science from plumbing</h3>
-            <p>A model can be scientifically sound while its package imports, Windows data loader, or result parser fails. These are different problems.</p>
-          </article>
-          <article class="card accent">
-            <div class="number">4</div>
-            <h3>Build trustable evidence</h3>
-            <p>Logs, hashes, locks, raw metrics, and independent checks let another researcher audit the result instead of trusting a summary line.</p>
-          </article>
-        </div>
+        <ol class="compact-list">
+          <li><h3>Make the comparison fair</h3><p>Freeze the dataset, folds, inputs, target, metric, and budget.</p></li>
+          <li><h3>Expose assumptions</h3><p>Reveal disagreements among configs, runtime overrides, and preprocessing.</p></li>
+          <li><h3>Separate science from plumbing</h3><p>Do not confuse model behavior with import, loader, or parser failures.</p></li>
+          <li><h3>Build auditable evidence</h3><p>Keep raw metrics, hashes, and independent checks.</p></li>
+        </ol>
 
-        <div class="callout accent"><strong>Beginner rule:</strong> do not start by changing the architecture. First make the smallest official baseline run, understand every input and output, and prove that the evaluation is reproducible.</div>
+        <div class="callout accent"><strong>Beginner rule:</strong> reproduce the smallest official baseline before changing the architecture.</div>
       </section>
 
       <section class="section searchable" id="vocabulary">
         <div class="section-kicker">02 · Vocabulary</div>
         <h2>Four terms to understand before the workflow</h2>
-        <p class="lead">These words appear throughout machine-learning papers, but each carries a specific responsibility in a reproduction.</p>
+        <p class="lead">Four terms define what is being reproduced and compared.</p>
 
         <div class="grid-2">
           <article class="card primary">
             <h3>What is a baseline?</h3>
-            <p>A baseline is the existing method that anchors comparison. It is not necessarily simple. Here it is the official Res18-U-Net implementation evaluated under the paper's fold protocol.</p>
+            <p>The existing method that anchors comparison. Here it is official Res18-U-Net under the paper's folds.</p>
           </article>
           <article class="card blue">
             <h3>What is a fold?</h3>
-            <p>A fold is one predefined train/validation/test assignment. Wildfire conditions change across years, so twelve official folds measure how sensitive the result is to that assignment.</p>
+            <p>One predefined train/validation/test assignment. Twelve official folds expose sensitivity to year selection.</p>
           </article>
           <article class="card purple">
             <h3>What is a checkpoint?</h3>
-            <p>A checkpoint is a saved set of learned model weights. A released checkpoint lets us test the authors' trained model without repeating the training process.</p>
+            <p>Saved learned weights. A released checkpoint can be tested without repeating training.</p>
           </article>
           <article class="card accent">
             <h3>What is average precision?</h3>
-            <p>Average precision (AP) summarizes the precision–recall curve across thresholds. It is useful when positive fire pixels are rare, but it does not tell us how one fixed threshold behaves.</p>
+            <p>AP summarizes precision–recall across thresholds. It suits rare fire pixels but does not describe one fixed threshold.</p>
           </article>
         </div>
 
-        <div class="callout blue"><strong>Important distinction:</strong> a training reproduction asks “can we learn a comparable checkpoint?” A released-weight test reproduction asks “does the authors' checkpoint produce the expected metrics in our environment?” We did both for Fold 2, then the second task for all twelve folds.</div>
+        <p><strong>Training reproduction</strong> asks whether we can learn a comparable checkpoint. <strong>Released-weight reproduction</strong> asks whether the authors' checkpoint produces the expected metrics here. We did both for Fold 2, then tested all twelve released weights.</p>
       </section>
 
       <section class="section searchable" id="target">
         <div class="section-kicker">03 · Scientific target</div>
         <h2>What exactly did we reproduce?</h2>
-        <p class="lead">A model name alone is not a reproducible target. The complete target is a model plus time horizon, features, label, folds, and metrics.</p>
+        <p class="lead">A reproducible target includes the model, horizon, features, label, folds, and metrics.</p>
 
         <div class="table-wrap">
           <table>
             <thead><tr><th>Contract item</th><th>Frozen choice</th><th>Why it matters</th></tr></thead>
             <tbody>
-              <tr><td>Architecture</td><td><strong>Res18-U-Net</strong></td><td>The smallest official neural baseline in scope.</td></tr>
-              <tr><td>History</td><td><strong>T=1</strong></td><td>One input day; no additional temporal context.</td></tr>
-              <tr><td>Features</td><td><strong>All 40 channels</strong></td><td>Matches the official released-weight configuration.</td></tr>
+              <tr><td>Architecture</td><td><strong>Res18-U-Net</strong></td><td>Smallest official neural baseline.</td></tr>
+              <tr><td>History</td><td><strong>T=1</strong></td><td>One input day.</td></tr>
+              <tr><td>Features</td><td><strong>All 40 channels</strong></td><td>Official released-weight configuration.</td></tr>
               <tr><td>Output</td><td>Next-calendar-day active-fire proxy map</td><td>Not burned area, ignition risk, or an exact 24-hour fireline.</td></tr>
-              <tr><td>Protocol</td><td>Official Fold 0–11 mappings</td><td>Prevents us from choosing an easier split after seeing results.</td></tr>
-              <tr><td>Primary metric</td><td>Average precision</td><td>Handles strong pixel imbalance better than accuracy.</td></tr>
-              <tr><td>Secondary metrics</td><td>F1, IoU, Precision, Recall, Loss</td><td>Shows fixed-threshold behavior and optimization loss.</td></tr>
+              <tr><td>Protocol</td><td>Official Fold 0–11 mappings</td><td>Prevents split selection after seeing results.</td></tr>
+              <tr><td>Primary metric</td><td>Average precision</td><td>Suitable for pixel imbalance.</td></tr>
+              <tr><td>Secondary metrics</td><td>F1, IoU, Precision, Recall, Loss</td><td>Fixed-threshold behavior and loss.</td></tr>
             </tbody>
           </table>
         </div>
@@ -442,7 +436,7 @@
       <section class="section searchable" id="contract">
         <div class="section-kicker">04 · Experiment design</div>
         <h2>Freeze the question before touching the code</h2>
-        <p class="lead">A scientific contract protects the experiment from accidental goal changes. It states what may change for compatibility and what must remain scientifically identical.</p>
+        <p class="lead">A scientific contract separates allowed compatibility work from scientific choices that must remain fixed.</p>
 
         <div class="compare">
           <div class="proves">
@@ -467,13 +461,13 @@
           </div>
         </div>
 
-        <div class="callout warning"><strong>Scientific contract:</strong> when a number changes later, we can ask whether the cause is scientific (model/data/protocol) or operational (environment/loader/parser). Without the contract, those causes become mixed.</div>
+        <div class="callout warning"><strong>Scientific contract:</strong> it lets us classify a changed number as scientific (model/data/protocol) or operational (environment/loader/parser).</div>
       </section>
 
       <section class="section searchable" id="official-code">
         <div class="section-kicker">05 · Implementation lineage</div>
         <h2>Reuse official code, then wrap it with evidence</h2>
-        <p class="lead">The goal was not to rewrite the authors' model. We kept the official scientific path and added a thin control layer around it.</p>
+        <p class="lead">We kept the official scientific path and added control and verification around it.</p>
 
         <div class="flow" role="img" aria-label="Official code is wrapped by a compatibility controller and checked by an independent verifier">
           <svg viewBox="0 0 960 230" aria-hidden="true">
@@ -495,33 +489,33 @@
           </svg>
         </div>
 
-        <div class="grid-3">
-          <article class="card primary"><h3>Official layer</h3><p>The pinned upstream commit provides Res18-U-Net, the datamodule, focal loss, checkpoint loading, and test metrics.</p></article>
-          <article class="card blue"><h3>Control layer</h3><p>Our scripts freeze commands, prevent accidental retries, monitor one process lineage, and publish outputs atomically.</p></article>
-          <article class="card accent"><h3>Verification layer</h3><p>Separate code re-reads raw logs, state dictionaries, inventories, timestamps, and metrics before returning PASS.</p></article>
-        </div>
+        <dl class="compact-definitions">
+          <div><dt>Official layer</dt><dd>Res18-U-Net, data, loss, checkpoint loading, and test metrics.</dd></div>
+          <div><dt>Control layer</dt><dd>Frozen commands, one process lineage, no automatic retry, and atomic outputs.</dd></div>
+          <div><dt>Verification layer</dt><dd>Separate code re-reads raw logs, weights, inventories, timing, and metrics before PASS.</dd></div>
+        </dl>
 
-        <div class="callout blue"><span class="badge engineering">Engineering compatibility</span> The runtime patch deleted <strong>seven unused eager architecture exports</strong> that pointed to files absent from the pinned official commit. It retained the four imports required by training and <strong>did not modify the model, loss, optimizer, data, or metrics</strong>.</div>
+        <div class="callout blue"><span class="badge engineering">Engineering compatibility</span> The runtime patch deleted <strong>seven unused eager architecture exports</strong> for files absent from the pinned commit. Required training imports remained; it <strong>did not modify the model, loss, optimizer, data, or metrics</strong>.</div>
       </section>
 
       <section class="section searchable" id="data-folds">
         <div class="section-kicker">06 · Data integrity</div>
         <h2>Audit the data before asking the model a question</h2>
-        <p class="lead">A correct model evaluated on the wrong files or fold mapping is still a wrong experiment.</p>
+        <p class="lead">Correct code on the wrong files or folds is still a wrong experiment.</p>
 
         <div class="grid-4">
-          <article class="card primary"><h3>607 files</h3><p>The selected WSTS source inventory contained exactly 607 event files.</p></article>
-          <article class="card blue"><h3>24.24 GB</h3><p>The files totalled 24,242,259,023 bytes and were sealed by path, size, and modification time.</p></article>
-          <article class="card purple"><h3>2018–2021</h3><p>The official data years were retained; we did not invent a convenience split.</p></article>
-          <article class="card accent"><h3>12 mappings</h3><p>Each released checkpoint was pinned to its official fold ID and filename hash.</p></article>
+          <article class="card primary"><h3>607 files</h3><p>Exact WSTS source inventory.</p></article>
+          <article class="card blue"><h3>24.24 GB</h3><p>24,242,259,023 bytes sealed by path, size, and time.</p></article>
+          <article class="card purple"><h3>2018–2021</h3><p>Official years; no convenience split.</p></article>
+          <article class="card accent"><h3>12 mappings</h3><p>One official fold ID and weight hash each.</p></article>
         </div>
 
-        <div class="timeline">
-          <article class="timeline-item"><h3>Freeze the question</h3><p>Write the expected years, folds, features, target, and metrics before execution.</p></article>
-          <article class="timeline-item"><h3>Audit the data</h3><p>Count files, bytes, events, years, label validity, and positive targets. Reject extra or missing years.</p></article>
-          <article class="timeline-item"><h3>Pin the fold manifest</h3><p>Associate Fold 0–11 with exactly one official filename, byte count, SHA-256, and test contract.</p></article>
-          <article class="timeline-item"><h3>Recheck after every run</h3><p>Compare the post-run inventory with the pre-run inventory so model execution cannot silently alter source data.</p></article>
-        </div>
+        <ol class="compact-list">
+          <li><h3>Freeze the question</h3><p>Record years, folds, features, target, and metrics.</p></li>
+          <li><h3>Audit the data</h3><p>Check files, bytes, events, labels, and positive targets.</p></li>
+          <li><h3>Pin the fold manifest</h3><p>Bind each fold to one filename, size, SHA-256, and contract.</p></li>
+          <li><h3>Recheck after execution</h3><p>Require the post-run source inventory to match.</p></li>
+        </ol>
 
         <div class="callout"><strong>Concrete example:</strong> official Fold 2 uses training years 2018 and 2020, validation year 2019, and test year 2021. That mapping is part of the result—not a background detail.</div>
       </section>
@@ -529,7 +523,7 @@
       <section class="section searchable" id="environment">
         <div class="section-kicker">07 · Runtime</div>
         <h2>Rebuild the environment without changing the experiment</h2>
-        <p class="lead">Older research repositories often depend on a narrow combination of Python, CUDA, NumPy, and framework behavior. Reproduction begins by making that combination explicit.</p>
+        <p class="lead">Older repositories often require an exact Python, CUDA, NumPy, and framework combination.</p>
 
         <div class="table-wrap">
           <table>
@@ -545,45 +539,45 @@
           </table>
         </div>
 
-        <div class="callout warning"><strong>Beginner trap:</strong> “the code imports” is not enough. A useful environment test must cross the actual data-loader boundary and verify tensor shapes, finite values, binary targets, and the absence of training or test side effects.</div>
+        <div class="callout warning"><strong>Beginner trap:</strong> importing code is not enough. Cross the real loader boundary and verify shapes, finite values, binary targets, and no training/test side effects.</div>
       </section>
 
       <section class="section searchable" id="calibration">
         <div class="section-kicker">08 · Cost control</div>
         <h2>Calibrate before committing to a long run</h2>
-        <p class="lead">A 500-step run answers two practical questions: can the full training path advance correctly, and how long will a real fold take on this machine?</p>
+        <p class="lead">A 500-step run tests the full training path and estimates one fold's cost.</p>
 
         <div class="grid-3">
-          <article class="card primary"><h3>500 steps</h3><p>The successful calibration reached exactly 500 optimizer steps and the official <code>max_steps</code> stop.</p></article>
-          <article class="card blue"><h3>17.08 minutes</h3><p>End-to-end wall time was 1,024.878947258 seconds, including startup and validation overhead.</p></article>
-          <article class="card accent"><h3>4.70–5.69 hours</h3><p>Epoch-aware and wall-linear projections bounded one 10,000-step Fold-2 run on this Windows host.</p></article>
+          <article class="card primary"><h3>500 steps</h3><p>Exact optimizer-step stop reached.</p></article>
+          <article class="card blue"><h3>17.08 minutes</h3><p>1,024.878947258 seconds end to end.</p></article>
+          <article class="card accent"><h3>4.70–5.69 hours</h3><p>Projected 10,000-step Fold-2 range.</p></article>
         </div>
 
-        <div class="timeline">
-          <article class="timeline-item"><h3>Rebuild the environment</h3><p>Pin Python and libraries, verify CUDA, freeze config hashes, and keep the original upstream checkout clean.</p></article>
-          <article class="timeline-item"><h3>Calibrate the runtime</h3><p>Use the official training entry point for 500 steps, with test and predict disabled.</p></article>
-          <article class="timeline-item"><h3>Measure the whole cycle</h3><p>Separate startup, instantaneous steps, epoch boundaries, data stalls, and validation. A fast median step is not the same as fast end-to-end training.</p></article>
-          <article class="timeline-item"><h3>Decide whether to continue</h3><p>The measured projection and memory envelope justified one full Fold-2 run before any twelve-fold training commitment.</p></article>
-        </div>
+        <ol class="compact-list">
+          <li><h3>Rebuild the environment</h3><p>Pin libraries, CUDA, configs, and clean upstream code.</p></li>
+          <li><h3>Calibrate the runtime</h3><p>Run the official entry point for 500 steps, without test or predict.</p></li>
+          <li><h3>Measure the whole cycle</h3><p>Include startup, data stalls, epoch boundaries, and validation.</p></li>
+          <li><h3>Decide whether to continue</h3><p>Use measured runtime and memory before the full fold.</p></li>
+        </ol>
 
-        <div class="callout blue"><strong>Why this helps:</strong> calibration turns hardware planning into evidence. It also catches environment and data-loader problems when the cost of failure is minutes rather than hours.</div>
+        <div class="callout blue"><strong>Why this helps:</strong> plan hardware from evidence and catch loader problems in minutes, not hours.</div>
       </section>
 
       <section class="section searchable" id="one-fold">
         <div class="section-kicker">09 · Training reproduction</div>
         <h2>Complete one full fold before scaling out</h2>
-        <p class="lead">Fold 2 was the bridge between a short smoke/calibration and the released-weight campaign.</p>
+        <p class="lead">Fold 2 connected calibration to the released-weight campaign.</p>
 
         <div class="grid-2">
           <article class="card primary">
             <h3>Our trained Fold 2</h3>
             <p><strong>10,000 optimizer steps</strong><br>5.211 hours wall time<br>Test AP <strong>0.5546640157699585</strong></p>
-            <p class="small">The best checkpoint filename rounded validation AP to 0.33; raw progress displayed 0.326. Neither is treated as an unrounded value.</p>
+            <p class="small">Filename AP 0.33 was rounded; raw progress showed 0.326.</p>
           </article>
           <article class="card blue">
             <h3>Official released Fold 2</h3>
             <p><strong>Strict-loaded checkpoint</strong><br>560.128 seconds test wall time<br>Test AP <strong>0.5709022879600525</strong></p>
-            <p class="small">The 0.016238 AP gap describes two Fold-2 checkpoints only. It is not a twelve-fold paper comparison.</p>
+            <p class="small">The 0.016238 AP gap compares two Fold-2 checkpoints only.</p>
           </article>
         </div>
 
@@ -593,7 +587,7 @@
       <section class="section searchable" id="released-weights">
         <div class="section-kicker">10 · Test-only campaign</div>
         <h2>Evaluate all twelve released weights</h2>
-        <p class="lead">Once the single-fold path was understood, the cheapest faithful comparison was to test every official released checkpoint under its official fold.</p>
+        <p class="lead">Next, test every official released checkpoint under its official fold.</p>
 
         <div class="callout accent"><strong>This is a test-only evaluation of official released weights, not twelve new training runs.</strong> Each state dictionary loaded 182 tensors with <code>strict=True</code>; training, validation, prediction, and automatic retry were disabled.</div>
 
@@ -617,23 +611,20 @@
           </svg>
         </div>
 
-        <p>The scientific test wall times totalled <strong>5749.570263385773 seconds</strong> (95.83 minutes), with a median of <strong>549.7098723649979 seconds</strong> per fold. The campaign ran sequentially so one fold could not start until the previous fold had exited successfully and passed its independent verifier.</p>
+        <p>Scientific test wall time totalled <strong>5749.570263385773 seconds</strong> (95.83 minutes); median fold time was <strong>549.7098723649979 seconds</strong>. Each fold waited for the previous independent PASS.</p>
       </section>
 
       <section class="section searchable" id="verification">
         <div class="section-kicker">11 · Evidence</div>
         <h2>An independent verifier should distrust the summary</h2>
-        <p class="lead">If the same code both computes a result and declares it correct, one bug can contaminate both steps. Independent verification reconstructs the claim from lower-level evidence.</p>
+        <p class="lead">An <strong>Independent verifier</strong> reconstructs the claim without trusting controller metrics.</p>
 
-        <div class="grid-3">
-          <article class="card primary"><h3>Raw evidence</h3><p>Standard output/error, timestamps, commands, config, GPU samples, exit code, source inventories, checkpoint/weight files, and official NPZ output.</p></article>
-          <article class="card blue"><h3>Independent logic</h3><p>A separate process parses raw test tables, rechecks ranges, recomputes timing, verifies state-dict identity, and compares live source data.</p></article>
-          <article class="card accent"><h3>Atomic publication</h3><p>A publication marker points to one CSV, one summary, and one independent result by exact relative path and SHA-256.</p></article>
-        </div>
-
-        <div class="callout"><strong>Independent verifier:</strong> a program that derives the reported result from raw evidence without importing or trusting the controller's computed metrics. All twelve fold verifiers returned PASS, and the campaign verifier confirmed that raw seals were unchanged before and after aggregation.</div>
-
-        <div class="callout blue"><strong>Verify from raw evidence:</strong> start with the immutable command, streams, exit marker, weight identity, source inventory, and official outputs; only then derive the result row and publication status.</div>
+        <ol class="compact-list">
+          <li><h3>Raw evidence</h3><p>Read commands, streams, exit status, config, inventories, weights, and official output.</p></li>
+          <li><h3>Independent logic</h3><p>Parse metrics, check ranges, recompute timing, and verify weight identity.</p></li>
+          <li><h3>Atomic publication</h3><p>Bind one CSV, summary, and independent result by path and SHA-256.</p></li>
+          <li><h3>Verify from raw evidence</h3><p>Publish only after all twelve fold verifiers PASS and raw seals remain unchanged.</p></li>
+        </ol>
 
         <p class="small">Full audit details are preserved in <a href="../docs/experiments/res18_unet_t1_reproduction.md">res18_unet_t1_reproduction.md</a>. The public lecture intentionally teaches the reasoning rather than listing every artifact hash.</p>
       </section>

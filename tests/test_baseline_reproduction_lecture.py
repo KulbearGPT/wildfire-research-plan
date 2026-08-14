@@ -154,6 +154,24 @@ def test_lecture_has_the_courseware_shell_and_complete_toc() -> None:
         assert control in text
 
 
+def test_lecture_keeps_a_compact_reading_rhythm() -> None:
+    html = LECTURE.read_text(encoding="utf-8")
+    visible = re.sub(
+        r"<(?:style|script)\b[^>]*>[\s\S]*?</(?:style|script)>",
+        " ",
+        html,
+        flags=re.IGNORECASE,
+    )
+    visible = re.sub(r"<[^>]+>", " ", visible)
+    visible_word_count = len(
+        re.findall(r"[A-Za-z0-9][A-Za-z0-9'./+–—-]*", visible)
+    )
+    content_card_count = len(re.findall(r'<article class="card\b', html))
+
+    assert 2_250 <= visible_word_count <= 2_400, visible_word_count
+    assert 16 <= content_card_count <= 18, content_card_count
+
+
 def test_lecture_teaches_the_full_process_without_overclaiming() -> None:
     text = LECTURE.read_text(encoding="utf-8")
     missing = [
