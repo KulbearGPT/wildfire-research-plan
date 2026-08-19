@@ -54,6 +54,17 @@
     }
 
     * { box-sizing: border-box; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     html { scroll-behavior: smooth; scroll-padding-top: 82px; }
     body {
       margin: 0;
@@ -829,6 +840,7 @@
 
         <div class="table-wrap">
           <table>
+            <caption class="sr-only">Dataset targets, project roles, and evidence limits</caption>
             <thead><tr><th>Dataset</th><th>Main target</th><th>Role in this project</th><th>Important limit</th></tr></thead>
             <tbody>
               <tr><td><strong>Next Day Wildfire Spread</strong><br><span class="badge peer">IEEE TGRS 2022</span></td><td>Next-day fire spread proxy</td><td>Task origin and benchmark context</td><td>Single-day formulation; later time-series benchmarks change the input contract.</td></tr>
@@ -965,6 +977,7 @@
 
         <div class="table-wrap">
           <table>
+            <caption class="sr-only">Research foundations and the boundaries this project must add</caption>
             <thead><tr><th>Dimension</th><th>Existing foundation</th><th>Boundary this project must add</th></tr></thead>
             <tbody>
               <tr><td><strong>Task</strong></td><td>Public benchmarks already cover next-day active-fire prediction and burned-area progression.</td><td>Fix the next-UTC-calendar-day active-fire proxy contract and state explicitly why active-fire and burned-area labels cannot be merged.</td></tr>
@@ -1048,7 +1061,7 @@
 
   <footer class="footer">
     <p>Wildfire Forecasting · Research Foundations and Related Work · English Courseware</p>
-    <p>Adapted from the supplied Chinese courseware and the minimum-necessary-revision research plan. Source status last reviewed 7 August 2026.</p>
+    <p>Adapted from the supplied Chinese courseware and the minimum-necessary-revision research plan. Source status last reviewed 18 August 2026.</p>
   </footer>
 
   <script>

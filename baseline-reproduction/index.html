@@ -58,6 +58,17 @@
     }
 
     * { box-sizing: border-box; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     html { scroll-behavior: smooth; scroll-padding-top: 82px; }
     body {
       margin: 0;
@@ -415,13 +426,16 @@
         <h2>What exactly did we reproduce?</h2>
         <p class="lead">A reproducible target includes the model, horizon, features, label, folds, and metrics.</p>
 
+        <div class="callout blue"><strong>Dataset boundary:</strong> this lecture reproduces the original WSTS 2018–2021 baseline. It is separate from the later WSTS+ four-fold protocol used for our future cross-year experiments.</div>
+
         <div class="table-wrap">
           <table>
+            <caption class="sr-only">Frozen Res18-U-Net reproduction contract</caption>
             <thead><tr><th>Contract item</th><th>Frozen choice</th><th>Why it matters</th></tr></thead>
             <tbody>
               <tr><td>Architecture</td><td><strong>Res18-U-Net</strong></td><td>Smallest official neural baseline.</td></tr>
               <tr><td>History</td><td><strong>T=1</strong></td><td>One input day.</td></tr>
-              <tr><td>Features</td><td><strong>All 40 channels</strong></td><td>Official released-weight configuration.</td></tr>
+              <tr><td>Features</td><td><strong>All 40 preprocessed model-input channels</strong></td><td>The official loader replaces one land-cover channel with 17 one-hot channels and adds a binary active-fire mask (23 - 1 + 17 + 1 = 40).</td></tr>
               <tr><td>Output</td><td>Next-calendar-day active-fire proxy map</td><td>Not burned area, ignition risk, or an exact 24-hour fireline.</td></tr>
               <tr><td>Protocol</td><td>Official Fold 0–11 mappings</td><td>Prevents split selection after seeing results.</td></tr>
               <tr><td>Primary metric</td><td>Average precision</td><td>Suitable for pixel imbalance.</td></tr>
@@ -527,6 +541,7 @@
 
         <div class="table-wrap">
           <table>
+            <caption class="sr-only">Verified software and hardware environment</caption>
             <thead><tr><th>Component</th><th>Verified runtime</th><th>Role</th></tr></thead>
             <tbody>
               <tr><td>Python</td><td>3.10.4</td><td>Matches the official environment contract.</td></tr>
@@ -636,6 +651,7 @@
 
         <div class="table-wrap">
           <table>
+            <caption class="sr-only">Average precision for each released-weight fold</caption>
             <thead><tr><th>Fold</th><th class="numeric">AP</th><th>Interpretation</th></tr></thead>
             <tbody>
               <tr><td>0</td><td class="numeric">0.5276636481285095</td><td>Above the twelve-fold mean</td></tr>
@@ -656,6 +672,7 @@
 
         <div class="table-wrap">
           <table>
+            <caption class="sr-only">Aggregate released-weight evaluation metrics</caption>
             <thead><tr><th>Metric</th><th class="numeric">Mean</th><th class="numeric">Population std</th><th>Observed range</th></tr></thead>
             <tbody>
               <tr><td><strong>AP</strong></td><td class="numeric best">0.45276400446891785</td><td class="numeric">0.08821731990844857</td><td>0.3066331744194031 (Fold 3) – 0.5765069723129272 (Fold 6)</td></tr>
@@ -683,6 +700,7 @@
 
         <div class="table-wrap">
           <table>
+            <caption class="sr-only">Observed reproduction failures and controlled responses</caption>
             <thead><tr><th>Observed failure</th><th>Classification</th><th>Response</th><th>Scientific child rerun?</th></tr></thead>
             <tbody>
               <tr><td>Official initializer imported model files absent from the pinned commit</td><td><span class="badge engineering">Packaging</span></td><td>Delete only seven unused eager exports in a derived checkout</td><td>No training had started</td></tr>

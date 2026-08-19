@@ -94,7 +94,10 @@ class LectureParser(HTMLParser):
         self.hrefs: list[str] = []
         self.sources: list[str] = []
         self.scripts: list[str] = []
+        self.tables: list[dict[str, object]] = []
+        self._table_stack: list[int] = []
         self._script: list[str] | None = None
+        self._caption: dict[str, object] | None = None
 
     def handle_starttag(
         self, tag: str, attrs: list[tuple[str, str | None]]
@@ -108,21 +111,77 @@ class LectureParser(HTMLParser):
             self.sources.append(attributes["src"])
         if tag == "script" and not attributes.get("src"):
             self._script = []
+        if tag == "table":
+            self.tables.append({"captions": []})
+            self._table_stack.append(len(self.tables) - 1)
+        if tag == "caption":
+            self._caption = {"attributes": attributes, "text_parts": []}
 
     def handle_data(self, data: str) -> None:
         if self._script is not None:
             self._script.append(data)
+        if self._caption is not None:
+            self._caption["text_parts"].append(data)
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "script" and self._script is not None:
             self.scripts.append("".join(self._script))
             self._script = None
+        if tag == "caption" and self._caption is not None:
+            caption = {
+                "attributes": self._caption["attributes"],
+                "text": "".join(self._caption["text_parts"]).strip(),
+            }
+            if self._table_stack:
+                self.tables[self._table_stack[-1]]["captions"].append(caption)
+            self._caption = None
+        if tag == "table" and self._table_stack:
+            self._table_stack.pop()
+
+
+def _parse_page(path: Path) -> LectureParser:
+    parser = LectureParser()
+    parser.feed(path.read_text(encoding="utf-8"))
+    return parser
 
 
 def _parse_lecture() -> LectureParser:
-    parser = LectureParser()
-    parser.feed(LECTURE.read_text(encoding="utf-8"))
-    return parser
+    return _parse_page(LECTURE)
+
+
+def test_every_lecture_table_has_an_accessible_name() -> None:
+    for page in (LECTURE, RELATED_WORK):
+        parser = _parse_page(page)
+        assert parser.tables
+        for table in parser.tables:
+            captions = table["captions"]
+            assert len(captions) == 1, page
+            caption = captions[0]
+            attributes = caption["attributes"]
+            assert caption["text"], page
+            assert "sr-only" in attributes.get("class", "").split(), page
+            assert "hidden" not in attributes, page
+            inline_style = attributes.get("style", "").replace(" ", "").lower()
+            assert "display:none" not in inline_style, page
+            assert "visibility:hidden" not in inline_style, page
+
+        html = page.read_text(encoding="utf-8")
+        sr_only_rule = re.search(r"\.sr-only\s*\{([^}]*)\}", html)
+        assert sr_only_rule, page
+        declarations = sr_only_rule.group(1).replace(" ", "").lower()
+        assert "position:absolute" in declarations, page
+        assert "width:1px" in declarations, page
+        assert "overflow:hidden" in declarations, page
+        assert "display:none" not in declarations, page
+        assert "visibility:hidden" not in declarations, page
+
+
+def test_lecture_distinguishes_dataset_and_channel_contracts() -> None:
+    text = LECTURE.read_text(encoding="utf-8")
+    assert "original WSTS 2018–2021 baseline" in text
+    assert "later WSTS+ four-fold protocol" in text
+    assert "replaces one land-cover channel with 17 one-hot channels" in text
+    assert "23 - 1 + 17 + 1 = 40" in text
 
 
 def test_lecture_has_the_courseware_shell_and_complete_toc() -> None:
