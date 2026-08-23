@@ -75,6 +75,9 @@ identity without reading the target.
 - `promotion.py` validates immutable prerequisite results and renders reviewed
   seed-0 promotion or seed 1/2 replication manifests. It never invokes Slurm
   or retries a run.
+- `completion.py` validates the 10,000-step marker, checkpoint, finite final
+  validation metrics, and CUDA observation for every declared seed, then
+  creates a non-overwriting completion record with the test lock preserved.
 
 Export the canonical matrix once:
 
