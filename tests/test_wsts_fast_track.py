@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import h5py
 
-from reproductions.wsts_fast_track import compute_stats, contract, entrypoint
+from reproductions.wsts_fast_track import compute_stats, contract, entrypoint, matrix
 
 
 EXPECTED_YEAR_COUNTS = {
@@ -19,6 +19,38 @@ EXPECTED_YEAR_COUNTS = {
     2022: 122,
     2023: 68,
 }
+
+
+def test_follow_on_matrix_has_exact_clean_runs() -> None:
+    assert tuple(matrix.CLEAN_RUNS) == (
+        "C00-S0-3K",
+        "C02-S0-3K",
+        "C00-S0-10K",
+        "C02-S0-10K",
+        "C00-S1-10K",
+        "C00-S2-10K",
+        "C02-S1-10K",
+        "C02-S2-10K",
+    )
+    promoted = matrix.run_spec("C00-S0-10K")
+    assert promoted.experiment_id == "C00"
+    assert (promoted.seed, promoted.max_steps) == (0, 10_000)
+    assert promoted.prerequisites == ("C00-S0-3K", "C02-S0-3K")
+    assert promoted.launch_state == "promotable"
+    assert matrix.run_spec("C02-S1-10K").launch_state == "gated"
+
+
+def test_follow_on_matrix_has_exact_corruptions() -> None:
+    assert tuple(matrix.CORRUPTIONS) == tuple(f"M{i:02d}" for i in range(8))
+    assert matrix.CORRUPTIONS["M01"].feature_indices == (22,)
+    assert matrix.CORRUPTIONS["M03"].feature_indices == tuple(range(5, 12))
+    assert matrix.CORRUPTIONS["M04"].feature_indices == tuple(range(17, 22))
+    assert matrix.CORRUPTIONS["M06"].severity == "area=0.25"
+    assert matrix.CORRUPTIONS["M07"].severity == "area=0.50"
+    assert all(
+        scenario.implementation_state == "declared"
+        for scenario in matrix.CORRUPTIONS.values()
+    )
 
 
 def test_c00_and_c02_render_the_approved_screening_commands(tmp_path: Path) -> None:
