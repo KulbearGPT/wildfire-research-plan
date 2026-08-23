@@ -21,7 +21,7 @@
 - The active migration dataset contract is exactly eight years `2016` through `2023`, 999 direct event-level HDF5 files, and 49,816,826,985 bytes before hashing.
 - Candidate methods from the shared planning conversation remain labelled candidates or hypotheses unless a primary paper or official source is verified.
 - Every implementation task follows RED -> GREEN TDD and ends with a focused test run and a reviewable commit.
-- Use `D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe` for local pytest commands because bare `python` is not on the current PATH.
+- Use `C:\Users\Ji\miniconda3\python.exe` for local pytest commands because bare `python` is not on the current PATH.
 
 ---
 
@@ -121,7 +121,7 @@ def test_roadmap_preserves_claim_boundaries() -> None:
 Run:
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest tests/test_project_research_organization.py -q
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest tests/test_project_research_organization.py -q
 ```
 
 Expected: FAIL because `README.md` and `docs/research-roadmap.md` do not exist.
@@ -169,7 +169,7 @@ unverified performance numbers from the shared ChatGPT conversation.
 - [ ] **Step 5: Run focused GREEN tests**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest tests/test_project_research_organization.py -q
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest tests/test_project_research_organization.py -q
 ```
 
 Expected: all tests PASS.
@@ -270,7 +270,7 @@ class, newline/control characters, and missing command after `--`.
 - [ ] **Step 2: Run RED**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest tests/test_cluster_profile.py -q
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest tests/test_cluster_profile.py -q
 ```
 
 Expected: FAIL because the profile and CLI do not exist.
@@ -382,7 +382,7 @@ summary documents.
 - [ ] **Step 7: Run GREEN and commit**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest tests/test_cluster_profile.py -q
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest tests/test_cluster_profile.py -q
 git diff --check
 git add .gitignore configs/cluster/profile.example.env scripts/cluster/clusterctl.py tests/test_cluster_profile.py
 git commit -m "feat: add portable Slurm profile"
@@ -435,7 +435,7 @@ leftovers.
 - [ ] **Step 2: Run RED**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest tests/test_cluster_manifest.py -q
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest tests/test_cluster_manifest.py -q
 ```
 
 Expected: FAIL because manifest interfaces do not exist.
@@ -475,7 +475,7 @@ contract above before publishing the tracked files.
 Run against the active fixed tree:
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' scripts/cluster/clusterctl.py manifest create `
+& 'C:\Users\Ji\miniconda3\python.exe' scripts/cluster/clusterctl.py manifest create `
   'D:\WildFire Project\data\hdf5' `
   manifests/data/wstsplus-hdf5.csv `
   manifests/data/wstsplus-hdf5.summary.json `
@@ -492,7 +492,7 @@ direct files, recompute total bytes, validate 64-character lowercase hashes,
 and recompute the CSV file hash. Then run the production verifier:
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' scripts/cluster/clusterctl.py manifest verify `
+& 'C:\Users\Ji\miniconda3\python.exe' scripts/cluster/clusterctl.py manifest verify `
   'D:\WildFire Project\data\hdf5' `
   manifests/data/wstsplus-hdf5.csv `
   manifests/data/wstsplus-hdf5.summary.json `
@@ -509,7 +509,7 @@ revision `acf70a37394849f4ec8d108a51d6f4325a554d0a`; do not duplicate its rows.
 - [ ] **Step 7: Run GREEN and commit**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest tests/test_cluster_manifest.py -q
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest tests/test_cluster_manifest.py -q
 git diff --check
 git add scripts/cluster/clusterctl.py manifests/data manifests/weights/README.md tests/test_cluster_manifest.py
 git commit -m "feat: add verified WSTS+ migration manifest"
@@ -572,7 +572,7 @@ directories.
 - [ ] **Step 2: Run RED**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest tests/test_cluster_scripts.py -q
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest tests/test_cluster_scripts.py -q
 ```
 
 - [ ] **Step 3: Implement compact run records**
@@ -639,9 +639,9 @@ system.
 - [ ] **Step 6: Run GREEN, static checks, and commit**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest `
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest `
   tests/test_cluster_profile.py tests/test_cluster_manifest.py tests/test_cluster_scripts.py -q
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m py_compile scripts/cluster/clusterctl.py
+& 'C:\Users\Ji\miniconda3\python.exe' -m py_compile scripts/cluster/clusterctl.py
 git diff --check
 git add scripts/cluster tests/test_cluster_scripts.py
 git commit -m "feat: add thin Slurm research runners"
@@ -693,7 +693,7 @@ accounts in every newly tracked cluster file.
 - [ ] **Step 2: Run RED**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest `
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest `
   tests/test_project_research_organization.py tests/test_cluster_scripts.py -q
 ```
 
@@ -738,7 +738,7 @@ byte-identical hardware equivalence.
 - [ ] **Step 5: Run GREEN and commit**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest `
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest `
   tests/test_project_research_organization.py tests/test_cluster_scripts.py -q
 git diff --check
 git add docs/cluster-migration.md environments/README.md `
@@ -761,7 +761,7 @@ git commit -m "docs: add Slurm migration quick start"
 - [ ] **Step 1: Run focused repository-organization tests**
 
 ```powershell
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest `
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest `
   tests/test_project_research_organization.py `
   tests/test_cluster_profile.py `
   tests/test_cluster_manifest.py `
@@ -774,7 +774,7 @@ Expected: PASS with no Slurm or scientific process.
 
 ```powershell
 $env:PATH = 'C:\Users\Ji\miniconda3\condabin;C:\Users\Ji\miniconda3\Scripts;C:\Users\Ji\miniconda3;' + $env:PATH
-& 'D:\WildFire Project\.conda-envs\wsts-res18-t1\python.exe' -m pytest -q
+& 'C:\Users\Ji\miniconda3\python.exe' -m pytest -q
 ```
 
 Expected: all tests pass; the PATH prefix is required by the existing Conda
