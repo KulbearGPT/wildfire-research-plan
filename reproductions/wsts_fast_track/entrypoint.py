@@ -12,7 +12,13 @@ from pathlib import Path
 
 import numpy as np
 
-from .contract import experiment_spec, upstream_arguments, validate_inventory
+from .contract import (
+    ExperimentSpec,
+    experiment_spec,
+    upstream_arguments,
+    validate_inventory,
+)
+from .matrix import CLEAN_RUNS, run_spec
 
 
 TRAIN_YEARS = (2016, 2017, 2018, 2019, 2020)
@@ -70,6 +76,19 @@ def load_training_stats(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]
     return means, stds, missing_values
 
 
+def resolve_run(
+    experiment_id: str | None, run_id: str | None
+) -> tuple[ExperimentSpec, int, int | None]:
+    """Resolve exactly one legacy experiment or declared follow-on run."""
+
+    if (experiment_id is None) == (run_id is None):
+        raise ValueError("exactly one of experiment_id or run_id is required")
+    if experiment_id is not None:
+        return experiment_spec(experiment_id), 3_000, None
+    declared = run_spec(str(run_id))
+    return experiment_spec(declared.experiment_id), declared.max_steps, declared.seed
+
+
 def _install_runtime_contract(
     upstream_root: Path,
     experiment_id: str,
@@ -115,7 +134,9 @@ def _install_runtime_contract(
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--upstream-root", type=Path, required=True)
-    parser.add_argument("--experiment", choices=("C00", "C02"), required=True)
+    selector = parser.add_mutually_exclusive_group(required=True)
+    selector.add_argument("--experiment", choices=("C00", "C02"))
+    selector.add_argument("--run-id", choices=tuple(CLEAN_RUNS))
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--run-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
@@ -132,7 +153,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise ValueError(f"pinned upstream train.py is missing: {train_path}")
     validate_inventory(data_root)
     stats = load_training_stats(args.stats_path)
-    spec = experiment_spec(args.experiment)
+    spec, max_steps, seed = resolve_run(args.experiment, args.run_id)
     _install_runtime_contract(upstream_root, spec.experiment_id, stats)
 
     work_root = run_root / "work"
@@ -141,7 +162,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     os.chdir(work_root)
     sys.argv = [
         str(train_path),
-        *upstream_arguments(spec, upstream_root, data_root, run_root),
+        *upstream_arguments(
+            spec,
+            upstream_root,
+            data_root,
+            run_root,
+            max_steps=max_steps,
+            seed=seed,
+        ),
     ]
     runpy.run_path(str(train_path), run_name="__main__")
 

@@ -92,6 +92,85 @@ def test_c00_and_c02_render_the_approved_screening_commands(tmp_path: Path) -> N
     assert "--model.class_path=models.SMPTempModel" in c02
 
 
+def test_default_screening_command_remains_exact(tmp_path: Path) -> None:
+    upstream_root = (tmp_path / "upstream").resolve()
+    data_root = (tmp_path / "data").resolve()
+    run_root = (tmp_path / "run").resolve()
+
+    arguments = contract.upstream_arguments(
+        contract.experiment_spec("C00"), upstream_root, data_root, run_root
+    )
+
+    assert arguments == [
+        f"--config={upstream_root / 'cfgs/unet/res18_monotemporal.yaml'}",
+        f"--trainer={upstream_root / 'cfgs/trainer_single_gpu.yaml'}",
+        f"--data={upstream_root / 'cfgs/data_monotemporal_full_features.yaml'}",
+        f"--data.data_dir={data_root}",
+        "--data.additional_data=true",
+        "--data.data_fold_id=0",
+        "--data.features_to_keep=null",
+        "--data.n_leading_observations=1",
+        "--data.n_leading_observations_test_adjustment=5",
+        "--data.return_doy=false",
+        "--data.remove_duplicate_features=true",
+        "--data.batch_size=64",
+        "--data.num_workers=8",
+        "--trainer.max_steps=3000",
+        "--trainer.num_sanity_val_steps=0",
+        f"--trainer.default_root_dir={run_root / 'work'}",
+        "--trainer.logger.init_args.log_model=false",
+        "--do_train=true",
+        "--do_validate=true",
+        "--do_test=false",
+        "--do_predict=false",
+    ]
+
+
+def test_declared_promotion_renders_seed_and_10k_without_test() -> None:
+    spec, max_steps, seed = entrypoint.resolve_run(None, "C02-S0-10K")
+    arguments = contract.upstream_arguments(
+        spec,
+        Path("/upstream"),
+        Path("/data"),
+        Path("/run"),
+        max_steps=max_steps,
+        seed=seed,
+    )
+
+    assert "--seed_everything=0" in arguments
+    assert "--trainer.max_steps=10000" in arguments
+    assert "--do_test=false" in arguments
+    assert "--model.class_path=models.SMPTempModel" in arguments
+
+
+@pytest.mark.parametrize(
+    ("run_id", "expected_seed"),
+    [
+        ("C00-S1-10K", 1),
+        ("C00-S2-10K", 2),
+        ("C02-S1-10K", 1),
+        ("C02-S2-10K", 2),
+    ],
+)
+def test_entrypoint_resolves_declared_replication_seed(
+    run_id: str, expected_seed: int
+) -> None:
+    _, max_steps, seed = entrypoint.resolve_run(None, run_id)
+
+    assert max_steps == 10_000
+    assert seed == expected_seed
+
+
+@pytest.mark.parametrize(
+    ("experiment_id", "run_id"), [(None, None), ("C00", "C00-S0-10K")]
+)
+def test_entrypoint_requires_exactly_one_run_selector(
+    experiment_id: str | None, run_id: str | None
+) -> None:
+    with pytest.raises(ValueError, match="exactly one"):
+        entrypoint.resolve_run(experiment_id, run_id)
+
+
 def _write_inventory(root: Path) -> None:
     for year, count in EXPECTED_YEAR_COUNTS.items():
         year_root = root / str(year)

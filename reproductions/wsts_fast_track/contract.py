@@ -107,8 +107,16 @@ def upstream_arguments(
     upstream_root: Path,
     data_root: Path,
     run_root: Path,
+    *,
+    max_steps: int = 3_000,
+    seed: int | None = None,
 ) -> list[str]:
     """Render the exact LightningCLI arguments for one screening experiment."""
+
+    if type(max_steps) is not int or max_steps <= 0:
+        raise ValueError("max_steps must be a positive integer")
+    if seed is not None and (type(seed) is not int or seed < 0):
+        raise ValueError("seed must be a nonnegative integer or None")
 
     upstream_root = upstream_root.resolve()
     data_root = data_root.resolve()
@@ -133,7 +141,7 @@ def upstream_arguments(
         f"{_bool_argument(spec.remove_duplicate_features)}",
         "--data.batch_size=64",
         "--data.num_workers=8",
-        "--trainer.max_steps=3000",
+        f"--trainer.max_steps={max_steps}",
         "--trainer.num_sanity_val_steps=0",
         f"--trainer.default_root_dir={run_root / 'work'}",
         "--trainer.logger.init_args.log_model=false",
@@ -142,6 +150,8 @@ def upstream_arguments(
         "--do_test=false",
         "--do_predict=false",
     ]
+    if seed is not None:
+        arguments.insert(0, f"--seed_everything={seed}")
     if spec.model_class_override is not None:
         arguments.append(f"--model.class_path={spec.model_class_override}")
     return arguments
