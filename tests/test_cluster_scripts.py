@@ -97,6 +97,7 @@ def test_job_has_no_retry_or_scientific_override() -> None:
         assert forbidden not in text
     assert "set +e" in text
     assert "exit_code=$?" in text
+    assert text.index('cd "$run_dir"') < text.rindex('"$@"')
 
 
 @pytest.mark.parametrize("name", ["bootstrap.sh", "job.sh"])

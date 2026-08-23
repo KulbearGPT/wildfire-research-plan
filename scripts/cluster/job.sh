@@ -31,6 +31,7 @@ run_id="${SLURM_JOB_ID:-manual}-${SLURM_ARRAY_TASK_ID:-0}"
 run_dir="$runs_root/$run_id"
 
 python "$repo_root/scripts/cluster/clusterctl.py" run start "$profile" "$run_dir" -- "$@"
+cd "$run_dir"
 set +e
 "$@"
 exit_code=$?
