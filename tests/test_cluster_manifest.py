@@ -222,3 +222,26 @@ def test_tracked_manifest_outputs_are_not_ignored() -> None:
             check=False,
         )
         assert result.returncode == 1, path
+
+
+def test_heavy_cluster_roots_are_ignored_without_hiding_weight_manifest() -> None:
+    for path in ("weights/example.pth", "scratch/tmp.bin"):
+        result = subprocess.run(
+            ["git", "check-ignore", "--quiet", "--no-index", "--", path],
+            cwd=ROOT,
+            check=False,
+        )
+        assert result.returncode == 0, path
+    manifest = subprocess.run(
+        [
+            "git",
+            "check-ignore",
+            "--quiet",
+            "--no-index",
+            "--",
+            "manifests/weights/README.md",
+        ],
+        cwd=ROOT,
+        check=False,
+    )
+    assert manifest.returncode == 1

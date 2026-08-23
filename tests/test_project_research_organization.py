@@ -99,6 +99,23 @@ def test_cluster_guide_contains_exact_first_day_command_boundaries() -> None:
     assert text.count('--upstream-root "${DERIVED_UPSTREAM_ROOT}"') == 2
 
 
+def test_cluster_docs_explain_automatic_formal_preflight_and_nested_outputs() -> None:
+    guide = (ROOT / "docs" / "cluster-migration.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    for literal in (
+        "automatically verifies the 999-file production manifest",
+        "PyTorch, CUDA, and the single visible GPU",
+        "official upstream commit",
+        "official weight size and SHA-256",
+        '"${RUN_DIR}/work/smoke.json"',
+        '"${RUN_DIR}/work/metrics.csv"',
+        "WANDB_MODE=disabled",
+    ):
+        assert literal in guide
+    assert "formal preflight before the scientific command" in readme
+
+
 def test_new_cluster_files_do_not_embed_local_or_site_specific_secrets() -> None:
     files = [
         ROOT / "README.md",

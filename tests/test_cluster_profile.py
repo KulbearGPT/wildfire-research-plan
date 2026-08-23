@@ -112,6 +112,46 @@ def test_profile_rejects_array_concurrency_outside_available_gpu_range(
         ctl.parse_profile(write_profile(tmp_path, profile))
 
 
+@pytest.mark.parametrize(
+    "gpu_request",
+    [
+        "--gres=gpu:h100:1,gpu:h100:1",
+        "--gpus=h100:2",
+        "--gres=gpu:h100:1,license:foo:1",
+    ],
+)
+def test_profile_rejects_multi_resource_gpu_requests(
+    tmp_path: Path, gpu_request: str
+) -> None:
+    ctl = load_clusterctl()
+    profile = formal_profile_values()
+    profile["SLURM_GPU_REQUEST"] = gpu_request
+
+    with pytest.raises(ValueError, match="exactly one GPU"):
+        ctl.parse_profile(write_profile(tmp_path, profile))
+
+
+def test_profile_rejects_relative_operational_root(tmp_path: Path) -> None:
+    ctl = load_clusterctl()
+    profile = formal_profile_values()
+    profile["RUNS_ROOT"] = "relative/runs"
+
+    with pytest.raises(ValueError, match="RUNS_ROOT.*absolute"):
+        ctl.parse_profile(write_profile(tmp_path, profile))
+
+
+@pytest.mark.parametrize("key", ["RUNS_ROOT", "CACHE_ROOT", "LOG_ROOT"])
+def test_profile_rejects_mutable_root_inside_data(
+    tmp_path: Path, key: str
+) -> None:
+    ctl = load_clusterctl()
+    profile = formal_profile_values()
+    profile[key] = profile["DATA_ROOT"] + "/mutable"
+
+    with pytest.raises(ValueError, match=f"{key}.*DATA_ROOT"):
+        ctl.parse_profile(write_profile(tmp_path, profile))
+
+
 def test_render_uses_one_gpu_and_bounded_array_without_running_sbatch(
     tmp_path: Path,
 ) -> None:

@@ -2,6 +2,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -34,7 +35,9 @@ def init_git_repo(path: Path) -> None:
     subprocess.run(["git", "-C", path, "commit", "-qm", "initial"], check=True)
 
 
-def write_profile(tmp_path: Path, data_root: Path) -> Path:
+def write_profile(
+    tmp_path: Path, data_root: Path, *, project_root: Path | None = None
+) -> Path:
     for name in ("runs", "caches", "logs"):
         (tmp_path / name).mkdir(exist_ok=True)
     activation = tmp_path / "env" / "bin" / "activate"
@@ -50,7 +53,7 @@ def write_profile(tmp_path: Path, data_root: Path) -> Path:
         "SLURM_ARRAY_CONCURRENCY": "4",
         "MODULES": "python/3.11,cuda/12.2",
         "ENV_ACTIVATE": activation.as_posix(),
-        "PROJECT_ROOT": tmp_path.as_posix(),
+        "PROJECT_ROOT": (project_root or tmp_path).as_posix(),
         "DATA_ROOT": data_root.as_posix(),
         "RUNS_ROOT": (tmp_path / "runs").as_posix(),
         "CACHE_ROOT": (tmp_path / "caches").as_posix(),
@@ -66,6 +69,49 @@ def write_profile(tmp_path: Path, data_root: Path) -> Path:
         encoding="utf-8",
     )
     return profile
+
+
+def runtime_environment() -> dict[str, object]:
+    return {
+        "python": "3.11.5",
+        "implementation": "CPython",
+        "platform": "Linux",
+        "numpy": "1.22.3",
+        "torch": "2.0.0",
+        "torch_cuda": "11.8",
+        "lightning": "2.0.1",
+        "cuda_available": True,
+        "cuda_device_count": 1,
+        "cuda_device_name": "NVIDIA H100 80GB HBM3",
+        "wandb_mode": "disabled",
+    }
+
+
+def formal_preflight_record(
+    ctl,
+    tmp_path: Path,
+    repo: Path,
+    profile: Path,
+    data_root: Path,
+    command: list[str],
+) -> dict[str, object]:
+    csv_path = tmp_path / "manifest.csv"
+    summary_path = tmp_path / "summary.json"
+    if not csv_path.exists():
+        ctl.write_hdf5_manifest(data_root, csv_path, summary_path)
+    runner = lambda *_args, **_kwargs: SimpleNamespace(
+        returncode=0, stdout="NVIDIA H100 80GB HBM3\n", stderr=""
+    )
+    return ctl.preflight(
+        profile,
+        csv_path,
+        summary_path,
+        require_gpu=True,
+        repo_root=repo,
+        runner=runner,
+        runtime_probe=lambda: runtime_environment(),
+        command=command,
+    )
 
 
 def make_data_fixture(tmp_path: Path) -> Path:
@@ -98,6 +144,11 @@ def test_job_has_no_retry_or_scientific_override() -> None:
     assert "set +e" in text
     assert "exit_code=$?" in text
     assert text.index('cd "$run_dir"') < text.rindex('"$@"')
+    assert "export WANDB_MODE=disabled" in text
+    assert "export PYTHONDONTWRITEBYTECODE=1" in text
+    assert text.index(" preflight ") < text.index(" run start ")
+    assert 'work_dir="$run_dir/work"' in text
+    assert 'run finish "$run_dir" "$exit_code" "$started_sha256"' in text
 
 
 @pytest.mark.parametrize("name", ["bootstrap.sh", "job.sh"])
@@ -114,18 +165,21 @@ def test_run_finish_writes_one_terminal_marker_and_preserves_start(tmp_path: Pat
     repo.mkdir()
     init_git_repo(repo)
     data_root = make_data_fixture(tmp_path)
-    profile = write_profile(tmp_path, data_root)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
     run_dir = tmp_path / "run"
+    command = ["python", "train.py"]
+    record = formal_preflight_record(ctl, tmp_path, repo, profile, data_root, command)
 
     ctl.write_run_start(
         run_dir,
         profile,
-        ["python", "train.py"],
+        command,
         {"SLURM_JOB_ID": "42", "SLURM_ARRAY_TASK_ID": "3"},
+        record,
         repo_root=repo,
     )
     before = (run_dir / "started.json").read_bytes()
-    terminal = ctl.write_run_finish(run_dir, 0)
+    terminal = ctl.write_run_finish(run_dir, 0, hashlib.sha256(before).hexdigest())
 
     assert terminal["status"] == "completed"
     assert terminal["exit_code"] == 0
@@ -140,14 +194,18 @@ def test_nonzero_finish_is_failure_and_terminal_is_immutable(tmp_path: Path) -> 
     repo = tmp_path / "repo"
     repo.mkdir()
     init_git_repo(repo)
-    profile = write_profile(tmp_path, make_data_fixture(tmp_path))
+    data_root = make_data_fixture(tmp_path)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
     run_dir = tmp_path / "run"
-    ctl.write_run_start(run_dir, profile, ["python", "fail.py"], {}, repo_root=repo)
+    command = ["python", "fail.py"]
+    record = formal_preflight_record(ctl, tmp_path, repo, profile, data_root, command)
+    ctl.write_run_start(run_dir, profile, command, {}, record, repo_root=repo)
+    started_sha = hashlib.sha256((run_dir / "started.json").read_bytes()).hexdigest()
 
-    assert ctl.write_run_finish(run_dir, 7)["status"] == "failure"
+    assert ctl.write_run_finish(run_dir, 7, started_sha)["status"] == "failure"
     assert (run_dir / "failure.json").is_file()
     with pytest.raises(ValueError, match="terminal"):
-        ctl.write_run_finish(run_dir, 0)
+        ctl.write_run_finish(run_dir, 0, started_sha)
 
 
 def test_run_start_rejects_dirty_formal_checkout(tmp_path: Path) -> None:
@@ -156,10 +214,17 @@ def test_run_start_rejects_dirty_formal_checkout(tmp_path: Path) -> None:
     repo.mkdir()
     init_git_repo(repo)
     (repo / "tracked.txt").write_text("dirty\n", encoding="utf-8")
-    profile = write_profile(tmp_path, make_data_fixture(tmp_path))
+    profile = write_profile(tmp_path, make_data_fixture(tmp_path), project_root=repo)
 
     with pytest.raises(ValueError, match="dirty"):
-        ctl.write_run_start(tmp_path / "run", profile, ["python", "x.py"], {}, repo_root=repo)
+        ctl.write_run_start(
+            tmp_path / "run",
+            profile,
+            ["python", "x.py"],
+            {},
+            {},
+            repo_root=repo,
+        )
 
 
 def test_finish_rejects_profile_mutation(tmp_path: Path) -> None:
@@ -167,15 +232,44 @@ def test_finish_rejects_profile_mutation(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
     init_git_repo(repo)
-    profile = write_profile(tmp_path, make_data_fixture(tmp_path))
+    data_root = make_data_fixture(tmp_path)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
     run_dir = tmp_path / "run"
-    ctl.write_run_start(run_dir, profile, ["python", "x.py"], {}, repo_root=repo)
+    command = ["python", "x.py"]
+    record = formal_preflight_record(ctl, tmp_path, repo, profile, data_root, command)
+    ctl.write_run_start(run_dir, profile, command, {}, record, repo_root=repo)
     profile.write_text(profile.read_text(encoding="utf-8") + "# changed\n", encoding="utf-8")
 
     with pytest.raises(ValueError, match="profile"):
-        ctl.write_run_finish(run_dir, 0)
+        ctl.write_run_finish(
+            run_dir,
+            0,
+            hashlib.sha256((run_dir / "started.json").read_bytes()).hexdigest(),
+        )
     assert not (run_dir / "completed.json").exists()
     assert not (run_dir / "failure.json").exists()
+
+
+def test_finish_rejects_started_evidence_changed_by_child(tmp_path: Path) -> None:
+    ctl = load_clusterctl()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_git_repo(repo)
+    data_root = make_data_fixture(tmp_path)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
+    command = ["python", "x.py"]
+    record = formal_preflight_record(ctl, tmp_path, repo, profile, data_root, command)
+    run_dir = tmp_path / "run"
+    ctl.write_run_start(run_dir, profile, command, {}, record, repo_root=repo)
+    started = run_dir / "started.json"
+    original_sha = hashlib.sha256(started.read_bytes()).hexdigest()
+    payload = json.loads(started.read_text(encoding="utf-8"))
+    payload["command"] = ["python", "different.py"]
+    started.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="started evidence changed"):
+        ctl.write_run_finish(run_dir, 0, original_sha)
+    assert not (run_dir / "completed.json").exists()
 
 
 def test_preflight_verifies_manifest_roots_git_and_gpu(tmp_path: Path) -> None:
@@ -184,7 +278,7 @@ def test_preflight_verifies_manifest_roots_git_and_gpu(tmp_path: Path) -> None:
     repo.mkdir()
     init_git_repo(repo)
     data_root = make_data_fixture(tmp_path)
-    profile = write_profile(tmp_path, data_root)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
     csv_path = tmp_path / "manifest.csv"
     summary_path = tmp_path / "summary.json"
     ctl.write_hdf5_manifest(data_root, csv_path, summary_path)
@@ -201,11 +295,16 @@ def test_preflight_verifies_manifest_roots_git_and_gpu(tmp_path: Path) -> None:
         require_gpu=True,
         repo_root=repo,
         runner=runner,
+        runtime_probe=lambda: runtime_environment(),
+        command=["python", "train.py"],
     )
 
     assert result["status"] == "pass"
     assert result["file_count"] == 1
     assert calls == [["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"]]
+    assert result["environment"]["torch"] == "2.0.0"
+    assert result["data"]["manifest_sha256"] == result["manifest_sha256"]
+    assert result["command"] == ["python", "train.py"]
 
 
 def test_preflight_rejects_missing_manifest_and_no_cuda_device(tmp_path: Path) -> None:
@@ -214,10 +313,16 @@ def test_preflight_rejects_missing_manifest_and_no_cuda_device(tmp_path: Path) -
     repo.mkdir()
     init_git_repo(repo)
     data_root = make_data_fixture(tmp_path)
-    profile = write_profile(tmp_path, data_root)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
 
     with pytest.raises(ValueError, match="manifest"):
-        ctl.preflight(profile, tmp_path / "missing.csv", tmp_path / "missing.json", repo_root=repo)
+        ctl.preflight(
+            profile,
+            tmp_path / "missing.csv",
+            tmp_path / "missing.json",
+            repo_root=repo,
+            runtime_probe=lambda: runtime_environment(),
+        )
 
     csv_path = tmp_path / "manifest.csv"
     summary_path = tmp_path / "summary.json"
@@ -231,6 +336,7 @@ def test_preflight_rejects_missing_manifest_and_no_cuda_device(tmp_path: Path) -
             require_gpu=True,
             repo_root=repo,
             runner=runner,
+            runtime_probe=lambda: runtime_environment(),
         )
 
 
@@ -240,7 +346,7 @@ def test_preflight_rejects_invalid_output_root(tmp_path: Path) -> None:
     repo.mkdir()
     init_git_repo(repo)
     data_root = make_data_fixture(tmp_path)
-    profile = write_profile(tmp_path, data_root)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
     text = profile.read_text(encoding="utf-8")
     bad_root = tmp_path / "not-a-directory"
     bad_root.write_text("file\n", encoding="utf-8")
@@ -253,7 +359,177 @@ def test_preflight_rejects_invalid_output_root(tmp_path: Path) -> None:
     ctl.write_hdf5_manifest(data_root, csv_path, summary_path)
 
     with pytest.raises(ValueError, match="RUNS_ROOT"):
-        ctl.preflight(profile, csv_path, summary_path, repo_root=repo)
+        ctl.preflight(
+            profile,
+            csv_path,
+            summary_path,
+            repo_root=repo,
+            runtime_probe=lambda: runtime_environment(),
+        )
+
+
+def test_preflight_requires_project_checkout_and_optional_production_contract(
+    tmp_path: Path,
+) -> None:
+    ctl = load_clusterctl()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_git_repo(repo)
+    data_root = make_data_fixture(tmp_path)
+    profile = write_profile(tmp_path, data_root)
+    csv_path = tmp_path / "manifest.csv"
+    summary_path = tmp_path / "summary.json"
+    ctl.write_hdf5_manifest(data_root, csv_path, summary_path)
+
+    with pytest.raises(ValueError, match="PROJECT_ROOT"):
+        ctl.preflight(
+            profile,
+            csv_path,
+            summary_path,
+            repo_root=repo,
+            runtime_probe=lambda: runtime_environment(),
+        )
+
+    profile = write_profile(tmp_path, data_root, project_root=repo)
+    with pytest.raises(ValueError, match="production dataset contract"):
+        ctl.preflight(
+            profile,
+            csv_path,
+            summary_path,
+            require_production_contract=True,
+            repo_root=repo,
+            runtime_probe=lambda: runtime_environment(),
+        )
+
+
+def test_preflight_gpu_rejects_multiple_visible_devices(tmp_path: Path) -> None:
+    ctl = load_clusterctl()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_git_repo(repo)
+    data_root = make_data_fixture(tmp_path)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
+    csv_path = tmp_path / "manifest.csv"
+    summary_path = tmp_path / "summary.json"
+    ctl.write_hdf5_manifest(data_root, csv_path, summary_path)
+    runner = lambda *_args, **_kwargs: SimpleNamespace(
+        returncode=0,
+        stdout="NVIDIA H100 80GB HBM3\nNVIDIA H100 80GB HBM3\n",
+        stderr="",
+    )
+
+    with pytest.raises(ValueError, match="exactly one visible GPU"):
+        ctl.preflight(
+            profile,
+            csv_path,
+            summary_path,
+            require_gpu=True,
+            repo_root=repo,
+            runner=runner,
+            runtime_probe=lambda: runtime_environment(),
+        )
+
+
+@pytest.mark.parametrize("option", ["--data-root", "--data.data_dir"])
+def test_preflight_command_cannot_bypass_profile_data_root(
+    tmp_path: Path, option: str
+) -> None:
+    ctl = load_clusterctl()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_git_repo(repo)
+    data_root = make_data_fixture(tmp_path)
+    profile = write_profile(tmp_path, data_root, project_root=repo)
+    csv_path = tmp_path / "manifest.csv"
+    summary_path = tmp_path / "summary.json"
+    ctl.write_hdf5_manifest(data_root, csv_path, summary_path)
+
+    with pytest.raises(ValueError, match="DATA_ROOT"):
+        ctl.preflight(
+            profile,
+            csv_path,
+            summary_path,
+            repo_root=repo,
+            runtime_probe=lambda: runtime_environment(),
+            command=["python", "train.py", option, str(tmp_path / "other-data")],
+        )
+
+
+def test_upstream_lineage_accepts_only_clean_or_exact_reviewed_patch(
+    tmp_path: Path,
+) -> None:
+    ctl = load_clusterctl()
+    official = tmp_path / "official"
+    official.mkdir()
+    subprocess.run(["git", "init", "-q", official], check=True)
+    subprocess.run(["git", "-C", official, "config", "user.email", "test@example.com"], check=True)
+    subprocess.run(["git", "-C", official, "config", "user.name", "Test"], check=True)
+    initializer = official / "src" / "models" / "__init__.py"
+    initializer.parent.mkdir(parents=True)
+    initializer.write_text("keep\nremove\n", encoding="utf-8")
+    subprocess.run(["git", "-C", official, "add", "."], check=True)
+    subprocess.run(["git", "-C", official, "commit", "-qm", "initial"], check=True)
+    commit = subprocess.run(
+        ["git", "-C", official, "rev-parse", "HEAD"],
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout.strip()
+    patch_path = tmp_path / "scope.patch"
+    patch_path.write_text(
+        "diff --git a/src/models/__init__.py b/src/models/__init__.py\n"
+        "--- a/src/models/__init__.py\n"
+        "+++ b/src/models/__init__.py\n"
+        "@@ -1,2 +1 @@\n"
+        " keep\n"
+        "-remove\n",
+        encoding="utf-8",
+    )
+    derived = tmp_path / "derived"
+    shutil.copytree(official, derived)
+    subprocess.run(["git", "-C", derived, "apply", patch_path], check=True)
+
+    assert ctl.verify_upstream_lineage(official, commit, patch_path)["mode"] == "official-clean"
+    assert ctl.verify_upstream_lineage(derived, commit, patch_path)["mode"] == "reviewed-derived"
+    (derived / "unexpected.py").write_text("x=1\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="sole derived change"):
+        ctl.verify_upstream_lineage(derived, commit, patch_path)
+
+
+def test_weight_lineage_requires_manifest_size_and_sha(tmp_path: Path) -> None:
+    ctl = load_clusterctl()
+    weight = tmp_path / "fold2.pth"
+    weight.write_bytes(b"weight")
+    manifest = tmp_path / "weights.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "repo_id": "example/repo",
+                "revision": "a" * 40,
+                "weight_prefix": "weights/",
+                "weights": [
+                    {
+                        "filename": "fold2.pth",
+                        "fold_id": 2,
+                        "hub_path": "weights/fold2.pth",
+                        "sha256": hashlib.sha256(b"weight").hexdigest(),
+                        "size": 6,
+                        "filename_ap": 0.5,
+                        "train_years": [2018, 2020],
+                        "validation_year": 2019,
+                        "test_year": 2021,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert ctl.verify_weight_lineage(weight, manifest)["fold_id"] == 2
+    weight.write_bytes(b"tamper")
+    with pytest.raises(ValueError, match="weight"):
+        ctl.verify_weight_lineage(weight, manifest)
 
 
 def test_collection_packs_only_declared_small_json_csv_files(tmp_path: Path) -> None:

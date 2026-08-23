@@ -22,6 +22,8 @@ env_activate="$(python3 "$repo_root/scripts/cluster/clusterctl.py" profile get "
 runs_root="$(python3 "$repo_root/scripts/cluster/clusterctl.py" profile get "$profile" RUNS_ROOT)"
 scratch_name="$(python3 "$repo_root/scripts/cluster/clusterctl.py" profile get "$profile" SCRATCH_ENV)"
 source "$env_activate"
+export WANDB_MODE=disabled
+export PYTHONDONTWRITEBYTECODE=1
 
 scratch_value="${!scratch_name:-}"
 if [[ -n "$scratch_value" ]]; then
@@ -30,11 +32,20 @@ fi
 run_id="${SLURM_JOB_ID:-manual}-${SLURM_ARRAY_TASK_ID:-0}"
 run_dir="$runs_root/$run_id"
 
-python "$repo_root/scripts/cluster/clusterctl.py" run start "$profile" "$run_dir" -- "$@"
+preflight_json="$(python "$repo_root/scripts/cluster/clusterctl.py" preflight "$profile" \
+  --data-manifest "$repo_root/manifests/data/wstsplus-hdf5.csv" \
+  --data-summary "$repo_root/manifests/data/wstsplus-hdf5.summary.json" \
+  --require-gpu --require-production-contract -- "$@")"
+python "$repo_root/scripts/cluster/clusterctl.py" run start "$profile" "$run_dir" \
+  --preflight-json "$preflight_json" -- "$@"
 cd "$run_dir"
+started_sha256="$(sha256sum "$run_dir/started.json" | awk '{print $1}')"
+work_dir="$run_dir/work"
+mkdir "$work_dir"
+cd "$work_dir"
 set +e
 "$@"
 exit_code=$?
 set -e
-python "$repo_root/scripts/cluster/clusterctl.py" run finish "$run_dir" "$exit_code"
+python "$repo_root/scripts/cluster/clusterctl.py" run finish "$run_dir" "$exit_code" "$started_sha256"
 exit "$exit_code"

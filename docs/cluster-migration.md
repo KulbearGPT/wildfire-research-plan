@@ -64,6 +64,16 @@ python3 scripts/cluster/clusterctl.py profile validate configs/cluster/profile.e
 Validation parses only literal `KEY=VALUE` lines. It does not source the file,
 expand variables, or execute substitutions. Never commit the real profile.
 
+Every submitted job runs a formal preflight before it creates run evidence or
+executes the scientific command. It automatically verifies the 999-file production manifest,
+the clean project checkout, PyTorch, CUDA, and the single visible GPU. When the command names
+`--upstream-root` or `--weights-path`, it
+also verifies the official upstream commit (or the exact reviewed seven-line
+deletion patch) and the official weight size and SHA-256. The resulting data,
+runtime, command, code, and weight identities are sealed into `started.json`.
+The job exports `WANDB_MODE=disabled` and disables Python bytecode so that a
+prototype run does not create external logging or source-tree cache files.
+
 ## Qualify the environment
 
 First confirm that the profile's modules expose the intended Python, compiler,
@@ -223,8 +233,12 @@ Archive only declared small JSON/CSV outputs:
 
 ```bash
 scripts/cluster/collect.sh "${RUN_DIR}" "${RUN_DIR}/collection.json" \
-  "${RUN_DIR}/smoke.json" "${RUN_DIR}/metrics.csv"
+  "${RUN_DIR}/work/smoke.json" "${RUN_DIR}/work/metrics.csv"
 ```
+
+Scientific commands run under `${RUN_DIR}/work`; immutable lifecycle evidence
+stays in `${RUN_DIR}`. This separation prevents an upstream script with fixed
+relative output names from colliding with the evidence markers.
 
 ## Inode hygiene
 

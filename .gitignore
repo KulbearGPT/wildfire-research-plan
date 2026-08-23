@@ -22,4 +22,6 @@ artifacts/rule-baselines/
 /caches/
 /tmp/
 /envs/
+/weights/
+/scratch/
 *.ckpt

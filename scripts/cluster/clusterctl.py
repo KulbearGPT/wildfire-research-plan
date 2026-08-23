@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from pathlib import PurePosixPath
+from pathlib import PureWindowsPath
 from typing import Sequence
 
 
@@ -53,7 +54,8 @@ TIME_KEYS = {
 _KEY_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
 _NAME_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
 _TIME_PATTERN = re.compile(r"^(?:[0-9]+-)?[0-9]{1,2}:[0-9]{2}:[0-9]{2}$")
-_GPU_PATTERN = re.compile(r"^--(?:gpus|gres)=[^\s]+:1$")
+_GPUS_PATTERN = re.compile(r"^--gpus=(?:[A-Za-z0-9_.-]+:)?1$")
+_GRES_PATTERN = re.compile(r"^--gres=gpu(?::[A-Za-z0-9_.-]+)?:1$")
 _ENV_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _ARRAY_PATTERN = re.compile(r"^([0-9]+)-([0-9]+)$")
 _YEAR_PATTERN = re.compile(r"^[0-9]{4}$")
@@ -72,6 +74,9 @@ PRODUCTION_YEAR_COUNTS = {
     "2022": 122,
     "2023": 68,
 }
+UPSTREAM_LOCK = REPOSITORY_ROOT / "reproductions" / "wsts_res18_unet_t1" / "upstream.lock.json"
+UPSTREAM_PATCH = REPOSITORY_ROOT / "reproductions" / "wsts_res18_unet_t1" / "patches" / "res18_import_scope.patch"
+WEIGHTS_MANIFEST = REPOSITORY_ROOT / "reproductions" / "wsts_res18_unet_t1" / "official_weights_manifest.json"
 
 
 @dataclass(frozen=True)
@@ -89,6 +94,13 @@ def _is_placeholder(value: str) -> bool:
         or (stripped.startswith("<") and stripped.endswith(">"))
         or "/GROUP/" in stripped
     )
+
+
+def _absolute_profile_path(key: str, value: str):
+    path = PureWindowsPath(value) if re.match(r"^[A-Za-z]:[/\\]", value) else PurePosixPath(value)
+    if not path.is_absolute() or ".." in path.parts:
+        raise ValueError(f"{key} must be an absolute normalized path")
+    return path
 
 
 def parse_profile(
@@ -138,13 +150,34 @@ def parse_profile(
         raise ValueError("SLURM_ARRAY_CONCURRENCY must be an integer") from error
     if not 1 <= concurrency <= 4:
         raise ValueError("SLURM_ARRAY_CONCURRENCY must be between 1 and 4")
-    if not _GPU_PATTERN.fullmatch(values["SLURM_GPU_REQUEST"]):
+    if not (
+        _GPUS_PATTERN.fullmatch(values["SLURM_GPU_REQUEST"])
+        or _GRES_PATTERN.fullmatch(values["SLURM_GPU_REQUEST"])
+    ):
         raise ValueError("SLURM_GPU_REQUEST must request exactly one GPU")
     if not _ENV_NAME_PATTERN.fullmatch(values["SCRATCH_ENV"]):
         raise ValueError("SCRATCH_ENV must name one environment variable")
     for key in ("SMOKE_TIME", "CALIBRATION_TIME", "FULL_TIME"):
         if not _TIME_PATTERN.fullmatch(values[key]):
             raise ValueError(f"{key} must be a Slurm time value")
+    paths = {
+        key: _absolute_profile_path(key, values[key])
+        for key in (
+            "PROJECT_ROOT",
+            "DATA_ROOT",
+            "RUNS_ROOT",
+            "CACHE_ROOT",
+            "LOG_ROOT",
+            "ENV_ACTIVATE",
+        )
+    }
+    data_root = paths["DATA_ROOT"]
+    for key in ("RUNS_ROOT", "CACHE_ROOT", "LOG_ROOT"):
+        path = paths[key]
+        if type(path) is type(data_root) and (
+            path == data_root or data_root in path.parents
+        ):
+            raise ValueError(f"{key} must not equal or be nested under DATA_ROOT")
     return values
 
 
@@ -387,6 +420,155 @@ def _git_identity(repo_root: Path) -> tuple[str, bool]:
     return commit, bool(status.stdout)
 
 
+def _runtime_environment() -> dict[str, object]:
+    """Read bounded runtime facts from the already activated job process."""
+
+    import numpy
+    import torch
+
+    try:
+        import pytorch_lightning as lightning
+    except ImportError:
+        lightning = None
+    cuda_available = bool(torch.cuda.is_available())
+    cuda_count = int(torch.cuda.device_count()) if cuda_available else 0
+    return {
+        "python": platform.python_version(),
+        "implementation": platform.python_implementation(),
+        "platform": platform.system(),
+        "numpy": str(numpy.__version__),
+        "torch": str(torch.__version__),
+        "torch_cuda": str(torch.version.cuda) if torch.version.cuda is not None else None,
+        "lightning": str(lightning.__version__) if lightning is not None else None,
+        "cuda_available": cuda_available,
+        "cuda_device_count": cuda_count,
+        "cuda_device_name": torch.cuda.get_device_name(0) if cuda_count == 1 else None,
+        "wandb_mode": os.environ.get("WANDB_MODE"),
+    }
+
+
+def _run_git(root: Path, *arguments: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(root), *arguments],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ValueError("upstream Git identity is unavailable")
+    return result.stdout
+
+
+def _patched_initializer(clean_text: str, patch_text: str) -> str:
+    remaining = clean_text.splitlines(keepends=True)
+    removed = [
+        line[1:].rstrip("\n")
+        for line in patch_text.splitlines()
+        if line.startswith("-") and not line.startswith("---")
+    ]
+    added = [
+        line
+        for line in patch_text.splitlines()
+        if line.startswith("+") and not line.startswith("+++")
+    ]
+    if not removed or added:
+        raise ValueError("reviewed upstream patch must contain deletions only")
+    for deletion in removed:
+        matches = [
+            index
+            for index, line in enumerate(remaining)
+            if line.rstrip("\r\n") == deletion
+        ]
+        if len(matches) != 1:
+            raise ValueError("reviewed upstream patch does not match pinned initializer")
+        remaining.pop(matches[0])
+    return "".join(remaining)
+
+
+def verify_upstream_lineage(
+    upstream_root: Path | str, expected_commit: str, patch_path: Path | str
+) -> dict[str, object]:
+    root = Path(upstream_root).resolve()
+    patch = Path(patch_path).resolve()
+    if not root.is_dir() or _is_link_or_reparse(root):
+        raise ValueError("upstream root is missing or linked")
+    if not re.fullmatch(r"[0-9a-f]{40}", expected_commit):
+        raise ValueError("expected upstream commit is invalid")
+    if _run_git(root, "rev-parse", "HEAD").strip() != expected_commit:
+        raise ValueError("upstream commit does not match the reviewed commit")
+    status = [
+        line
+        for line in _run_git(
+            root, "status", "--porcelain", "--untracked-files=all"
+        ).splitlines()
+        if line
+    ]
+    common = {
+        "root": str(root),
+        "commit": expected_commit,
+        "patch_path": str(patch),
+        "patch_sha256": _sha256_file(patch),
+    }
+    if not status:
+        return {**common, "mode": "official-clean"}
+    if status != [" M src/models/__init__.py"]:
+        raise ValueError(
+            "upstream checkout must have the sole derived change src/models/__init__.py"
+        )
+    clean_text = _run_git(root, "show", f"{expected_commit}:src/models/__init__.py")
+    current = (root / "src" / "models" / "__init__.py").read_text(encoding="utf-8")
+    if current != _patched_initializer(clean_text, patch.read_text(encoding="utf-8")):
+        raise ValueError("upstream sole derived change is not the exact reviewed patch")
+    return {**common, "mode": "reviewed-derived"}
+
+
+def verify_weight_lineage(
+    weight_path: Path | str, manifest_path: Path | str
+) -> dict[str, object]:
+    weight = Path(weight_path).resolve()
+    manifest = Path(manifest_path).resolve()
+    if not weight.is_file() or _is_link_or_reparse(weight):
+        raise ValueError("official weight is missing or linked")
+    try:
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("official weight manifest is invalid") from error
+    rows = payload.get("weights") if isinstance(payload, dict) else None
+    matches = [
+        row
+        for row in rows or []
+        if isinstance(row, dict) and row.get("filename") == weight.name
+    ]
+    if len(matches) != 1:
+        raise ValueError("official weight filename is absent or ambiguous in manifest")
+    row = matches[0]
+    if (
+        weight.stat().st_size != row.get("size")
+        or _sha256_file(weight) != row.get("sha256")
+    ):
+        raise ValueError("official weight size or SHA-256 does not match manifest")
+    return {
+        "path": str(weight),
+        "manifest_path": str(manifest),
+        "manifest_sha256": _sha256_file(manifest),
+        "revision": payload.get("revision"),
+        "fold_id": row.get("fold_id"),
+        "size": row.get("size"),
+        "sha256": row.get("sha256"),
+    }
+
+
+def _command_option(command: Sequence[str], name: str) -> str | None:
+    for index, token in enumerate(command):
+        if token == name:
+            if index + 1 >= len(command):
+                raise ValueError(f"scientific command option {name} has no value")
+            return command[index + 1]
+        if token.startswith(name + "="):
+            return token.split("=", 1)[1]
+    return None
+
+
 def _canonical_json_bytes(payload: dict[str, object]) -> bytes:
     return (
         json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
@@ -409,6 +591,7 @@ def write_run_start(
     profile_path: Path | str,
     command: Sequence[str],
     environ: dict[str, str] | os._Environ[str],
+    preflight_record: dict[str, object],
     *,
     repo_root: Path | str = REPOSITORY_ROOT,
 ) -> dict[str, object]:
@@ -419,6 +602,18 @@ def write_run_start(
     commit, dirty = _git_identity(Path(repo_root))
     if dirty:
         raise ValueError("formal Git checkout is dirty")
+    if (
+        preflight_record.get("schema_version") != 1
+        or preflight_record.get("status") != "pass"
+        or preflight_record.get("git_commit") != commit
+        or preflight_record.get("profile_path") != str(profile_target)
+        or preflight_record.get("profile_sha256") != _sha256_file(profile_target)
+        or preflight_record.get("command") != list(command)
+        or not isinstance(preflight_record.get("data"), dict)
+        or not isinstance(preflight_record.get("environment"), dict)
+        or not isinstance(preflight_record.get("official_lineage"), dict)
+    ):
+        raise ValueError("preflight evidence does not match this run")
     target = Path(run_dir)
     if target.exists() and (not target.is_dir() or any(target.iterdir())):
         raise ValueError("run directory must be absent or empty")
@@ -434,17 +629,22 @@ def write_run_start(
         "profile_path": str(profile_target),
         "profile_sha256": _sha256_file(profile_target),
         "command": list(command),
-        "python": platform.python_version(),
-        "environment": {
-            "implementation": platform.python_implementation(),
-            "platform": platform.system(),
-        },
+        "python": preflight_record["environment"].get("python"),
+        "environment": preflight_record["environment"],
+        "data": preflight_record["data"],
+        "official_lineage": preflight_record["official_lineage"],
+        "preflight_sha256": hashlib.sha256(
+            _canonical_json_bytes(preflight_record)
+        ).hexdigest(),
+        "wandb_mode": preflight_record["environment"].get("wandb_mode"),
     }
     _write_once_json(target / "started.json", payload)
     return payload
 
 
-def write_run_finish(run_dir: Path | str, exit_code: int) -> dict[str, object]:
+def write_run_finish(
+    run_dir: Path | str, exit_code: int, expected_started_sha256: str
+) -> dict[str, object]:
     target = Path(run_dir)
     started_path = target / "started.json"
     completed_path = target / "completed.json"
@@ -454,6 +654,11 @@ def write_run_finish(run_dir: Path | str, exit_code: int) -> dict[str, object]:
     if completed_path.exists() or failure_path.exists():
         raise ValueError("a terminal run marker already exists")
     started_bytes = started_path.read_bytes()
+    if (
+        not _SHA256_PATTERN.fullmatch(expected_started_sha256)
+        or hashlib.sha256(started_bytes).hexdigest() != expected_started_sha256
+    ):
+        raise ValueError("started evidence changed after scientific launch")
     try:
         started = json.loads(started_bytes)
         created = datetime.fromisoformat(started["created_utc"].replace("Z", "+00:00"))
@@ -471,7 +676,7 @@ def write_run_finish(run_dir: Path | str, exit_code: int) -> dict[str, object]:
         "ended_utc": ended.isoformat().replace("+00:00", "Z"),
         "elapsed_seconds": max(0.0, (ended - created).total_seconds()),
         "exit_code": code,
-        "started_sha256": hashlib.sha256(started_bytes).hexdigest(),
+        "started_sha256": expected_started_sha256,
     }
     _write_once_json(completed_path if code == 0 else failure_path, payload)
     return payload
@@ -483,15 +688,26 @@ def preflight(
     summary_path: Path | str,
     *,
     require_gpu: bool = False,
+    require_production_contract: bool = False,
     repo_root: Path | str = REPOSITORY_ROOT,
     runner=subprocess.run,
+    runtime_probe=_runtime_environment,
+    command: Sequence[str] = (),
 ) -> dict[str, object]:
     profile = parse_profile(profile_path)
-    commit, dirty = _git_identity(Path(repo_root))
+    repository = Path(repo_root).resolve()
+    commit, dirty = _git_identity(repository)
     if dirty:
         raise ValueError("formal Git checkout is dirty")
+    if Path(profile["PROJECT_ROOT"]).resolve() != repository:
+        raise ValueError("PROJECT_ROOT must be the formal Git checkout")
     try:
-        summary = verify_hdf5_manifest(profile["DATA_ROOT"], csv_path, summary_path)
+        summary = verify_hdf5_manifest(
+            profile["DATA_ROOT"],
+            csv_path,
+            summary_path,
+            require_production_contract=require_production_contract,
+        )
     except ValueError as error:
         raise ValueError(f"data manifest verification failed: {error}") from error
     activation = Path(profile["ENV_ACTIVATE"])
@@ -501,6 +717,22 @@ def preflight(
         path = Path(profile[key])
         if not path.is_dir() or not os.access(path, os.W_OK):
             raise ValueError(f"{key} is not a writable directory")
+    environment = runtime_probe()
+    required_environment = {
+        "python",
+        "implementation",
+        "platform",
+        "numpy",
+        "torch",
+        "torch_cuda",
+        "lightning",
+        "cuda_available",
+        "cuda_device_count",
+        "cuda_device_name",
+        "wandb_mode",
+    }
+    if not isinstance(environment, dict) or set(environment) != required_environment:
+        raise ValueError("runtime environment evidence is incomplete")
     if require_gpu:
         gpu = runner(
             ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
@@ -508,14 +740,73 @@ def preflight(
             capture_output=True,
             check=False,
         )
-        if gpu.returncode != 0 or not gpu.stdout.strip():
+        visible = [line.strip() for line in gpu.stdout.splitlines() if line.strip()]
+        if gpu.returncode != 0 or not visible:
             raise ValueError("formal GPU mode requires one visible CUDA device")
-    return {
-        "status": "pass",
-        "git_commit": commit,
+        if len(visible) != 1:
+            raise ValueError("formal GPU mode requires exactly one visible GPU")
+        if environment["cuda_available"] is not True or environment["cuda_device_count"] != 1:
+            raise ValueError("formal GPU mode requires exactly one visible CUDA device")
+        if environment["wandb_mode"] != "disabled":
+            raise ValueError("formal GPU mode requires WANDB_MODE=disabled")
+    scientific_command = list(command)
+    if any(not token or "\n" in token or "\r" in token for token in scientific_command):
+        raise ValueError("scientific command contains an invalid token")
+    for data_option in ("--data-root", "--data.data_dir"):
+        command_data_root = _command_option(scientific_command, data_option)
+        if (
+            command_data_root is not None
+            and Path(command_data_root).resolve() != Path(profile["DATA_ROOT"]).resolve()
+        ):
+            raise ValueError(
+                f"scientific command {data_option} must equal profile DATA_ROOT"
+            )
+    lock_path = UPSTREAM_LOCK
+    patch_path = UPSTREAM_PATCH
+    weights_manifest = WEIGHTS_MANIFEST
+    try:
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+        expected_upstream = lock["code"]["commit"]
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError) as error:
+        raise ValueError("tracked upstream lock is invalid") from error
+    official_lineage: dict[str, object] = {
+        "upstream_lock_path": str(lock_path.resolve()),
+        "upstream_lock_sha256": _sha256_file(lock_path),
+        "reviewed_patch_path": str(patch_path.resolve()),
+        "reviewed_patch_sha256": _sha256_file(patch_path),
+        "weights_manifest_path": str(weights_manifest.resolve()),
+        "weights_manifest_sha256": _sha256_file(weights_manifest),
+    }
+    upstream_value = _command_option(scientific_command, "--upstream-root")
+    if upstream_value is not None:
+        official_lineage["upstream"] = verify_upstream_lineage(
+            upstream_value, expected_upstream, patch_path
+        )
+    weight_value = _command_option(scientific_command, "--weights-path")
+    if weight_value is not None:
+        official_lineage["weight"] = verify_weight_lineage(
+            weight_value, weights_manifest
+        )
+    data = {
+        "root": str(Path(profile["DATA_ROOT"]).resolve()),
         "file_count": summary["file_count"],
         "total_bytes": summary["total_bytes"],
         "manifest_sha256": summary["manifest_sha256"],
+        "summary_sha256": _sha256_file(Path(summary_path)),
+    }
+    return {
+        "schema_version": 1,
+        "status": "pass",
+        "git_commit": commit,
+        "profile_path": str(Path(profile_path).resolve()),
+        "profile_sha256": _sha256_file(Path(profile_path)),
+        "file_count": summary["file_count"],
+        "total_bytes": summary["total_bytes"],
+        "manifest_sha256": summary["manifest_sha256"],
+        "data": data,
+        "environment": environment,
+        "official_lineage": official_lineage,
+        "command": scientific_command,
         "gpu_required": require_gpu,
     }
 
@@ -672,15 +963,18 @@ def _build_parser() -> argparse.ArgumentParser:
     preflight_parser.add_argument("--data-manifest", type=Path, required=True)
     preflight_parser.add_argument("--data-summary", type=Path, required=True)
     preflight_parser.add_argument("--require-gpu", action="store_true")
+    preflight_parser.add_argument("--require-production-contract", action="store_true")
 
     run_parser = subcommands.add_parser("run")
     run_actions = run_parser.add_subparsers(dest="run_action", required=True)
     run_start = run_actions.add_parser("start")
     run_start.add_argument("profile", type=Path)
     run_start.add_argument("run_dir", type=Path)
+    run_start.add_argument("--preflight-json", required=True)
     run_finish = run_actions.add_parser("finish")
     run_finish.add_argument("run_dir", type=Path)
     run_finish.add_argument("exit_code", type=int)
+    run_finish.add_argument("started_sha256")
 
     collect_parser = subcommands.add_parser("collect")
     collect_parser.add_argument("run_dir", type=Path)
@@ -691,7 +985,10 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _split_scientific_command(argv: Sequence[str]) -> tuple[list[str], list[str]]:
     arguments = list(argv)
-    command_action = arguments[:1] == ["submit"] or arguments[:2] == ["run", "start"]
+    command_action = (
+        arguments[:1] in (["submit"], ["preflight"])
+        or arguments[:2] == ["run", "start"]
+    )
     if not command_action or "--" not in arguments:
         return arguments, []
     separator = arguments.index("--")
@@ -734,6 +1031,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 arguments.data_manifest,
                 arguments.data_summary,
                 require_gpu=arguments.require_gpu,
+                require_production_contract=arguments.require_production_contract,
+                command=scientific_command,
             )
             print(json.dumps(result, sort_keys=True, separators=(",", ":")))
             return 0
@@ -747,9 +1046,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                     arguments.profile,
                     scientific_command,
                     os.environ,
+                    json.loads(arguments.preflight_json),
                 )
             else:
-                result = write_run_finish(arguments.run_dir, arguments.exit_code)
+                result = write_run_finish(
+                    arguments.run_dir,
+                    arguments.exit_code,
+                    arguments.started_sha256,
+                )
             print(json.dumps(result, sort_keys=True, separators=(",", ":")))
             return 0
 
