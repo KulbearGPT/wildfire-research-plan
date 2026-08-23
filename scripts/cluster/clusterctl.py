@@ -9,12 +9,15 @@ import hashlib
 import io
 import json
 import os
+import platform
 import re
 import shlex
 import subprocess
 import sys
+import tarfile
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from pathlib import PurePosixPath
 from typing import Sequence
@@ -359,6 +362,226 @@ def verify_hdf5_manifest(
     return summary
 
 
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _git_identity(repo_root: Path) -> tuple[str, bool]:
+    head = subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    status = subprocess.run(
+        ["git", "-C", str(repo_root), "status", "--porcelain", "--untracked-files=all"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    commit = head.stdout.strip()
+    if head.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("formal Git checkout has no exact commit")
+    if status.returncode != 0:
+        raise ValueError("formal Git checkout status is unavailable")
+    return commit, bool(status.stdout)
+
+
+def _canonical_json_bytes(payload: dict[str, object]) -> bytes:
+    return (
+        json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        + "\n"
+    ).encode("utf-8")
+
+
+def _write_once_json(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() or path.is_symlink():
+        raise ValueError(f"evidence marker already exists: {path.name}")
+    with path.open("xb") as handle:
+        handle.write(_canonical_json_bytes(payload))
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def write_run_start(
+    run_dir: Path | str,
+    profile_path: Path | str,
+    command: Sequence[str],
+    environ: dict[str, str] | os._Environ[str],
+    *,
+    repo_root: Path | str = REPOSITORY_ROOT,
+) -> dict[str, object]:
+    profile_target = Path(profile_path).resolve()
+    parse_profile(profile_target)
+    if not command or any(not token or "\n" in token or "\r" in token for token in command):
+        raise ValueError("scientific command must contain nonempty tokens")
+    commit, dirty = _git_identity(Path(repo_root))
+    if dirty:
+        raise ValueError("formal Git checkout is dirty")
+    target = Path(run_dir)
+    if target.exists() and (not target.is_dir() or any(target.iterdir())):
+        raise ValueError("run directory must be absent or empty")
+    target.mkdir(parents=True, exist_ok=True)
+    payload: dict[str, object] = {
+        "schema_version": 1,
+        "status": "started",
+        "created_utc": _utc_now(),
+        "slurm_job_id": environ.get("SLURM_JOB_ID"),
+        "slurm_array_task_id": environ.get("SLURM_ARRAY_TASK_ID"),
+        "git_commit": commit,
+        "git_dirty": False,
+        "profile_path": str(profile_target),
+        "profile_sha256": _sha256_file(profile_target),
+        "command": list(command),
+        "python": platform.python_version(),
+        "environment": {
+            "implementation": platform.python_implementation(),
+            "platform": platform.system(),
+        },
+    }
+    _write_once_json(target / "started.json", payload)
+    return payload
+
+
+def write_run_finish(run_dir: Path | str, exit_code: int) -> dict[str, object]:
+    target = Path(run_dir)
+    started_path = target / "started.json"
+    completed_path = target / "completed.json"
+    failure_path = target / "failure.json"
+    if not started_path.is_file() or _is_link_or_reparse(started_path):
+        raise ValueError("started evidence is missing or linked")
+    if completed_path.exists() or failure_path.exists():
+        raise ValueError("a terminal run marker already exists")
+    started_bytes = started_path.read_bytes()
+    try:
+        started = json.loads(started_bytes)
+        created = datetime.fromisoformat(started["created_utc"].replace("Z", "+00:00"))
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+        raise ValueError("started evidence is invalid") from error
+    profile_path = Path(started["profile_path"])
+    if not profile_path.is_file() or _sha256_file(profile_path) != started["profile_sha256"]:
+        raise ValueError("cluster profile changed after run start")
+    ended = datetime.now(timezone.utc)
+    code = int(exit_code)
+    status = "completed" if code == 0 else "failure"
+    payload: dict[str, object] = {
+        "schema_version": 1,
+        "status": status,
+        "ended_utc": ended.isoformat().replace("+00:00", "Z"),
+        "elapsed_seconds": max(0.0, (ended - created).total_seconds()),
+        "exit_code": code,
+        "started_sha256": hashlib.sha256(started_bytes).hexdigest(),
+    }
+    _write_once_json(completed_path if code == 0 else failure_path, payload)
+    return payload
+
+
+def preflight(
+    profile_path: Path | str,
+    csv_path: Path | str,
+    summary_path: Path | str,
+    *,
+    require_gpu: bool = False,
+    repo_root: Path | str = REPOSITORY_ROOT,
+    runner=subprocess.run,
+) -> dict[str, object]:
+    profile = parse_profile(profile_path)
+    commit, dirty = _git_identity(Path(repo_root))
+    if dirty:
+        raise ValueError("formal Git checkout is dirty")
+    try:
+        summary = verify_hdf5_manifest(profile["DATA_ROOT"], csv_path, summary_path)
+    except ValueError as error:
+        raise ValueError(f"data manifest verification failed: {error}") from error
+    activation = Path(profile["ENV_ACTIVATE"])
+    if not activation.is_file():
+        raise ValueError("ENV_ACTIVATE is not a file")
+    for key in ("PROJECT_ROOT", "RUNS_ROOT", "CACHE_ROOT", "LOG_ROOT"):
+        path = Path(profile[key])
+        if not path.is_dir() or not os.access(path, os.W_OK):
+            raise ValueError(f"{key} is not a writable directory")
+    if require_gpu:
+        gpu = runner(
+            ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if gpu.returncode != 0 or not gpu.stdout.strip():
+            raise ValueError("formal GPU mode requires one visible CUDA device")
+    return {
+        "status": "pass",
+        "git_commit": commit,
+        "file_count": summary["file_count"],
+        "total_bytes": summary["total_bytes"],
+        "manifest_sha256": summary["manifest_sha256"],
+        "gpu_required": require_gpu,
+    }
+
+
+def collect_results(
+    run_dir: Path | str,
+    output_json: Path | str,
+    result_paths: Sequence[Path | str],
+    *,
+    maximum_file_bytes: int = 10 * 1024 * 1024,
+) -> dict[str, object]:
+    root = Path(run_dir).resolve()
+    output = Path(output_json)
+    archive = output.with_name("results.tar.gz")
+    if not root.is_dir() or _is_link_or_reparse(root):
+        raise ValueError("run directory is missing or linked")
+    if output.parent.resolve() != root or output.name != "collection.json":
+        raise ValueError("collection output must be RUN_DIR/collection.json")
+    if output.exists() or archive.exists():
+        raise ValueError("existing collection would be overwritten")
+    selected: list[tuple[Path, str]] = []
+    for raw_path in result_paths:
+        path = Path(raw_path)
+        if not path.is_absolute():
+            path = root / path
+        resolved = path.resolve()
+        try:
+            relative = resolved.relative_to(root).as_posix()
+        except ValueError as error:
+            raise ValueError("result path escapes the run directory") from error
+        if (
+            resolved != path.absolute()
+            or not resolved.is_file()
+            or _is_link_or_reparse(resolved)
+            or resolved.suffix not in {".json", ".csv"}
+            or resolved.stat().st_size > maximum_file_bytes
+            or resolved.name in {"started.json", "completed.json", "failure.json", "collection.json"}
+        ):
+            raise ValueError(f"result is not one declared small JSON/CSV file: {path}")
+        selected.append((resolved, relative))
+    if not selected:
+        raise ValueError("at least one result file is required")
+    selected.sort(key=lambda item: item[1])
+    try:
+        with tarfile.open(archive, "x:gz") as bundle:
+            for path, relative in selected:
+                bundle.add(path, arcname=relative, recursive=False)
+        payload: dict[str, object] = {
+            "schema_version": 1,
+            "status": "pass",
+            "created_utc": _utc_now(),
+            "files": [relative for _, relative in selected],
+            "file_sha256": {
+                relative: _sha256_file(path) for path, relative in selected
+            },
+            "archive": archive.name,
+            "archive_sha256": _sha256_file(archive),
+        }
+        _write_once_json(output, payload)
+        return payload
+    except Exception:
+        if archive.exists() and not output.exists():
+            archive.unlink()
+        raise
+
+
 def render_submit_command(
     profile: dict[str, str],
     *,
@@ -422,6 +645,9 @@ def _build_parser() -> argparse.ArgumentParser:
     validate = profile_actions.add_parser("validate")
     validate.add_argument("profile", type=Path)
     validate.add_argument("--allow-placeholders", action="store_true")
+    profile_get = profile_actions.add_parser("get")
+    profile_get.add_argument("profile", type=Path)
+    profile_get.add_argument("key", choices=REQUIRED_PROFILE_KEYS)
 
     submit = subcommands.add_parser("submit")
     submit.add_argument("profile", type=Path)
@@ -440,12 +666,33 @@ def _build_parser() -> argparse.ArgumentParser:
         operation.add_argument("csv_path", type=Path)
         operation.add_argument("summary_path", type=Path)
         operation.add_argument("--require-production-contract", action="store_true")
+
+    preflight_parser = subcommands.add_parser("preflight")
+    preflight_parser.add_argument("profile", type=Path)
+    preflight_parser.add_argument("--data-manifest", type=Path, required=True)
+    preflight_parser.add_argument("--data-summary", type=Path, required=True)
+    preflight_parser.add_argument("--require-gpu", action="store_true")
+
+    run_parser = subcommands.add_parser("run")
+    run_actions = run_parser.add_subparsers(dest="run_action", required=True)
+    run_start = run_actions.add_parser("start")
+    run_start.add_argument("profile", type=Path)
+    run_start.add_argument("run_dir", type=Path)
+    run_finish = run_actions.add_parser("finish")
+    run_finish.add_argument("run_dir", type=Path)
+    run_finish.add_argument("exit_code", type=int)
+
+    collect_parser = subcommands.add_parser("collect")
+    collect_parser.add_argument("run_dir", type=Path)
+    collect_parser.add_argument("output_json", type=Path)
+    collect_parser.add_argument("result_paths", nargs="+")
     return parser
 
 
 def _split_scientific_command(argv: Sequence[str]) -> tuple[list[str], list[str]]:
     arguments = list(argv)
-    if arguments[:1] != ["submit"] or "--" not in arguments:
+    command_action = arguments[:1] == ["submit"] or arguments[:2] == ["run", "start"]
+    if not command_action or "--" not in arguments:
         return arguments, []
     separator = arguments.index("--")
     return arguments[:separator], arguments[separator + 1 :]
@@ -458,10 +705,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(parser_arguments)
     try:
         if arguments.action == "profile":
-            parse_profile(
+            profile = parse_profile(
                 arguments.profile,
-                allow_placeholders=arguments.allow_placeholders,
+                allow_placeholders=getattr(arguments, "allow_placeholders", False),
             )
+            if arguments.profile_action == "get":
+                print(profile[arguments.key])
             return 0
 
         if arguments.action == "manifest":
@@ -477,6 +726,40 @@ def main(argv: Sequence[str] | None = None) -> int:
                 require_production_contract=arguments.require_production_contract,
             )
             print(json.dumps(summary, sort_keys=True, separators=(",", ":")))
+            return 0
+
+        if arguments.action == "preflight":
+            result = preflight(
+                arguments.profile,
+                arguments.data_manifest,
+                arguments.data_summary,
+                require_gpu=arguments.require_gpu,
+            )
+            print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+            return 0
+
+        if arguments.action == "run":
+            if arguments.run_action == "start":
+                if not scientific_command:
+                    raise ValueError("scientific command is required after --")
+                result = write_run_start(
+                    arguments.run_dir,
+                    arguments.profile,
+                    scientific_command,
+                    os.environ,
+                )
+            else:
+                result = write_run_finish(arguments.run_dir, arguments.exit_code)
+            print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+            return 0
+
+        if arguments.action == "collect":
+            result = collect_results(
+                arguments.run_dir,
+                arguments.output_json,
+                arguments.result_paths,
+            )
+            print(json.dumps(result, sort_keys=True, separators=(",", ":")))
             return 0
 
         profile = parse_profile(arguments.profile)
