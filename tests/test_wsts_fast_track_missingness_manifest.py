@@ -96,6 +96,11 @@ def test_formal_manifest_renders_ordered_96_task_matrix(tmp_path: Path) -> None:
     assert manifest["years"] == [2022, 2023]
     assert manifest["heldout_access"] is True
     assert len(manifest["records"]) == 6
+    assert [item["experiment_id"] for item in manifest["clean_validation_summary"]] == [
+        "C00",
+        "C02",
+    ]
+    assert all(item["seed_count"] == 3 for item in manifest["clean_validation_summary"])
     assert len(manifest["tasks"]) == 96
     expected = [
         (run_id, scenario_id, year)

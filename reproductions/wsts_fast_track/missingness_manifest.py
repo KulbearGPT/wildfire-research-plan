@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -70,6 +71,32 @@ def _manifest(
         raise ValueError(f"unknown missingness manifest mode: {mode}")
     formal = mode == "formal"
     records = _validated_records(record_paths, require_all=formal)
+    clean_summary: list[dict[str, object]] = []
+    for experiment_id in ("C00", "C02"):
+        experiment_records = [
+            record
+            for record in records
+            if record["experiment_id"] == experiment_id
+        ]
+        if not experiment_records:
+            continue
+        metric_summary: dict[str, object] = {}
+        for metric_name in ("val_avg_precision", "val_f1", "val_loss"):
+            values = [
+                float(record["clean_validation_metrics"][metric_name])  # type: ignore[index]
+                for record in experiment_records
+            ]
+            metric_summary[metric_name] = {
+                "mean": statistics.mean(values),
+                "std": statistics.stdev(values) if len(values) > 1 else 0.0,
+            }
+        clean_summary.append(
+            {
+                "experiment_id": experiment_id,
+                "seed_count": len(experiment_records),
+                "metrics": metric_summary,
+            }
+        )
     years = FORMAL_YEARS if formal else ENGINEERING_YEARS
     root = Path(output_root).resolve()
     tasks: list[dict[str, object]] = []
@@ -110,6 +137,7 @@ def _manifest(
             "retraining": False,
         },
         "records": records,
+        "clean_validation_summary": clean_summary,
         "tasks": tasks,
     }
 
