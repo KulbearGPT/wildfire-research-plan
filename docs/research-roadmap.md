@@ -34,8 +34,13 @@ lineage. The first matched seed-0 screening runs are:
 1. C00 Res18-U-Net, `T=1`, All features, 3,000 optimizer steps;
 2. C02 Res18-UTAE, `T=5`, Multi features, 3,000 optimizer steps.
 
-These runs select candidates for 10,000-step promotion. They do not by
-themselves support a final model-quality or test-performance claim.
+These runs gate fresh, matched 10,000-step promotion for both controls; their
+screening AP ranking does not eliminate either baseline. After both seed-0 10K
+runs pass, seed 1 and seed 2 are the declared replication set. The canonical
+run IDs and gates live in
+[`reproductions/wsts_fast_track/`](../reproductions/wsts_fast_track/README.md).
+The 3,000-step runs do not by themselves support a final model-quality or
+test-performance claim.
 
 ## Stage 0 — Cluster migration and equivalence
 
@@ -89,8 +94,10 @@ actual frozen WSTS+ split before robustness mechanisms are introduced?
    official reproduction.
 2. UTAE(Res18), `T=5`, Multi features, seed 0, as the stronger
    clean-observation backbone candidate.
-3. Additional seeds only after the seed-0 data, numerical, runtime, and metric
-   gates pass.
+3. Fresh `C00-S0-10K` and `C02-S0-10K` runs after both 3,000-step screening
+   records pass; neither resumes a screening checkpoint.
+4. `C00/C02-S1-10K` and `C00/C02-S2-10K` only after both seed-0 10K data,
+   numerical, runtime, and metric gates pass.
 
 **Gate:** no split leakage; finite training; checkpoint selection fixed before
 launch; test results reported separately for 2022 and 2023; and improvement
@@ -105,10 +112,13 @@ seed variability, calibration, runtime, and parameter/training-budget counts.
 **Question:** Which prespecified observation failures cause stable and
 scientifically meaningful degradation in the learned controls?
 
-**Required runs:** apply a frozen test-only corruption matrix to the clean
-checkpoints. The minimum matrix covers missing fire history, one-day-stale fire
-history, loss of one dynamic modality, combined dynamic-modality loss, and
-structured spatial block missingness at prespecified severities.
+**Required runs:** apply the frozen, test-only M00–M07 matrix declared in
+[`reproductions/wsts_fast_track/`](../reproductions/wsts_fast_track/README.md)
+to accepted clean checkpoints. It covers clean reference, missing and
+one-day-stale fire history, observed-weather loss, forecast-weather loss,
+combined weather loss, and deterministic structured blocks covering 25% and
+50% of dynamic-input area. The identifiers are declared now; corruption
+transforms remain non-launchable until their later implementation is reviewed.
 
 **Gate:** corruption generation must be deterministic, label-independent, and
 free of future information. Continue to method development only if degradation
