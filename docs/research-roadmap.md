@@ -26,20 +26,22 @@ The immediate priority is to begin new learned experiments. The remaining
 Stage 0 checkpoint-equivalence work and Stage 1 positive-weight sensitivity
 study are deferred; they remain documented below but no longer block Stage 2.
 
-The launch gate is deliberately small: exact active-fixed WSTS+ year counts,
+The launch gate was deliberately small: exact active-fixed WSTS+ year counts,
 the frozen 2016–2020 train / 2021 validation split, one finite train and
 validation batch inside each job, a locked 2022–2023 test, and compact run
-lineage. The first matched seed-0 screening runs are:
+lineage. The first matched seed-0 screening runs were:
 
 1. C00 Res18-U-Net, `T=1`, All features, 3,000 optimizer steps;
 2. C02 Res18-UTAE, `T=5`, Multi features, 3,000 optimizer steps.
 
-These runs gate fresh, matched 10,000-step promotion for both controls; their
-screening AP ranking does not eliminate either baseline. After both seed-0 10K
-runs pass, seed 1 and seed 2 are the declared replication set. The canonical
-run IDs and gates live in
+Both completed with passing records. C00 job `20346980` reached validation AP
+0.547372 and C02 job `20346981` reached 0.584540; this screening difference
+does not eliminate either baseline. Fresh matched seed-0 10,000-step jobs
+`20353582` and `20353584` have been submitted. After both pass, seed 1 and seed
+2 are the declared replication set. The canonical run IDs and gates live in
 [`reproductions/wsts_fast_track/`](../reproductions/wsts_fast_track/README.md).
-The 3,000-step runs do not by themselves support a final model-quality or
+No Fast Experiment Track artifact reads 2022–2023 before the declared final
+test action, and a screening result is not a clean-performance or held-out-
 test-performance claim.
 
 ## Stage 0 — Cluster migration and equivalence
@@ -83,7 +85,7 @@ calibration diagnostics, runtime, and the exact one-variable diff.
 
 ## Stage 2 — WSTS+ learned controls
 
-**Status:** Active under the Fast Experiment Track above.
+**Status:** Active; 3K screening complete and seed-0 10K promotion submitted.
 
 **Question:** What clean-observation learned performance is available on the
 actual frozen WSTS+ split before robustness mechanisms are introduced?
@@ -106,6 +108,13 @@ across different prevalence levels.
 
 **Output:** a reviewed clean-baseline table with per-year and aggregate metrics,
 seed variability, calibration, runtime, and parameter/training-budget counts.
+
+The replication gate and controlled-missingness implementation boundary are
+specified in
+[`2026-08-23-wsts-post-control-design.md`](superpowers/specs/2026-08-23-wsts-post-control-design.md).
+The current upstream validation dataset enables training augmentation, so the
+formal Stage 3 evaluator must instead construct a deterministic
+`is_train=false` path before any M00--M07 result is recorded.
 
 ## Stage 3 — Controlled-missingness diagnosis
 

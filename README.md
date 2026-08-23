@@ -15,9 +15,9 @@ infrastructure needed to run the next experiments.
 - The official Res18-U-Net, `T=1`, Fold-2 training path has been executed, and
   all twelve official released weights have been evaluated independently. See
   [`docs/experiments/res18_unet_t1_reproduction.md`](docs/experiments/res18_unet_t1_reproduction.md).
-- A one-step Res18-U-Net `T=1` engineering smoke has completed on an Nibi H100.
-  The active Fast Experiment Track now prepares the full 999-event WSTS+ tree
-  and runs the first C00/C02 learned controls. See
+- The active-fixed 999-event WSTS+ tree is prepared on Nibi. C00/C02 seed-0
+  3,000-step screening has completed, and both models have advanced to fresh
+  10,000-step runs. See
   [`reproductions/wsts_fast_track/`](reproductions/wsts_fast_track/).
 
 ## Scientific boundary
@@ -78,10 +78,12 @@ official-weight identities into its run record. Follow
 [`docs/cluster-migration.md`](docs/cluster-migration.md) after cloning the
 reviewed migration commit.
 
-## Next experiment
+## Active experiment
 
-The immediate experiments are C00 Res18-U-Net `T=1` All and C02 Res18-UTAE
-`T=5` Multi, each with seed 0 and 3,000 optimizer steps on the frozen
-2016–2020 train / 2021 validation split. Cluster checkpoint equivalence and the
-Fold-2 positive-weight sensitivity study are deferred so they do not block new
-model experiments. The 2022–2023 test years remain withheld during screening.
+The immediate experiments are fresh `C00-S0-10K` and `C02-S0-10K` runs on the
+frozen 2016–2020 train / 2021 validation split (Nibi jobs `20353582` and
+`20353584`). Their 3,000-step prerequisites passed without accessing the
+withheld 2022–2023 years. Seed 1/2 manifests are implemented but remain locked
+until both seed-0 10K completion records pass. Controlled-missingness work is
+next after clean replication; its implementation must use a deterministic
+`is_train=false` evaluation path and may not tune against the held-out years.

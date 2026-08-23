@@ -13,13 +13,15 @@ minimum scientific boundaries needed for interpretable screening.
 - Budget: 3,000 optimizer steps per model.
 - Hardware: one Nibi H100.
 
-| ID | Model | History | Features | Status | Nibi job | Best 2021 AP |
-| --- | --- | ---: | --- | --- | --- | ---: |
-| C00 | Res18-UNet | 1 | All (40) | Preparing | — | — |
-| C02 | Res18-UTAE | 5 | Multi (33) | Preparing | — | — |
+| ID | Model | History | Features | Parameters | Nibi job | Wall | Best step | 2021 AP | 2021 F1 | 2021 loss | CUDA peak |
+| --- | --- | ---: | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| C00 | Res18-UNet | 1 | All (40) | 14,444,241 | `20346980` | 580 s | 2,343 | 0.547372 | 0.402298 | 0.006614 | 3.88 GB |
+| C02 | Res18-UTAE | 5 | Multi (33) | 14,704,785 | `20346981` | 1,988 s | 2,941 | 0.584540 | 0.438810 | 0.006639 | 4.99 GB |
 
-The first runs are screening evidence. A model must be promoted to the frozen
-10,000-step budget before the project makes a clean-performance claim.
+Both jobs completed at exactly 3,000 optimizer steps with Slurm exit `0:0`, one
+loadable best checkpoint, finite metrics, and no test action. These runs are
+screening evidence. The AP difference does not select a winner, and neither
+single-seed result is a clean-performance or held-out-test claim.
 
 ## Clean follow-on matrix
 
@@ -30,14 +32,14 @@ control.
 
 | Run ID | Model | Seed | Steps | State |
 | --- | --- | ---: | ---: | --- |
-| `C00-S0-3K` | Res18-UNet | 0 | 3,000 | Active screening |
-| `C02-S0-3K` | Res18-UTAE | 0 | 3,000 | Active screening |
-| `C00-S0-10K` | Res18-UNet | 0 | 10,000 | Promotable after both 3K records pass |
-| `C02-S0-10K` | Res18-UTAE | 0 | 10,000 | Promotable after both 3K records pass |
-| `C00-S1-10K` | Res18-UNet | 1 | 10,000 | Gated on both seed-0 10K runs |
-| `C00-S2-10K` | Res18-UNet | 2 | 10,000 | Gated on both seed-0 10K runs |
-| `C02-S1-10K` | Res18-UTAE | 1 | 10,000 | Gated on both seed-0 10K runs |
-| `C02-S2-10K` | Res18-UTAE | 2 | 10,000 | Gated on both seed-0 10K runs |
+| `C00-S0-3K` | Res18-UNet | 0 | 3,000 | Pass — job `20346980` |
+| `C02-S0-3K` | Res18-UTAE | 0 | 3,000 | Pass — job `20346981` |
+| `C00-S0-10K` | Res18-UNet | 0 | 10,000 | Submitted fresh — job `20353582` |
+| `C02-S0-10K` | Res18-UTAE | 0 | 10,000 | Submitted fresh — job `20353584` |
+| `C00-S1-10K` | Res18-UNet | 1 | 10,000 | Manifest code ready; gated on both seed-0 10K records |
+| `C00-S2-10K` | Res18-UNet | 2 | 10,000 | Manifest code ready; gated on both seed-0 10K records |
+| `C02-S1-10K` | Res18-UTAE | 1 | 10,000 | Manifest code ready; gated on both seed-0 10K records |
+| `C02-S2-10K` | Res18-UTAE | 2 | 10,000 | Manifest code ready; gated on both seed-0 10K records |
 
 Seed-0 promotion continues to train on 2016–2020 and select on 2021.
 The 2022–2023 test years remain withheld.
@@ -70,8 +72,9 @@ identity without reading the target.
   upstream Lightning CLI.
 - `matrix.py` is the authoritative typed registry for clean follow-on runs and
   declared corruption scenarios.
-- `promotion.py` validates immutable screening results and renders reviewed
-  seed-0 10K manifests. It never invokes Slurm or retries a run.
+- `promotion.py` validates immutable prerequisite results and renders reviewed
+  seed-0 promotion or seed 1/2 replication manifests. It never invokes Slurm
+  or retries a run.
 
 Export the canonical matrix once:
 
@@ -98,6 +101,19 @@ python -m reproductions.wsts_fast_track.promotion render \
 Review the manifest and pass its `command` explicitly to the existing cluster
 submission layer. Rendering the manifest is not job submission. Existing
 outputs are never overwritten.
+
+After both seed-0 10K completion records pass, the same command renders a
+replication by changing `--run-id` to one of `C00-S1-10K`, `C00-S2-10K`,
+`C02-S1-10K`, or `C02-S2-10K` and supplying the two seed-0 10K records. A 3K
+record or a nonzero-seed prerequisite is rejected.
+
+The post-control execution order and the M00--M07 evaluation boundary are
+frozen in
+[`docs/superpowers/specs/2026-08-23-wsts-post-control-design.md`](../../docs/superpowers/specs/2026-08-23-wsts-post-control-design.md).
+In particular, the upstream validation loader uses training augmentation, so
+formal controlled-missingness results require a separate deterministic
+`is_train=false` evaluation path. No real 2022--2023 file is opened while that
+path is only being implemented and tested.
 
 Large data, environments, checkpoints, logs, and run evidence remain outside
 Git under the Nibi project filesystem.
