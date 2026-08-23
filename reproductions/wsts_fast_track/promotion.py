@@ -1,4 +1,4 @@
-"""Validate screening evidence and render immutable 10K promotion manifests."""
+"""Validate prerequisite evidence and render immutable 10K run manifests."""
 
 from __future__ import annotations
 
@@ -151,11 +151,11 @@ def promotion_manifest(
     run_root: Path,
     stats_path: Path,
 ) -> dict[str, object]:
-    """Build one deterministic seed-0 promotion manifest."""
+    """Build one deterministic promotion or replication manifest."""
 
     target = run_spec(run_id)
-    if target.launch_state != "promotable":
-        raise ValueError(f"fast-track run is not promotable: {run_id}")
+    if target.stage not in {"promotion", "replication"} or not target.prerequisites:
+        raise ValueError(f"fast-track run is not a gated follow-on run: {run_id}")
     prerequisites = validate_prerequisites(target, result_paths)
     prerequisite_payload = []
     for prerequisite_id, payload in zip(target.prerequisites, prerequisites):

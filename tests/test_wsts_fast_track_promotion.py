@@ -8,20 +8,26 @@ import pytest
 from reproductions.wsts_fast_track import matrix, promotion
 
 
-def _completed(experiment: str, job_id: str) -> dict[str, object]:
+def _completed(
+    experiment: str,
+    job_id: str,
+    *,
+    max_steps: int = 3_000,
+    seed: int = 0,
+) -> dict[str, object]:
     return {
         "status": "pass",
-        "purpose": "3000-step screening; not a clean-performance claim",
+        "purpose": "immutable clean-run evidence",
         "experiment": experiment,
         "slurm_job_id": job_id,
-        "max_steps": 3_000,
-        "seed": 0,
+        "max_steps": max_steps,
+        "seed": seed,
         "train_years": [2016, 2017, 2018, 2019, 2020],
         "validation_years": [2021],
         "test_enabled": False,
         "withheld_years": [2022, 2023],
         "checkpoint": f"/runs/{experiment}/best.ckpt",
-        "checkpoint_global_step": 2_800,
+        "checkpoint_global_step": max_steps - 200,
         "peak_cuda_allocated_bytes": 1_234,
         "wall_seconds": 100,
         "metrics": {
@@ -32,20 +38,38 @@ def _completed(experiment: str, job_id: str) -> dict[str, object]:
     }
 
 
-def _write_results(tmp_path: Path) -> tuple[Path, Path]:
+def _write_results(
+    tmp_path: Path,
+    *,
+    max_steps: int = 3_000,
+    seed: int = 0,
+    prefix: str = "",
+) -> tuple[Path, Path]:
     paths: list[Path] = []
     for experiment, job_id in (("C00", "100"), ("C02", "102")):
-        path = tmp_path / f"{experiment}.json"
+        path = tmp_path / f"{prefix}{experiment}.json"
         path.write_text(
-            json.dumps(_completed(experiment, job_id)), encoding="utf-8"
+            json.dumps(
+                _completed(
+                    experiment,
+                    job_id,
+                    max_steps=max_steps,
+                    seed=seed,
+                )
+            ),
+            encoding="utf-8",
         )
         paths.append(path)
     return paths[0], paths[1]
 
 
-def _manifest(tmp_path: Path, paths: tuple[Path, ...]) -> dict[str, object]:
+def _manifest(
+    tmp_path: Path,
+    paths: tuple[Path, ...],
+    run_id: str = "C00-S0-10K",
+) -> dict[str, object]:
     return promotion.promotion_manifest(
-        "C00-S0-10K",
+        run_id,
         paths,
         upstream_root=tmp_path / "upstream",
         data_root=tmp_path / "data",
@@ -183,20 +207,51 @@ def test_screening_gate_rejects_completed_schema_drift(
 
 
 @pytest.mark.parametrize(
-    "run_id", ["C00-S1-10K", "C00-S2-10K", "C02-S1-10K", "C02-S2-10K"]
+    ("run_id", "experiment", "seed"),
+    [
+        ("C00-S1-10K", "C00", 1),
+        ("C00-S2-10K", "C00", 2),
+        ("C02-S1-10K", "C02", 1),
+        ("C02-S2-10K", "C02", 2),
+    ],
 )
-def test_gated_replications_cannot_render(run_id: str, tmp_path: Path) -> None:
-    c00, c02 = _write_results(tmp_path)
+def test_passing_seed_zero_10k_pair_unlocks_declared_replication(
+    run_id: str,
+    experiment: str,
+    seed: int,
+    tmp_path: Path,
+) -> None:
+    c00, c02 = _write_results(tmp_path, max_steps=10_000)
 
-    with pytest.raises(ValueError, match="not promotable"):
-        promotion.promotion_manifest(
-            run_id,
-            (c00, c02),
-            upstream_root=tmp_path / "upstream",
-            data_root=tmp_path / "data",
-            run_root=tmp_path / "run",
-            stats_path=tmp_path / "stats.npz",
-        )
+    payload = _manifest(tmp_path, (c02, c00), run_id)
+
+    assert payload["run"]["run_id"] == run_id
+    assert payload["run"]["experiment_id"] == experiment
+    assert payload["run"]["seed"] == seed
+    assert payload["run"]["max_steps"] == 10_000
+    assert [item["run_id"] for item in payload["prerequisites"]] == [
+        "C00-S0-10K",
+        "C02-S0-10K",
+    ]
+    assert payload["command"][5:7] == ["--run-id", run_id]
+    assert payload["boundary"]["test_enabled"] is False
+
+
+@pytest.mark.parametrize(("max_steps", "seed"), [(3_000, 0), (10_000, 1)])
+def test_replication_gate_rejects_wrong_prerequisite_budget_or_seed(
+    max_steps: int,
+    seed: int,
+    tmp_path: Path,
+) -> None:
+    c00, c02 = _write_results(tmp_path, max_steps=max_steps, seed=seed)
+
+    with pytest.raises(ValueError, match="max_steps|seed"):
+        _manifest(tmp_path, (c00, c02), "C00-S1-10K")
+
+
+def test_active_screening_run_cannot_render(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="follow-on"):
+        _manifest(tmp_path, (), "C00-S0-3K")
 
 
 def test_unknown_run_cannot_render(tmp_path: Path) -> None:
