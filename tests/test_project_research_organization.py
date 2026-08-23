@@ -43,3 +43,82 @@ def test_roadmap_preserves_claim_boundaries() -> None:
     assert "released-weight executable reproducibility" in text
     assert "does not prove paper-table provenance identity" in text
     assert "Candidate, primary-source verification required" in text
+
+
+def test_cluster_guide_orders_read_only_gates_before_submission() -> None:
+    text = (ROOT / "docs" / "cluster-migration.md").read_text(encoding="utf-8")
+    ordered = [
+        "Clone the reviewed commit",
+        "Create the site-local profile",
+        "Qualify the environment",
+        "Transfer and verify HDF5",
+        "Fetch pinned upstream code and weights",
+        "Run the one-batch smoke",
+        "Run Fold-2 test-only equivalence",
+        "Run the 500-step calibration",
+    ]
+    positions = [text.index(item) for item in ordered]
+
+    assert positions == sorted(positions)
+
+
+def test_cluster_docs_preserve_execution_and_environment_boundaries() -> None:
+    guide = (ROOT / "docs" / "cluster-migration.md").read_text(encoding="utf-8")
+    environment = (ROOT / "environments" / "README.md").read_text(encoding="utf-8")
+
+    assert (
+        "No cluster scientific job has been run by this repository reorganization"
+        in guide
+    )
+    assert "do not run the Windows-fixed controllers on Linux" in guide
+    normalized_environment = " ".join(environment.split())
+    assert "numerical executable equivalence" in normalized_environment
+    assert "not byte-identical hardware equivalence" in normalized_environment
+    assert (
+        "Freeze exact training versions only after the target-cluster smoke"
+        in normalized_environment
+    )
+
+
+def test_cluster_guide_contains_exact_first_day_command_boundaries() -> None:
+    text = (ROOT / "docs" / "cluster-migration.md").read_text(encoding="utf-8")
+    literals = (
+        "profile validate configs/cluster/profile.env",
+        "manifest verify \"${DATA_ROOT}\"",
+        "--require-production-contract",
+        "submit.sh configs/cluster/profile.env",
+        "--dry-run --",
+        "smoke_fold2.py",
+        "official_weight_entrypoint.py",
+        "--trainer.max_steps=500",
+        "--do_test=false",
+    )
+    for literal in literals:
+        assert literal in text
+    assert text.count('--upstream-root "${OFFICIAL_UPSTREAM_ROOT}"') == 1
+    assert text.count('--upstream-root "${DERIVED_UPSTREAM_ROOT}"') == 2
+
+
+def test_new_cluster_files_do_not_embed_local_or_site_specific_secrets() -> None:
+    files = [
+        ROOT / "README.md",
+        ROOT / "docs" / "research-roadmap.md",
+        ROOT / "docs" / "cluster-migration.md",
+        ROOT / "environments" / "README.md",
+        ROOT / "configs" / "cluster" / "profile.example.env",
+        ROOT / "scripts" / "cluster" / "clusterctl.py",
+        *(ROOT / "scripts" / "cluster").glob("*.sh"),
+        ROOT / "manifests" / "weights" / "README.md",
+    ]
+    forbidden = (
+        "D:\\WildFire Project",
+        "C:\\Users\\Ji",
+        "def-",
+        "rrg-",
+        "Bearer ",
+        "hf_",
+    )
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        for value in forbidden:
+            assert value not in text, f"{value!r} leaked into {path}"
