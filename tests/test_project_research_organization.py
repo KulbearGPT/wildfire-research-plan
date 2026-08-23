@@ -107,12 +107,14 @@ def test_cluster_docs_explain_automatic_formal_preflight_and_nested_outputs() ->
         "automatically verifies the 999-file production manifest",
         "PyTorch, CUDA, and the single visible GPU",
         "official upstream commit",
-        "official weight size and SHA-256",
+        "official weight filename and size",
         '"${RUN_DIR}/work/smoke.json"',
         '"${RUN_DIR}/work/metrics.csv"',
         "WANDB_MODE=disabled",
     ):
         assert literal in guide
+    assert "sha256sum" not in guide
+    assert "manifest SHA-256" not in guide
     assert "formal preflight before the scientific command" in readme
 
 

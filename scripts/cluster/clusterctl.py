@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import io
 import json
 import os
@@ -59,8 +58,7 @@ _GRES_PATTERN = re.compile(r"^--gres=gpu(?::[A-Za-z0-9_.-]+)?:1$")
 _ENV_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _ARRAY_PATTERN = re.compile(r"^([0-9]+)-([0-9]+)$")
 _YEAR_PATTERN = re.compile(r"^[0-9]{4}$")
-_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
-MANIFEST_HEADER = ("relative_path", "size_bytes", "sha256")
+MANIFEST_HEADER = ("relative_path", "size_bytes")
 DATASET_NAME = "WSTS+ active fixed event-level HDF5"
 PRODUCTION_FILE_COUNT = 999
 PRODUCTION_TOTAL_BYTES = 49_816_826_985
@@ -83,7 +81,6 @@ WEIGHTS_MANIFEST = REPOSITORY_ROOT / "reproductions" / "wsts_res18_unet_t1" / "o
 class ManifestEntry:
     relative_path: str
     size_bytes: int
-    sha256: str
 
 
 def _is_placeholder(value: str) -> bool:
@@ -190,14 +187,6 @@ def _is_link_or_reparse(path: Path) -> bool:
     return path.is_symlink() or bool(attributes & reparse_flag)
 
 
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for block in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
-
-
 def _validate_relative_hdf5_path(value: str) -> tuple[int, str]:
     pure = PurePosixPath(value)
     if (
@@ -213,7 +202,7 @@ def _validate_relative_hdf5_path(value: str) -> tuple[int, str]:
 
 
 def build_hdf5_manifest(data_root: Path | str) -> list[ManifestEntry]:
-    """Hash one canonical year/event.hdf5 tree without opening HDF5 content."""
+    """Inventory one canonical year/event.hdf5 tree without reading file content."""
 
     root = Path(data_root)
     if not root.is_dir() or _is_link_or_reparse(root):
@@ -241,7 +230,6 @@ def build_hdf5_manifest(data_root: Path | str) -> list[ManifestEntry]:
                 ManifestEntry(
                     relative_path=relative_path,
                     size_bytes=event_path.stat().st_size,
-                    sha256=_sha256_file(event_path),
                 )
             )
     return entries
@@ -258,26 +246,22 @@ def _manifest_csv_bytes(entries: Sequence[ManifestEntry]) -> bytes:
             {
                 "relative_path": entry.relative_path,
                 "size_bytes": entry.size_bytes,
-                "sha256": entry.sha256,
             }
         )
     return output.getvalue().encode("utf-8")
 
 
-def _summary_for(
-    entries: Sequence[ManifestEntry], csv_bytes: bytes
-) -> dict[str, object]:
+def _summary_for(entries: Sequence[ManifestEntry]) -> dict[str, object]:
     years: dict[str, int] = {}
     for entry in entries:
         year = entry.relative_path.split("/", 1)[0]
         years[year] = years.get(year, 0) + 1
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": DATASET_NAME,
         "file_count": len(entries),
         "total_bytes": sum(entry.size_bytes for entry in entries),
         "years": years,
-        "manifest_sha256": hashlib.sha256(csv_bytes).hexdigest(),
     }
 
 
@@ -315,7 +299,7 @@ def write_hdf5_manifest(
 ) -> dict[str, object]:
     entries = build_hdf5_manifest(data_root)
     csv_bytes = _manifest_csv_bytes(entries)
-    summary = _summary_for(entries, csv_bytes)
+    summary = _summary_for(entries)
     if require_production_contract:
         _require_production_contract(summary)
     summary_bytes = (
@@ -351,10 +335,7 @@ def _read_manifest_entries(csv_bytes: bytes) -> list[ManifestEntry]:
         size_text = row["size_bytes"]
         if not size_text.isdigit() or (size_text.startswith("0") and size_text != "0"):
             raise ValueError(f"invalid manifest size for {relative_path}")
-        sha256 = row["sha256"]
-        if not _SHA256_PATTERN.fullmatch(sha256):
-            raise ValueError(f"invalid manifest SHA-256 for {relative_path}")
-        entries.append(ManifestEntry(relative_path, int(size_text), sha256))
+        entries.append(ManifestEntry(relative_path, int(size_text)))
     if entries != sorted(
         entries,
         key=lambda entry: _validate_relative_hdf5_path(entry.relative_path),
@@ -385,10 +366,8 @@ def verify_hdf5_manifest(
         summary = json.loads(summary_target.read_text(encoding="utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError("manifest summary is not valid UTF-8 JSON") from error
-    expected_summary = _summary_for(recorded_entries, csv_bytes)
+    expected_summary = _summary_for(recorded_entries)
     if summary != expected_summary:
-        if isinstance(summary, dict) and summary.get("manifest_sha256") != expected_summary["manifest_sha256"]:
-            raise ValueError("summary manifest_sha256 does not match CSV bytes")
         raise ValueError("manifest summary does not match manifest rows")
     if require_production_contract:
         _require_production_contract(summary)
@@ -507,7 +486,6 @@ def verify_upstream_lineage(
         "root": str(root),
         "commit": expected_commit,
         "patch_path": str(patch),
-        "patch_sha256": _sha256_file(patch),
     }
     if not status:
         return {**common, "mode": "official-clean"}
@@ -542,19 +520,14 @@ def verify_weight_lineage(
     if len(matches) != 1:
         raise ValueError("official weight filename is absent or ambiguous in manifest")
     row = matches[0]
-    if (
-        weight.stat().st_size != row.get("size")
-        or _sha256_file(weight) != row.get("sha256")
-    ):
-        raise ValueError("official weight size or SHA-256 does not match manifest")
+    if weight.stat().st_size != row.get("size"):
+        raise ValueError("official weight size does not match manifest")
     return {
         "path": str(weight),
         "manifest_path": str(manifest),
-        "manifest_sha256": _sha256_file(manifest),
         "revision": payload.get("revision"),
         "fold_id": row.get("fold_id"),
         "size": row.get("size"),
-        "sha256": row.get("sha256"),
     }
 
 
@@ -596,7 +569,7 @@ def write_run_start(
     repo_root: Path | str = REPOSITORY_ROOT,
 ) -> dict[str, object]:
     profile_target = Path(profile_path).resolve()
-    parse_profile(profile_target)
+    profile = parse_profile(profile_target)
     if not command or any(not token or "\n" in token or "\r" in token for token in command):
         raise ValueError("scientific command must contain nonempty tokens")
     commit, dirty = _git_identity(Path(repo_root))
@@ -607,7 +580,7 @@ def write_run_start(
         or preflight_record.get("status") != "pass"
         or preflight_record.get("git_commit") != commit
         or preflight_record.get("profile_path") != str(profile_target)
-        or preflight_record.get("profile_sha256") != _sha256_file(profile_target)
+        or preflight_record.get("profile") != profile
         or preflight_record.get("command") != list(command)
         or not isinstance(preflight_record.get("data"), dict)
         or not isinstance(preflight_record.get("environment"), dict)
@@ -627,24 +600,19 @@ def write_run_start(
         "git_commit": commit,
         "git_dirty": False,
         "profile_path": str(profile_target),
-        "profile_sha256": _sha256_file(profile_target),
+        "profile": profile,
         "command": list(command),
         "python": preflight_record["environment"].get("python"),
         "environment": preflight_record["environment"],
         "data": preflight_record["data"],
         "official_lineage": preflight_record["official_lineage"],
-        "preflight_sha256": hashlib.sha256(
-            _canonical_json_bytes(preflight_record)
-        ).hexdigest(),
         "wandb_mode": preflight_record["environment"].get("wandb_mode"),
     }
     _write_once_json(target / "started.json", payload)
     return payload
 
 
-def write_run_finish(
-    run_dir: Path | str, exit_code: int, expected_started_sha256: str
-) -> dict[str, object]:
+def write_run_finish(run_dir: Path | str, exit_code: int) -> dict[str, object]:
     target = Path(run_dir)
     started_path = target / "started.json"
     completed_path = target / "completed.json"
@@ -654,18 +622,13 @@ def write_run_finish(
     if completed_path.exists() or failure_path.exists():
         raise ValueError("a terminal run marker already exists")
     started_bytes = started_path.read_bytes()
-    if (
-        not _SHA256_PATTERN.fullmatch(expected_started_sha256)
-        or hashlib.sha256(started_bytes).hexdigest() != expected_started_sha256
-    ):
-        raise ValueError("started evidence changed after scientific launch")
     try:
         started = json.loads(started_bytes)
         created = datetime.fromisoformat(started["created_utc"].replace("Z", "+00:00"))
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
         raise ValueError("started evidence is invalid") from error
     profile_path = Path(started["profile_path"])
-    if not profile_path.is_file() or _sha256_file(profile_path) != started["profile_sha256"]:
+    if not profile_path.is_file() or parse_profile(profile_path) != started["profile"]:
         raise ValueError("cluster profile changed after run start")
     ended = datetime.now(timezone.utc)
     code = int(exit_code)
@@ -676,7 +639,6 @@ def write_run_finish(
         "ended_utc": ended.isoformat().replace("+00:00", "Z"),
         "elapsed_seconds": max(0.0, (ended - created).total_seconds()),
         "exit_code": code,
-        "started_sha256": expected_started_sha256,
     }
     _write_once_json(completed_path if code == 0 else failure_path, payload)
     return payload
@@ -771,11 +733,10 @@ def preflight(
         raise ValueError("tracked upstream lock is invalid") from error
     official_lineage: dict[str, object] = {
         "upstream_lock_path": str(lock_path.resolve()),
-        "upstream_lock_sha256": _sha256_file(lock_path),
+        "upstream_commit": expected_upstream,
         "reviewed_patch_path": str(patch_path.resolve()),
-        "reviewed_patch_sha256": _sha256_file(patch_path),
         "weights_manifest_path": str(weights_manifest.resolve()),
-        "weights_manifest_sha256": _sha256_file(weights_manifest),
+        "weights_revision": lock["weights"]["revision"],
     }
     upstream_value = _command_option(scientific_command, "--upstream-root")
     if upstream_value is not None:
@@ -791,18 +752,16 @@ def preflight(
         "root": str(Path(profile["DATA_ROOT"]).resolve()),
         "file_count": summary["file_count"],
         "total_bytes": summary["total_bytes"],
-        "manifest_sha256": summary["manifest_sha256"],
-        "summary_sha256": _sha256_file(Path(summary_path)),
+        "years": summary["years"],
     }
     return {
         "schema_version": 1,
         "status": "pass",
         "git_commit": commit,
         "profile_path": str(Path(profile_path).resolve()),
-        "profile_sha256": _sha256_file(Path(profile_path)),
+        "profile": profile,
         "file_count": summary["file_count"],
         "total_bytes": summary["total_bytes"],
-        "manifest_sha256": summary["manifest_sha256"],
         "data": data,
         "environment": environment,
         "official_lineage": official_lineage,
@@ -859,11 +818,7 @@ def collect_results(
             "status": "pass",
             "created_utc": _utc_now(),
             "files": [relative for _, relative in selected],
-            "file_sha256": {
-                relative: _sha256_file(path) for path, relative in selected
-            },
             "archive": archive.name,
-            "archive_sha256": _sha256_file(archive),
         }
         _write_once_json(output, payload)
         return payload
@@ -974,7 +929,6 @@ def _build_parser() -> argparse.ArgumentParser:
     run_finish = run_actions.add_parser("finish")
     run_finish.add_argument("run_dir", type=Path)
     run_finish.add_argument("exit_code", type=int)
-    run_finish.add_argument("started_sha256")
 
     collect_parser = subcommands.add_parser("collect")
     collect_parser.add_argument("run_dir", type=Path)
@@ -1049,11 +1003,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     json.loads(arguments.preflight_json),
                 )
             else:
-                result = write_run_finish(
-                    arguments.run_dir,
-                    arguments.exit_code,
-                    arguments.started_sha256,
-                )
+                result = write_run_finish(arguments.run_dir, arguments.exit_code)
             print(json.dumps(result, sort_keys=True, separators=(",", ":")))
             return 0
 

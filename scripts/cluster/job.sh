@@ -39,7 +39,6 @@ preflight_json="$(python "$repo_root/scripts/cluster/clusterctl.py" preflight "$
 python "$repo_root/scripts/cluster/clusterctl.py" run start "$profile" "$run_dir" \
   --preflight-json "$preflight_json" -- "$@"
 cd "$run_dir"
-started_sha256="$(sha256sum "$run_dir/started.json" | awk '{print $1}')"
 work_dir="$run_dir/work"
 mkdir "$work_dir"
 cd "$work_dir"
@@ -47,5 +46,5 @@ set +e
 "$@"
 exit_code=$?
 set -e
-python "$repo_root/scripts/cluster/clusterctl.py" run finish "$run_dir" "$exit_code" "$started_sha256"
+python "$repo_root/scripts/cluster/clusterctl.py" run finish "$run_dir" "$exit_code"
 exit "$exit_code"

@@ -1,4 +1,3 @@
-import hashlib
 import importlib.util
 import json
 import os
@@ -148,7 +147,8 @@ def test_job_has_no_retry_or_scientific_override() -> None:
     assert "export PYTHONDONTWRITEBYTECODE=1" in text
     assert text.index(" preflight ") < text.index(" run start ")
     assert 'work_dir="$run_dir/work"' in text
-    assert 'run finish "$run_dir" "$exit_code" "$started_sha256"' in text
+    assert 'run finish "$run_dir" "$exit_code"' in text
+    assert "sha256sum" not in text
 
 
 @pytest.mark.parametrize("name", ["bootstrap.sh", "job.sh"])
@@ -179,11 +179,11 @@ def test_run_finish_writes_one_terminal_marker_and_preserves_start(tmp_path: Pat
         repo_root=repo,
     )
     before = (run_dir / "started.json").read_bytes()
-    terminal = ctl.write_run_finish(run_dir, 0, hashlib.sha256(before).hexdigest())
+    terminal = ctl.write_run_finish(run_dir, 0)
 
     assert terminal["status"] == "completed"
     assert terminal["exit_code"] == 0
-    assert terminal["started_sha256"] == hashlib.sha256(before).hexdigest()
+    assert "started_sha256" not in terminal
     assert (run_dir / "completed.json").is_file()
     assert not (run_dir / "failure.json").exists()
     assert (run_dir / "started.json").read_bytes() == before
@@ -200,12 +200,10 @@ def test_nonzero_finish_is_failure_and_terminal_is_immutable(tmp_path: Path) -> 
     command = ["python", "fail.py"]
     record = formal_preflight_record(ctl, tmp_path, repo, profile, data_root, command)
     ctl.write_run_start(run_dir, profile, command, {}, record, repo_root=repo)
-    started_sha = hashlib.sha256((run_dir / "started.json").read_bytes()).hexdigest()
-
-    assert ctl.write_run_finish(run_dir, 7, started_sha)["status"] == "failure"
+    assert ctl.write_run_finish(run_dir, 7)["status"] == "failure"
     assert (run_dir / "failure.json").is_file()
     with pytest.raises(ValueError, match="terminal"):
-        ctl.write_run_finish(run_dir, 0, started_sha)
+        ctl.write_run_finish(run_dir, 0)
 
 
 def test_run_start_rejects_dirty_formal_checkout(tmp_path: Path) -> None:
@@ -238,38 +236,17 @@ def test_finish_rejects_profile_mutation(tmp_path: Path) -> None:
     command = ["python", "x.py"]
     record = formal_preflight_record(ctl, tmp_path, repo, profile, data_root, command)
     ctl.write_run_start(run_dir, profile, command, {}, record, repo_root=repo)
-    profile.write_text(profile.read_text(encoding="utf-8") + "# changed\n", encoding="utf-8")
+    profile.write_text(
+        profile.read_text(encoding="utf-8").replace(
+            "CALIBRATION_TIME=03:00:00", "CALIBRATION_TIME=04:00:00"
+        ),
+        encoding="utf-8",
+    )
 
     with pytest.raises(ValueError, match="profile"):
-        ctl.write_run_finish(
-            run_dir,
-            0,
-            hashlib.sha256((run_dir / "started.json").read_bytes()).hexdigest(),
-        )
+        ctl.write_run_finish(run_dir, 0)
     assert not (run_dir / "completed.json").exists()
     assert not (run_dir / "failure.json").exists()
-
-
-def test_finish_rejects_started_evidence_changed_by_child(tmp_path: Path) -> None:
-    ctl = load_clusterctl()
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    init_git_repo(repo)
-    data_root = make_data_fixture(tmp_path)
-    profile = write_profile(tmp_path, data_root, project_root=repo)
-    command = ["python", "x.py"]
-    record = formal_preflight_record(ctl, tmp_path, repo, profile, data_root, command)
-    run_dir = tmp_path / "run"
-    ctl.write_run_start(run_dir, profile, command, {}, record, repo_root=repo)
-    started = run_dir / "started.json"
-    original_sha = hashlib.sha256(started.read_bytes()).hexdigest()
-    payload = json.loads(started.read_text(encoding="utf-8"))
-    payload["command"] = ["python", "different.py"]
-    started.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="started evidence changed"):
-        ctl.write_run_finish(run_dir, 0, original_sha)
-    assert not (run_dir / "completed.json").exists()
 
 
 def test_preflight_verifies_manifest_roots_git_and_gpu(tmp_path: Path) -> None:
@@ -303,8 +280,9 @@ def test_preflight_verifies_manifest_roots_git_and_gpu(tmp_path: Path) -> None:
     assert result["file_count"] == 1
     assert calls == [["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"]]
     assert result["environment"]["torch"] == "2.0.0"
-    assert result["data"]["manifest_sha256"] == result["manifest_sha256"]
+    assert result["data"]["file_count"] == result["file_count"]
     assert result["command"] == ["python", "train.py"]
+    assert "sha256" not in json.dumps(result).lower()
 
 
 def test_preflight_rejects_missing_manifest_and_no_cuda_device(tmp_path: Path) -> None:
@@ -496,7 +474,7 @@ def test_upstream_lineage_accepts_only_clean_or_exact_reviewed_patch(
         ctl.verify_upstream_lineage(derived, commit, patch_path)
 
 
-def test_weight_lineage_requires_manifest_size_and_sha(tmp_path: Path) -> None:
+def test_weight_lineage_requires_manifest_filename_and_size(tmp_path: Path) -> None:
     ctl = load_clusterctl()
     weight = tmp_path / "fold2.pth"
     weight.write_bytes(b"weight")
@@ -513,7 +491,7 @@ def test_weight_lineage_requires_manifest_size_and_sha(tmp_path: Path) -> None:
                         "filename": "fold2.pth",
                         "fold_id": 2,
                         "hub_path": "weights/fold2.pth",
-                        "sha256": hashlib.sha256(b"weight").hexdigest(),
+                        "sha256": "0" * 64,
                         "size": 6,
                         "filename_ap": 0.5,
                         "train_years": [2018, 2020],
@@ -527,7 +505,7 @@ def test_weight_lineage_requires_manifest_size_and_sha(tmp_path: Path) -> None:
     )
 
     assert ctl.verify_weight_lineage(weight, manifest)["fold_id"] == 2
-    weight.write_bytes(b"tamper")
+    weight.write_bytes(b"larger!")
     with pytest.raises(ValueError, match="weight"):
         ctl.verify_weight_lineage(weight, manifest)
 
@@ -548,6 +526,7 @@ def test_collection_packs_only_declared_small_json_csv_files(tmp_path: Path) -> 
 
     assert result["status"] == "pass"
     assert result["files"] == ["metrics.json", "summary.csv"]
+    assert "sha256" not in json.dumps(result).lower()
     assert (run_dir / "results.tar.gz").is_file()
     assert checkpoint.is_file()
     with pytest.raises(ValueError, match="existing collection"):

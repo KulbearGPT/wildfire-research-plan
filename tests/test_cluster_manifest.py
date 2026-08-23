@@ -1,5 +1,4 @@
 import csv
-import hashlib
 import importlib.util
 import json
 import subprocess
@@ -37,7 +36,7 @@ def output_paths(tmp_path: Path) -> tuple[Path, Path]:
     return tmp_path / "manifest.csv", tmp_path / "manifest.summary.json"
 
 
-def test_manifest_round_trip_hashes_only_direct_year_hdf5(tmp_path: Path) -> None:
+def test_manifest_round_trip_records_only_direct_year_hdf5_metadata(tmp_path: Path) -> None:
     ctl = load_clusterctl()
     root = make_fixture(tmp_path, {2016: [b"a", b"bb"], 2017: [b"ccc"]})
     (root / "conversion_errors.json").write_text("{}\n", encoding="utf-8")
@@ -46,24 +45,23 @@ def test_manifest_round_trip_hashes_only_direct_year_hdf5(tmp_path: Path) -> Non
     summary = ctl.write_hdf5_manifest(root, csv_path, summary_path)
 
     assert summary == {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": "WSTS+ active fixed event-level HDF5",
         "file_count": 3,
         "total_bytes": 6,
         "years": {"2016": 2, "2017": 1},
-        "manifest_sha256": hashlib.sha256(csv_path.read_bytes()).hexdigest(),
     }
     assert csv_path.read_text(encoding="utf-8").splitlines() == [
-        "relative_path,size_bytes,sha256",
-        f"2016/event-000.hdf5,1,{hashlib.sha256(b'a').hexdigest()}",
-        f"2016/event-001.hdf5,2,{hashlib.sha256(b'bb').hexdigest()}",
-        f"2017/event-000.hdf5,3,{hashlib.sha256(b'ccc').hexdigest()}",
+        "relative_path,size_bytes",
+        "2016/event-000.hdf5,1",
+        "2016/event-001.hdf5,2",
+        "2017/event-000.hdf5,3",
     ]
     assert ctl.verify_hdf5_manifest(root, csv_path, summary_path) == summary
     assert not list(tmp_path.glob(".*.tmp"))
 
 
-@pytest.mark.parametrize("mutation", ["missing", "extra", "resize", "content"])
+@pytest.mark.parametrize("mutation", ["missing", "extra", "resize"])
 def test_verify_rejects_tree_mutation(tmp_path: Path, mutation: str) -> None:
     ctl = load_clusterctl()
     root = make_fixture(tmp_path, {2016: [b"a"]})
@@ -77,11 +75,19 @@ def test_verify_rejects_tree_mutation(tmp_path: Path, mutation: str) -> None:
         (root / "2016" / "extra.hdf5").write_bytes(b"extra")
     elif mutation == "resize":
         event.write_bytes(b"aa")
-    else:
-        event.write_bytes(b"b")
-
     with pytest.raises(ValueError):
         ctl.verify_hdf5_manifest(root, csv_path, summary_path)
+
+
+def test_verify_intentionally_ignores_same_size_content_changes(tmp_path: Path) -> None:
+    ctl = load_clusterctl()
+    root = make_fixture(tmp_path, {2016: [b"a"]})
+    csv_path, summary_path = output_paths(tmp_path)
+    ctl.write_hdf5_manifest(root, csv_path, summary_path)
+
+    (root / "2016" / "event-000.hdf5").write_bytes(b"b")
+
+    assert ctl.verify_hdf5_manifest(root, csv_path, summary_path)["file_count"] == 1
 
 
 @pytest.mark.parametrize("unsafe", ["nested", "non-year", "wrong-extension"])
@@ -116,7 +122,7 @@ def test_builder_rejects_symlinked_event_when_supported(tmp_path: Path) -> None:
         ctl.build_hdf5_manifest(root)
 
 
-@pytest.mark.parametrize("tamper", ["duplicate", "unsafe-path", "uppercase-sha"])
+@pytest.mark.parametrize("tamper", ["duplicate", "unsafe-path", "invalid-size"])
 def test_verifier_rejects_malformed_manifest_rows(tmp_path: Path, tamper: str) -> None:
     ctl = load_clusterctl()
     root = make_fixture(tmp_path, {2016: [b"a"]})
@@ -129,10 +135,10 @@ def test_verifier_rejects_malformed_manifest_rows(tmp_path: Path, tamper: str) -
     elif tamper == "unsafe-path":
         rows[0]["relative_path"] = "../outside.hdf5"
     else:
-        rows[0]["sha256"] = rows[0]["sha256"].upper()
+        rows[0]["size_bytes"] = "01"
     with csv_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(
-            handle, fieldnames=("relative_path", "size_bytes", "sha256")
+            handle, fieldnames=("relative_path", "size_bytes")
         )
         writer.writeheader()
         writer.writerows(rows)
@@ -141,16 +147,16 @@ def test_verifier_rejects_malformed_manifest_rows(tmp_path: Path, tamper: str) -
         ctl.verify_hdf5_manifest(root, csv_path, summary_path)
 
 
-def test_verifier_rejects_wrong_summary_manifest_hash(tmp_path: Path) -> None:
+def test_verifier_rejects_wrong_summary_metadata(tmp_path: Path) -> None:
     ctl = load_clusterctl()
     root = make_fixture(tmp_path, {2016: [b"a"]})
     csv_path, summary_path = output_paths(tmp_path)
     ctl.write_hdf5_manifest(root, csv_path, summary_path)
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    summary["manifest_sha256"] = "0" * 64
+    summary["file_count"] = 2
     summary_path.write_text(json.dumps(summary), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="manifest_sha256"):
+    with pytest.raises(ValueError, match="summary"):
         ctl.verify_hdf5_manifest(root, csv_path, summary_path)
 
 

@@ -1,10 +1,16 @@
 # Cluster Research Prototype Migration Implementation Plan
 
+> **Implementation update (2026-08-23):** the user explicitly chose a light,
+> metadata-only migration check. The implemented contract uses relative paths,
+> file counts, byte sizes, and year counts and does not hash datasets, weights,
+> or run evidence. Hash-oriented examples later in this historical execution
+> plan are superseded; use `docs/cluster-migration.md` for current operation.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn the current repository into a small, cluster-ready Slurm research prototype while preserving the completed baseline evidence and publishing a single authoritative next-experiment roadmap.
 
-**Architecture:** Keep the existing website, Phase 0 package, and reproduction controls in place. Add a root research entry point, an explicit roadmap, one small standard-library cluster control CLI, five thin shell wrappers, and a hash manifest for the 999 active event-level HDF5 files. Site-specific accounts and paths live only in an ignored profile; scientific commands remain ordinary commands passed through Slurm.
+**Architecture:** Keep the existing website, Phase 0 package, and reproduction controls in place. Add a root research entry point, an explicit roadmap, one small standard-library cluster control CLI, five thin shell wrappers, and a metadata inventory for the 999 active event-level HDF5 files. Site-specific accounts and paths live only in an ignored profile; scientific commands remain ordinary commands passed through Slurm.
 
 **Tech Stack:** Python 3.13 standard library, pytest, POSIX shell, Slurm CLI, Git, CSV/JSON, existing `wildfire_phase0` package.
 
@@ -18,7 +24,7 @@
 - Do not commit data, official weights, checkpoints, environments, caches, real cluster profiles, credentials, local absolute paths, or run artifacts.
 - Keep cluster code standard-library-only and small; no new runtime dependency is allowed.
 - One Slurm task requests one GPU. Parallel folds, seeds, or corruptions use a bounded array; no DDP or multi-node support is added.
-- The active migration dataset contract is exactly eight years `2016` through `2023`, 999 direct event-level HDF5 files, and 49,816,826,985 bytes before hashing.
+- The active migration dataset contract is exactly eight years `2016` through `2023`, 999 direct event-level HDF5 files, and 49,816,826,985 bytes.
 - Candidate methods from the shared planning conversation remain labelled candidates or hypotheses unless a primary paper or official source is verified.
 - Every implementation task follows RED -> GREEN TDD and ends with a focused test run and a reviewable commit.
 - Use `C:\Users\Ji\miniconda3\python.exe` for local pytest commands because bare `python` is not on the current PATH.
@@ -34,8 +40,8 @@
 - `docs/cluster-migration.md` — site-independent Slurm migration guide.
 - `configs/cluster/profile.example.env` — dummy, non-secret site profile.
 - `environments/README.md` — audit/training environment boundary and cluster qualification procedure.
-- `manifests/data/wstsplus-hdf5.csv` — 999 path/size/SHA-256 records generated from the active fixed HDF5 tree.
-- `manifests/data/wstsplus-hdf5.summary.json` — count, bytes, years, and manifest hash.
+- `manifests/data/wstsplus-hdf5.csv` — 999 path/size records generated from the active fixed HDF5 tree.
+- `manifests/data/wstsplus-hdf5.summary.json` — count, bytes, and years.
 - `manifests/weights/README.md` — canonical pointer to the existing official-weight manifest, avoiding duplication.
 - `scripts/cluster/clusterctl.py` — profile parsing, `sbatch` rendering, manifest creation/verification, and compact run-record helpers.
 - `scripts/cluster/bootstrap.sh` — module/virtualenv bootstrap wrapper for an explicit requirements file.
@@ -409,7 +415,7 @@ git commit -m "feat: add portable Slurm profile"
 - [ ] **Step 1: Write manifest RED tests**
 
 ```python
-def test_manifest_round_trip_hashes_only_direct_year_hdf5(tmp_path: Path) -> None:
+def test_manifest_round_trip_records_only_direct_year_hdf5_metadata(tmp_path: Path) -> None:
     root = make_fixture(tmp_path, {2016: [b"a", b"bb"], 2017: [b"ccc"]})
     summary = clusterctl.write_hdf5_manifest(root, csv_path, summary_path)
     assert summary["file_count"] == 3
@@ -418,7 +424,7 @@ def test_manifest_round_trip_hashes_only_direct_year_hdf5(tmp_path: Path) -> Non
     assert clusterctl.verify_hdf5_manifest(root, csv_path, summary_path) == summary
 
 
-@pytest.mark.parametrize("mutation", ["missing", "extra", "resize", "content"])
+@pytest.mark.parametrize("mutation", ["missing", "extra", "resize"])
 def test_verify_rejects_tree_mutation(tmp_path: Path, mutation: str) -> None:
     root = make_fixture(tmp_path, {2016: [b"a"]})
     clusterctl.write_hdf5_manifest(root, csv_path, summary_path)
@@ -429,8 +435,7 @@ def test_verify_rejects_tree_mutation(tmp_path: Path, mutation: str) -> None:
 
 Add tests rejecting symlink files/directories when platform capability exists,
 nested HDF5 files, non-year directories, duplicate CSV rows, unsafe relative
-paths, non-lowercase SHA-256, wrong summary manifest hash, and non-atomic temp
-leftovers.
+paths, invalid sizes, wrong summary metadata, and non-atomic temp leftovers.
 
 - [ ] **Step 2: Run RED**
 
@@ -445,24 +450,23 @@ Expected: FAIL because manifest interfaces do not exist.
 Use a frozen CSV header:
 
 ```csv
-relative_path,size_bytes,sha256
+relative_path,size_bytes
 ```
 
-Only direct `<year>/<filename>.hdf5` files are valid. Store POSIX relative paths,
-integer bytes, and lowercase SHA-256. Sort by integer year then filename. Write
+Only direct `<year>/<filename>.hdf5` files are valid. Store POSIX relative paths
+and integer bytes. Sort by integer year then filename. Write
 CSV and summary through sibling temporary files followed by `os.replace`.
 
 The summary exact keys are:
 
 ```python
 {
-    "schema_version": 1,
+    "schema_version": 2,
     "dataset": "WSTS+ active fixed event-level HDF5",
     "file_count": 999,
     "total_bytes": 49816826985,
     "years": {"2016": 92, "2017": 110, "2018": 176, "2019": 74,
               "2020": 201, "2021": 156, "2022": 122, "2023": 68},
-    "manifest_sha256": hashlib.sha256(csv_bytes).hexdigest(),
 }
 ```
 
@@ -483,13 +487,13 @@ Run against the active fixed tree:
 ```
 
 Expected: 999 files, 49,816,826,985 bytes, exact year counts above. This command
-reads all HDF5 bytes to hash them but does not open or modify HDF5 content.
+reads filesystem metadata only and does not open or modify HDF5 content.
 
 - [ ] **Step 5: Independently verify the generated manifest**
 
 Use a short standard-library script that does not import `clusterctl` to recount
-direct files, recompute total bytes, validate 64-character lowercase hashes,
-and recompute the CSV file hash. Then run the production verifier:
+direct files and recompute total bytes and year counts. Then run the production
+verifier:
 
 ```powershell
 & 'C:\Users\Ji\miniconda3\python.exe' scripts/cluster/clusterctl.py manifest verify `
@@ -589,15 +593,15 @@ directories.
     "git_commit": exact_git_head,
     "git_dirty": False,
     "profile_path": str(profile_path.resolve()),
-    "profile_sha256": sha256_file(profile_path),
+    "profile": parsed_profile,
     "command": command,
     "python": platform.python_version(),
     "environment": selected_nonsecret_versions,
 }
 ```
 
-`completed.json` or `failure.json` records the exit code, end UTC, elapsed
-seconds, and the original `started.json` SHA-256. Never include all environment
+`completed.json` or `failure.json` records the exit code, end UTC, and elapsed
+seconds. Never include all environment
 variables. Never auto-resume or auto-retry.
 
 - [ ] **Step 4: Implement wrappers**
@@ -850,6 +854,6 @@ claim that cluster equivalence or training has already run.
   schemas, test commands, commits, and production data totals are specified.
 - **Type consistency:** Tasks 2–5 use the same `parse_profile`,
   `render_submit_command`, manifest, and CLI interfaces.
-- **Scientific safety:** all local commands are tests, hashing, documentation,
+- **Scientific safety:** all local commands are tests, metadata inventory, documentation,
   or Git operations. Actual cluster jobs remain after the pushed migration
   commit.

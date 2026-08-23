@@ -29,7 +29,7 @@ with numerically equivalent test behavior before any new training begins?
 without optimization, one official Fold-2 checkpoint test-only equivalence
 run, and one 500-step timing calibration after equivalence passes.
 
-**Gate:** data counts, bytes, hashes, input/output shapes, finite values,
+**Gate:** data counts, bytes, year distribution, input/output shapes, finite values,
 official weight strict loading, test metrics within a declared numerical
 tolerance, and complete environment provenance must pass. Failure stops all new
 training.

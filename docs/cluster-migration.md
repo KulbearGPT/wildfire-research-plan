@@ -69,7 +69,7 @@ executes the scientific command. It automatically verifies the 999-file producti
 the clean project checkout, PyTorch, CUDA, and the single visible GPU. When the command names
 `--upstream-root` or `--weights-path`, it
 also verifies the official upstream commit (or the exact reviewed seven-line
-deletion patch) and the official weight size and SHA-256. The resulting data,
+deletion patch) and the official weight filename and size. The resulting data,
 runtime, command, code, and weight identities are sealed into `started.json`.
 The job exports `WANDB_MODE=disabled` and disables Python bytecode so that a
 prototype run does not create external logging or source-tree cache files.
@@ -115,10 +115,9 @@ python3 scripts/cluster/clusterctl.py manifest verify "${DATA_ROOT}" \
   --require-production-contract
 ```
 
-The required result is 999 files, 49,816,826,985 bytes, exact 2016–2023 year
-counts, and manifest SHA-256
-`d54aaa15918bc4030d7ece168c54c4d3d007f83e4f31cad3a40a629c96e8fb4e`.
-Any missing, extra, resized, or content-mismatched event stops migration.
+The required result is 999 files, 49,816,826,985 bytes, and exact 2016–2023
+year counts. Any missing, extra, or resized event stops migration. This is a
+fast metadata inventory: it deliberately does not hash the 49.8 GB dataset.
 
 ## Fetch pinned upstream code and weights
 
@@ -137,18 +136,20 @@ git -C "${OFFICIAL_UPSTREAM_ROOT}" status --short
 git -C "${DERIVED_UPSTREAM_ROOT}" diff --check
 ```
 
-Fetch only the Fold-2 weight needed for qualification and verify the canonical
-manifest hash. Fetch other folds later only when an experiment needs them.
+Fetch only the Fold-2 weight needed for qualification and verify its filename
+and byte size against the canonical manifest. Fetch other folds later only when
+an experiment needs them.
 
 ```bash
 mkdir -p "${WEIGHT_ROOT}/trained_model_weights/Res18Unet_T1/All"
 curl --fail --location \
   "https://huggingface.co/saadlahrichi/WSTSPlus/resolve/acf70a37394849f4ec8d108a51d6f4325a554d0a/trained_model_weights/Res18Unet_T1/All/fold2_testAP0.571.pth?download=true" \
   --output "${WEIGHT_ROOT}/trained_model_weights/Res18Unet_T1/All/fold2_testAP0.571.pth"
-printf '%s  %s\n' \
-  e17cd58e29ee7b91f6a8ba85ddcb5783ec69b9541e2de93298ba3241e785a9ec \
-  "${WEIGHT_ROOT}/trained_model_weights/Res18Unet_T1/All/fold2_testAP0.571.pth" | sha256sum --check -
+ls -lh "${WEIGHT_ROOT}/trained_model_weights/Res18Unet_T1/All/fold2_testAP0.571.pth"
 ```
+
+The formal job preflight checks that the filename and byte size match the
+tracked official manifest; it does not hash the weight.
 
 ## Run the one-batch smoke
 

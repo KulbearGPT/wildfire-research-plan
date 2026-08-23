@@ -1,5 +1,11 @@
 # Cluster-Ready Wildfire Research Prototype Design
 
+> **Updated migration policy (2026-08-23):** the user selected fast metadata
+> validation instead of content hashing. Cluster migration records paths,
+> counts, byte sizes, year counts, code commits, environment versions, and
+> commands. It does not compute dataset, weight, or run-evidence hashes. Any
+> earlier hash-oriented detail below is superseded by this policy.
+
 **Date:** 2026-08-23
 **Status:** Approved in chat; awaiting written-spec review
 **Repository:** `KulbearGPT/wildfire-research-plan`
@@ -147,7 +153,7 @@ an orchestration framework.
 - website and documentation;
 - small experiment and cluster-profile templates;
 - dependency inputs or locks once verified on the target cluster;
-- data and weight manifests containing counts, sizes, revisions, and hashes;
+- data and weight manifests containing counts, sizes, and revisions;
 - generic Slurm scripts;
 - compact, reviewed experiment summaries and scientific claim boundaries.
 
@@ -223,8 +229,8 @@ invalid:
 - missing or dirty code identity for a formal run;
 - missing cluster-profile field;
 - unavailable GPU or environment;
-- mismatched data count/bytes/hash manifest;
-- mismatched official weight revision/hash;
+- mismatched data count/bytes/year metadata;
+- mismatched official weight filename/size;
 - missing output/log root;
 - insufficient writable scratch;
 - an existing immutable run directory or launch marker.
@@ -259,7 +265,7 @@ does not claim byte-identical execution across hardware and software stacks.
 
 The authoritative training representation on the cluster is the audited set of
 approximately 999 event-level HDF5 files. The migration transfers these files
-plus a manifest containing canonical relative path, byte size, and SHA-256.
+plus a manifest containing canonical relative path and byte size.
 
 Raw small-file products are retained as a few immutable archives. They are not
 expanded into the persistent project tree. If a source audit later requires
@@ -375,8 +381,7 @@ The repository reorganization is complete only when all of the following pass:
 3. `submit.sh --dry-run` produces the expected one-GPU `sbatch` command and
    bounded array concurrency without invoking Slurm;
 4. shell syntax checks pass for every tracked cluster script;
-5. manifest validation rejects missing, extra, resized, or hash-mismatched
-   files;
+5. manifest validation rejects missing, extra, or resized files;
 6. ignore-contract tests prove that real profiles, data, environments, weights,
    runs, checkpoints, caches, and scratch remain untracked;
 7. secret, absolute-local-path, and accidental-large-file scans pass;

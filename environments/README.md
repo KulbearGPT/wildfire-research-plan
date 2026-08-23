@@ -10,7 +10,8 @@ dependencies. It runs deterministic inventory, repair, split, rule-baseline,
 manifest, and reporting code. It does not need CUDA, Lightning, the authors'
 model repository, or released weights.
 
-Record Python, package lock or freeze, Git commit, and the data-manifest hash.
+Record Python, package lock or freeze, Git commit, and the data inventory
+(file count, total bytes, and year counts).
 This environment can run on a CPU login or scheduled CPU node, subject to the
 site's policy.
 
@@ -24,7 +25,7 @@ models. Record at minimum:
 - PyTorch Lightning, NumPy, h5py, and segmentation-models-pytorch;
 - GPU model and count visible to the task;
 - module list, requirements input, Git commit, upstream commit, and weight/data
-  manifest hashes.
+  manifest metadata.
 
 Use one H100 per task. Folds and seeds are independent Slurm jobs; do not add
 DDP until a measured single-run bottleneck justifies it.
