@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
 from typing import Final, Literal
 
@@ -168,8 +169,9 @@ def run_spec(run_id: str) -> RunSpec:
 def matrix_payload() -> dict[str, object]:
     """Return the canonical versioned experiment-matrix payload."""
 
-    return {
+    payload = {
         "schema_version": 1,
         "clean_runs": [asdict(item) for item in CLEAN_RUNS.values()],
         "corruptions": [asdict(item) for item in CORRUPTIONS.values()],
     }
+    return json.loads(json.dumps(payload))
