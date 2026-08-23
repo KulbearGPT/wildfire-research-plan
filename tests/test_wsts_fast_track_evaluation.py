@@ -12,9 +12,9 @@ from reproductions.wsts_fast_track import contract, evaluation
 
 
 class FakeDataset:
-    def __init__(self, path: Path, *, history: int) -> None:
+    def __init__(self, path: Path, *, history: int, year: int = 2021) -> None:
         self.data_dir = str(path.parents[1])
-        self.included_fire_years = [2021]
+        self.included_fire_years = [year]
         self.stats_years = [2016, 2017, 2018, 2019, 2020]
         self.n_leading_observations = history
         self.n_leading_observations_test_adjustment = 6
@@ -25,8 +25,8 @@ class FakeDataset:
         self.remove_duplicate_features = False
         self.features_to_keep = None
         self.return_doy = False
-        self.imgs_per_fire = {2021: {path.stem: [str(path)]}}
-        self.datapoints_per_fire = {2021: {path.stem: 10 - 6}}
+        self.imgs_per_fire = {year: {path.stem: [str(path)]}}
+        self.datapoints_per_fire = {year: {path.stem: 10 - 6}}
         self.length = 4
         self.preprocessed_x: np.ndarray | None = None
 
@@ -34,7 +34,8 @@ class FakeDataset:
         return self.length
 
     def find_image_index_from_dataset_index(self, index: int):
-        return 2021, next(iter(self.imgs_per_fire[2021])), index
+        year = self.included_fire_years[0]
+        return year, next(iter(self.imgs_per_fire[year])), index
 
     def preprocess_and_augment(self, x: np.ndarray, y: np.ndarray):
         assert self.is_train is False
@@ -42,14 +43,16 @@ class FakeDataset:
         return torch.from_numpy(x.copy()), torch.from_numpy((y > 0).astype(np.int64))
 
 
-def _event(tmp_path: Path, *, height: int = 8, width: int = 8) -> Path:
-    path = tmp_path / "data" / "2021" / "fire-a.hdf5"
+def _event(
+    tmp_path: Path, *, year: int = 2021, height: int = 8, width: int = 8
+) -> Path:
+    path = tmp_path / "data" / str(year) / "fire-a.hdf5"
     path.parent.mkdir(parents=True)
     values = np.zeros((10, 23, height, width), dtype=np.float32)
     for day_index in range(10):
         for feature in range(23):
             values[day_index, feature] = day_index * 100 + feature
-    start = date(2021, 8, 1)
+    start = date(year, 8, 1)
     dates = [(start + timedelta(days=index)).isoformat() for index in range(10)]
     with h5py.File(path, "w") as handle:
         dataset = handle.create_dataset("data", data=values)
@@ -144,6 +147,20 @@ def test_wrapper_rejects_non_engineering_dataset_contract(
 
     with pytest.raises(ValueError, match=message):
         evaluation.ControlledMissingnessDataset(base, "M00")
+
+
+def test_heldout_wrapper_requires_explicit_formal_authorization(tmp_path: Path) -> None:
+    base = FakeDataset(_event(tmp_path, year=2022), history=5, year=2022)
+
+    with pytest.raises(ValueError, match="held-out authorization"):
+        evaluation.ControlledMissingnessDataset(
+            base, "M00", evaluation_year=2022
+        )
+
+    dataset = evaluation.ControlledMissingnessDataset(
+        base, "M00", evaluation_year=2022, heldout_authorized=True
+    )
+    assert dataset.describe(0).target_date == "2022-08-07"
 
 
 @pytest.mark.parametrize("experiment_id", ["C00", "C02"])

@@ -34,7 +34,7 @@ control.
 | --- | --- | ---: | ---: | --- |
 | `C00-S0-3K` | Res18-UNet | 0 | 3,000 | Pass — job `20346980` |
 | `C02-S0-3K` | Res18-UTAE | 0 | 3,000 | Pass — job `20346981` |
-| `C00-S0-10K` | Res18-UNet | 0 | 10,000 | Submitted fresh — job `20353582` |
+| `C00-S0-10K` | Res18-UNet | 0 | 10,000 | Pass — job `20353582`, 2021 AP 0.583933 |
 | `C02-S0-10K` | Res18-UTAE | 0 | 10,000 | Submitted fresh — job `20353584` |
 | `C00-S1-10K` | Res18-UNet | 1 | 10,000 | Manifest code ready; gated on both seed-0 10K records |
 | `C00-S2-10K` | Res18-UNet | 2 | 10,000 | Manifest code ready; gated on both seed-0 10K records |
@@ -44,11 +44,12 @@ control.
 Seed-0 promotion continues to train on 2016–2020 and select on 2021.
 The 2022–2023 test years remain withheld.
 
-## Declared controlled-missingness matrix
+## Implemented controlled-missingness matrix
 
-These scenarios are frozen identifiers, not implemented or launchable
-experiments yet. Later spatial masks must be generated from event/date/scenario
-identity without reading the target.
+These scenarios are deterministic evaluation-only transformations. They share
+one effective six-day target population, use an `is_train=false` center crop,
+and generate spatial masks from event/date/scenario identity without reading
+the target, prediction, or metric.
 
 | ID | Condition | Raw inputs | Severity |
 | --- | --- | --- | --- |
@@ -73,8 +74,16 @@ identity without reading the target.
 - `matrix.py` is the authoritative typed registry for clean follow-on runs and
   implemented corruption scenarios.
 - `missingness.py` applies the versioned M00--M07 raw-space transformations;
-  `evaluation.py` supplies the deterministic, 2021-only `is_train=false`
-  engineering dataset with an identical target population for C00 and C02.
+  `evaluation.py` supplies deterministic `is_train=false` datasets with an
+  identical target population for C00 and C02. Held-out years require an
+  explicit formal-manifest authorization.
+- `missingness_manifest.py` renders 2021 engineering tasks from any available
+  10K checkpoint, but requires all six clean records for the formal 96-task
+  matrix over 2022 and 2023.
+- `evaluate_missingness.py` strict-loads a frozen checkpoint and records AP,
+  F1, IoU, precision, recall, and loss without retraining or checkpoint
+  selection. `aggregate_missingness.py` reports same-year deltas from M00 and
+  seed mean/dispersion.
 - `promotion.py` validates immutable prerequisite results and renders reviewed
   seed-0 promotion or seed 1/2 replication manifests. It never invokes Slurm
   or retries a run.
@@ -120,13 +129,30 @@ manifest's split/test boundary, snapshots committed project code with
 calls `sbatch`; submission remains a separate explicit action after the real
 seed-0 gate passes.
 
+An available 10K checkpoint can render a non-scientific 2021 engineering
+matrix immediately:
+
+```bash
+python -m reproductions.wsts_fast_track.missingness_manifest \
+  --mode engineering \
+  --record C00-S0-10K="$c00Seed0Completed" \
+  --output-root "$engineeringResultRoot" \
+  --output "$engineeringManifest"
+```
+
+Each declared task is executed by the reviewed Nibi payload
+`run_missingness_on_nibi.sh MANIFEST EVALUATION_ID`. The payload snapshots the
+committed project tree and never submits another job. Formal manifest rendering
+uses `--mode formal` and six `--record RUN_ID=PATH` arguments; an incomplete
+clean replication set is rejected before any 2022--2023 dataset can be built.
+
 The post-control execution order and the M00--M07 evaluation boundary are
 frozen in
 [`docs/superpowers/specs/2026-08-23-wsts-post-control-design.md`](../../docs/superpowers/specs/2026-08-23-wsts-post-control-design.md).
-In particular, the upstream validation loader uses training augmentation, so
-formal controlled-missingness results require a separate deterministic
-`is_train=false` evaluation path. No real 2022--2023 file is opened while that
-path is only being implemented and tested.
+The upstream validation loader uses training augmentation, so every controlled
+evaluation instead uses the separate deterministic path above. Until the six
+clean records exist, only synthetic fixtures and explicitly non-scientific
+2021 engineering tasks are runnable.
 
 Large data, environments, checkpoints, logs, and run evidence remain outside
 Git under the Nibi project filesystem.

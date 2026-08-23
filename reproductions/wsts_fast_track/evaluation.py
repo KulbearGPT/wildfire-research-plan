@@ -57,13 +57,28 @@ def _center_crop_last_two(values: np.ndarray, side: int) -> np.ndarray:
 class ControlledMissingnessDataset:
     """Wrap the pinned upstream dataset and corrupt raw inputs before preprocessing."""
 
-    def __init__(self, base_dataset: Any, scenario_id: str) -> None:
+    def __init__(
+        self,
+        base_dataset: Any,
+        scenario_id: str,
+        *,
+        evaluation_year: int = 2021,
+        heldout_authorized: bool = False,
+    ) -> None:
         if scenario_id not in CORRUPTIONS:
             raise ValueError(f"unknown controlled-missingness scenario: {scenario_id}")
+        if evaluation_year not in {2021, 2022, 2023}:
+            raise ValueError("controlled evaluation year must be 2021, 2022, or 2023")
+        if evaluation_year in {2022, 2023} and heldout_authorized is not True:
+            raise ValueError("held-out authorization is required for 2022--2023")
         if getattr(base_dataset, "is_train", None) is not False:
             raise ValueError("controlled evaluation requires is_train=false")
-        if tuple(getattr(base_dataset, "included_fire_years", ())) != ENGINEERING_YEARS:
-            raise ValueError("engineering evaluation is 2021-only")
+        if tuple(getattr(base_dataset, "included_fire_years", ())) != (
+            evaluation_year,
+        ):
+            if evaluation_year == 2021:
+                raise ValueError("engineering evaluation is 2021-only")
+            raise ValueError("held-out dataset year differs from its authorization")
         if getattr(base_dataset, "load_from_hdf5", None) is not True:
             raise ValueError("controlled evaluation requires HDF5 input")
         if (
@@ -81,6 +96,8 @@ class ControlledMissingnessDataset:
 
         self.base = base_dataset
         self.scenario_id = scenario_id
+        self.evaluation_year = evaluation_year
+        self.heldout_authorized = heldout_authorized
         self.data_root = Path(base_dataset.data_dir).resolve()
 
     def __len__(self) -> int:
@@ -90,8 +107,8 @@ class ControlledMissingnessDataset:
         year, fire_name, in_fire_index = self.base.find_image_index_from_dataset_index(
             index
         )
-        if year != 2021:
-            raise ValueError("engineering descriptor escaped the 2021-only boundary")
+        if year != self.evaluation_year:
+            raise ValueError("sample descriptor escaped its authorized year boundary")
         hdf5_items = self.base.imgs_per_fire[year][fire_name]
         if len(hdf5_items) != 1:
             raise ValueError("event must resolve to exactly one HDF5 file")
@@ -191,6 +208,24 @@ def engineering_dataset_kwargs(
     }
 
 
+def controlled_dataset_kwargs(
+    spec: ExperimentSpec,
+    data_root: Path,
+    *,
+    evaluation_year: int,
+    heldout_authorized: bool,
+) -> dict[str, object]:
+    """Return dataset arguments after enforcing the year authorization."""
+
+    if evaluation_year == 2021:
+        return engineering_dataset_kwargs(spec, data_root)
+    if evaluation_year not in {2022, 2023} or heldout_authorized is not True:
+        raise ValueError("held-out authorization is required for 2022--2023")
+    result = engineering_dataset_kwargs(spec, data_root)
+    result["included_fire_years"] = [evaluation_year]
+    return result
+
+
 def build_engineering_dataset(
     *,
     upstream_root: Path,
@@ -200,6 +235,29 @@ def build_engineering_dataset(
     scenario_id: str,
 ) -> ControlledMissingnessDataset:
     """Build one pinned 2021-only upstream dataset without validation augmentation."""
+
+    return build_controlled_dataset(
+        upstream_root=upstream_root,
+        data_root=data_root,
+        stats_path=stats_path,
+        experiment_id=experiment_id,
+        scenario_id=scenario_id,
+        evaluation_year=2021,
+        heldout_authorized=False,
+    )
+
+
+def build_controlled_dataset(
+    *,
+    upstream_root: Path,
+    data_root: Path,
+    stats_path: Path,
+    experiment_id: str,
+    scenario_id: str,
+    evaluation_year: int,
+    heldout_authorized: bool,
+) -> ControlledMissingnessDataset:
+    """Build a pinned dataset after an explicit engineering/formal year gate."""
 
     upstream = Path(upstream_root).resolve()
     if not (upstream / "src" / "dataloader" / "FireSpreadDataset.py").is_file():
@@ -211,6 +269,16 @@ def build_engineering_dataset(
     _install_runtime_contract(upstream, experiment_id, stats)
     dataset_module = importlib.import_module("dataloader.FireSpreadDataset")
     base = dataset_module.FireSpreadDataset(
-        **engineering_dataset_kwargs(spec, data_root)
+        **controlled_dataset_kwargs(
+            spec,
+            data_root,
+            evaluation_year=evaluation_year,
+            heldout_authorized=heldout_authorized,
+        )
     )
-    return ControlledMissingnessDataset(base, scenario_id)
+    return ControlledMissingnessDataset(
+        base,
+        scenario_id,
+        evaluation_year=evaluation_year,
+        heldout_authorized=heldout_authorized,
+    )

@@ -114,6 +114,12 @@ def _validate_completed(
     return payload
 
 
+def validate_completed_for_run(path: Path, run_id: str) -> dict[str, object]:
+    """Validate one external completion record against one declared run ID."""
+
+    return _validate_completed(load_completed(path), run_spec(run_id))
+
+
 def validate_prerequisites(
     target: RunSpec, paths: Sequence[Path]
 ) -> tuple[dict[str, object], ...]:
