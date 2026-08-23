@@ -20,7 +20,26 @@ output.
 - Missing provenance limits the main study to controlled missingness. The work
   does not establish natural-missingness or operational-deployment performance.
 
+## Active Fast Experiment Track — 2026-08-23
+
+The immediate priority is to begin new learned experiments. The remaining
+Stage 0 checkpoint-equivalence work and Stage 1 positive-weight sensitivity
+study are deferred; they remain documented below but no longer block Stage 2.
+
+The launch gate is deliberately small: exact active-fixed WSTS+ year counts,
+the frozen 2016–2020 train / 2021 validation split, one finite train and
+validation batch inside each job, a locked 2022–2023 test, and compact run
+lineage. The first matched seed-0 screening runs are:
+
+1. C00 Res18-U-Net, `T=1`, All features, 3,000 optimizer steps;
+2. C02 Res18-UTAE, `T=5`, Multi features, 3,000 optimizer steps.
+
+These runs select candidates for 10,000-step promotion. They do not by
+themselves support a final model-quality or test-performance claim.
+
 ## Stage 0 — Cluster migration and equivalence
+
+**Status:** Deferred; not a Fast Experiment Track launch prerequisite.
 
 **Question:** Does the selected cluster environment execute the pinned baseline
 with numerically equivalent test behavior before any new training begins?
@@ -40,6 +59,8 @@ memory observation, and the selected time tier.
 
 ## Stage 1 — Training-contract sensitivity
 
+**Status:** Deferred until after the first Stage 2 seed-0 screening results.
+
 **Question:** Does the official configuration/code positive-weight discrepancy
 materially affect the Fold-2 result?
 
@@ -56,6 +77,8 @@ report both contracts rather than selecting the better result post hoc.
 calibration diagnostics, runtime, and the exact one-variable diff.
 
 ## Stage 2 — WSTS+ learned controls
+
+**Status:** Active under the Fast Experiment Track above.
 
 **Question:** What clean-observation learned performance is available on the
 actual frozen WSTS+ split before robustness mechanisms are introduced?

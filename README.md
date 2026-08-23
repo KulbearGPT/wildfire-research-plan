@@ -15,9 +15,10 @@ infrastructure needed to run the next experiments.
 - The official Res18-U-Net, `T=1`, Fold-2 training path has been executed, and
   all twelve official released weights have been evaluated independently. See
   [`docs/experiments/res18_unet_t1_reproduction.md`](docs/experiments/res18_unet_t1_reproduction.md).
-- The next work is cluster equivalence, one paired training-contract
-  sensitivity experiment, WSTS+ learned controls, and controlled-missingness
-  diagnosis. See [`docs/research-roadmap.md`](docs/research-roadmap.md).
+- A one-step Res18-U-Net `T=1` engineering smoke has completed on an Nibi H100.
+  The active Fast Experiment Track now prepares the full 999-event WSTS+ tree
+  and runs the first C00/C02 learned controls. See
+  [`reproductions/wsts_fast_track/`](reproductions/wsts_fast_track/).
 
 ## Scientific boundary
 
@@ -43,6 +44,8 @@ frozen lineage; future cluster runs begin a linked but separate lineage.
   rule-baseline, and reporting code.
 - [`reproductions/wsts_res18_unet_t1/`](reproductions/wsts_res18_unet_t1/) —
   pinned official-code reproduction controls and manifests.
+- [`reproductions/wsts_fast_track/`](reproductions/wsts_fast_track/) — frozen
+  WSTS+ split and C00/C02 seed-0 screening controls.
 - [`docs/experiments/`](docs/experiments/) — reviewed result summaries and
   claim boundaries.
 - [`docs/research-roadmap.md`](docs/research-roadmap.md) — authoritative order
@@ -77,8 +80,8 @@ reviewed migration commit.
 
 ## Next experiment
 
-Do not start with a larger model. First establish cluster checkpoint
-equivalence and then run the paired Fold-2 positive-weight sensitivity
-experiment in one environment. After the training contract is frozen, train
-the WSTS+ Res18-U-Net `T=1` bridge baseline and the stronger clean-observation
-backbone candidate described in the roadmap.
+The immediate experiments are C00 Res18-U-Net `T=1` All and C02 Res18-UTAE
+`T=5` Multi, each with seed 0 and 3,000 optimizer steps on the frozen
+2016–2020 train / 2021 validation split. Cluster checkpoint equivalence and the
+Fold-2 positive-weight sensitivity study are deferred so they do not block new
+model experiments. The 2022–2023 test years remain withheld during screening.
