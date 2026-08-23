@@ -80,6 +80,25 @@ def test_cluster_docs_preserve_execution_and_environment_boundaries() -> None:
     )
 
 
+def test_cluster_docs_identify_nibi_and_its_storage_boundaries() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    guide = (ROOT / "docs" / "cluster-migration.md").read_text(encoding="utf-8")
+    environment = (ROOT / "environments" / "README.md").read_text(encoding="utf-8")
+
+    assert "Alliance Nibi" in readme
+    for literal in (
+        "https://docs.alliancecan.ca/wiki/Nibi",
+        "nibi.alliancecan.ca",
+        "--gpus=h100:1",
+        "$SLURM_TMPDIR",
+        "80 GB",
+    ):
+        assert literal in guide
+    assert "/project" in guide
+    assert "/scratch" in guide
+    assert "Nibi" in environment
+
+
 def test_cluster_guide_contains_exact_first_day_command_boundaries() -> None:
     text = (ROOT / "docs" / "cluster-migration.md").read_text(encoding="utf-8")
     literals = (

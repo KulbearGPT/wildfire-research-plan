@@ -64,12 +64,13 @@ are deliberately excluded from Git.
 
 ## Slurm cluster quick start
 
-The cluster layer is a thin research boundary, not a deployment system. A new
-site supplies one ignored profile containing account, partition, module, and
-path values. The generic scripts validate the profile and data manifest, print
-the exact `sbatch` command in dry-run mode, and execute one scientific command
-once. Each job performs a formal preflight before the scientific command and
-seals the production-data, runtime, command, upstream-code, and applicable
+The current deployment target is **Alliance Nibi**. The cluster layer is a thin
+research boundary, not a deployment system. Nibi supplies one ignored profile
+containing the user's account, partition, module, and path values. The generic
+scripts validate the profile and data manifest, print the exact `sbatch`
+command in dry-run mode, and execute one scientific command once. Each job
+performs a formal preflight before the scientific command and seals the
+production-data, runtime, command, upstream-code, and applicable
 official-weight identities into its run record. Follow
 [`docs/cluster-migration.md`](docs/cluster-migration.md) after cloning the
 reviewed migration commit.

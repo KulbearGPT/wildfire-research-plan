@@ -7,6 +7,15 @@ per task. It is not a deployment platform and does not add DDP, multi-node
 training, automatic retry, or a workflow service. Independent folds and seeds
 may later use a bounded array with at most four concurrent tasks.
 
+## Nibi target
+
+The current target is [Alliance Nibi](https://docs.alliancecan.ca/wiki/Nibi).
+Connect through `nibi.alliancecan.ca`. Nibi's GPU nodes provide eight 80 GB
+H100 SXM GPUs per full node; this project requests one full H100 with
+`--gpus=h100:1`. Keep the account and partition in the ignored site profile,
+because those values depend on the user's allocation rather than the
+repository.
+
 **No cluster scientific job has been run by this repository reorganization.**
 The completed Windows/RTX 3090 evidence remains frozen. A cluster run starts a
 new lineage and must pass the gates below before it can support a scientific
@@ -15,10 +24,13 @@ use the portable entrypoints shown here.
 
 ## Persistent and node-local layout
 
-Keep the Git checkout, 999 event HDF5 files, verified weights, compact run
-records, and selected checkpoints on persistent project storage. Point
-`SCRATCH_ENV` at the site's node-local temporary-directory variable so that
-temporary loader and compilation files do not consume persistent inodes.
+On Nibi, keep the Git checkout, 999 event HDF5 files, verified weights, compact
+run records, and selected checkpoints under persistent `/project` storage.
+Use `$SLURM_TMPDIR` for node-local temporary loader and compilation files by
+setting `SCRATCH_ENV=SLURM_TMPDIR` in the ignored profile. Use `/scratch` only
+for regenerable staging or transfer data: Nibi documents a 1 TB soft quota and
+a 60-day grace period, so it is not the authoritative home for datasets,
+environments, run evidence, or checkpoints.
 
 The examples below assume these shell variables have been set to site-local
 absolute paths:

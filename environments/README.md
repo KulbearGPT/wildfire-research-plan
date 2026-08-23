@@ -3,6 +3,11 @@
 This repository keeps two environment boundaries because data auditing and GPU
 model execution have different risks and dependencies.
 
+The current qualification target is Alliance Nibi. Site-local module names,
+accounts, partitions, and absolute paths belong only in the ignored cluster
+profile; tracked environment evidence records the resolved software and
+hardware versions without embedding allocation-specific values.
+
 ## Audit environment
 
 The audit environment installs the root `wildfire-phase0` package and its test
