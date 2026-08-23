@@ -16,8 +16,8 @@ case "${run_id}" in
 esac
 
 started_at_epoch=$(date +%s)
-script_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-repo=$(git -C "${script_root}" rev-parse --show-toplevel)
+runner_path=$(realpath "${BASH_SOURCE[0]}")
+repo=$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)
 base=/project/6085198/kulbear/wildfire
 upstream=${base}/cache/WildfireSpreadTS-res18-runtime
 data=${base}/hdf5/wstsplus-active-fixed
@@ -88,7 +88,7 @@ PY
 
 mkdir -p "${run_root}/project"
 cp "${manifest_path}" "${run_root}/replication-manifest.json"
-cp "${script_root}/run_replication_on_nibi.sh" "${run_root}/"
+cp "${runner_path}" "${run_root}/run_replication_on_nibi.sh"
 git -C "${repo}" rev-parse HEAD > "${run_root}/project-commit.txt"
 git -C "${repo}" status --porcelain=v1 > "${run_root}/project-status.txt"
 git -C "${repo}" archive --format=tar HEAD | tar -xf - -C "${run_root}/project"

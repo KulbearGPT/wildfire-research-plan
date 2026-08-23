@@ -18,6 +18,7 @@ def test_missingness_runner_has_valid_shell_syntax_and_no_submission() -> None:
     assert "reproductions.wsts_fast_track.evaluate_missingness" in text
     assert "archive --format=tar HEAD" in text
     assert "WANDB_MODE=disabled" in text
+    assert 'SLURM_SUBMIT_DIR:-$PWD' in text
 
 
 def test_missingness_runner_requires_manifest_and_evaluation_id() -> None:

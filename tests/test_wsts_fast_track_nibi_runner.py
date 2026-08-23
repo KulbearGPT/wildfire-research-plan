@@ -18,6 +18,7 @@ def test_replication_runner_has_valid_shell_syntax_and_no_submission() -> None:
     assert "sbatch" not in text
     assert "reproductions.wsts_fast_track.completion" in text
     assert "archive --format=tar HEAD" in text
+    assert 'SLURM_SUBMIT_DIR:-$PWD' in text
 
 
 def test_replication_runner_is_limited_to_declared_seed_one_and_two_runs() -> None:
