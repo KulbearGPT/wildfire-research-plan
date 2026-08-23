@@ -110,6 +110,13 @@ replication by changing `--run-id` to one of `C00-S1-10K`, `C00-S2-10K`,
 `C02-S1-10K`, or `C02-S2-10K` and supplying the two seed-0 10K records. A 3K
 record or a nonzero-seed prerequisite is rejected.
 
+`run_replication_on_nibi.sh RUN_ID MANIFEST` is the reviewed Nibi batch
+payload for those four runs. It accepts no seed-0 or screening ID, rechecks the
+manifest's split/test boundary, snapshots committed project code with
+`git archive`, and seals the result through `completion.py`. The payload never
+calls `sbatch`; submission remains a separate explicit action after the real
+seed-0 gate passes.
+
 The post-control execution order and the M00--M07 evaluation boundary are
 frozen in
 [`docs/superpowers/specs/2026-08-23-wsts-post-control-design.md`](../../docs/superpowers/specs/2026-08-23-wsts-post-control-design.md).
