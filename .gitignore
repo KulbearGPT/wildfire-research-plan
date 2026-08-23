@@ -5,6 +5,9 @@ __pycache__/
 *.pyc
 *.egg-info/
 data/
+!/manifests/data/
+!/manifests/data/*.csv
+!/manifests/data/*.json
 artifacts/phase0/*.csv
 artifacts/phase0/*.json
 artifacts/phase0/*.md

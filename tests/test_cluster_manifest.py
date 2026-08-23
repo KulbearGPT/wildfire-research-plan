@@ -205,3 +205,20 @@ def test_production_contract_rejects_fixture_summary(tmp_path: Path) -> None:
         )
     assert not csv_path.exists()
     assert not summary_path.exists()
+
+
+def test_tracked_manifest_outputs_are_not_ignored() -> None:
+    paths = [
+        "manifests/data/wstsplus-hdf5.csv",
+        "manifests/data/wstsplus-hdf5.summary.json",
+    ]
+
+    for path in paths:
+        result = subprocess.run(
+            ["git", "check-ignore", "--quiet", "--", path],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        assert result.returncode == 1, path

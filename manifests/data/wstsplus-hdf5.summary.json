@@ -1,0 +1,17 @@
+{
+  "dataset": "WSTS+ active fixed event-level HDF5",
+  "file_count": 999,
+  "manifest_sha256": "d54aaa15918bc4030d7ece168c54c4d3d007f83e4f31cad3a40a629c96e8fb4e",
+  "schema_version": 1,
+  "total_bytes": 49816826985,
+  "years": {
+    "2016": 92,
+    "2017": 110,
+    "2018": 176,
+    "2019": 74,
+    "2020": 201,
+    "2021": 156,
+    "2022": 122,
+    "2023": 68
+  }
+}
