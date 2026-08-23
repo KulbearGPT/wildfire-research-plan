@@ -11,3 +11,12 @@ artifacts/phase0/*.md
 artifacts/rule-baselines/
 /artifacts/reproductions/
 /reproductions/wsts_res18_unet_t1/.local/
+/configs/cluster/profile.env
+/data/
+/checkpoints/
+/runs/
+/logs/
+/caches/
+/tmp/
+/envs/
+*.ckpt
