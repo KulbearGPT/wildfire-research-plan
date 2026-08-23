@@ -48,7 +48,7 @@ def test_follow_on_matrix_has_exact_corruptions() -> None:
     assert matrix.CORRUPTIONS["M06"].severity == "area=0.25"
     assert matrix.CORRUPTIONS["M07"].severity == "area=0.50"
     assert all(
-        scenario.implementation_state == "declared"
+        scenario.implementation_state == "implemented"
         for scenario in matrix.CORRUPTIONS.values()
     )
 

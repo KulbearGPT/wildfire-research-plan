@@ -54,9 +54,28 @@ predictions, and model metrics are forbidden inputs to mask generation.
 The upstream validation dataset currently enables training augmentation.
 Formal M00--M07 results must therefore use a separate `is_train=false`
 evaluation dataset. Implementation tests use synthetic arrays only and may not
-open the real 2022--2023 files. Missing-value encoding and the M02 sample
-contract must be frozen in a later reviewed implementation change after the
-clean replication gate passes.
+open the real 2022--2023 files.
+
+The reviewed implementation contract is schema version 1:
+
+- the deterministic model-visible center crop is taken first, then corruption
+  is applied to its raw 23-channel tensor before upstream standardization,
+  binary-fire derivation, land-cover expansion, and feature selection;
+- unavailable continuous dynamic inputs are encoded as raw `NaN`, which the
+  pinned upstream preprocessing maps to normalized zero (the train mean);
+- unavailable active-fire detection time is encoded as raw zero, which also
+  produces a zero derived binary-fire channel;
+- all scenarios use an effective history adjustment of six days. This skips
+  five initial samples for C00 (`T=1`) and one for C02 (`T=5`), aligns their
+  target dates, and guarantees the immediately preceding active-fire day
+  required by M02 without changing the population between M00--M07;
+- M06/M07 mask exactly the nearest integer to 25%/50% of model-visible spatial
+  pixels in one deterministic rectangular block. The same block is applied to
+  every declared dynamic raw feature and time step in a sample.
+
+These choices describe controlled unavailability under the existing model
+interface; because the models have no observation-mask channel, they do not
+claim to distinguish a missing value from a train-mean value.
 
 ## Claim boundary
 

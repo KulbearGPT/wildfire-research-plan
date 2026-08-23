@@ -71,7 +71,10 @@ identity without reading the target.
   loads train-only statistics, refuses split/test overrides, and runs the
   upstream Lightning CLI.
 - `matrix.py` is the authoritative typed registry for clean follow-on runs and
-  declared corruption scenarios.
+  implemented corruption scenarios.
+- `missingness.py` applies the versioned M00--M07 raw-space transformations;
+  `evaluation.py` supplies the deterministic, 2021-only `is_train=false`
+  engineering dataset with an identical target population for C00 and C02.
 - `promotion.py` validates immutable prerequisite results and renders reviewed
   seed-0 promotion or seed 1/2 replication manifests. It never invokes Slurm
   or retries a run.

@@ -30,7 +30,7 @@ class CorruptionSpec:
     feature_indices: tuple[int, ...]
     severity: str
     matrix_seed: int
-    implementation_state: Literal["declared"]
+    implementation_state: Literal["implemented"]
 
 
 _SCREENING_PREREQUISITES = ("C00-S0-3K", "C02-S0-3K")
@@ -102,12 +102,12 @@ CLEAN_RUNS: Final[dict[str, RunSpec]] = {
 _DYNAMIC_FEATURES = tuple(range(12)) + (15,) + tuple(range(17, 23))
 
 CORRUPTIONS: Final[dict[str, CorruptionSpec]] = {
-    "M00": CorruptionSpec("M00", "clean reference", "clean", (), "none", 0, "declared"),
+    "M00": CorruptionSpec("M00", "clean reference", "clean", (), "none", 0, "implemented"),
     "M01": CorruptionSpec(
-        "M01", "active-fire history absent", "fire_history", (22,), "all", 0, "declared"
+        "M01", "active-fire history absent", "fire_history", (22,), "all", 0, "implemented"
     ),
     "M02": CorruptionSpec(
-        "M02", "active-fire history stale", "fire_history", (22,), "days=1", 0, "declared"
+        "M02", "active-fire history stale", "fire_history", (22,), "days=1", 0, "implemented"
     ),
     "M03": CorruptionSpec(
         "M03",
@@ -116,7 +116,7 @@ CORRUPTIONS: Final[dict[str, CorruptionSpec]] = {
         tuple(range(5, 12)),
         "full",
         0,
-        "declared",
+        "implemented",
     ),
     "M04": CorruptionSpec(
         "M04",
@@ -125,7 +125,7 @@ CORRUPTIONS: Final[dict[str, CorruptionSpec]] = {
         tuple(range(17, 22)),
         "full",
         0,
-        "declared",
+        "implemented",
     ),
     "M05": CorruptionSpec(
         "M05",
@@ -134,7 +134,7 @@ CORRUPTIONS: Final[dict[str, CorruptionSpec]] = {
         tuple(range(5, 12)) + tuple(range(17, 22)),
         "full",
         0,
-        "declared",
+        "implemented",
     ),
     "M06": CorruptionSpec(
         "M06",
@@ -143,7 +143,7 @@ CORRUPTIONS: Final[dict[str, CorruptionSpec]] = {
         _DYNAMIC_FEATURES,
         "area=0.25",
         0,
-        "declared",
+        "implemented",
     ),
     "M07": CorruptionSpec(
         "M07",
@@ -152,7 +152,7 @@ CORRUPTIONS: Final[dict[str, CorruptionSpec]] = {
         _DYNAMIC_FEATURES,
         "area=0.50",
         0,
-        "declared",
+        "implemented",
     ),
 }
 
