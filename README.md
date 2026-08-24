@@ -15,10 +15,15 @@ infrastructure needed to run the next experiments.
 - The official Res18-U-Net, `T=1`, Fold-2 training path has been executed, and
   all twelve official released weights have been evaluated independently. See
   [`docs/experiments/res18_unet_t1_reproduction.md`](docs/experiments/res18_unet_t1_reproduction.md).
-- The active-fixed 999-event WSTS+ tree is prepared on Nibi. C00/C02 seed-0
-  3,000-step screening has completed, and both models have advanced to fresh
-  10,000-step runs. See
+- The active-fixed 999-event WSTS+ tree is prepared on Nibi. All six C00/C02
+  seed-0/1/2 10,000-step clean runs and the 96-task M00--M07 formal
+  missingness matrix have completed. Active-fire-history loss (M01) is the
+  dominant diagnosed failure. See
   [`reproductions/wsts_fast_track/`](reproductions/wsts_fast_track/).
+- P00 (`FireDrop-C00`) completed: 30% training-only active-fire dropout sharply
+  improved M01 while preserving clean validation behavior. P01 now tests the
+  one-variable follow-up: append an explicit active-fire-validity channel to
+  the same FireDrop training contract.
 
 ## Scientific boundary
 
@@ -80,10 +85,9 @@ reviewed migration commit.
 
 ## Active experiment
 
-The immediate experiments are fresh `C00-S0-10K` and `C02-S0-10K` runs on the
-frozen 2016–2020 train / 2021 validation split (Nibi jobs `20353582` and
-`20353584`). Their 3,000-step prerequisites passed without accessing the
-withheld 2022–2023 years. Seed 1/2 manifests are implemented but remain locked
-until both seed-0 10K completion records pass. Controlled-missingness work is
-next after clean replication; its implementation must use a deterministic
-`is_train=false` evaluation path and may not tune against the held-out years.
+The immediate experiment is `P01-FireDropMask-C00`: the same C00 backbone,
+seed 0, 10,000-step budget, frozen 2016–2020 train / 2021 validation split,
+and 30% training-only active-fire dropout as P00, with one added binary
+active-fire-validity channel. Its first triage is restricted to 2021
+M00/M01/M02/M07. The already-read 2022--2023 P00 results are retained as a
+one-time final check and are not used to tune P01.

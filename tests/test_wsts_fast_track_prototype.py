@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from reproductions.wsts_fast_track import prototype
-from reproductions.wsts_fast_track import evaluate_prototype
 
 
 def test_fire_dropout_changes_only_training_active_fire_history() -> None:
@@ -32,7 +31,40 @@ def test_fire_dropout_changes_only_training_active_fire_history() -> None:
     assert np.all(x == 1.0)
 
 
+def test_fire_dropout_reports_matching_active_fire_validity() -> None:
+    x = np.ones((1, 23, 2, 2), dtype=np.float32)
+    y = np.ones((2, 2), dtype=np.float32)
+
+    dropped, dropped_validity = prototype.apply_training_fire_dropout_with_validity(
+        (x, y),
+        is_train=True,
+        probability=0.3,
+        random_value=0.2,
+    )
+    clean, clean_validity = prototype.apply_training_fire_dropout_with_validity(
+        (x, y),
+        is_train=True,
+        probability=0.3,
+        random_value=0.4,
+    )
+
+    assert np.all(dropped[0][:, 22] == 0.0)
+    assert dropped_validity == 0.0
+    assert np.array_equal(clean[0], x)
+    assert clean_validity == 1.0
+
+    processed = np.ones((1, 40, 2, 2), dtype=np.float32)
+    with_validity = prototype.append_fire_validity_channel(
+        processed, dropped_validity
+    )
+    assert with_validity.shape == (1, 41, 2, 2)
+    assert np.all(with_validity[:, :40] == 1.0)
+    assert np.all(with_validity[:, 40] == 0.0)
+
+
 def test_prototype_heldout_year_requires_explicit_authorization() -> None:
+    from reproductions.wsts_fast_track import evaluate_prototype
+
     assert evaluate_prototype.evaluation_boundary(
         2021, heldout_authorized=False
     ) == ("prototype-validation", False)

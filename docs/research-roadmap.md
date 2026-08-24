@@ -85,7 +85,8 @@ calibration diagnostics, runtime, and the exact one-variable diff.
 
 ## Stage 2 — WSTS+ learned controls
 
-**Status:** Active; 3K screening complete and seed-0 10K promotion submitted.
+**Status:** Complete for the fast experiment track; six C00/C02 seed-0/1/2
+10K records passed.
 
 **Question:** What clean-observation learned performance is available on the
 actual frozen WSTS+ split before robustness mechanisms are introduced?
@@ -118,6 +119,10 @@ formal Stage 3 evaluator must instead construct a deterministic
 
 ## Stage 3 — Controlled-missingness diagnosis
 
+**Status:** Complete; all 96 M00--M07 tasks over the accepted clean checkpoints
+and 2022--2023 finished. M01 active-fire-history absence was the dominant
+failure, followed by severe structured missingness.
+
 **Question:** Which prespecified observation failures cause stable and
 scientifically meaningful degradation in the learned controls?
 
@@ -139,6 +144,11 @@ checkpoint, event/scenario slices, and representative failure cases. Do not
 claim that simulated corruption is observed natural missingness.
 
 ## Stage 4 — Matched robust baselines and main method
+
+**Status:** Active. P00 established the minimal training-corruption baseline:
+30% training-only active-fire dropout. Its controlled 2021 AP changed from
+0.584368 to 0.585322 on M00 and from 0.045920 to 0.299465 on M01. P01 keeps
+that contract fixed and adds one explicit active-fire-validity channel.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and

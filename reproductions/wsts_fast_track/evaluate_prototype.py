@@ -1,4 +1,4 @@
-"""Evaluate P00 on the four validation scenarios used for rapid triage."""
+"""Evaluate P00/P01 on the four scenarios used for rapid triage."""
 
 from __future__ import annotations
 
@@ -15,7 +15,11 @@ from .evaluate_missingness import (
     write_result_new,
 )
 from .evaluation import build_controlled_dataset
-from .prototype import FIRE_DROPOUT_PROBABILITY, PROTOTYPE_ID
+from .prototype import (
+    FIRE_DROPOUT_PROBABILITY,
+    PROTOTYPE_ID,
+    RELIABILITY_PROTOTYPE_ID,
+)
 
 
 SCENARIOS = ("M00", "M01", "M02", "M07")
@@ -54,22 +58,31 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     record_path = args.record.resolve(strict=True)
     record = json.loads(record_path.read_text(encoding="utf-8"))
+    prototype_id = record.get("prototype_id") if isinstance(record, dict) else None
+    expected_policy = (
+        {
+            "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
+            "training_only": True,
+        }
+        if prototype_id == PROTOTYPE_ID
+        else {
+            "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
+            "active_fire_validity_channel": True,
+            "training_only_dropout": True,
+        }
+    )
     if (
         not isinstance(record, dict)
         or record.get("status") != "pass"
-        or record.get("prototype_id") != PROTOTYPE_ID
+        or prototype_id not in {PROTOTYPE_ID, RELIABILITY_PROTOTYPE_ID}
         or record.get("experiment") != "C00"
         or record.get("seed") != 0
         or record.get("max_steps") != 10_000
         or record.get("validation_years") != [2021]
         or record.get("test_enabled") is not False
-        or record.get("training_policy")
-        != {
-            "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
-            "training_only": True,
-        }
+        or record.get("training_policy") != expected_policy
     ):
-        raise ValueError("P00 completion record is invalid")
+        raise ValueError("prototype completion record is invalid")
     checkpoint = Path(str(record.get("checkpoint", ""))).resolve(strict=True)
     mode, scientific_claim = evaluation_boundary(
         args.year,
@@ -97,6 +110,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             scenario_id=scenario_id,
             evaluation_year=args.year,
             heldout_authorized=scientific_claim,
+            active_fire_validity_channel=(
+                prototype_id == RELIABILITY_PROTOTYPE_ID
+            ),
         )
         loader = torch.utils.data.DataLoader(
             dataset,
@@ -111,7 +127,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "status": "pass",
             "mode": mode,
             "scientific_claim": scientific_claim,
-            "prototype_id": PROTOTYPE_ID,
+            "prototype_id": prototype_id,
             "record": str(record_path),
             "scenario_id": scenario_id,
             "year": args.year,
@@ -128,7 +144,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "status": "pass",
         "mode": mode,
         "scientific_claim": scientific_claim,
-        "prototype_id": PROTOTYPE_ID,
+        "prototype_id": prototype_id,
         "record": str(record_path),
         "year": args.year,
         "scenario_count": len(SCENARIOS),

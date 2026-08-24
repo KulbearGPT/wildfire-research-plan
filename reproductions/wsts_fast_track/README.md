@@ -156,3 +156,18 @@ clean records exist, only synthetic fixtures and explicitly non-scientific
 
 Large data, environments, checkpoints, logs, and run evidence remain outside
 Git under the Nibi project filesystem.
+
+## Rapid robustness prototypes
+
+P00 (`FireDrop-C00`) trains C00 from scratch for 10,000 steps while dropping
+the raw active-fire-history feature for 30% of training samples. Its 2021
+controlled AP was 0.585322 on M00 and 0.299465 on M01, versus 0.584368 and
+0.045920 for the clean C00 checkpoint. The one-time 2022 and 2023 checks also
+showed large positive M01 deltas while keeping clean AP within the frozen
+rapid-triage tolerance.
+
+P01 (`FireDropMask-C00`) is the next one-variable experiment. It retains the
+same model, split, seed, budget, and dropout probability, and appends one
+binary active-fire-validity channel after upstream preprocessing. Its first
+evaluation is limited to 2021 M00/M01/M02/M07; there is no probability sweep
+or additional-seed launch in this prototype gate.
