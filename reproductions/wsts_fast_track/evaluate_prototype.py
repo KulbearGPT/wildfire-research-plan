@@ -21,6 +21,20 @@ from .prototype import FIRE_DROPOUT_PROBABILITY, PROTOTYPE_ID
 SCENARIOS = ("M00", "M01", "M02", "M07")
 
 
+def evaluation_boundary(
+    year: int, *, heldout_authorized: bool
+) -> tuple[str, bool]:
+    """Resolve validation or one-time held-out prototype evaluation."""
+
+    if year == 2021 and heldout_authorized is False:
+        return "prototype-validation", False
+    if year in {2022, 2023} and heldout_authorized is True:
+        return "prototype-formal", True
+    if year in {2022, 2023}:
+        raise ValueError("held-out evaluation requires explicit authorization")
+    raise ValueError("prototype evaluation year must be 2021, 2022, or 2023")
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--record", type=Path, required=True)
@@ -28,6 +42,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--upstream-root", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
+    parser.add_argument("--year", type=int, choices=(2021, 2022, 2023), default=2021)
+    parser.add_argument("--heldout-authorized", action="store_true")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
@@ -55,6 +71,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     ):
         raise ValueError("P00 completion record is invalid")
     checkpoint = Path(str(record.get("checkpoint", ""))).resolve(strict=True)
+    mode, scientific_claim = evaluation_boundary(
+        args.year,
+        heldout_authorized=args.heldout_authorized,
+    )
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=False)
     device = torch.device(args.device)
@@ -75,8 +95,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             stats_path=args.stats_path,
             experiment_id="C00",
             scenario_id=scenario_id,
-            evaluation_year=2021,
-            heldout_authorized=False,
+            evaluation_year=args.year,
+            heldout_authorized=scientific_claim,
         )
         loader = torch.utils.data.DataLoader(
             dataset,
@@ -89,12 +109,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = {
             "schema_version": 1,
             "status": "pass",
-            "mode": "prototype-validation",
-            "scientific_claim": False,
+            "mode": mode,
+            "scientific_claim": scientific_claim,
             "prototype_id": PROTOTYPE_ID,
             "record": str(record_path),
             "scenario_id": scenario_id,
-            "year": 2021,
+            "year": args.year,
             "metrics": metrics,
         }
         write_result_new(output_root / f"{scenario_id}.json", result)
@@ -106,11 +126,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     summary = {
         "schema_version": 1,
         "status": "pass",
-        "mode": "prototype-validation",
-        "scientific_claim": False,
+        "mode": mode,
+        "scientific_claim": scientific_claim,
         "prototype_id": PROTOTYPE_ID,
         "record": str(record_path),
-        "year": 2021,
+        "year": args.year,
         "scenario_count": len(SCENARIOS),
         "results": {
             scenario_id: {

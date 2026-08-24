@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from reproductions.wsts_fast_track import prototype
+from reproductions.wsts_fast_track import evaluate_prototype
 
 
 def test_fire_dropout_changes_only_training_active_fire_history() -> None:
@@ -28,3 +30,16 @@ def test_fire_dropout_changes_only_training_active_fire_history() -> None:
     assert np.array_equal(validation_x, x)
     assert np.array_equal(validation_y, y)
     assert np.all(x == 1.0)
+
+
+def test_prototype_heldout_year_requires_explicit_authorization() -> None:
+    assert evaluate_prototype.evaluation_boundary(
+        2021, heldout_authorized=False
+    ) == ("prototype-validation", False)
+
+    with pytest.raises(ValueError, match="authorization"):
+        evaluate_prototype.evaluation_boundary(2022, heldout_authorized=False)
+
+    assert evaluate_prototype.evaluation_boundary(
+        2023, heldout_authorized=True
+    ) == ("prototype-formal", True)

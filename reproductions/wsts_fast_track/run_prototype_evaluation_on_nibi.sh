@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 1 ]]; then
-  echo "usage: $0 P00_COMPLETED_RECORD" >&2
+if [[ $# -ne 2 ]]; then
+  echo "usage: $0 P00_COMPLETED_RECORD YEAR" >&2
   exit 2
 fi
 
 record_path=$(realpath "$1")
+year=$2
+case "${year}" in
+  2021|2022|2023) ;;
+  *)
+    echo "year must be 2021, 2022, or 2023" >&2
+    exit 2
+    ;;
+esac
 runner_path=$(realpath "${BASH_SOURCE[0]}")
 repo=$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)
 base=/project/6085198/kulbear/wildfire
@@ -14,7 +22,7 @@ upstream=${base}/cache/WildfireSpreadTS-res18-runtime
 data=${base}/hdf5/wstsplus-active-fixed
 data_evidence=${base}/runs/nibi-wstsplus-data-20260823
 stats=${data_evidence}/train-2016-2020-stats.npz
-run_root=${base}/runs/prototype-P00-eval-2021-${SLURM_JOB_ID}
+run_root=${base}/runs/prototype-P00-eval-${year}-${SLURM_JOB_ID}
 output_root=${run_root}/results
 
 test -f "${record_path}"
@@ -43,12 +51,19 @@ export WANDB_SILENT=true
 export HDF5_USE_FILE_LOCKING=FALSE
 export PYTHONUNBUFFERED=1
 
+heldout_argument=()
+if [[ "${year}" != 2021 ]]; then
+  heldout_argument+=(--heldout-authorized)
+fi
+
 python -m reproductions.wsts_fast_track.evaluate_prototype \
   --record "${record_path}" \
   --output-root "${output_root}" \
   --upstream-root "${upstream}" \
   --data-root "${data}" \
   --stats-path "${stats}" \
+  --year "${year}" \
+  "${heldout_argument[@]}" \
   --device cuda 2>&1 | tee "${run_root}/evaluation.log"
 
 test -f "${output_root}/summary.json"
