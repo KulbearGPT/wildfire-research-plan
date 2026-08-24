@@ -200,6 +200,20 @@ def evaluate_batches(
     }
 
 
+def checkpoint_init_args(
+    hyperparameters: Mapping[str, Any],
+    *,
+    experiment_id: str,
+) -> dict[str, Any]:
+    """Build constructor arguments compatible with the declared architecture."""
+
+    init_args = dict(hyperparameters)
+    init_args["encoder_weights"] = None
+    if experiment_id == "C02":
+        init_args.pop("use_doy", None)
+    return init_args
+
+
 def load_checkpoint_model(
     checkpoint: Path,
     *,
@@ -225,8 +239,10 @@ def load_checkpoint_model(
     state_dict = payload.get("state_dict")
     if not isinstance(hyperparameters, dict) or not isinstance(state_dict, dict):
         raise ValueError("checkpoint lacks hyperparameters or state_dict")
-    init_args: dict[str, Any] = dict(hyperparameters)
-    init_args["encoder_weights"] = None
+    init_args = checkpoint_init_args(
+        hyperparameters,
+        experiment_id=experiment_id,
+    )
     model = model_class(**init_args)
     model.load_state_dict(state_dict, strict=True)
     return model.to(device)

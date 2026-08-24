@@ -19,6 +19,26 @@ class PerfectModel(torch.nn.Module):
         return F.binary_cross_entropy_with_logits(logits, target.float())
 
 
+def test_checkpoint_init_args_do_not_forward_c02_fixed_use_doy() -> None:
+    hyperparameters = {
+        "encoder_name": "resnet18",
+        "encoder_weights": "imagenet",
+        "n_channels": 5,
+        "use_doy": False,
+    }
+
+    result = evaluate_missingness.checkpoint_init_args(
+        hyperparameters,
+        experiment_id="C02",
+    )
+
+    assert result == {
+        "encoder_name": "resnet18",
+        "encoder_weights": None,
+        "n_channels": 5,
+    }
+
+
 def test_evaluate_batches_computes_exact_streaming_binary_metrics() -> None:
     logits = torch.tensor(
         [
