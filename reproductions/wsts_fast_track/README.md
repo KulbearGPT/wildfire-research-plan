@@ -188,3 +188,10 @@ M00/M01/M06/M07 screen. AP was 0.585322, 0.299465, 0.350878, and 0.166982,
 respectively: M00/M01 exactly preserve P00, while M06/M07 improve P00 by 0.0339
 and 0.0378. P03 is therefore the leading rapid routed prototype, but remains a
 two-forward-pass engineering result without held-out evaluation.
+
+P04 (`FrozenP00-SpatialResidualGate`) freezes P00, reuses its final 16-channel
+decoder feature, and trains only a 17-parameter `1x1` residual head inside the
+known missing block. Job `20462018` completed 1,000 training steps plus the
+2021 screen in 3:37. M00/M01 AP exactly matched P00; M06/M07 AP was 0.332083/
+0.139913, improving P00 by 0.0151/0.0107 but trailing P03 by 0.0188/0.0271.
+P04 is a useful single-forward compute control, not the promoted prototype.

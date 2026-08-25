@@ -94,3 +94,9 @@ M06/M07 missing block, where P02 is used. AP is 0.585322/0.299465/0.350878/
 M00/M01 and +0.0339/+0.0378 on M06/M07, so P03 is the current leading routed
 prototype. No held-out evaluation or additional seed is implied by this
 screening result.
+
+P04 tested whether P03 could be compressed to one P00 forward pass plus a
+17-parameter `1x1` residual head trained for 1,000 steps. Job `20462018`
+preserved M00/M01 exactly and improved P00 AP by 0.0151/0.0107 on M06/M07,
+but remained 0.0188/0.0271 below P03. P04 is retained as the minimum-compute
+matched control and is not promoted.
