@@ -2,16 +2,18 @@
 set -euo pipefail
 
 if [[ $# -lt 1 || $# -gt 2 ]]; then
-  echo "usage: $0 P00_COMPLETED_RECORD [RESIDUAL_KERNEL_SIZE]" >&2
+  echo "usage: $0 P00_COMPLETED_RECORD [1|3|last]" >&2
   exit 2
 fi
 
 p00_record=$(realpath "$1")
-kernel_size=${2:-1}
-case "${kernel_size}" in
-  1) prototype_label=P04-residual-gate ;;
-  3) prototype_label=P05-residual-gate-3x3 ;;
-  *) echo "residual kernel size must be 1 or 3" >&2; exit 2 ;;
+gate_variant=${2:-1}
+gate_args=()
+case "${gate_variant}" in
+  1) prototype_label=P04-residual-gate; gate_args=(--residual-kernel-size 1) ;;
+  3) prototype_label=P05-residual-gate-3x3; gate_args=(--residual-kernel-size 3) ;;
+  last) prototype_label=P06-last-block-router; gate_args=(--adapt-last-block) ;;
+  *) echo "gate variant must be 1, 3, or last" >&2; exit 2 ;;
 esac
 runner_path=$(realpath "${BASH_SOURCE[0]}")
 repo=$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)
@@ -54,7 +56,7 @@ python -m reproductions.wsts_fast_track.train_residual_gate \
   --data-root "${data}" \
   --stats-path "${stats}" \
   --output-path "${gate_checkpoint}" \
-  --residual-kernel-size "${kernel_size}" \
+  "${gate_args[@]}" \
   --device cuda 2>&1 | tee "${run_root}/training.log"
 
 python -m reproductions.wsts_fast_track.evaluate_residual_gate \
@@ -64,7 +66,7 @@ python -m reproductions.wsts_fast_track.evaluate_residual_gate \
   --upstream-root "${upstream}" \
   --data-root "${data}" \
   --stats-path "${stats}" \
-  --residual-kernel-size "${kernel_size}" \
+  "${gate_args[@]}" \
   --device cuda 2>&1 | tee "${run_root}/evaluation.log"
 
 test -f "${output_root}/summary.json"

@@ -15,8 +15,10 @@ from .evaluation import build_controlled_dataset
 from .prototype import FIRE_DROPOUT_PROBABILITY, PROTOTYPE_ID as P00_ID
 from .residual_gate import (
     GATE_TRAINING_STEPS,
+    LAST_BLOCK_PROTOTYPE_ID,
     PROTOTYPE_ID,
     SPATIAL_PROTOTYPE_ID,
+    FrozenLastBlockRouter,
     FrozenSpatialResidualGate,
 )
 
@@ -35,6 +37,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--residual-kernel-size", type=int, choices=(1, 3), default=1
     )
+    parser.add_argument("--adapt-last-block", action="store_true")
     args = parser.parse_args(argv)
 
     p00_checkpoint = _checkpoint_from_record(
@@ -50,20 +53,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         map_location="cpu",
         weights_only=False,
     )
-    expected_parameters = 17 if args.residual_kernel_size == 1 else 145
-    prototype_id = (
-        PROTOTYPE_ID
-        if args.residual_kernel_size == 1
-        else SPATIAL_PROTOTYPE_ID
-    )
+    if args.adapt_last_block:
+        prototype_id = LAST_BLOCK_PROTOTYPE_ID
+        gate_type = "last-decoder-block"
+    else:
+        prototype_id = (
+            PROTOTYPE_ID
+            if args.residual_kernel_size == 1
+            else SPATIAL_PROTOTYPE_ID
+        )
+        gate_type = f"residual-{args.residual_kernel_size}x{args.residual_kernel_size}"
     if (
         not isinstance(gate_payload, dict)
         or gate_payload.get("status") != "pass"
         or gate_payload.get("prototype_id") != prototype_id
         or gate_payload.get("steps") != GATE_TRAINING_STEPS
+        or gate_payload.get("gate_type") != gate_type
         or gate_payload.get("residual_kernel_size") != args.residual_kernel_size
-        or gate_payload.get("trainable_parameters") != expected_parameters
-        or not isinstance(gate_payload.get("residual_head"), dict)
     ):
         raise ValueError("invalid residual-gate checkpoint")
     device = torch.device(args.device)
@@ -75,10 +81,27 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=args.upstream_root,
         device=device,
     )
-    gate = FrozenSpatialResidualGate(
-        default_model, residual_kernel_size=args.residual_kernel_size
+    if args.adapt_last_block:
+        gate = FrozenLastBlockRouter(default_model)
+        if (
+            not isinstance(gate_payload.get("adapted_block"), dict)
+            or not isinstance(gate_payload.get("adapted_head"), dict)
+        ):
+            raise ValueError("P06 checkpoint lacks its adapted branch")
+        gate.adapted_block.load_state_dict(gate_payload["adapted_block"], strict=True)
+        gate.adapted_head.load_state_dict(gate_payload["adapted_head"], strict=True)
+    else:
+        gate = FrozenSpatialResidualGate(
+            default_model, residual_kernel_size=args.residual_kernel_size
+        )
+        if not isinstance(gate_payload.get("residual_head"), dict):
+            raise ValueError("residual checkpoint lacks its head")
+        gate.residual_head.load_state_dict(gate_payload["residual_head"], strict=True)
+    expected_parameters = sum(
+        parameter.numel() for parameter in gate.trainable_parameters()
     )
-    gate.residual_head.load_state_dict(gate_payload["residual_head"], strict=True)
+    if gate_payload.get("trainable_parameters") != expected_parameters:
+        raise ValueError("gate checkpoint parameter count differs from model")
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=False)
 

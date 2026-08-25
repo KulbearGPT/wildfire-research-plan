@@ -195,3 +195,8 @@ known missing block. Job `20462018` completed 1,000 training steps plus the
 2021 screen in 3:37. M00/M01 AP exactly matched P00; M06/M07 AP was 0.332083/
 0.139913, improving P00 by 0.0151/0.0107 but trailing P03 by 0.0188/0.0271.
 P04 is a useful single-forward compute control, not the promoted prototype.
+
+P05 enlarged the P04 correction to one 145-parameter `3x3` convolution while
+holding every other choice fixed. Job `20464221` finished in 3:30. M00/M01
+again exactly matched P00, but M06/M07 AP fell slightly to 0.327723/0.138767.
+The failure to improve P04 rejects kernel size as the immediate bottleneck.

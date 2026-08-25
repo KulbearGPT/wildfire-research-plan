@@ -8,8 +8,16 @@ class _Encoder(torch.nn.Module):
         return (features[:, :16],)
 
 
+class _TwoFeatureEncoder(torch.nn.Module):
+    def forward(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        selected = features[:, :16]
+        return selected, selected
+
+
 class _Decoder(torch.nn.Module):
-    def forward(self, feature: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, feature: torch.Tensor, _skip: torch.Tensor | None = None
+    ) -> torch.Tensor:
         return feature
 
 
@@ -101,3 +109,26 @@ def test_spatial_residual_gate_supports_minimal_three_by_three_head() -> None:
 
     assert tuple(gate.residual_head.weight.shape) == (1, 16, 3, 3)
     assert sum(parameter.numel() for parameter in gate.trainable_parameters()) == 145
+
+
+def test_last_block_router_preserves_default_outside_mask() -> None:
+    from reproductions.wsts_fast_track.residual_gate import FrozenLastBlockRouter
+
+    model = _TinyDefault()
+    model.model.encoder = _TwoFeatureEncoder()
+    model.model.decoder.center = torch.nn.Identity()
+    model.model.decoder.blocks = torch.nn.ModuleList([_Decoder()])
+    model.model.segmentation_head = torch.nn.Conv2d(16, 1, 1)
+    with torch.no_grad():
+        model.model.segmentation_head.weight.zero_()
+        model.model.segmentation_head.bias.fill_(2.0)
+    routed_input = torch.zeros((1, 1, 41, 2, 2))
+    routed_input[:, :, 40, 0, 1] = 1.0
+    router = FrozenLastBlockRouter(model)
+    with torch.no_grad():
+        router.adapted_head.bias.fill_(5.0)
+
+    routed = router(routed_input)
+
+    expected = torch.tensor([[[[2.0, 5.0], [2.0, 2.0]]]])
+    torch.testing.assert_close(routed, expected)

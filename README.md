@@ -100,3 +100,8 @@ P04 tested whether P03 could be compressed to one P00 forward pass plus a
 preserved M00/M01 exactly and improved P00 AP by 0.0151/0.0107 on M06/M07,
 but remained 0.0188/0.0271 below P03. P04 is retained as the minimum-compute
 matched control and is not promoted.
+
+P05 expanded that residual head to a 145-parameter `3x3` convolution. Job
+`20464221` preserved M00/M01 but reached only 0.327723/0.138767 AP on M06/M07,
+slightly below P04. Kernel size is therefore not the limiting factor; P05 is
+not promoted.

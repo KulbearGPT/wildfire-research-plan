@@ -18,8 +18,10 @@ from .evaluate_spatial_router import _checkpoint_from_record
 from .prototype import FIRE_DROPOUT_PROBABILITY, PROTOTYPE_ID as P00_ID
 from .residual_gate import (
     GATE_TRAINING_STEPS,
+    LAST_BLOCK_PROTOTYPE_ID,
     PROTOTYPE_ID,
     SPATIAL_PROTOTYPE_ID,
+    FrozenLastBlockRouter,
     FrozenSpatialResidualGate,
     install_training_processed_block_dropout,
 )
@@ -38,6 +40,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--residual-kernel-size", type=int, choices=(1, 3), default=1
     )
+    parser.add_argument("--adapt-last-block", action="store_true")
     args = parser.parse_args(argv)
 
     upstream = args.upstream_root.resolve()
@@ -93,18 +96,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=upstream,
         device=device,
     )
-    gate = FrozenSpatialResidualGate(
-        default_model, residual_kernel_size=args.residual_kernel_size
-    ).to(device)
+    if args.adapt_last_block:
+        gate = FrozenLastBlockRouter(default_model).to(device)
+        prototype_id = LAST_BLOCK_PROTOTYPE_ID
+        gate_type = "last-decoder-block"
+    else:
+        gate = FrozenSpatialResidualGate(
+            default_model, residual_kernel_size=args.residual_kernel_size
+        ).to(device)
+        prototype_id = (
+            PROTOTYPE_ID
+            if args.residual_kernel_size == 1
+            else SPATIAL_PROTOTYPE_ID
+        )
+        gate_type = f"residual-{args.residual_kernel_size}x{args.residual_kernel_size}"
     parameters = tuple(gate.trainable_parameters())
-    expected_parameters = 17 if args.residual_kernel_size == 1 else 145
-    if sum(parameter.numel() for parameter in parameters) != expected_parameters:
+    trainable_parameter_count = sum(parameter.numel() for parameter in parameters)
+    if not args.adapt_last_block and trainable_parameter_count != (
+        17 if args.residual_kernel_size == 1 else 145
+    ):
         raise ValueError("residual gate exposes an unexpected parameter count")
-    prototype_id = (
-        PROTOTYPE_ID
-        if args.residual_kernel_size == 1
-        else SPATIAL_PROTOTYPE_ID
-    )
     optimizer = torch.optim.Adam(parameters, lr=1e-2)
     gate.train()
     iterator = iter(loader)
@@ -124,7 +135,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         optimizer.step()
         final_loss = float(loss.detach().cpu())
         if step == 1 or step % 100 == 0:
-            print(f"P04_STEP={step} LOSS={final_loss:.8f}", flush=True)
+            print(f"GATE_STEP={step} LOSS={final_loss:.8f}", flush=True)
 
     output = args.output_path.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -138,15 +149,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         "steps": GATE_TRAINING_STEPS,
         "seed": 0,
         "block_fractions": [0.25, 0.5],
+        "gate_type": gate_type,
         "residual_kernel_size": args.residual_kernel_size,
-        "trainable_parameters": expected_parameters,
+        "trainable_parameters": trainable_parameter_count,
         "final_loss": final_loss,
-        "residual_head": gate.residual_head.state_dict(),
     }
+    if args.adapt_last_block:
+        payload["adapted_block"] = gate.adapted_block.state_dict()
+        payload["adapted_head"] = gate.adapted_head.state_dict()
+    else:
+        payload["residual_head"] = gate.residual_head.state_dict()
     if output.exists():
         raise FileExistsError(output)
     torch.save(payload, output)
-    print(f"P04_CHECKPOINT={output}", flush=True)
+    print(f"GATE_CHECKPOINT={output}", flush=True)
     return 0
 
 

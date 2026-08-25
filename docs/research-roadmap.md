@@ -158,6 +158,9 @@ M06/M07 by 0.0339/0.0378, making P03 the current leading routed prototype.
 P04 compressed routing to one frozen P00 pass plus a 17-parameter residual
 head. It preserved M00/M01 and improved P00 on M06/M07 by 0.0151/0.0107, but
 trailed P03 by 0.0188/0.0271 and was not promoted.
+P05 replaced P04's `1x1` residual with a 145-parameter `3x3` residual, but its
+M06/M07 AP decreased to 0.3277/0.1388. Merely enlarging the output correction
+does not close the gap to P03.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and
@@ -174,11 +177,11 @@ modality specialization controls?
 7. residual reliability gating with candidate semantic-prototype reliability,
    while retaining the same backbone, data, corruption, and training budget.
 
-**Immediate next prototype:** retain P04's single-forward contract but replace
-its `1x1` linear correction with one `3x3` residual convolution (145 trainable
-parameters). First screen only 2021 M00/M01/M06/M07 and retain P03/P04 as the
-routing and minimum-compute controls; do not add seeds or held-out years unless
-the new prototype beats P03.
+**Immediate next prototype:** share P00's encoder and first four decoder blocks,
+then adapt only a copied final decoder block and prediction head inside the
+known missing region. First screen only 2021 M00/M01/M06/M07 and retain P03/
+P04 as the accuracy and minimum-compute controls. If this final cheap capacity
+step does not beat P03, stop escalating the rapid spatial-router branch.
 
 **Gate:** a method must preserve clean performance within the frozen tolerance,
 improve multiple prespecified missingness regimes, and beat the matched

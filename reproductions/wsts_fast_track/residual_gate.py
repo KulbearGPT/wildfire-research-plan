@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import copy
 import sys
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ from .missingness import structured_block_mask
 
 PROTOTYPE_ID = "P04-FrozenP00-SpatialResidualGate"
 SPATIAL_PROTOTYPE_ID = "P05-FrozenP00-SpatialResidualGate3x3"
+LAST_BLOCK_PROTOTYPE_ID = "P06-FrozenP00-LastBlockRouter"
 GATE_TRAINING_STEPS = 1_000
 PROCESSED_DYNAMIC_NON_FIRE = tuple(range(12)) + (15,) + tuple(range(33, 38))
 
@@ -144,6 +146,71 @@ class FrozenSpatialResidualGate(torch.nn.Module):
         return apply_masked_residual(
             default_logits, residual_logits, missing_mask
         )
+
+    def compute_loss(
+        self, logits: torch.Tensor, target: torch.Tensor
+    ) -> torch.Tensor:
+        return self.default_model.compute_loss(logits, target)
+
+
+class FrozenLastBlockRouter(torch.nn.Module):
+    """Share P00 through decoder block four and adapt only its final block."""
+
+    def __init__(self, default_model: torch.nn.Module) -> None:
+        super().__init__()
+        self.default_model = default_model
+        self.default_model.requires_grad_(False)
+        self.default_model.eval()
+        decoder = self.default_model.model.decoder
+        if len(decoder.blocks) < 1:
+            raise ValueError("P00 decoder must expose at least one block")
+        self.adapted_block = copy.deepcopy(decoder.blocks[-1])
+        self.adapted_head = copy.deepcopy(
+            self.default_model.model.segmentation_head
+        )
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        self.default_model.eval()
+        return self
+
+    def trainable_parameters(self):
+        return (
+            *self.adapted_block.parameters(),
+            *self.adapted_head.parameters(),
+        )
+
+    def forward(self, routed_input: torch.Tensor) -> torch.Tensor:
+        if (
+            routed_input.ndim != 5
+            or routed_input.shape[1] != 1
+            or routed_input.shape[2] != 41
+        ):
+            raise ValueError("router input must have shape (B, 1, 41, H, W)")
+        inputs = routed_input[:, 0, :40]
+        missing_mask = routed_input[:, 0, 40:41].bool()
+        decoder = self.default_model.model.decoder
+        with torch.no_grad():
+            encoded = self.default_model.model.encoder(inputs)
+            features = encoded[1:][::-1]
+            if not features:
+                raise ValueError("P00 encoder did not expose decoder features")
+            x = decoder.center(features[0])
+            skips = features[1:]
+            for index, block in enumerate(decoder.blocks[:-1]):
+                skip = skips[index] if index < len(skips) else None
+                x = block(x, skip)
+            final_index = len(decoder.blocks) - 1
+            final_skip = skips[final_index] if final_index < len(skips) else None
+            default_features = decoder.blocks[-1](x, final_skip)
+            default_logits = self.default_model.model.segmentation_head(
+                default_features
+            )
+        adapted_features = self.adapted_block(
+            x.detach(), None if final_skip is None else final_skip.detach()
+        )
+        adapted_logits = self.adapted_head(adapted_features)
+        return torch.where(missing_mask, adapted_logits, default_logits)
 
     def compute_loss(
         self, logits: torch.Tensor, target: torch.Tensor
