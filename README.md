@@ -20,10 +20,12 @@ infrastructure needed to run the next experiments.
   missingness matrix have completed. Active-fire-history loss (M01) is the
   dominant diagnosed failure. See
   [`reproductions/wsts_fast_track/`](reproductions/wsts_fast_track/).
-- P00 (`FireDrop-C00`) remains the accepted rapid baseline. P01's explicit
-  active-fire-validity channel did not improve P00. P02's added structured
-  BlockDrop improved severe block missingness but harmed the active-fire-
-  missing regime, so neither P01 nor P02 was promoted.
+- P00 (`FireDrop-C00`) remains the accepted single-checkpoint baseline. P01's
+  explicit active-fire-validity channel did not improve P00, while P02's
+  structured BlockDrop exposed a useful spatial-missingness expert but harmed
+  other regimes. P03 now routes frozen P00/P02 logits only inside known missing
+  blocks: it exactly preserves P00 on M00/M01 and improves AP by 0.0339 on M06
+  and 0.0378 on M07.
 
 ## Scientific boundary
 
@@ -85,8 +87,10 @@ reviewed migration commit.
 
 ## Active experiment
 
-P01 and P02 rapid triage is complete. P01 lost AP relative to P00 on M00,
-M01, and M02. P02 improved M06 by 0.0183 AP and M07 by 0.0303 AP, but lost
-0.0200 on M00 and 0.0322 on M01, failing its frozen promotion rule. P00 remains
-the mainline checkpoint. No P01/P02 held-out evaluation or probability sweep
-is authorized.
+P03 spatial expert routing completed in job `20458324`. It is a training-free
+2021 engineering prototype: P00 is used everywhere except inside the known
+M06/M07 missing block, where P02 is used. AP is 0.585322/0.299465/0.350878/
+0.166982 on M00/M01/M06/M07. Relative to P00 this is exactly neutral on
+M00/M01 and +0.0339/+0.0378 on M06/M07, so P03 is the current leading routed
+prototype. No held-out evaluation or additional seed is implied by this
+screening result.

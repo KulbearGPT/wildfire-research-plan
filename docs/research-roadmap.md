@@ -151,7 +151,10 @@ claim that simulated corruption is observed natural missingness.
 that contract fixed and adds one explicit active-fire-validity channel.
 P01 did not improve P00. P02 added 30% structured BlockDrop and improved P00
 by 0.0183 AP on M06 and 0.0303 on M07, but degraded M00 by 0.0200 and M01 by
-0.0322. It therefore exposed a robustness tradeoff and was not promoted.
+0.0322. It therefore exposed a robustness tradeoff and was not promoted as a
+single model. P03 uses P02 only inside known missing blocks and P00 elsewhere.
+The training-free router exactly preserved P00 AP on 2021 M00/M01 and improved
+M06/M07 by 0.0339/0.0378, making P03 the current leading routed prototype.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and
@@ -167,6 +170,11 @@ modality specialization controls?
 6. FireEx-style modality experts and a capacity-matched generalist ensemble;
 7. residual reliability gating with candidate semantic-prototype reliability,
    while retaining the same backbone, data, corruption, and training budget.
+
+**Immediate next prototype:** replace P03's hard two-checkpoint switch with the
+smallest learned reliability-conditioned gate that can reuse frozen features.
+First screen only 2021 M00/M01/M06/M07 and retain P03 as the matched routing
+control; do not add seeds or held-out years until that prototype beats P03.
 
 **Gate:** a method must preserve clean performance within the frozen tolerance,
 improve multiple prespecified missingness regimes, and beat the matched

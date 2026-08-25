@@ -180,3 +180,11 @@ the P00 comparison job `20454658`, P02 changed AP by -0.0200 on M00, -0.0322
 on M01, +0.0183 on M06, and +0.0303 on M07. P02 failed its preservation gate
 despite the M07 gain. P00 remains the accepted rapid baseline; P01/P02 do not
 advance to held-out evaluation or additional seeds.
+
+P03 (`SpatialExpertRouter-P00-P02`) reuses those two frozen checkpoints with no
+training. It selects P02 logits only at pixels inside the deterministic M06/M07
+missing block and P00 logits elsewhere. Job `20458324` completed the 2021
+M00/M01/M06/M07 screen. AP was 0.585322, 0.299465, 0.350878, and 0.166982,
+respectively: M00/M01 exactly preserve P00, while M06/M07 improve P00 by 0.0339
+and 0.0378. P03 is therefore the leading rapid routed prototype, but remains a
+two-forward-pass engineering result without held-out evaluation.
