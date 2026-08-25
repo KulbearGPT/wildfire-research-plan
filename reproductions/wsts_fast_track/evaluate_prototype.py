@@ -16,6 +16,8 @@ from .evaluate_missingness import (
 )
 from .evaluation import build_controlled_dataset
 from .prototype import (
+    BLOCK_DROPOUT_PROBABILITY,
+    BLOCK_PROTOTYPE_ID,
     FIRE_DROPOUT_PROBABILITY,
     PROTOTYPE_ID,
     RELIABILITY_PROTOTYPE_ID,
@@ -23,6 +25,7 @@ from .prototype import (
 
 
 SCENARIOS = ("M00", "M01", "M02", "M07")
+AVAILABLE_SCENARIOS = tuple(f"M{index:02d}" for index in range(8))
 
 
 def evaluation_boundary(
@@ -48,6 +51,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--stats-path", type=Path, required=True)
     parser.add_argument("--year", type=int, choices=(2021, 2022, 2023), default=2021)
     parser.add_argument("--heldout-authorized", action="store_true")
+    parser.add_argument(
+        "--scenarios",
+        nargs="+",
+        choices=AVAILABLE_SCENARIOS,
+        default=list(SCENARIOS),
+    )
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
@@ -70,11 +79,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             "active_fire_validity_channel": True,
             "training_only_dropout": True,
         }
+        if prototype_id == RELIABILITY_PROTOTYPE_ID
+        else {
+            "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
+            "block_dropout_probability": BLOCK_DROPOUT_PROBABILITY,
+            "block_fractions": [0.25, 0.5],
+            "training_only": True,
+        }
     )
     if (
         not isinstance(record, dict)
         or record.get("status") != "pass"
-        or prototype_id not in {PROTOTYPE_ID, RELIABILITY_PROTOTYPE_ID}
+        or prototype_id
+        not in {PROTOTYPE_ID, RELIABILITY_PROTOTYPE_ID, BLOCK_PROTOTYPE_ID}
         or record.get("experiment") != "C00"
         or record.get("seed") != 0
         or record.get("max_steps") != 10_000
@@ -84,6 +101,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     ):
         raise ValueError("prototype completion record is invalid")
     checkpoint = Path(str(record.get("checkpoint", ""))).resolve(strict=True)
+    selected_scenarios = tuple(args.scenarios)
+    if "M00" not in selected_scenarios or len(set(selected_scenarios)) != len(
+        selected_scenarios
+    ):
+        raise ValueError("prototype scenarios require one M00 and no duplicates")
     mode, scientific_claim = evaluation_boundary(
         args.year,
         heldout_authorized=args.heldout_authorized,
@@ -101,7 +123,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         device=device,
     )
     results: dict[str, object] = {}
-    for scenario_id in SCENARIOS:
+    for scenario_id in selected_scenarios:
         dataset = build_controlled_dataset(
             upstream_root=args.upstream_root,
             data_root=args.data_root,
@@ -147,7 +169,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "prototype_id": prototype_id,
         "record": str(record_path),
         "year": args.year,
-        "scenario_count": len(SCENARIOS),
+        "scenario_count": len(selected_scenarios),
         "results": {
             scenario_id: {
                 "metrics": metrics,

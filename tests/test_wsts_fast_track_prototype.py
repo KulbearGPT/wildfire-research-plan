@@ -62,6 +62,46 @@ def test_fire_dropout_reports_matching_active_fire_validity() -> None:
     assert np.all(with_validity[:, 40] == 0.0)
 
 
+def test_block_dropout_masks_only_training_dynamic_inputs() -> None:
+    x = np.ones((1, 23, 4, 4), dtype=np.float32)
+    y = np.ones((4, 4), dtype=np.float32)
+
+    (train_x, train_y), mask = prototype.apply_training_fire_and_block_dropout(
+        (x, y),
+        is_train=True,
+        fire_probability=0.3,
+        block_probability=0.3,
+        fire_random_value=0.8,
+        block_random_value=0.2,
+        fraction_random_value=0.8,
+        key_digest="00" * 32,
+    )
+    (validation_x, validation_y), validation_mask = (
+        prototype.apply_training_fire_and_block_dropout(
+            (x, y),
+            is_train=False,
+            fire_probability=0.3,
+            block_probability=0.3,
+            fire_random_value=0.2,
+            block_random_value=0.2,
+            fraction_random_value=0.8,
+            key_digest="00" * 32,
+        )
+    )
+
+    assert mask is not None
+    assert int(mask.sum()) == 8
+    dynamic_non_fire = tuple(range(12)) + (15,) + tuple(range(17, 22))
+    assert np.isnan(train_x[:, dynamic_non_fire][:, :, mask]).all()
+    assert np.count_nonzero(train_x[:, 22][:, mask]) == 0
+    np.testing.assert_array_equal(train_x[:, (12, 13, 14, 16)], 1.0)
+    np.testing.assert_array_equal(train_x[:, :, ~mask], 1.0)
+    np.testing.assert_array_equal(train_y, y)
+    np.testing.assert_array_equal(validation_x, x)
+    np.testing.assert_array_equal(validation_y, y)
+    assert validation_mask is None
+
+
 def test_prototype_heldout_year_requires_explicit_authorization() -> None:
     from reproductions.wsts_fast_track import evaluate_prototype
 
