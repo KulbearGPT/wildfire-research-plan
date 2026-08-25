@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import torch
+import pytest
 
 
 class _ConstantExpert(torch.nn.Module):
@@ -46,3 +47,20 @@ def test_spatial_router_consumes_mask_channel_without_passing_it_to_experts() ->
         [[[[2.0, 5.0, 5.0], [2.0, 2.0, 2.0]]]]
     ).expand(2, -1, -1, -1)
     torch.testing.assert_close(routed, expected)
+
+
+def test_spatial_router_heldout_requires_explicit_authorization() -> None:
+    from reproductions.wsts_fast_track.evaluate_spatial_router import (
+        router_evaluation_boundary,
+    )
+
+    assert router_evaluation_boundary(2021, heldout_authorized=False) == (
+        "prototype-validation",
+        False,
+    )
+    with pytest.raises(ValueError, match="authorization"):
+        router_evaluation_boundary(2022, heldout_authorized=False)
+    assert router_evaluation_boundary(2023, heldout_authorized=True) == (
+        "prototype-formal",
+        True,
+    )

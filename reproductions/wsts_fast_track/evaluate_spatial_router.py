@@ -1,4 +1,4 @@
-"""Evaluate the training-free P03 spatial expert router on 2021."""
+"""Evaluate P03 against P00 on validation or authorized held-out years."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pathlib import Path
 import torch
 
 from .evaluate_missingness import evaluate_batches, load_checkpoint_model, write_result_new
+from .evaluate_prototype import evaluation_boundary
 from .evaluation import build_controlled_dataset
 from .prototype import (
     BLOCK_DROPOUT_PROBABILITY,
@@ -21,6 +22,14 @@ from .spatial_router import ROUTER_ID, SpatialExpertRouter
 
 
 SCENARIOS = ("M00", "M01", "M06", "M07")
+
+
+def router_evaluation_boundary(
+    year: int, *, heldout_authorized: bool
+) -> tuple[str, bool]:
+    """Apply the shared one-time held-out authorization boundary."""
+
+    return evaluation_boundary(year, heldout_authorized=heldout_authorized)
 
 
 def _checkpoint_from_record(
@@ -53,10 +62,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--upstream-root", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
+    parser.add_argument("--year", type=int, choices=(2021, 2022, 2023), default=2021)
+    parser.add_argument("--heldout-authorized", action="store_true")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args(argv)
+    mode, scientific_claim = router_evaluation_boundary(
+        args.year, heldout_authorized=args.heldout_authorized
+    )
 
     p00_checkpoint = _checkpoint_from_record(
         args.p00_record,
@@ -96,6 +110,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_root.mkdir(parents=True, exist_ok=False)
 
     results: dict[str, dict[str, int | float]] = {}
+    baseline_results: dict[str, dict[str, int | float]] = {}
     for scenario_id in SCENARIOS:
         dataset = build_controlled_dataset(
             upstream_root=args.upstream_root,
@@ -103,8 +118,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             stats_path=args.stats_path,
             experiment_id="C00",
             scenario_id=scenario_id,
-            evaluation_year=2021,
-            heldout_authorized=False,
+            evaluation_year=args.year,
+            heldout_authorized=scientific_claim,
             routing_mask_channel=True,
         )
         loader = torch.utils.data.DataLoader(
@@ -114,34 +129,52 @@ def main(argv: Sequence[str] | None = None) -> int:
             num_workers=args.num_workers,
             pin_memory=device.type == "cuda",
         )
+        baseline_metrics = evaluate_batches(default_model, loader, device=device)
         metrics = evaluate_batches(router, loader, device=device)
+        baseline_result = {
+            "schema_version": 1,
+            "status": "pass",
+            "mode": mode,
+            "scientific_claim": scientific_claim,
+            "prototype_id": PROTOTYPE_ID,
+            "scenario_id": scenario_id,
+            "year": args.year,
+            "metrics": baseline_metrics,
+        }
         result = {
             "schema_version": 1,
             "status": "pass",
-            "mode": "prototype-validation",
-            "scientific_claim": False,
+            "mode": mode,
+            "scientific_claim": scientific_claim,
             "prototype_id": ROUTER_ID,
             "scenario_id": scenario_id,
-            "year": 2021,
+            "year": args.year,
             "metrics": metrics,
         }
-        write_result_new(output_root / f"{scenario_id}.json", result)
+        write_result_new(output_root / f"P00-{scenario_id}.json", baseline_result)
+        write_result_new(output_root / f"P03-{scenario_id}.json", result)
+        baseline_results[scenario_id] = baseline_metrics
         results[scenario_id] = metrics
+        print(json.dumps(baseline_result, sort_keys=True), flush=True)
         print(json.dumps(result, sort_keys=True), flush=True)
 
     summary = {
         "schema_version": 1,
         "status": "pass",
-        "mode": "prototype-validation",
-        "scientific_claim": False,
+        "mode": mode,
+        "scientific_claim": scientific_claim,
         "prototype_id": ROUTER_ID,
         "p00_record": str(args.p00_record.resolve(strict=True)),
         "p02_record": str(args.p02_record.resolve(strict=True)),
-        "year": 2021,
+        "year": args.year,
         "scenario_count": len(SCENARIOS),
         "results": {
             scenario_id: {"metrics": metrics}
             for scenario_id, metrics in results.items()
+        },
+        "baseline_results": {
+            scenario_id: {"metrics": metrics}
+            for scenario_id, metrics in baseline_results.items()
         },
     }
     write_result_new(output_root / "summary.json", summary)
