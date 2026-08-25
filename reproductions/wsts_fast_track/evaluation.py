@@ -65,6 +65,7 @@ class ControlledMissingnessDataset:
         evaluation_year: int = 2021,
         heldout_authorized: bool = False,
         active_fire_validity_channel: bool = False,
+        routing_mask_channel: bool = False,
     ) -> None:
         if scenario_id not in CORRUPTIONS:
             raise ValueError(f"unknown controlled-missingness scenario: {scenario_id}")
@@ -100,6 +101,7 @@ class ControlledMissingnessDataset:
         self.evaluation_year = evaluation_year
         self.heldout_authorized = heldout_authorized
         self.active_fire_validity_channel = active_fire_validity_channel
+        self.routing_mask_channel = routing_mask_channel
         self.data_root = Path(base_dataset.data_dir).resolve()
 
     def __len__(self) -> int:
@@ -180,6 +182,16 @@ class ControlledMissingnessDataset:
 
             validity = 0.0 if self.scenario_id == "M01" else 1.0
             x = append_fire_validity_channel(x, validity)
+
+        if self.routing_mask_channel:
+            import torch
+
+            mask = corruption.spatial_mask
+            if mask is None:
+                mask = np.zeros(x.shape[-2:], dtype=bool)
+            mask_tensor = torch.as_tensor(mask, dtype=x.dtype, device=x.device)
+            mask_tensor = mask_tensor[None, None].expand(x.shape[0], 1, -1, -1)
+            x = torch.cat((x, mask_tensor), dim=1)
 
         if self.base.remove_duplicate_features and self.base.n_leading_observations > 1:
             x = self.base.flatten_and_remove_duplicate_features_(x)
@@ -265,6 +277,7 @@ def build_controlled_dataset(
     evaluation_year: int,
     heldout_authorized: bool,
     active_fire_validity_channel: bool = False,
+    routing_mask_channel: bool = False,
 ) -> ControlledMissingnessDataset:
     """Build a pinned dataset after an explicit engineering/formal year gate."""
 
@@ -276,6 +289,8 @@ def build_controlled_dataset(
     spec = experiment_spec(experiment_id)
     if active_fire_validity_channel and experiment_id != "C00":
         raise ValueError("active-fire validity prototype requires C00")
+    if routing_mask_channel and experiment_id != "C00":
+        raise ValueError("spatial routing prototype requires C00")
     stats = load_training_stats(stats_path)
     _install_runtime_contract(upstream, experiment_id, stats)
     dataset_module = importlib.import_module("dataloader.FireSpreadDataset")
@@ -293,4 +308,5 @@ def build_controlled_dataset(
         evaluation_year=evaluation_year,
         heldout_authorized=heldout_authorized,
         active_fire_validity_channel=active_fire_validity_channel,
+        routing_mask_channel=routing_mask_channel,
     )
