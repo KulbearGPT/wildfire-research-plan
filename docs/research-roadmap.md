@@ -154,13 +154,18 @@ by 0.0183 AP on M06 and 0.0303 on M07, but degraded M00 by 0.0200 and M01 by
 0.0322. It therefore exposed a robustness tradeoff and was not promoted as a
 single model. P03 uses P02 only inside known missing blocks and P00 elsewhere.
 The training-free router exactly preserved P00 AP on 2021 M00/M01 and improved
-M06/M07 by 0.0339/0.0378, making P03 the current leading routed prototype.
+M06/M07 by 0.0339/0.0378, making P03 the 2021-selected routed prototype.
 P04 compressed routing to one frozen P00 pass plus a 17-parameter residual
 head. It preserved M00/M01 and improved P00 on M06/M07 by 0.0151/0.0107, but
 trailed P03 by 0.0188/0.0271 and was not promoted.
 P05 replaced P04's `1x1` residual with a 145-parameter `3x3` residual, but its
 M06/M07 AP decreased to 0.3277/0.1388. Merely enlarging the output correction
 does not close the gap to P03.
+P06 adapted the final decoder block and head but reached only 0.3302/0.1410 on
+M06/M07. The spatial-router capacity escalation is complete. P03's final
+held-out M06/M07 deltas were -0.0231/-0.0261 in 2022 and +0.0135/+0.0096 in
+2023. Because the gain is not cross-year stable, P03 is not promoted and P00
+remains the mainline checkpoint.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and
@@ -177,11 +182,10 @@ modality specialization controls?
 7. residual reliability gating with candidate semantic-prototype reliability,
    while retaining the same backbone, data, corruption, and training budget.
 
-**Immediate next prototype:** share P00's encoder and first four decoder blocks,
-then adapt only a copied final decoder block and prediction head inside the
-known missing region. First screen only 2021 M00/M01/M06/M07 and retain P03/
-P04 as the accuracy and minimum-compute controls. If this final cheap capacity
-step does not beat P03, stop escalating the rapid spatial-router branch.
+**Rapid-prototype decision:** complete. Do not tune P00--P06 against the now
+opened 2022--2023 results. Any future method-development phase must freeze a
+new hypothesis and use only the training/validation evidence available before
+this final held-out check; P00 is its matched mainline baseline.
 
 **Gate:** a method must preserve clean performance within the frozen tolerance,
 improve multiple prespecified missingness regimes, and beat the matched

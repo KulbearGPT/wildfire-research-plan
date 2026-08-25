@@ -186,8 +186,8 @@ training. It selects P02 logits only at pixels inside the deterministic M06/M07
 missing block and P00 logits elsewhere. Job `20458324` completed the 2021
 M00/M01/M06/M07 screen. AP was 0.585322, 0.299465, 0.350878, and 0.166982,
 respectively: M00/M01 exactly preserve P00, while M06/M07 improve P00 by 0.0339
-and 0.0378. P03 is therefore the leading rapid routed prototype, but remains a
-two-forward-pass engineering result without held-out evaluation.
+and 0.0378. P03 was therefore selected as the leading rapid routed prototype
+for the one-time held-out comparison reported at the end of this section.
 
 P04 (`FrozenP00-SpatialResidualGate`) freezes P00, reuses its final 16-channel
 decoder feature, and trains only a 17-parameter `1x1` residual head inside the
@@ -200,3 +200,13 @@ P05 enlarged the P04 correction to one 145-parameter `3x3` convolution while
 holding every other choice fixed. Job `20464221` finished in 3:30. M00/M01
 again exactly matched P00, but M06/M07 AP fell slightly to 0.327723/0.138767.
 The failure to improve P04 rejects kernel size as the immediate bottleneck.
+
+P06 shared P00 through the first four decoder blocks and trained a copied final
+decoder block plus head. Job `20464396` produced M06/M07 AP of 0.330240/
+0.141035, again below P03. The cheap capacity escalation therefore stopped.
+
+P03 then received its one-time held-out comparison. Against P00, its M06/M07
+AP deltas were -0.0231/-0.0261 in 2022 (job `20465333`) and +0.0135/+0.0096 in
+2023 (job `20465334`); M00/M01 were exactly preserved. This mixed result fails
+the cross-year robustness requirement. P03 is not promoted, P00 remains the
+mainline checkpoint, and 2022--2023 are closed to further prototype tuning.

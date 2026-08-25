@@ -20,12 +20,14 @@ infrastructure needed to run the next experiments.
   missingness matrix have completed. Active-fire-history loss (M01) is the
   dominant diagnosed failure. See
   [`reproductions/wsts_fast_track/`](reproductions/wsts_fast_track/).
-- P00 (`FireDrop-C00`) remains the accepted single-checkpoint baseline. P01's
+- P00 (`FireDrop-C00`) remains the accepted mainline checkpoint. P01's
   explicit active-fire-validity channel did not improve P00, while P02's
   structured BlockDrop exposed a useful spatial-missingness expert but harmed
   other regimes. P03 now routes frozen P00/P02 logits only inside known missing
-  blocks: it exactly preserves P00 on M00/M01 and improves AP by 0.0339 on M06
-  and 0.0378 on M07.
+  blocks: it preserved P00 and improved 2021 M06/M07, but the final held-out
+  check was negative in 2022 and positive in 2023. P03 is therefore not
+  promoted. See
+  [`docs/experiments/p00_p06_rapid_reliability.md`](docs/experiments/p00_p06_rapid_reliability.md).
 
 ## Scientific boundary
 
@@ -85,15 +87,14 @@ official-weight identities into its run record. Follow
 [`docs/cluster-migration.md`](docs/cluster-migration.md) after cloning the
 reviewed migration commit.
 
-## Active experiment
+## Rapid prototype outcome
 
 P03 spatial expert routing completed in job `20458324`. It is a training-free
 2021 engineering prototype: P00 is used everywhere except inside the known
 M06/M07 missing block, where P02 is used. AP is 0.585322/0.299465/0.350878/
 0.166982 on M00/M01/M06/M07. Relative to P00 this is exactly neutral on
-M00/M01 and +0.0339/+0.0378 on M06/M07, so P03 is the current leading routed
-prototype. No held-out evaluation or additional seed is implied by this
-screening result.
+M00/M01 and +0.0339/+0.0378 on M06/M07, making P03 the 2021-selected routed
+candidate for the final held-out comparison reported below.
 
 P04 tested whether P03 could be compressed to one P00 forward pass plus a
 17-parameter `1x1` residual head trained for 1,000 steps. Job `20462018`
@@ -105,3 +106,10 @@ P05 expanded that residual head to a 145-parameter `3x3` convolution. Job
 `20464221` preserved M00/M01 but reached only 0.327723/0.138767 AP on M06/M07,
 slightly below P04. Kernel size is therefore not the limiting factor; P05 is
 not promoted.
+
+P06 adapted the final decoder block and head while sharing the rest of P00. Job
+`20464396` reached 0.330240/0.141035 on 2021 M06/M07 and also failed to beat
+P03. The spatial-router branch then closed. Final P03 jobs `20465333/20465334`
+showed M06/M07 deltas of -0.0231/-0.0261 in 2022 and +0.0135/+0.0096 in 2023.
+The result is not cross-year robust, so P00 remains mainline and held-out years
+must not be used for further tuning.
