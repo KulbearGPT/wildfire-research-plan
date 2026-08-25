@@ -8,6 +8,24 @@ import torch
 ROUTER_ID = "P03-SpatialExpertRouter-P00-P02"
 
 
+class RoutingInputModel(torch.nn.Module):
+    """Expose a 40-channel model through the routed 41-channel input contract."""
+
+    def __init__(self, model: torch.nn.Module) -> None:
+        super().__init__()
+        self.model = model
+
+    def forward(self, routed_input: torch.Tensor) -> torch.Tensor:
+        if routed_input.ndim != 5 or routed_input.shape[2] != 41:
+            raise ValueError("routed input must have shape (B, T, 41, H, W)")
+        return self.model(routed_input[:, :, :40])
+
+    def compute_loss(
+        self, logits: torch.Tensor, target: torch.Tensor
+    ) -> torch.Tensor:
+        return self.model.compute_loss(logits, target)
+
+
 def route_spatial_logits(
     default_logits: torch.Tensor,
     block_logits: torch.Tensor,

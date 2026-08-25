@@ -18,7 +18,7 @@ from .prototype import (
     FIRE_DROPOUT_PROBABILITY,
     PROTOTYPE_ID,
 )
-from .spatial_router import ROUTER_ID, SpatialExpertRouter
+from .spatial_router import ROUTER_ID, RoutingInputModel, SpatialExpertRouter
 
 
 SCENARIOS = ("M00", "M01", "M06", "M07")
@@ -106,6 +106,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         device=device,
     )
     router = SpatialExpertRouter(default_model, block_model)
+    baseline_model = RoutingInputModel(default_model)
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=False)
 
@@ -129,7 +130,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             num_workers=args.num_workers,
             pin_memory=device.type == "cuda",
         )
-        baseline_metrics = evaluate_batches(default_model, loader, device=device)
+        baseline_metrics = evaluate_batches(baseline_model, loader, device=device)
         metrics = evaluate_batches(router, loader, device=device)
         baseline_result = {
             "schema_version": 1,

@@ -18,6 +18,15 @@ class _ConstantExpert(torch.nn.Module):
         )
 
 
+class _FortyChannelExpert(torch.nn.Module):
+    def forward(self, features: torch.Tensor) -> torch.Tensor:
+        assert tuple(features.shape[1:3]) == (1, 40)
+        return features[:, -1, :1]
+
+    def compute_loss(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        return (logits - target).square().mean()
+
+
 def test_spatial_router_uses_block_expert_only_inside_missing_area() -> None:
     from reproductions.wsts_fast_track import spatial_router
 
@@ -64,3 +73,15 @@ def test_spatial_router_heldout_requires_explicit_authorization() -> None:
         "prototype-formal",
         True,
     )
+
+
+def test_default_baseline_strips_routing_mask_channel() -> None:
+    from reproductions.wsts_fast_track.spatial_router import RoutingInputModel
+
+    routed_input = torch.zeros((2, 1, 41, 3, 3))
+    routed_input[:, :, 40] = 1.0
+
+    logits = RoutingInputModel(_FortyChannelExpert())(routed_input)
+
+    assert tuple(logits.shape) == (2, 1, 3, 3)
+    assert torch.count_nonzero(logits) == 0
