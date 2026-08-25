@@ -92,3 +92,12 @@ def test_processed_block_dropout_appends_mask_and_hides_dynamic_channels() -> No
     assert torch.all(routed[:, 40][:, mask] == 1.0)
     assert torch.all(routed[:, 12:15] == 1.0)
     assert torch.all(routed[:, 16:33] == 1.0)
+
+
+def test_spatial_residual_gate_supports_minimal_three_by_three_head() -> None:
+    from reproductions.wsts_fast_track.residual_gate import FrozenSpatialResidualGate
+
+    gate = FrozenSpatialResidualGate(_TinyDefault(), residual_kernel_size=3)
+
+    assert tuple(gate.residual_head.weight.shape) == (1, 16, 3, 3)
+    assert sum(parameter.numel() for parameter in gate.trainable_parameters()) == 145

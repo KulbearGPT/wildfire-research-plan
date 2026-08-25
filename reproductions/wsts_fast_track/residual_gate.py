@@ -14,6 +14,7 @@ from .missingness import structured_block_mask
 
 
 PROTOTYPE_ID = "P04-FrozenP00-SpatialResidualGate"
+SPATIAL_PROTOTYPE_ID = "P05-FrozenP00-SpatialResidualGate3x3"
 GATE_TRAINING_STEPS = 1_000
 PROCESSED_DYNAMIC_NON_FIRE = tuple(range(12)) + (15,) + tuple(range(33, 38))
 
@@ -93,14 +94,26 @@ def install_training_processed_block_dropout(upstream_root: Path) -> None:
 
 
 class FrozenSpatialResidualGate(torch.nn.Module):
-    """Add a 17-parameter correction to frozen P00 decoder features."""
+    """Add a minimal spatial correction to frozen P00 decoder features."""
 
-    def __init__(self, default_model: torch.nn.Module) -> None:
+    def __init__(
+        self,
+        default_model: torch.nn.Module,
+        *,
+        residual_kernel_size: int = 1,
+    ) -> None:
         super().__init__()
+        if residual_kernel_size not in {1, 3}:
+            raise ValueError("residual kernel size must be 1 or 3")
         self.default_model = default_model
         self.default_model.requires_grad_(False)
         self.default_model.eval()
-        self.residual_head = torch.nn.Conv2d(16, 1, kernel_size=1)
+        self.residual_head = torch.nn.Conv2d(
+            16,
+            1,
+            kernel_size=residual_kernel_size,
+            padding=residual_kernel_size // 2,
+        )
         torch.nn.init.zeros_(self.residual_head.weight)
         torch.nn.init.zeros_(self.residual_head.bias)
 

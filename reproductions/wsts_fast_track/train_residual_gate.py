@@ -19,6 +19,7 @@ from .prototype import FIRE_DROPOUT_PROBABILITY, PROTOTYPE_ID as P00_ID
 from .residual_gate import (
     GATE_TRAINING_STEPS,
     PROTOTYPE_ID,
+    SPATIAL_PROTOTYPE_ID,
     FrozenSpatialResidualGate,
     install_training_processed_block_dropout,
 )
@@ -34,6 +35,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--residual-kernel-size", type=int, choices=(1, 3), default=1
+    )
     args = parser.parse_args(argv)
 
     upstream = args.upstream_root.resolve()
@@ -89,10 +93,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=upstream,
         device=device,
     )
-    gate = FrozenSpatialResidualGate(default_model).to(device)
+    gate = FrozenSpatialResidualGate(
+        default_model, residual_kernel_size=args.residual_kernel_size
+    ).to(device)
     parameters = tuple(gate.trainable_parameters())
-    if sum(parameter.numel() for parameter in parameters) != 17:
-        raise ValueError("P04 must expose exactly 17 trainable parameters")
+    expected_parameters = 17 if args.residual_kernel_size == 1 else 145
+    if sum(parameter.numel() for parameter in parameters) != expected_parameters:
+        raise ValueError("residual gate exposes an unexpected parameter count")
+    prototype_id = (
+        PROTOTYPE_ID
+        if args.residual_kernel_size == 1
+        else SPATIAL_PROTOTYPE_ID
+    )
     optimizer = torch.optim.Adam(parameters, lr=1e-2)
     gate.train()
     iterator = iter(loader)
@@ -119,14 +131,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "prototype_id": PROTOTYPE_ID,
+        "prototype_id": prototype_id,
         "base_record": str(args.p00_record.resolve(strict=True)),
         "base_checkpoint": str(checkpoint),
         "train_years": list(TRAIN_YEARS),
         "steps": GATE_TRAINING_STEPS,
         "seed": 0,
         "block_fractions": [0.25, 0.5],
-        "trainable_parameters": 17,
+        "residual_kernel_size": args.residual_kernel_size,
+        "trainable_parameters": expected_parameters,
         "final_loss": final_loss,
         "residual_head": gate.residual_head.state_dict(),
     }

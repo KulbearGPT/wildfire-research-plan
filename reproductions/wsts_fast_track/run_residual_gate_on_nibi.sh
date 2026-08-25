@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 1 ]]; then
-  echo "usage: $0 P00_COMPLETED_RECORD" >&2
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  echo "usage: $0 P00_COMPLETED_RECORD [RESIDUAL_KERNEL_SIZE]" >&2
   exit 2
 fi
 
 p00_record=$(realpath "$1")
+kernel_size=${2:-1}
+case "${kernel_size}" in
+  1) prototype_label=P04-residual-gate ;;
+  3) prototype_label=P05-residual-gate-3x3 ;;
+  *) echo "residual kernel size must be 1 or 3" >&2; exit 2 ;;
+esac
 runner_path=$(realpath "${BASH_SOURCE[0]}")
 repo=$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)
 base=/project/6085198/kulbear/wildfire
 upstream=${base}/cache/WildfireSpreadTS-res18-runtime
 data=${base}/hdf5/wstsplus-active-fixed
 stats=${base}/runs/nibi-wstsplus-data-20260823/train-2016-2020-stats.npz
-run_root=${base}/runs/prototype-P04-residual-gate-${SLURM_JOB_ID}
+run_root=${base}/runs/prototype-${prototype_label}-${SLURM_JOB_ID}
 gate_checkpoint=${run_root}/gate.pt
 output_root=${run_root}/results
 
@@ -48,6 +54,7 @@ python -m reproductions.wsts_fast_track.train_residual_gate \
   --data-root "${data}" \
   --stats-path "${stats}" \
   --output-path "${gate_checkpoint}" \
+  --residual-kernel-size "${kernel_size}" \
   --device cuda 2>&1 | tee "${run_root}/training.log"
 
 python -m reproductions.wsts_fast_track.evaluate_residual_gate \
@@ -57,6 +64,7 @@ python -m reproductions.wsts_fast_track.evaluate_residual_gate \
   --upstream-root "${upstream}" \
   --data-root "${data}" \
   --stats-path "${stats}" \
+  --residual-kernel-size "${kernel_size}" \
   --device cuda 2>&1 | tee "${run_root}/evaluation.log"
 
 test -f "${output_root}/summary.json"

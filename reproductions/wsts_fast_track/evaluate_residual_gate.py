@@ -13,7 +13,12 @@ from .evaluate_missingness import evaluate_batches, load_checkpoint_model, write
 from .evaluate_spatial_router import SCENARIOS, _checkpoint_from_record
 from .evaluation import build_controlled_dataset
 from .prototype import FIRE_DROPOUT_PROBABILITY, PROTOTYPE_ID as P00_ID
-from .residual_gate import GATE_TRAINING_STEPS, PROTOTYPE_ID, FrozenSpatialResidualGate
+from .residual_gate import (
+    GATE_TRAINING_STEPS,
+    PROTOTYPE_ID,
+    SPATIAL_PROTOTYPE_ID,
+    FrozenSpatialResidualGate,
+)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -27,6 +32,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--residual-kernel-size", type=int, choices=(1, 3), default=1
+    )
     args = parser.parse_args(argv)
 
     p00_checkpoint = _checkpoint_from_record(
@@ -42,15 +50,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         map_location="cpu",
         weights_only=False,
     )
+    expected_parameters = 17 if args.residual_kernel_size == 1 else 145
+    prototype_id = (
+        PROTOTYPE_ID
+        if args.residual_kernel_size == 1
+        else SPATIAL_PROTOTYPE_ID
+    )
     if (
         not isinstance(gate_payload, dict)
         or gate_payload.get("status") != "pass"
-        or gate_payload.get("prototype_id") != PROTOTYPE_ID
+        or gate_payload.get("prototype_id") != prototype_id
         or gate_payload.get("steps") != GATE_TRAINING_STEPS
-        or gate_payload.get("trainable_parameters") != 17
+        or gate_payload.get("residual_kernel_size") != args.residual_kernel_size
+        or gate_payload.get("trainable_parameters") != expected_parameters
         or not isinstance(gate_payload.get("residual_head"), dict)
     ):
-        raise ValueError("invalid P04 gate checkpoint")
+        raise ValueError("invalid residual-gate checkpoint")
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise ValueError("CUDA evaluation requested but unavailable")
@@ -60,7 +75,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=args.upstream_root,
         device=device,
     )
-    gate = FrozenSpatialResidualGate(default_model)
+    gate = FrozenSpatialResidualGate(
+        default_model, residual_kernel_size=args.residual_kernel_size
+    )
     gate.residual_head.load_state_dict(gate_payload["residual_head"], strict=True)
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=False)
@@ -90,7 +107,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "status": "pass",
             "mode": "prototype-validation",
             "scientific_claim": False,
-            "prototype_id": PROTOTYPE_ID,
+            "prototype_id": prototype_id,
             "scenario_id": scenario_id,
             "year": 2021,
             "metrics": metrics,
@@ -104,7 +121,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "status": "pass",
         "mode": "prototype-validation",
         "scientific_claim": False,
-        "prototype_id": PROTOTYPE_ID,
+        "prototype_id": prototype_id,
         "p00_record": str(args.p00_record.resolve(strict=True)),
         "gate_checkpoint": str(args.gate_checkpoint.resolve(strict=True)),
         "year": 2021,
