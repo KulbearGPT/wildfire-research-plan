@@ -168,6 +168,8 @@ class FrozenLastBlockRouter(torch.nn.Module):
         self.adapted_head = copy.deepcopy(
             self.default_model.model.segmentation_head
         )
+        self.adapted_block.requires_grad_(True)
+        self.adapted_head.requires_grad_(True)
 
     def train(self, mode: bool = True):
         super().train(mode)

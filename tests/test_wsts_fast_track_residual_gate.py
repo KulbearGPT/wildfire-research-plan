@@ -125,6 +125,7 @@ def test_last_block_router_preserves_default_outside_mask() -> None:
     routed_input = torch.zeros((1, 1, 41, 2, 2))
     routed_input[:, :, 40, 0, 1] = 1.0
     router = FrozenLastBlockRouter(model)
+    assert all(parameter.requires_grad for parameter in router.trainable_parameters())
     with torch.no_grad():
         router.adapted_head.bias.fill_(5.0)
 
