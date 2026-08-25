@@ -149,6 +149,9 @@ claim that simulated corruption is observed natural missingness.
 30% training-only active-fire dropout. Its controlled 2021 AP changed from
 0.584368 to 0.585322 on M00 and from 0.045920 to 0.299465 on M01. P01 keeps
 that contract fixed and adds one explicit active-fire-validity channel.
+P01 did not improve P00. P02 added 30% structured BlockDrop and improved P00
+by 0.0183 AP on M06 and 0.0303 on M07, but degraded M00 by 0.0200 and M01 by
+0.0322. It therefore exposed a robustness tradeoff and was not promoted.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and

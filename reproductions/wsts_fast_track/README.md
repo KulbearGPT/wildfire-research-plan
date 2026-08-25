@@ -166,8 +166,17 @@ controlled AP was 0.585322 on M00 and 0.299465 on M01, versus 0.584368 and
 showed large positive M01 deltas while keeping clean AP within the frozen
 rapid-triage tolerance.
 
-P01 (`FireDropMask-C00`) is the next one-variable experiment. It retains the
+P01 (`FireDropMask-C00`) was the next one-variable experiment. It retained the
 same model, split, seed, budget, and dropout probability, and appends one
 binary active-fire-validity channel after upstream preprocessing. Its first
 evaluation is limited to 2021 M00/M01/M02/M07; there is no probability sweep
 or additional-seed launch in this prototype gate.
+
+P01 jobs `20414716`/`20414717` completed but did not beat P00: its AP deltas
+were -0.0095 on M00, -0.0111 on M01, -0.0250 on M02, and +0.0002 on M07.
+P02 then retained FireDrop and independently applied structured 25%/50%
+BlockDrop with probability 0.3. Jobs `20454659`/`20454660` completed; against
+the P00 comparison job `20454658`, P02 changed AP by -0.0200 on M00, -0.0322
+on M01, +0.0183 on M06, and +0.0303 on M07. P02 failed its preservation gate
+despite the M07 gain. P00 remains the accepted rapid baseline; P01/P02 do not
+advance to held-out evaluation or additional seeds.

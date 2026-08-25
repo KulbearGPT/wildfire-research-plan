@@ -20,10 +20,10 @@ infrastructure needed to run the next experiments.
   missingness matrix have completed. Active-fire-history loss (M01) is the
   dominant diagnosed failure. See
   [`reproductions/wsts_fast_track/`](reproductions/wsts_fast_track/).
-- P00 (`FireDrop-C00`) completed: 30% training-only active-fire dropout sharply
-  improved M01 while preserving clean validation behavior. P01 now tests the
-  one-variable follow-up: append an explicit active-fire-validity channel to
-  the same FireDrop training contract.
+- P00 (`FireDrop-C00`) remains the accepted rapid baseline. P01's explicit
+  active-fire-validity channel did not improve P00. P02's added structured
+  BlockDrop improved severe block missingness but harmed the active-fire-
+  missing regime, so neither P01 nor P02 was promoted.
 
 ## Scientific boundary
 
@@ -85,9 +85,8 @@ reviewed migration commit.
 
 ## Active experiment
 
-The immediate experiment is `P01-FireDropMask-C00`: the same C00 backbone,
-seed 0, 10,000-step budget, frozen 2016–2020 train / 2021 validation split,
-and 30% training-only active-fire dropout as P00, with one added binary
-active-fire-validity channel. Its first triage is restricted to 2021
-M00/M01/M02/M07. The already-read 2022--2023 P00 results are retained as a
-one-time final check and are not used to tune P01.
+P01 and P02 rapid triage is complete. P01 lost AP relative to P00 on M00,
+M01, and M02. P02 improved M06 by 0.0183 AP and M07 by 0.0303 AP, but lost
+0.0200 on M00 and 0.0322 on M01, failing its frozen promotion rule. P00 remains
+the mainline checkpoint. No P01/P02 held-out evaluation or probability sweep
+is authorized.
