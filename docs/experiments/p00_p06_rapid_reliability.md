@@ -1,11 +1,13 @@
-# P00--P06 Rapid Reliability Prototypes
+# P00--P07 Rapid Reliability Prototypes
 
 ## Outcome
 
 The rapid spatial-reliability branch is complete. P03 was the strongest 2021
-prototype, but its final one-time held-out comparison was inconsistent across
+prototype, but its fixed temporal test comparison was inconsistent across
 years. It is therefore retained as a diagnostic result rather than promoted as
-the main method. P00 remains the accepted mainline checkpoint.
+the main method. A later stochastic belief-residual probe (P07) improved P00
+under block missingness but collapsed to an effectively deterministic
+correction and did not beat P04. P00 remains the accepted mainline checkpoint.
 
 ## 2021 selection results
 
@@ -16,12 +18,28 @@ the main method. P00 remains the accepted mainline checkpoint.
 | P04 `1x1` residual | 17 | 0.585322 | 0.299465 | 0.332083 | 0.139913 | Compute control |
 | P05 `3x3` residual | 145 | 0.585322 | 0.299465 | 0.327723 | 0.138767 | Rejected |
 | P06 final-block router | adapted tail only | 0.585322 | 0.299465 | 0.330240 | 0.141035 | Rejected |
+| P07 stochastic belief residual | 4,945 | 0.585322 | 0.299465 | 0.331009 | 0.140771 | Rejected: variance collapse |
 
 P03 improved P00 by 0.033872 AP on M06 and 0.037806 on M07 while preserving
 M00/M01 exactly. Increasing the capacity of the single-forward correction in
 P04--P06 did not close the gap.
 
-## One-time held-out comparison
+## P07 stochastic belief probe
+
+P07 kept P00 frozen, drew four reparameterized residual samples inside known
+missing blocks, and trained its 4,945-parameter belief/output heads for 3,000
+steps on 2016--2020. It exactly preserved P00 on M00/M01. Relative to P00, its
+2021 AP improved by approximately 0.01400 on M06 and 0.01160 on M07.
+
+The stochastic mechanism did not earn promotion. Relative to the deterministic
+P04 control, P07 changed AP by -0.001074 on M06 and +0.000858 on M07, leaving
+the two-scenario mean slightly lower. Its mean predictive variance was only
+1.204e-8 on M06 and 1.503e-8 on M07, with zero variance on M00/M01 by
+construction. This is effectively posterior collapse: the learned predictor
+uses its mean correction but not a meaningful belief distribution. The P07
+checkpoint is therefore not advanced to the fixed 2022--2023 test set.
+
+## Fixed temporal test comparison
 
 | Year | Scenario | P00 AP | P03 AP | P03 minus P00 |
 |---:|---|---:|---:|---:|
@@ -44,9 +62,10 @@ P03 promotion or further tuning against 2022--2023 is authorized.
 - P04: job `20462018`.
 - P05: job `20464221`.
 - P06: job `20464396`; failed setup job `20464346` produced no result.
-- P03 held-out: jobs `20465333` (2022) and `20465334` (2023).
-- Failed held-out setup jobs `20464512`/`20464513` produced no result.
+- P07: job `20558998` completed on Nibi node `g30` in 10:58 with exit `0:0`.
+- P03 fixed-test jobs: `20465333` (2022) and `20465334` (2023).
+- Failed fixed-test setup jobs `20464512`/`20464513` produced no result.
 
 All training and full-dataset evaluation ran through Slurm compute nodes. The
-held-out results are final reporting evidence, not feedback for another
+fixed-test results are final reporting evidence, not feedback for another
 prototype iteration.
