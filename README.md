@@ -31,7 +31,8 @@ infrastructure needed to run the next experiments.
   2022, and 2023. P10 then held every training choice fixed and replaced
   GroupDRO with ordinary ERM. P09 and P10 were effectively tied across all
   three years, so the gain is attributed to corrected, year-balanced
-  multi-year training rather than GroupDRO. See
+  multi-year training rather than GroupDRO. P11 tried reusing P10 for complete
+  active-fire-history loss, but regressed 2021 M01 and was rejected. See
   [`docs/experiments/p00_p06_rapid_reliability.md`](docs/experiments/p00_p06_rapid_reliability.md).
 
 ## Scientific boundary
@@ -122,4 +123,6 @@ upstream multi-year sample resolver that had mapped pooled training indices to
 the final year. The matched P10 ERM control retained the gain and was
 effectively tied with P09 across 2021--2023. P10 is therefore the parsimonious
 leading candidate, and the evidence does not support a GroupDRO contribution.
-Held-out years must not be used for further tuning.
+P11 preserved that block result but reduced M01 AP when it routed complete
+active-fire loss to P10, so no P11 held-out evaluation was run. Held-out years
+must not be used for further tuning.

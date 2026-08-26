@@ -184,7 +184,12 @@ GroupDRO with ordinary ERM. P09 and P10 were effectively tied in 2021; P10 was
 slightly better in 2022 and slightly worse in 2023. The GroupDRO attribution is
 therefore rejected: corrected, balanced five-year exposure explains the gain.
 P10 is the parsimonious leading candidate. The 2022--2023 results remain
-reporting-only and cannot select further settings.
+reporting-only and cannot select further settings. P11 then tested whether the
+same P10 expert could also serve complete active-fire-history loss. It exactly
+retained P00 on M00 and P10 on M06/M07, but reduced 2021 M01 AP from `0.299465`
+to `0.291202`; P11 was rejected without held-out evaluation. The next minimal
+experiment is a corrected-index, inverse-year-balanced FireDrop-only ERM
+fine-tune initialized from P00 and selected only on 2021 M00/M01.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and

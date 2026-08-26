@@ -1,4 +1,4 @@
-# P00--P10 Rapid Reliability Prototypes
+# P00--P11 Rapid Reliability Prototypes
 
 ## Outcome
 
@@ -11,7 +11,9 @@ correction and did not beat P04. P08 used a training-only clean posterior and
 produced non-collapsed uncertainty, but its block-missingness AP fell below
 P00. P09 then passed the 2021 gate and improved M06/M07 over P00 in both fixed
 test years. P10 supplied the matched corrected-index ERM control and retained
-the gain, showing that GroupDRO adds no stable benefit.
+the gain, showing that GroupDRO adds no stable benefit. P11 then routed complete
+active-fire-history loss to P10, but its M01 AP regressed and the route was
+rejected without opening the held-out years.
 
 ## 2021 selection results
 
@@ -26,6 +28,7 @@ the gain, showing that GroupDRO adds no stable benefit.
 | P08 teacher-posterior belief | 14,465 | 0.585322 | 0.299465 | 0.306096 | 0.123222 | Rejected: AP regression |
 | P09 year-corruption GroupDRO router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365531 | 0.185136 | Ablation; no stable ERM gain |
 | P10 corrected-index balanced ERM router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365203 | 0.185669 | Parsimonious candidate |
+| P11 P00/P10 missingness router | 0 | 0.585322 | 0.291202 | 0.365203 | 0.185669 | Rejected: M01 regression |
 
 P03 improved P00 by 0.033872 AP on M06 and 0.037806 on M07 while preserving
 M00/M01 exactly. Increasing the capacity of the single-forward correction in
@@ -116,6 +119,24 @@ ERM explains essentially all of P09's gain. P10 is retained as the simpler
 leading candidate; P09 remains an ablation showing that adaptive environment
 weighting is unnecessary under this prototype budget.
 
+## P11 active-fire routing probe
+
+P11 was a training-free routing test. It retained P00 for clean inputs, used
+P10 only inside M06/M07 missing blocks, and used P10 over the full image when
+active-fire history was entirely absent in M01. This exactly preserved P00 on
+M00 and exactly reproduced P10 on M06/M07.
+
+The proposed M01 route failed its mandatory gate. M01 AP decreased from
+P00's `0.299465` to `0.291202` (`-0.008264`), while F1 decreased from
+`0.208634` to `0.134932`. The slightly lower focal loss did not compensate for
+the degraded ranking and thresholded forecast. P11 was therefore rejected and
+was not evaluated on 2022--2023.
+
+This negative result shows that P10's corrected five-year BlockDrop expert is
+not interchangeable with a dedicated fire-history-loss expert. The next
+minimal hypothesis is a corrected-index, inverse-year-balanced FireDrop-only
+ERM fine-tune initialized from P00, selected solely on 2021 M00/M01.
+
 ## Fixed temporal test comparison
 
 | Year | Scenario | P00 AP | P03 AP | P09 AP | P10 AP | P10 minus P00 | P10 minus P09 |
@@ -166,6 +187,10 @@ evidence and cannot be used to tune the corrected resolver, ERM, or GroupDRO.
   (2023, 7:47, `g33`) completed with exit `0:0`. Summary SHA-256 values are
   `9225bc337cc3ac7690b77fa0bb280ae74b7206d8c5be82c51f3aa96c950d1e58`
   and `0c5ae952ec20db82a8a67586bf3d1df2aafa0a2e327c371d6a2ed5fd8989fafc`.
+- P11 selection: job `20588449` completed on Nibi node `g34` in 8:04 with
+  exit `0:0`. Summary SHA-256:
+  `d8ee79786f08db5026a45688ade33c52c0c78e87d42213656ba3f0ad2f496594`.
+  P11 failed the 2021 M01 gate, so no fixed-test jobs were submitted.
 - P03 fixed-test jobs: `20465333` (2022) and `20465334` (2023).
 - Failed fixed-test setup jobs `20464512`/`20464513` produced no result.
 
