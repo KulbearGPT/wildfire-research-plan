@@ -36,7 +36,10 @@ infrastructure needed to run the next experiments.
   replaced the accidentally disabled focal class weighting with the normalized
   positive-class weight while keeping P10's 3,000-step recipe fixed. It caused
   severe overprediction and regressed M01/M06/M07 on 2021, so it was
-  rejected without opening 2022--2023. See
+  rejected without opening 2022--2023. P13 instead trained a dedicated
+  corrected-index, year-balanced FireDrop expert. Its small 2021 M01 gain did
+  not remain positive in both fixed test years, closing the engineering
+  expert-tuning branch. See
   [`docs/experiments/p00_p06_rapid_reliability.md`](docs/experiments/p00_p06_rapid_reliability.md).
 
 ## Scientific boundary
@@ -133,4 +136,6 @@ must not be used for further tuning. P12 properly enabled focal positive-class
 weighting (`alpha=0.998688`) in an otherwise matched P10 run, but reduced M01
 AP to 0.252888 and mean M06/M07 AP to 0.066132 through extreme overprediction.
 The prevalence-derived focal weighting is rejected; no P12 held-out evaluation
-was run.
+was run. P13 improved 2021 M01 AP by 0.004771, regressed 2022 by 0.002058, and
+improved 2023 by 0.019928. This mixed temporal result is diagnostic evidence,
+not a promoted final method.

@@ -1,4 +1,4 @@
-# P00--P12 Rapid Reliability Prototypes
+# P00--P13 Rapid Reliability Prototypes
 
 ## Outcome
 
@@ -15,7 +15,9 @@ the gain, showing that GroupDRO adds no stable benefit. P11 then routed complete
 active-fire-history loss to P10, but its M01 AP regressed and the route was
 rejected without opening the held-out years. P12 isolated the previously
 disabled focal class weighting; enabling the normalized positive weight caused
-severe overprediction and was also rejected on 2021.
+severe overprediction and was also rejected on 2021. P13's dedicated
+corrected-index FireDrop expert produced a small 2021 M01 gain, but the frozen
+test comparison changed sign across years. The engineering branch is closed.
 
 ## 2021 selection results
 
@@ -32,6 +34,7 @@ severe overprediction and was also rejected on 2021.
 | P10 corrected-index balanced ERM router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365203 | 0.185669 | Parsimonious candidate |
 | P11 P00/P10 missingness router | 0 | 0.585322 | 0.291202 | 0.365203 | 0.185669 | Rejected: M01 regression |
 | P12 corrected-alpha ERM router | full P02 fine-tune | 0.585322 | 0.252888 | 0.070432 | 0.061832 | Rejected: severe overprediction |
+| P13 dedicated FireDrop/P10 router | full P00 fine-tune | 0.585322 | 0.304237 | 0.365203 | 0.185669 | 2021 gate passed; fixed years mixed |
 
 P03 improved P00 by 0.033872 AP on M06 and 0.037806 on M07 while preserving
 M00/M01 exactly. Increasing the capacity of the single-forward correction in
@@ -157,6 +160,28 @@ weight makes positive pixels too dominant for this crop and sampling regime.
 P12 failed its 2021 gate and was not evaluated on 2022--2023. This rejects the
 specific near-one alpha, not every possible moderate class weight.
 
+## P13 dedicated FireDrop expert
+
+P13 started from P00 and retained the corrected five-year resolver,
+inverse-year sampler, seed 0, batch size 64, AdamW `1e-4`, 3,000 steps, and the
+legacy unweighted focal objective. Its only training corruption was the same
+30% FireDrop used by P00. The frozen diagnostic router used P00 on M00, the
+P13 expert on complete active-fire loss M01, and P10 inside M06/M07 blocks.
+
+P13 passed the frozen 2021 gate. M01 AP increased from `0.299465` to `0.304237`
+(`+0.004771`), while M00 exactly matched P00 and M06/M07 exactly matched P10.
+The fixed test result was not temporally stable: M01 AP changed from P00 by
+`-0.002058` in 2022 and `+0.019928` in 2023. The expert specialization is a
+useful diagnostic but not a robust standalone contribution. No P13 setting is
+changed from these reporting-only results, and the engineering branch closes
+in favor of explicit latent fire-state inference.
+
+| Year | P00 M01 AP | P13 M01 AP | P13 minus P00 |
+|---:|---:|---:|---:|
+| 2021 | 0.299465 | 0.304237 | +0.004771 |
+| 2022 | 0.163668 | 0.161609 | -0.002058 |
+| 2023 | 0.136357 | 0.156285 | +0.019928 |
+
 ## Fixed temporal test comparison
 
 | Year | Scenario | P00 AP | P03 AP | P09 AP | P10 AP | P10 minus P00 | P10 minus P09 |
@@ -219,6 +244,15 @@ evidence and cannot be used to tune the corrected resolver, ERM, or GroupDRO.
   Setup job `20591988` failed before training after exposing the raw-ratio
   checkpoint metadata; it produced no scientific result. P12 failed the 2021
   gate, so no fixed-test jobs were submitted.
+- P13 selection: job `20611586` completed on Nibi node `g36` in 25:36 with
+  exit `0:0`. Checkpoint SHA-256:
+  `d69cf3f22eba5105c47d1057eed98601f207b0f42a804781d26c9c31e61f4241`;
+  2021 summary SHA-256:
+  `b213631a96a8ec8c759e7a6b7c842412de0471f8c472615215992544617ef47b`.
+- P13 fixed tests: jobs `20612762` (2022, 15:35, `g32`) and `20612763`
+  (2023, 8:29, `g32`) completed with exit `0:0`. Summary SHA-256 values are
+  `9a3b9febac42131fbdb1ff2a99ef82974d28021871d2f9396d39b06af5a40174`
+  and `42d736f9a7b19df6930635bdbd7ddcf5c8c71f14bf3d17ed8f03c573a5eff790`.
 - P03 fixed-test jobs: `20465333` (2022) and `20465334` (2023).
 - Failed fixed-test setup jobs `20464512`/`20464513` produced no result.
 
