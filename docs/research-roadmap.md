@@ -178,10 +178,13 @@ remains the frozen legacy checkpoint. P07 collapsed to an effectively
 deterministic stochastic residual, and P08 generated nonzero uncertainty but
 regressed AP. P09 corrected the upstream year resolver and fine-tuned P02 with
 15-group year-corruption GroupDRO. It improved M06/M07 over P00 in 2021 and in
-both fixed test years. The result passes its temporal gate but is not yet
-attributable to GroupDRO because corrected multi-year exposure changed at the
-same time. The next experiment is a matched corrected-index balanced ERM
-fine-tune; 2022--2023 remain reporting-only and cannot select its settings.
+both fixed test years. P10 then held the corrected resolver, sampler, data,
+seed, optimizer, learning rate, and 3,000-step budget fixed while replacing
+GroupDRO with ordinary ERM. P09 and P10 were effectively tied in 2021; P10 was
+slightly better in 2022 and slightly worse in 2023. The GroupDRO attribution is
+therefore rejected: corrected, balanced five-year exposure explains the gain.
+P10 is the parsimonious leading candidate. The 2022--2023 results remain
+reporting-only and cannot select further settings.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and

@@ -1,4 +1,4 @@
-# P00--P09 Rapid Reliability Prototypes
+# P00--P10 Rapid Reliability Prototypes
 
 ## Outcome
 
@@ -10,9 +10,8 @@ under block missingness but collapsed to an effectively deterministic
 correction and did not beat P04. P08 used a training-only clean posterior and
 produced non-collapsed uncertainty, but its block-missingness AP fell below
 P00. P09 then passed the 2021 gate and improved M06/M07 over P00 in both fixed
-test years. It is the leading robustness candidate, but not yet an attributable
-GroupDRO result because its run also corrected an upstream multi-year dataset
-indexing defect. A matched corrected-index ERM control is required next.
+test years. P10 supplied the matched corrected-index ERM control and retained
+the gain, showing that GroupDRO adds no stable benefit.
 
 ## 2021 selection results
 
@@ -25,7 +24,8 @@ indexing defect. A matched corrected-index ERM control is required next.
 | P06 final-block router | adapted tail only | 0.585322 | 0.299465 | 0.330240 | 0.141035 | Rejected |
 | P07 stochastic belief residual | 4,945 | 0.585322 | 0.299465 | 0.331009 | 0.140771 | Rejected: variance collapse |
 | P08 teacher-posterior belief | 14,465 | 0.585322 | 0.299465 | 0.306096 | 0.123222 | Rejected: AP regression |
-| P09 year-corruption GroupDRO router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365531 | 0.185136 | Selected; attribution pending |
+| P09 year-corruption GroupDRO router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365531 | 0.185136 | Ablation; no stable ERM gain |
+| P10 corrected-index balanced ERM router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365203 | 0.185669 | Parsimonious candidate |
 
 P03 improved P00 by 0.033872 AP on M06 and 0.037806 on M07 while preserving
 M00/M01 exactly. Increasing the capacity of the single-forward correction in
@@ -92,27 +92,46 @@ M06/M07. Mean block AP was `0.275333`, improving P00 by `0.052243` and P03 by
 P09 also passed the frozen temporal gate. Its mean M06/M07 AP improvement over
 P00 was `0.018699` in 2022 and `0.022378` in 2023. However, P09 differs from
 P03 in two coupled ways: correct five-year sample resolution and GroupDRO.
-These results establish a strong corrected-data candidate, not a causal claim
-that GroupDRO produced the gain. The next required run is one matched
-corrected-index, inverse-year-balanced ERM fine-tune with the same samples,
-seed, optimizer, learning rate, and 3,000-step budget.
+These results established a strong corrected-data candidate but did not by
+themselves identify a GroupDRO effect. P10 below resolves that attribution.
+
+## P10 matched corrected-index ERM
+
+P10 held fixed the P02 initialization, corrected five-year index resolver,
+inverse-year sampler, corruption draws, seed 0, batch size 64, AdamW optimizer,
+`1e-4` learning rate, and 3,000-step budget. Its only scientific change from
+P09 was replacing the GroupDRO-weighted objective with the ordinary mean of
+the per-sample focal losses.
+
+On 2021, P10 reached `0.365203/0.185669` M06/M07 AP. Its mean block AP was
+`0.275436`, only `+0.000102` above P09. The fixed-year differences were also
+small and changed sign: P10 exceeded P09 mean block AP by `+0.004690` in 2022
+and trailed it by `-0.002189` in 2023. P10 remained above P00 in every tested
+year, by `+0.052345`, `+0.023389`, and `+0.020189` mean block AP in
+2021--2023 respectively, while routing preserved M00/M01 exactly.
+
+The matched control therefore does not support a meaningful or temporally
+stable GroupDRO contribution. Corrected five-year exposure with balanced-year
+ERM explains essentially all of P09's gain. P10 is retained as the simpler
+leading candidate; P09 remains an ablation showing that adaptive environment
+weighting is unnecessary under this prototype budget.
 
 ## Fixed temporal test comparison
 
-| Year | Scenario | P00 AP | P03 AP | P09 AP | P09 minus P00 |
-|---:|---|---:|---:|---:|---:|
-| 2022 | M00 | 0.281701 | 0.281701 | 0.281701 | 0.000000 |
-| 2022 | M01 | 0.163668 | 0.163668 | 0.163668 | 0.000000 |
-| 2022 | M06 | 0.128030 | 0.104961 | 0.145384 | +0.017354 |
-| 2022 | M07 | 0.062677 | 0.036584 | 0.082721 | +0.020044 |
-| 2023 | M00 | 0.406200 | 0.406200 | 0.406200 | 0.000000 |
-| 2023 | M01 | 0.136357 | 0.136357 | 0.136357 | 0.000000 |
-| 2023 | M06 | 0.195445 | 0.208950 | 0.220648 | +0.025203 |
-| 2023 | M07 | 0.076796 | 0.086391 | 0.096349 | +0.019554 |
+| Year | Scenario | P00 AP | P03 AP | P09 AP | P10 AP | P10 minus P00 | P10 minus P09 |
+|---:|---|---:|---:|---:|---:|---:|---:|
+| 2022 | M00 | 0.281701 | 0.281701 | 0.281701 | 0.281701 | 0.000000 | 0.000000 |
+| 2022 | M01 | 0.163668 | 0.163668 | 0.163668 | 0.163668 | 0.000000 | 0.000000 |
+| 2022 | M06 | 0.128030 | 0.104961 | 0.145384 | 0.149283 | +0.021253 | +0.003899 |
+| 2022 | M07 | 0.062677 | 0.036584 | 0.082721 | 0.088202 | +0.025525 | +0.005482 |
+| 2023 | M00 | 0.406200 | 0.406200 | 0.406200 | 0.406200 | 0.000000 | 0.000000 |
+| 2023 | M01 | 0.136357 | 0.136357 | 0.136357 | 0.136357 | 0.000000 | 0.000000 |
+| 2023 | M06 | 0.195445 | 0.208950 | 0.220648 | 0.218045 | +0.022600 | -0.002603 |
+| 2023 | M07 | 0.076796 | 0.086391 | 0.096349 | 0.094573 | +0.017778 | -0.001776 |
 
 P03 helps in 2021 and 2023 but harms both block-missingness conditions in 2022.
-P09 is positive in both test years, but its test results are final reporting
-evidence and cannot be used to tune either the corrected resolver or GroupDRO.
+P09 and P10 are positive in both test years. These results are final reporting
+evidence and cannot be used to tune the corrected resolver, ERM, or GroupDRO.
 
 ## Execution evidence
 
@@ -138,6 +157,15 @@ evidence and cannot be used to tune either the corrected resolver or GroupDRO.
 - P09 job `20563415` was cancelled after its diagnostics exposed the upstream
   year-index bug. Jobs `20563639` and `20563807` were cancelled before a
   scientific result because of allocation and wall-time constraints.
+- P10 selection: job `20566466` completed on Nibi node `g35` in 30:56 with
+  exit `0:0`. Checkpoint SHA-256:
+  `1f91ed533db7baf36b34a5709665f1ca5831f8ed277d465b2504f0a4e60c0b8b`;
+  2021 summary SHA-256:
+  `8b9949edbc0198666799c4158f167d3689764e1b397f5c046e4234c2a093aa44`.
+- P10 fixed tests: jobs `20582647` (2022, 13:03, `g32`) and `20582648`
+  (2023, 7:47, `g33`) completed with exit `0:0`. Summary SHA-256 values are
+  `9225bc337cc3ac7690b77fa0bb280ae74b7206d8c5be82c51f3aa96c950d1e58`
+  and `0c5ae952ec20db82a8a67586bf3d1df2aafa0a2e327c371d6a2ed5fd8989fafc`.
 - P03 fixed-test jobs: `20465333` (2022) and `20465334` (2023).
 - Failed fixed-test setup jobs `20464512`/`20464513` produced no result.
 
