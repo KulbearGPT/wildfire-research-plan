@@ -133,9 +133,10 @@ the degraded ranking and thresholded forecast. P11 was therefore rejected and
 was not evaluated on 2022--2023.
 
 This negative result shows that P10's corrected five-year BlockDrop expert is
-not interchangeable with a dedicated fire-history-loss expert. The next
-minimal hypothesis is a corrected-index, inverse-year-balanced FireDrop-only
-ERM fine-tune initialized from P00, selected solely on 2021 M00/M01.
+not automatically interchangeable with a fire-history-loss expert under the
+legacy focal weighting. P12 first isolates the suspected focal-alpha inversion
+while holding the complete P10 training recipe fixed; a dedicated FireDrop-only
+expert remains conditional on that one-variable result.
 
 ## Fixed temporal test comparison
 

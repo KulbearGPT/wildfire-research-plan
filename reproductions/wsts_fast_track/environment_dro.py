@@ -20,11 +20,21 @@ from .prototype import (
 
 PROTOTYPE_ID = "P09-YearCorruptionGroupDRO"
 ERM_PROTOTYPE_ID = "P10-YearBalancedERM"
+CORRECTED_ALPHA_PROTOTYPE_ID = "P12-CorrectedFocalAlphaERM"
 BLOCK_STATES = (0, 1, 2)
 GROUP_COUNT = len(TRAIN_YEARS) * len(BLOCK_STATES)
 TRAINING_STEPS = 3_000
 LEARNING_RATE = 1e-4
 GROUP_DRO_STEP_SIZE = 0.1
+
+
+def corrected_focal_alpha(normalized_positive_weight: float) -> float:
+    """Pass the normalized positive-class weight directly to focal loss."""
+
+    value = float(normalized_positive_weight)
+    if not 0.0 < value < 1.0:
+        raise ValueError("normalized focal positive weight must be within (0, 1)")
+    return value
 
 
 def erm_objective(per_sample_losses: torch.Tensor) -> torch.Tensor:

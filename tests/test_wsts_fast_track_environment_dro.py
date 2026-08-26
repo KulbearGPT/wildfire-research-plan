@@ -65,3 +65,9 @@ def test_erm_objective_is_plain_per_sample_mean() -> None:
     assert float(objective.detach()) == 2.5
     objective.backward()
     torch.testing.assert_close(losses.grad, torch.full((4,), 0.25))
+
+
+def test_corrected_focal_alpha_weights_the_positive_class() -> None:
+    from reproductions.wsts_fast_track.environment_dro import corrected_focal_alpha
+
+    assert corrected_focal_alpha(0.9) == 0.9

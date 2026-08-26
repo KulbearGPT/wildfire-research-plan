@@ -14,6 +14,7 @@ from torchvision.ops import sigmoid_focal_loss
 from .contract import experiment_spec, validate_inventory
 from .entrypoint import TRAIN_YEARS, _install_runtime_contract, load_training_stats
 from .environment_dro import (
+    CORRECTED_ALPHA_PROTOTYPE_ID,
     ERM_PROTOTYPE_ID,
     GROUP_COUNT,
     GROUP_DRO_STEP_SIZE,
@@ -21,6 +22,7 @@ from .environment_dro import (
     PROTOTYPE_ID,
     TRAINING_STEPS,
     balanced_year_sampling_weights,
+    corrected_focal_alpha,
     erm_objective,
     group_dro_objective,
     install_training_environment_groups,
@@ -45,7 +47,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--objective", choices=("groupdro", "erm"), default="groupdro")
+    parser.add_argument("--correct-focal-alpha", action="store_true")
     args = parser.parse_args(argv)
+    if args.correct_focal_alpha and args.objective != "erm":
+        raise ValueError("corrected focal alpha is only registered for matched ERM")
 
     upstream = args.upstream_root.resolve()
     data_root = args.data_root.resolve()
@@ -109,6 +114,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         device=device,
     )
     model.train()
+    focal_alpha = (
+        corrected_focal_alpha(float(model.hparams.pos_class_weight))
+        if args.correct_focal_alpha
+        else 1.0 - float(model.hparams.pos_class_weight)
+    )
+    print(
+        f"FOCAL_ALPHA_POLICY={'corrected-positive' if args.correct_focal_alpha else 'legacy-inverted'} "
+        f"FOCAL_ALPHA={focal_alpha:.12f}",
+        flush=True,
+    )
     parameters = tuple(parameter for parameter in model.parameters() if parameter.requires_grad)
     optimizer = torch.optim.AdamW(parameters, lr=LEARNING_RATE)
     log_weights = torch.zeros(GROUP_COUNT, device=device)
@@ -129,7 +144,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         pixel_losses = sigmoid_focal_loss(
             logits,
             target.float(),
-            alpha=1.0 - float(model.hparams.pos_class_weight),
+            alpha=focal_alpha,
             gamma=2.0,
             reduction="none",
         )
@@ -168,8 +183,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "prototype_id": PROTOTYPE_ID if args.objective == "groupdro" else ERM_PROTOTYPE_ID,
+        "prototype_id": (
+            CORRECTED_ALPHA_PROTOTYPE_ID
+            if args.correct_focal_alpha
+            else PROTOTYPE_ID if args.objective == "groupdro" else ERM_PROTOTYPE_ID
+        ),
         "objective": args.objective,
+        "focal_alpha_policy": "corrected-positive" if args.correct_focal_alpha else "legacy-inverted",
+        "focal_alpha": focal_alpha,
         "base_p02_record": str(args.p02_record.resolve(strict=True)),
         "base_p02_checkpoint": str(p02_checkpoint),
         "train_years": list(TRAIN_YEARS),

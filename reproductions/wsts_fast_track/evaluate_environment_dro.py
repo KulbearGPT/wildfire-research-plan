@@ -10,6 +10,7 @@ from pathlib import Path
 import torch
 
 from .environment_dro import (
+    CORRECTED_ALPHA_PROTOTYPE_ID,
     ERM_PROTOTYPE_ID,
     GROUP_COUNT,
     GROUP_DRO_STEP_SIZE,
@@ -41,6 +42,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--p02-record", type=Path, required=True)
     parser.add_argument("--dro-checkpoint", type=Path, required=True)
     parser.add_argument("--erm-checkpoint", type=Path)
+    parser.add_argument("--corrected-alpha-checkpoint", type=Path)
     parser.add_argument("--reliability-router", action="store_true")
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--upstream-root", type=Path, required=True)
@@ -113,6 +115,27 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise ValueError("invalid P10 matched ERM checkpoint")
     if args.reliability_router and erm_payload is None:
         raise ValueError("P11 reliability routing requires --erm-checkpoint")
+    corrected_payload = None
+    if args.corrected_alpha_checkpoint is not None:
+        corrected_payload = torch.load(
+            args.corrected_alpha_checkpoint.resolve(strict=True),
+            map_location="cpu",
+            weights_only=False,
+        )
+        if (
+            not isinstance(corrected_payload, dict)
+            or corrected_payload.get("status") != "pass"
+            or corrected_payload.get("prototype_id") != CORRECTED_ALPHA_PROTOTYPE_ID
+            or corrected_payload.get("objective") != "erm"
+            or corrected_payload.get("focal_alpha_policy") != "corrected-positive"
+            or corrected_payload.get("steps") != TRAINING_STEPS
+            or corrected_payload.get("group_count") != GROUP_COUNT
+            or corrected_payload.get("learning_rate") != LEARNING_RATE
+            or corrected_payload.get("group_dro_step_size") is not None
+            or corrected_payload.get("base_p02_checkpoint") != str(p02_checkpoint)
+            or not isinstance(corrected_payload.get("model_state"), dict)
+        ):
+            raise ValueError("invalid P12 corrected-alpha checkpoint")
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise ValueError("CUDA evaluation requested but unavailable")
@@ -142,6 +165,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         models.append(
             ("P10", ERM_PROTOTYPE_ID, SpatialExpertRouter(default_model, erm_expert))
         )
+    corrected_expert = None
+    if corrected_payload is not None:
+        corrected_expert = load_checkpoint_model(
+            p02_checkpoint, experiment_id="C00", upstream_root=args.upstream_root, device=device
+        )
+        corrected_expert.load_state_dict(corrected_payload["model_state"], strict=True)
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=False)
 
@@ -150,6 +179,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     }
     if args.reliability_router:
         all_results["P11"] = {}
+    if corrected_expert is not None:
+        all_results["P12"] = {}
     for scenario_id in SCENARIOS:
         dataset = build_controlled_dataset(
             upstream_root=args.upstream_root,
@@ -181,6 +212,18 @@ def main(argv: Sequence[str] | None = None) -> int:
                     ),
                 )
             )
+        if corrected_expert is not None:
+            scenario_models.append(
+                (
+                    "P12",
+                    CORRECTED_ALPHA_PROTOTYPE_ID,
+                    ReliabilityExpertRouter(
+                        default_model,
+                        corrected_expert,
+                        route_all=scenario_id == "M01",
+                    ),
+                )
+            )
         for label, prototype_id, model in scenario_models:
             metrics = evaluate_batches(model, loader, device=device)
             result = {
@@ -203,7 +246,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "mode": mode,
         "scientific_claim": scientific_claim,
         "prototype_id": (
-            RELIABILITY_ROUTER_ID
+            CORRECTED_ALPHA_PROTOTYPE_ID
+            if corrected_expert is not None
+            else RELIABILITY_ROUTER_ID
             if args.reliability_router
             else ERM_PROTOTYPE_ID if erm_payload is not None else PROTOTYPE_ID
         ),
@@ -213,6 +258,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "erm_checkpoint": (
             str(args.erm_checkpoint.resolve(strict=True))
             if args.erm_checkpoint is not None
+            else None
+        ),
+        "corrected_alpha_checkpoint": (
+            str(args.corrected_alpha_checkpoint.resolve(strict=True))
+            if args.corrected_alpha_checkpoint is not None
             else None
         ),
         "year": args.year,
