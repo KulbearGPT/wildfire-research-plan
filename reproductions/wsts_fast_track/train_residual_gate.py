@@ -17,12 +17,16 @@ from .evaluate_missingness import load_checkpoint_model
 from .evaluate_spatial_router import _checkpoint_from_record
 from .prototype import FIRE_DROPOUT_PROBABILITY, PROTOTYPE_ID as P00_ID
 from .residual_gate import (
+    BELIEF_PROTOTYPE_ID,
+    BELIEF_SAMPLE_COUNT,
+    BELIEF_TRAINING_STEPS,
     GATE_TRAINING_STEPS,
     LAST_BLOCK_PROTOTYPE_ID,
     PROTOTYPE_ID,
     SPATIAL_PROTOTYPE_ID,
     FrozenLastBlockRouter,
     FrozenSpatialResidualGate,
+    FrozenStochasticBeliefResidual,
     install_training_processed_block_dropout,
 )
 
@@ -41,7 +45,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--residual-kernel-size", type=int, choices=(1, 3), default=1
     )
     parser.add_argument("--adapt-last-block", action="store_true")
+    parser.add_argument("--stochastic-belief", action="store_true")
     args = parser.parse_args(argv)
+    if args.adapt_last_block and args.stochastic_belief:
+        raise ValueError("choose either last-block or stochastic-belief adaptation")
 
     upstream = args.upstream_root.resolve()
     data_root = args.data_root.resolve()
@@ -96,10 +103,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=upstream,
         device=device,
     )
-    if args.adapt_last_block:
+    if args.stochastic_belief:
+        gate = FrozenStochasticBeliefResidual(
+            default_model, sample_count=BELIEF_SAMPLE_COUNT
+        ).to(device)
+        prototype_id = BELIEF_PROTOTYPE_ID
+        gate_type = "stochastic-belief"
+        training_steps = BELIEF_TRAINING_STEPS
+        learning_rate = 1e-3
+    elif args.adapt_last_block:
         gate = FrozenLastBlockRouter(default_model).to(device)
         prototype_id = LAST_BLOCK_PROTOTYPE_ID
         gate_type = "last-decoder-block"
+        training_steps = GATE_TRAINING_STEPS
+        learning_rate = 1e-2
     else:
         gate = FrozenSpatialResidualGate(
             default_model, residual_kernel_size=args.residual_kernel_size
@@ -110,17 +127,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             else SPATIAL_PROTOTYPE_ID
         )
         gate_type = f"residual-{args.residual_kernel_size}x{args.residual_kernel_size}"
+        training_steps = GATE_TRAINING_STEPS
+        learning_rate = 1e-2
     parameters = tuple(gate.trainable_parameters())
     trainable_parameter_count = sum(parameter.numel() for parameter in parameters)
-    if not args.adapt_last_block and trainable_parameter_count != (
-        17 if args.residual_kernel_size == 1 else 145
+    expected_parameter_count = (
+        4_945
+        if args.stochastic_belief
+        else (17 if args.residual_kernel_size == 1 else 145)
+    )
+    if not args.adapt_last_block and (
+        trainable_parameter_count != expected_parameter_count
     ):
         raise ValueError("residual gate exposes an unexpected parameter count")
-    optimizer = torch.optim.Adam(parameters, lr=1e-2)
+    optimizer = torch.optim.Adam(parameters, lr=learning_rate)
     gate.train()
     iterator = iter(loader)
     final_loss = float("nan")
-    for step in range(1, GATE_TRAINING_STEPS + 1):
+    for step in range(1, training_steps + 1):
         try:
             x, target = next(iterator)
         except StopIteration:
@@ -146,15 +170,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         "base_record": str(args.p00_record.resolve(strict=True)),
         "base_checkpoint": str(checkpoint),
         "train_years": list(TRAIN_YEARS),
-        "steps": GATE_TRAINING_STEPS,
+        "steps": training_steps,
         "seed": 0,
         "block_fractions": [0.25, 0.5],
         "gate_type": gate_type,
         "residual_kernel_size": args.residual_kernel_size,
         "trainable_parameters": trainable_parameter_count,
+        "learning_rate": learning_rate,
         "final_loss": final_loss,
     }
-    if args.adapt_last_block:
+    if args.stochastic_belief:
+        payload["sample_count"] = gate.sample_count
+        payload["belief_head"] = gate.belief_head.state_dict()
+        payload["output_head"] = gate.output_head.state_dict()
+    elif args.adapt_last_block:
         payload["adapted_block"] = gate.adapted_block.state_dict()
         payload["adapted_head"] = gate.adapted_head.state_dict()
     else:

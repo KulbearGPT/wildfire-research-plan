@@ -14,12 +14,16 @@ from .evaluate_spatial_router import SCENARIOS, _checkpoint_from_record
 from .evaluation import build_controlled_dataset
 from .prototype import FIRE_DROPOUT_PROBABILITY, PROTOTYPE_ID as P00_ID
 from .residual_gate import (
+    BELIEF_PROTOTYPE_ID,
+    BELIEF_SAMPLE_COUNT,
+    BELIEF_TRAINING_STEPS,
     GATE_TRAINING_STEPS,
     LAST_BLOCK_PROTOTYPE_ID,
     PROTOTYPE_ID,
     SPATIAL_PROTOTYPE_ID,
     FrozenLastBlockRouter,
     FrozenSpatialResidualGate,
+    FrozenStochasticBeliefResidual,
 )
 
 
@@ -38,7 +42,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--residual-kernel-size", type=int, choices=(1, 3), default=1
     )
     parser.add_argument("--adapt-last-block", action="store_true")
+    parser.add_argument("--stochastic-belief", action="store_true")
     args = parser.parse_args(argv)
+    if args.adapt_last_block and args.stochastic_belief:
+        raise ValueError("choose either last-block or stochastic-belief adaptation")
 
     p00_checkpoint = _checkpoint_from_record(
         args.p00_record,
@@ -53,9 +60,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         map_location="cpu",
         weights_only=False,
     )
-    if args.adapt_last_block:
+    if args.stochastic_belief:
+        prototype_id = BELIEF_PROTOTYPE_ID
+        gate_type = "stochastic-belief"
+        training_steps = BELIEF_TRAINING_STEPS
+    elif args.adapt_last_block:
         prototype_id = LAST_BLOCK_PROTOTYPE_ID
         gate_type = "last-decoder-block"
+        training_steps = GATE_TRAINING_STEPS
     else:
         prototype_id = (
             PROTOTYPE_ID
@@ -63,11 +75,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             else SPATIAL_PROTOTYPE_ID
         )
         gate_type = f"residual-{args.residual_kernel_size}x{args.residual_kernel_size}"
+        training_steps = GATE_TRAINING_STEPS
     if (
         not isinstance(gate_payload, dict)
         or gate_payload.get("status") != "pass"
         or gate_payload.get("prototype_id") != prototype_id
-        or gate_payload.get("steps") != GATE_TRAINING_STEPS
+        or gate_payload.get("steps") != training_steps
         or gate_payload.get("gate_type") != gate_type
         or gate_payload.get("residual_kernel_size") != args.residual_kernel_size
     ):
@@ -81,7 +94,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=args.upstream_root,
         device=device,
     )
-    if args.adapt_last_block:
+    if args.stochastic_belief:
+        gate = FrozenStochasticBeliefResidual(
+            default_model, sample_count=BELIEF_SAMPLE_COUNT
+        )
+        if (
+            gate_payload.get("sample_count") != BELIEF_SAMPLE_COUNT
+            or gate_payload.get("learning_rate") != 1e-3
+            or not isinstance(gate_payload.get("belief_head"), dict)
+            or not isinstance(gate_payload.get("output_head"), dict)
+        ):
+            raise ValueError("P07 checkpoint lacks its stochastic heads")
+        gate.belief_head.load_state_dict(gate_payload["belief_head"], strict=True)
+        gate.output_head.load_state_dict(gate_payload["output_head"], strict=True)
+    elif args.adapt_last_block:
         gate = FrozenLastBlockRouter(default_model)
         if (
             not isinstance(gate_payload.get("adapted_block"), dict)
@@ -107,6 +133,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     results: dict[str, dict[str, int | float]] = {}
     for scenario_id in SCENARIOS:
+        torch.manual_seed(0)
         dataset = build_controlled_dataset(
             upstream_root=args.upstream_root,
             data_root=args.data_root,
