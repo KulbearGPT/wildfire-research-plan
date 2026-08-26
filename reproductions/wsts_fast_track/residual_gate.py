@@ -18,9 +18,12 @@ PROTOTYPE_ID = "P04-FrozenP00-SpatialResidualGate"
 SPATIAL_PROTOTYPE_ID = "P05-FrozenP00-SpatialResidualGate3x3"
 LAST_BLOCK_PROTOTYPE_ID = "P06-FrozenP00-LastBlockRouter"
 BELIEF_PROTOTYPE_ID = "P07-StochasticBeliefResidual"
+TEACHER_BELIEF_PROTOTYPE_ID = "P08-TeacherPosteriorBelief"
 GATE_TRAINING_STEPS = 1_000
 BELIEF_TRAINING_STEPS = 3_000
 BELIEF_SAMPLE_COUNT = 4
+TEACHER_BELIEF_KL_WEIGHT = 1e-3
+TEACHER_BELIEF_RECONSTRUCTION_WEIGHT = 1e-2
 PROCESSED_DYNAMIC_NON_FIRE = tuple(range(12)) + (15,) + tuple(range(33, 38))
 
 
@@ -227,6 +230,191 @@ class FrozenStochasticBeliefResidual(torch.nn.Module):
         mean_logits = torch.where(missing_mask, belief_logits, default_logits)
         variance = probabilities.var(dim=0, unbiased=False) * mask_float
         return mean_logits, variance
+
+    def forward(self, routed_input: torch.Tensor) -> torch.Tensor:
+        logits, _ = self.forward_with_uncertainty(routed_input)
+        return logits
+
+    def compute_loss(
+        self, logits: torch.Tensor, target: torch.Tensor
+    ) -> torch.Tensor:
+        return self.default_model.compute_loss(logits, target)
+
+
+class FrozenTeacherPosteriorBelief(torch.nn.Module):
+    """Train from a clean teacher posterior and infer from a corrupted prior."""
+
+    def __init__(
+        self,
+        default_model: torch.nn.Module,
+        *,
+        sample_count: int = BELIEF_SAMPLE_COUNT,
+    ) -> None:
+        super().__init__()
+        if sample_count < 2:
+            raise ValueError("teacher belief requires at least two samples")
+        self.default_model = default_model
+        self.default_model.requires_grad_(False)
+        self.default_model.eval()
+        self.sample_count = sample_count
+        self.prior_head = torch.nn.Conv2d(17, 32, kernel_size=3, padding=1)
+        self.posterior_head = torch.nn.Conv2d(32, 32, kernel_size=3, padding=1)
+        self.reconstruction_head = torch.nn.Conv2d(16, 16, kernel_size=1)
+        self.output_head = torch.nn.Conv2d(16, 1, kernel_size=1)
+        torch.nn.init.zeros_(self.prior_head.weight)
+        torch.nn.init.zeros_(self.prior_head.bias)
+        torch.nn.init.zeros_(self.posterior_head.weight)
+        torch.nn.init.zeros_(self.posterior_head.bias)
+        with torch.no_grad():
+            self.prior_head.bias[16:].fill_(-2.0)
+            self.posterior_head.bias[16:].fill_(-2.0)
+        torch.nn.init.dirac_(self.reconstruction_head.weight)
+        torch.nn.init.zeros_(self.reconstruction_head.bias)
+        torch.nn.init.zeros_(self.output_head.weight)
+        torch.nn.init.zeros_(self.output_head.bias)
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        self.default_model.eval()
+        return self
+
+    def trainable_parameters(self):
+        return (
+            *self.posterior_head.parameters(),
+            *self.prior_head.parameters(),
+            *self.reconstruction_head.parameters(),
+            *self.output_head.parameters(),
+        )
+
+    def _frozen_features(
+        self, inputs: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        with torch.no_grad():
+            encoded = self.default_model.model.encoder(inputs)
+            decoder_features = self.default_model.model.decoder(*encoded)
+            logits = self.default_model.model.segmentation_head(decoder_features)
+        return decoder_features.detach(), logits
+
+    @staticmethod
+    def _distribution_parameters(
+        parameters: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        mean, log_sigma = parameters.chunk(2, dim=1)
+        return mean, log_sigma.clamp(min=-2.0, max=2.0)
+
+    def _sample_forecasts(
+        self,
+        default_logits: torch.Tensor,
+        missing_mask: torch.Tensor,
+        mean: torch.Tensor,
+        log_sigma: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, list[torch.Tensor]]:
+        mask_float = missing_mask.to(default_logits.dtype)
+        sigma = torch.exp(log_sigma)
+        sampled_probabilities = []
+        latents = []
+        for _ in range(self.sample_count):
+            latent = mean + sigma * torch.randn_like(mean)
+            latents.append(latent)
+            residual = self.output_head(latent)
+            sampled_logits = default_logits + residual * mask_float
+            sampled_probabilities.append(torch.sigmoid(sampled_logits))
+        probabilities = torch.stack(sampled_probabilities, dim=0)
+        mean_probability = probabilities.mean(dim=0)
+        belief_logits = torch.logit(
+            mean_probability.clamp(min=1e-6, max=1.0 - 1e-6)
+        )
+        mean_logits = torch.where(missing_mask, belief_logits, default_logits)
+        variance = probabilities.var(dim=0, unbiased=False) * mask_float
+        return mean_logits, variance, latents
+
+    def training_objective(
+        self, teacher_input: torch.Tensor, target: torch.Tensor
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor], torch.Tensor]:
+        if (
+            teacher_input.ndim != 5
+            or teacher_input.shape[1] != 1
+            or teacher_input.shape[2] != 81
+        ):
+            raise ValueError("teacher-belief training input must have 81 channels")
+        corrupted = teacher_input[:, 0, :40]
+        missing_mask = teacher_input[:, 0, 40:41].bool()
+        clean = teacher_input[:, 0, 41:81]
+        mask_float = missing_mask.to(corrupted.dtype)
+        corrupted_features, default_logits = self._frozen_features(corrupted)
+        clean_features, _ = self._frozen_features(clean)
+        prior_mean, prior_log_sigma = self._distribution_parameters(
+            self.prior_head(torch.cat((corrupted_features, mask_float), dim=1))
+        )
+        posterior_mean, posterior_log_sigma = self._distribution_parameters(
+            self.posterior_head(
+                torch.cat((clean_features, corrupted_features), dim=1)
+            )
+        )
+        logits, _, latents = self._sample_forecasts(
+            default_logits,
+            missing_mask,
+            posterior_mean,
+            posterior_log_sigma,
+        )
+        forecast_loss = self.default_model.compute_loss(logits.squeeze(1), target)
+        prior_variance = torch.exp(2.0 * prior_log_sigma)
+        posterior_variance = torch.exp(2.0 * posterior_log_sigma)
+        kl_loss = 0.5 * (
+            2.0 * (prior_log_sigma - posterior_log_sigma)
+            + (
+                posterior_variance
+                + (posterior_mean - prior_mean).square()
+            )
+            / prior_variance
+            - 1.0
+        ).mean()
+        feature_residual = (clean_features - corrupted_features) * mask_float
+        reconstruction_error = torch.stack(
+            [
+                (self.reconstruction_head(latent) - feature_residual).square()
+                * mask_float
+                for latent in latents
+            ],
+            dim=0,
+        )
+        denominator = (
+            mask_float.sum() * feature_residual.shape[1] * self.sample_count
+        ).clamp_min(1.0)
+        reconstruction_loss = reconstruction_error.sum() / denominator
+        total = (
+            forecast_loss
+            + TEACHER_BELIEF_KL_WEIGHT * kl_loss
+            + TEACHER_BELIEF_RECONSTRUCTION_WEIGHT * reconstruction_loss
+        )
+        components = {
+            "forecast": forecast_loss,
+            "kl": kl_loss,
+            "reconstruction": reconstruction_loss,
+            "total": total,
+        }
+        return total, components, logits
+
+    def forward_with_uncertainty(
+        self, routed_input: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        if (
+            routed_input.ndim != 5
+            or routed_input.shape[1] != 1
+            or routed_input.shape[2] != 41
+        ):
+            raise ValueError("teacher-belief inference input must have 41 channels")
+        corrupted = routed_input[:, 0, :40]
+        missing_mask = routed_input[:, 0, 40:41].bool()
+        mask_float = missing_mask.to(corrupted.dtype)
+        corrupted_features, default_logits = self._frozen_features(corrupted)
+        prior_mean, prior_log_sigma = self._distribution_parameters(
+            self.prior_head(torch.cat((corrupted_features, mask_float), dim=1))
+        )
+        logits, variance, _ = self._sample_forecasts(
+            default_logits, missing_mask, prior_mean, prior_log_sigma
+        )
+        return logits, variance
 
     def forward(self, routed_input: torch.Tensor) -> torch.Tensor:
         logits, _ = self.forward_with_uncertainty(routed_input)

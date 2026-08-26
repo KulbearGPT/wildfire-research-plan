@@ -176,3 +176,44 @@ def test_stochastic_belief_preserves_unmasked_logits_and_round_trips() -> None:
     assert any(
         parameter.grad is not None for parameter in gate.trainable_parameters()
     )
+
+
+def test_teacher_posterior_trains_all_heads_and_prior_preserves_routing() -> None:
+    from reproductions.wsts_fast_track.residual_gate import (
+        FrozenTeacherPosteriorBelief,
+    )
+
+    training_input = torch.zeros((1, 1, 81, 2, 2))
+    training_input[:, :, 0] = 2.0
+    training_input[:, :, 40, 0, 1] = 1.0
+    training_input[:, :, 41] = 3.0
+    target = torch.zeros((1, 2, 2))
+    model = FrozenTeacherPosteriorBelief(_TinyDefault(), sample_count=4)
+
+    torch.manual_seed(11)
+    loss, components, training_logits = model.training_objective(
+        training_input, target
+    )
+
+    assert set(components) == {"forecast", "kl", "reconstruction", "total"}
+    assert all(torch.isfinite(value) for value in components.values())
+    assert torch.isfinite(loss)
+    missing = training_input[:, 0, 40:41].bool()
+    torch.testing.assert_close(training_logits[~missing], torch.full((3,), 4.0))
+    loss.backward()
+    for head in (
+        model.posterior_head,
+        model.prior_head,
+        model.reconstruction_head,
+        model.output_head,
+    ):
+        assert any(parameter.grad is not None for parameter in head.parameters())
+
+    torch.manual_seed(11)
+    inference_logits, variance = model.forward_with_uncertainty(
+        training_input[:, :, :41]
+    )
+    torch.testing.assert_close(inference_logits[~missing], torch.full((3,), 4.0))
+    assert torch.count_nonzero(variance[~missing]) == 0
+    assert torch.isfinite(variance).all()
+    assert torch.all(variance >= 0)
