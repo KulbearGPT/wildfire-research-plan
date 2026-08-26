@@ -28,12 +28,14 @@ LEARNING_RATE = 1e-4
 GROUP_DRO_STEP_SIZE = 0.1
 
 
-def corrected_focal_alpha(normalized_positive_weight: float) -> float:
-    """Pass the normalized positive-class weight directly to focal loss."""
+def corrected_focal_alpha(positive_weight: float) -> float:
+    """Convert a raw positive-class ratio to torchvision focal alpha."""
 
-    value = float(normalized_positive_weight)
-    if not 0.0 < value < 1.0:
-        raise ValueError("normalized focal positive weight must be within (0, 1)")
+    value = float(positive_weight)
+    if value <= 0.0:
+        raise ValueError("focal positive weight must be positive")
+    if value >= 1.0:
+        value /= 1.0 + value
     return value
 
 

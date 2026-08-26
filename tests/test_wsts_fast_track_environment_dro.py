@@ -71,3 +71,5 @@ def test_corrected_focal_alpha_weights_the_positive_class() -> None:
     from reproductions.wsts_fast_track.environment_dro import corrected_focal_alpha
 
     assert corrected_focal_alpha(0.9) == 0.9
+    raw_weight = 761.0785701324623
+    assert corrected_focal_alpha(raw_weight) == raw_weight / (1.0 + raw_weight)

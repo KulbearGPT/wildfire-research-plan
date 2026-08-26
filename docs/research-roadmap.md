@@ -188,9 +188,11 @@ reporting-only and cannot select further settings. P11 then tested whether the
 same P10 expert could also serve complete active-fire-history loss. It exactly
 retained P00 on M00 and P10 on M06/M07, but reduced 2021 M01 AP from `0.299465`
 to `0.291202`; P11 was rejected without held-out evaluation. P12 is the next
-single-variable diagnostic: repeat P10 exactly but pass the normalized positive
-class weight directly as torchvision focal `alpha`, instead of the legacy
-`1 - weight`. Its routed 2021 gate requires exact P00 M00, M01 AP above P00,
+single-variable diagnostic: repeat P10 exactly but normalize the raw positive
+class ratio and pass it as torchvision focal `alpha`. The legacy subclass
+restores the raw ratio after base-class normalization, making `1 - weight`
+negative and causing torchvision to skip alpha weighting entirely. P12's
+routed 2021 gate requires exact P00 M00, M01 AP above P00,
 and mean M06/M07 AP no more than `0.005` below P10. Only a passing frozen P12
 may be reported on 2022--2023.
 

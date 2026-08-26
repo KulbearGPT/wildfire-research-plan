@@ -134,9 +134,10 @@ was not evaluated on 2022--2023.
 
 This negative result shows that P10's corrected five-year BlockDrop expert is
 not automatically interchangeable with a fire-history-loss expert under the
-legacy focal weighting. P12 first isolates the suspected focal-alpha inversion
-while holding the complete P10 training recipe fixed; a dedicated FireDrop-only
-expert remains conditional on that one-variable result.
+legacy unweighted focal objective. P12 first isolates the upstream subclass
+hyperparameter overwrite that makes focal `alpha` negative and therefore
+disabled, while holding the complete P10 training recipe fixed; a dedicated
+FireDrop-only expert remains conditional on that one-variable result.
 
 ## Fixed temporal test comparison
 
