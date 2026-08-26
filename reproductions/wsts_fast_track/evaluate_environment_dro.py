@@ -1,4 +1,4 @@
-"""Evaluate P09 against P00 and P03 on one authorized year."""
+"""Evaluate P09 and its optional matched P10 ERM control."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pathlib import Path
 import torch
 
 from .environment_dro import (
+    ERM_PROTOTYPE_ID,
     GROUP_COUNT,
     GROUP_DRO_STEP_SIZE,
     LEARNING_RATE,
@@ -33,6 +34,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--p00-record", type=Path, required=True)
     parser.add_argument("--p02-record", type=Path, required=True)
     parser.add_argument("--dro-checkpoint", type=Path, required=True)
+    parser.add_argument("--erm-checkpoint", type=Path)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--upstream-root", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, required=True)
@@ -82,6 +84,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         or not isinstance(payload.get("model_state"), dict)
     ):
         raise ValueError("invalid P09 GroupDRO checkpoint")
+    erm_payload = None
+    if args.erm_checkpoint is not None:
+        erm_payload = torch.load(
+            args.erm_checkpoint.resolve(strict=True),
+            map_location="cpu",
+            weights_only=False,
+        )
+        if (
+            not isinstance(erm_payload, dict)
+            or erm_payload.get("status") != "pass"
+            or erm_payload.get("prototype_id") != ERM_PROTOTYPE_ID
+            or erm_payload.get("objective") != "erm"
+            or erm_payload.get("steps") != TRAINING_STEPS
+            or erm_payload.get("group_count") != GROUP_COUNT
+            or erm_payload.get("learning_rate") != LEARNING_RATE
+            or erm_payload.get("group_dro_step_size") is not None
+            or erm_payload.get("base_p02_checkpoint") != str(p02_checkpoint)
+            or not isinstance(erm_payload.get("model_state"), dict)
+        ):
+            raise ValueError("invalid P10 matched ERM checkpoint")
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise ValueError("CUDA evaluation requested but unavailable")
@@ -98,13 +120,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     baseline = RoutingInputModel(default_model)
     p03 = SpatialExpertRouter(default_model, original_expert)
     p09 = SpatialExpertRouter(default_model, dro_expert)
+    models = [
+        ("P00", P00_ID, baseline),
+        ("P03", ROUTER_ID, p03),
+        ("P09", PROTOTYPE_ID, p09),
+    ]
+    if erm_payload is not None:
+        erm_expert = load_checkpoint_model(
+            p02_checkpoint, experiment_id="C00", upstream_root=args.upstream_root, device=device
+        )
+        erm_expert.load_state_dict(erm_payload["model_state"], strict=True)
+        models.append(
+            ("P10", ERM_PROTOTYPE_ID, SpatialExpertRouter(default_model, erm_expert))
+        )
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=False)
 
     all_results: dict[str, dict[str, dict[str, int | float]]] = {
-        "P00": {},
-        "P03": {},
-        "P09": {},
+        label: {} for label, _, _ in models
     }
     for scenario_id in SCENARIOS:
         dataset = build_controlled_dataset(
@@ -124,11 +157,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             num_workers=args.num_workers,
             pin_memory=device.type == "cuda",
         )
-        for label, prototype_id, model in (
-            ("P00", P00_ID, baseline),
-            ("P03", ROUTER_ID, p03),
-            ("P09", PROTOTYPE_ID, p09),
-        ):
+        for label, prototype_id, model in models:
             metrics = evaluate_batches(model, loader, device=device)
             result = {
                 "schema_version": 1,
@@ -149,10 +178,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         "status": "pass",
         "mode": mode,
         "scientific_claim": scientific_claim,
-        "prototype_id": PROTOTYPE_ID,
+        "prototype_id": ERM_PROTOTYPE_ID if erm_payload is not None else PROTOTYPE_ID,
         "p00_record": str(args.p00_record.resolve(strict=True)),
         "p02_record": str(args.p02_record.resolve(strict=True)),
         "dro_checkpoint": str(args.dro_checkpoint.resolve(strict=True)),
+        "erm_checkpoint": (
+            str(args.erm_checkpoint.resolve(strict=True))
+            if args.erm_checkpoint is not None
+            else None
+        ),
         "year": args.year,
         "scenario_count": len(SCENARIOS),
         "results": all_results,

@@ -19,11 +19,20 @@ from .prototype import (
 
 
 PROTOTYPE_ID = "P09-YearCorruptionGroupDRO"
+ERM_PROTOTYPE_ID = "P10-YearBalancedERM"
 BLOCK_STATES = (0, 1, 2)
 GROUP_COUNT = len(TRAIN_YEARS) * len(BLOCK_STATES)
 TRAINING_STEPS = 3_000
 LEARNING_RATE = 1e-4
 GROUP_DRO_STEP_SIZE = 0.1
+
+
+def erm_objective(per_sample_losses: torch.Tensor) -> torch.Tensor:
+    """Return the ordinary empirical mean over sampled examples."""
+
+    if per_sample_losses.ndim != 1 or per_sample_losses.numel() == 0:
+        raise ValueError("ERM losses must be a non-empty one-dimensional tensor")
+    return per_sample_losses.mean()
 
 
 def environment_group(year: int, block_state: int) -> int:

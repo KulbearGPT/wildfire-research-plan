@@ -1,4 +1,4 @@
-"""Fine-tune the P02 expert with fixed year-corruption GroupDRO."""
+"""Fine-tune P02 with matched year-corruption GroupDRO or ERM."""
 
 from __future__ import annotations
 
@@ -14,12 +14,14 @@ from torchvision.ops import sigmoid_focal_loss
 from .contract import experiment_spec, validate_inventory
 from .entrypoint import TRAIN_YEARS, _install_runtime_contract, load_training_stats
 from .environment_dro import (
+    ERM_PROTOTYPE_ID,
     GROUP_COUNT,
     GROUP_DRO_STEP_SIZE,
     LEARNING_RATE,
     PROTOTYPE_ID,
     TRAINING_STEPS,
     balanced_year_sampling_weights,
+    erm_objective,
     group_dro_objective,
     install_training_environment_groups,
 )
@@ -42,6 +44,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--objective", choices=("groupdro", "erm"), default="groupdro")
     args = parser.parse_args(argv)
 
     upstream = args.upstream_root.resolve()
@@ -131,18 +134,28 @@ def main(argv: Sequence[str] | None = None) -> int:
             reduction="none",
         )
         per_sample_losses = pixel_losses.flatten(start_dim=1).mean(dim=1)
-        loss, last_group_losses, weights = group_dro_objective(
-            per_sample_losses,
-            group_ids,
-            log_weights,
-            step_size=GROUP_DRO_STEP_SIZE,
-        )
+        if args.objective == "groupdro":
+            loss, last_group_losses, weights = group_dro_objective(
+                per_sample_losses,
+                group_ids,
+                log_weights,
+                step_size=GROUP_DRO_STEP_SIZE,
+            )
+        else:
+            loss = erm_objective(per_sample_losses)
+            last_group_losses = {
+                int(group): float(per_sample_losses[group_ids == group].mean().detach().cpu())
+                for group in torch.unique(group_ids).tolist()
+            }
+            weights = torch.full(
+                (GROUP_COUNT,), 1.0 / GROUP_COUNT, device=device
+            )
         loss.backward()
         optimizer.step()
         final_loss = float(loss.detach().cpu())
         if step == 1 or step % 100 == 0:
             print(
-                f"DRO_STEP={step} LOSS={final_loss:.8f} "
+                f"{args.objective.upper()}_STEP={step} LOSS={final_loss:.8f} "
                 f"MAX_GROUP={int(weights.argmax())} "
                 f"WEIGHTS={','.join(f'{value:.6f}' for value in weights.cpu().tolist())}",
                 flush=True,
@@ -155,7 +168,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "prototype_id": PROTOTYPE_ID,
+        "prototype_id": PROTOTYPE_ID if args.objective == "groupdro" else ERM_PROTOTYPE_ID,
+        "objective": args.objective,
         "base_p02_record": str(args.p02_record.resolve(strict=True)),
         "base_p02_checkpoint": str(p02_checkpoint),
         "train_years": list(TRAIN_YEARS),
@@ -165,16 +179,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         "seed": 0,
         "batch_size": args.batch_size,
         "learning_rate": LEARNING_RATE,
-        "group_dro_step_size": GROUP_DRO_STEP_SIZE,
+        "group_dro_step_size": GROUP_DRO_STEP_SIZE if args.objective == "groupdro" else None,
         "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
         "trainable_parameters": sum(parameter.numel() for parameter in parameters),
         "final_loss": final_loss,
         "final_group_losses": last_group_losses,
-        "group_weights": torch.softmax(log_weights, dim=0).cpu().tolist(),
+        "group_weights": (
+            torch.softmax(log_weights, dim=0).cpu().tolist()
+            if args.objective == "groupdro"
+            else None
+        ),
         "model_state": model.state_dict(),
     }
     torch.save(payload, output)
-    print(f"DRO_CHECKPOINT={output}", flush=True)
+    print(f"{args.objective.upper()}_CHECKPOINT={output}", flush=True)
     return 0
 
 

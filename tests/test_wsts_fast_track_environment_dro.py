@@ -53,3 +53,15 @@ def test_group_dro_upweights_harder_group_and_preserves_gradients() -> None:
     assert 2.5 < float(objective.detach()) < 4.0
     objective.backward()
     assert torch.all(losses.grad > 0)
+
+
+def test_erm_objective_is_plain_per_sample_mean() -> None:
+    from reproductions.wsts_fast_track.environment_dro import erm_objective
+
+    losses = torch.tensor([1.0, 1.0, 4.0, 4.0], requires_grad=True)
+
+    objective = erm_objective(losses)
+
+    assert float(objective.detach()) == 2.5
+    objective.backward()
+    torch.testing.assert_close(losses.grad, torch.full((4,), 0.25))
