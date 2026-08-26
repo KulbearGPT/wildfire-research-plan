@@ -20,6 +20,14 @@ output.
 - Missing provenance limits the main study to controlled missingness. The work
   does not establish natural-missingness or operational-deployment performance.
 
+**Indexing correction discovered 2026-08-26:** the pinned upstream multi-year
+dataset resolver continues its outer year loop after finding a sample, so the
+found year is overwritten by the final included year. Local pooled-year
+training runs before P09 therefore do not establish the recorded 2016--2020
+training exposure, although single-year controlled evaluation is unaffected.
+P09 installs a local first-match resolver. Earlier checkpoints remain frozen
+legacy comparisons; corrected-data claims require matched reruns.
+
 ## Active Fast Experiment Track — 2026-08-23
 
 The immediate priority is to begin new learned experiments. The remaining
@@ -85,8 +93,9 @@ calibration diagnostics, runtime, and the exact one-variable diff.
 
 ## Stage 2 — WSTS+ learned controls
 
-**Status:** Complete for the fast experiment track; six C00/C02 seed-0/1/2
-10K records passed.
+**Status:** Runtime-complete but scientifically reopened by the multi-year
+indexing defect. The six C00/C02 seed-0/1/2 10K records passed their original
+runtime gates but do not prove pooled 2016--2020 training exposure.
 
 **Question:** What clean-observation learned performance is available on the
 actual frozen WSTS+ split before robustness mechanisms are introduced?
@@ -165,7 +174,14 @@ P06 adapted the final decoder block and head but reached only 0.3302/0.1410 on
 M06/M07. The spatial-router capacity escalation is complete. P03's final
 held-out M06/M07 deltas were -0.0231/-0.0261 in 2022 and +0.0135/+0.0096 in
 2023. Because the gain is not cross-year stable, P03 is not promoted and P00
-remains the mainline checkpoint.
+remains the frozen legacy checkpoint. P07 collapsed to an effectively
+deterministic stochastic residual, and P08 generated nonzero uncertainty but
+regressed AP. P09 corrected the upstream year resolver and fine-tuned P02 with
+15-group year-corruption GroupDRO. It improved M06/M07 over P00 in 2021 and in
+both fixed test years. The result passes its temporal gate but is not yet
+attributable to GroupDRO because corrected multi-year exposure changed at the
+same time. The next experiment is a matched corrected-index balanced ERM
+fine-tune; 2022--2023 remain reporting-only and cannot select its settings.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and

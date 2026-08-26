@@ -32,11 +32,11 @@
 - Produces: `group_dro_objective(per_sample_losses, group_ids, log_weights, step_size=0.1)`.
 - Produces: `install_training_environment_groups(upstream_root)`.
 
-- [ ] Write tests asserting exact group IDs, equal total sampler mass per year, movement toward a higher-loss group, and gradients to every per-sample loss.
-- [ ] Run the test and confirm RED because the module does not exist.
-- [ ] Implement the four minimal interfaces with exact validation and 15 fixed groups.
-- [ ] Run the test and confirm GREEN.
-- [ ] Commit the primitive and test.
+- [x] Write tests asserting exact group IDs, equal total sampler mass per year, movement toward a higher-loss group, and gradients to every per-sample loss.
+- [x] Run the test and confirm RED because the module does not exist.
+- [x] Implement the four minimal interfaces with exact validation and 15 fixed groups.
+- [x] Run the test and confirm GREEN.
+- [x] Commit the primitive and test.
 
 ### Task 2: Training, evaluation, and Nibi launchers
 
@@ -50,11 +50,11 @@
 - Training consumes accepted P02 record and emits `P09-YearCorruptionGroupDRO` checkpoint metadata plus a strict full-model state dict.
 - Evaluation consumes P00, P02, P09 and emits same-population P00/P03/P09 metrics for M00/M01/M06/M07.
 
-- [ ] Implement the fixed 3,000-step trainer using inverse-year sampling, per-sample focal loss, and the pure GroupDRO objective.
-- [ ] Implement strict checkpoint loading and routed evaluation for 2021 or an explicitly authorized 2022/2023.
-- [ ] Add one selection launcher and one fixed-year launcher that archive the committed project before compute execution.
-- [ ] Run the focused test, Python compilation, both `bash -n` checks, and `git diff --check`.
-- [ ] Commit the executable campaign.
+- [x] Implement the fixed 3,000-step trainer using inverse-year sampling, per-sample focal loss, and the pure GroupDRO objective.
+- [x] Implement strict checkpoint loading and routed evaluation for 2021 or an explicitly authorized 2022/2023.
+- [x] Add one selection launcher and one fixed-year launcher that archive the committed project before compute execution.
+- [x] Run the focused test, Python compilation, both `bash -n` checks, and `git diff --check`.
+- [x] Commit the executable campaign.
 
 ### Task 3: Run the registered decision
 
@@ -62,8 +62,8 @@
 - Modify: `docs/experiments/p00_p06_rapid_reliability.md`
 - Modify: `docs/research-roadmap.md`
 
-- [ ] Resolve P00/P02 records and submit one bounded H100 selection job.
-- [ ] Confirm allocation and monitor training plus 2021 evaluation to terminal status.
-- [ ] Apply the three-condition 2021 gate from the spec.
-- [ ] If selected, submit exactly one authorized evaluation job for each of 2022 and 2023 and apply the fixed temporal gate; otherwise stop without test access.
-- [ ] Record job IDs, metrics, decision, and artifact hashes; run final focused verification and commit the result.
+- [x] Resolve P00/P02 records and submit one bounded H100 selection job.
+- [x] Confirm allocation and monitor training plus 2021 evaluation to terminal status.
+- [x] Apply the three-condition 2021 gate from the spec.
+- [x] If selected, submit exactly one authorized evaluation job for each of 2022 and 2023 and apply the fixed temporal gate; otherwise stop without test access.
+- [x] Record job IDs, metrics, decision, and artifact hashes; run final focused verification and commit the result.

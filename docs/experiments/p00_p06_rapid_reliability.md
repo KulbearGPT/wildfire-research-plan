@@ -1,4 +1,4 @@
-# P00--P08 Rapid Reliability Prototypes
+# P00--P09 Rapid Reliability Prototypes
 
 ## Outcome
 
@@ -9,8 +9,10 @@ the main method. A later stochastic belief-residual probe (P07) improved P00
 under block missingness but collapsed to an effectively deterministic
 correction and did not beat P04. P08 used a training-only clean posterior and
 produced non-collapsed uncertainty, but its block-missingness AP fell below
-P00. P00 therefore remains the accepted mainline checkpoint, and the
-belief-state residual branch ends here.
+P00. P09 then passed the 2021 gate and improved M06/M07 over P00 in both fixed
+test years. It is the leading robustness candidate, but not yet an attributable
+GroupDRO result because its run also corrected an upstream multi-year dataset
+indexing defect. A matched corrected-index ERM control is required next.
 
 ## 2021 selection results
 
@@ -23,6 +25,7 @@ belief-state residual branch ends here.
 | P06 final-block router | adapted tail only | 0.585322 | 0.299465 | 0.330240 | 0.141035 | Rejected |
 | P07 stochastic belief residual | 4,945 | 0.585322 | 0.299465 | 0.331009 | 0.140771 | Rejected: variance collapse |
 | P08 teacher-posterior belief | 14,465 | 0.585322 | 0.299465 | 0.306096 | 0.123222 | Rejected: AP regression |
+| P09 year-corruption GroupDRO router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365531 | 0.185136 | Selected; attribution pending |
 
 P03 improved P00 by 0.033872 AP on M06 and 0.037806 on M07 while preserving
 M00/M01 exactly. Increasing the capacity of the single-forward correction in
@@ -66,22 +69,50 @@ made samples diverse, but the learned inference prior degraded the forecast.
 Per the pre-registered decision, the next method direction is
 temporal/environment robust optimization rather than another belief residual.
 
+## P09 year-corruption GroupDRO
+
+P09 initialized from P02 and fine-tuned all expert parameters for 3,000 steps
+with 15 environments: five training years crossed with clean, 25%, and 50%
+block states. Inverse-year sampling balanced expected year mass, while
+exponentiated GroupDRO weights emphasized high-loss environments. The final
+weight of group 14 (2020 at 50% BlockDrop) was `0.222623`, versus the uniform
+initial value `0.066667`.
+
+During the first attempt, runtime weights changed only for groups 12--14. A
+minimal reproduction showed that the pinned upstream dataset resolver breaks
+only its inner fire loop and then continues through later years, so every
+multi-year index is overwritten by the last year. P09 locally replaces that
+resolver with a first-match implementation. The corrected run showed distinct
+updates in all 15 groups from step 1 onward.
+
+On 2021, P09 preserved M00/M01 exactly and reached `0.365531/0.185136` AP on
+M06/M07. Mean block AP was `0.275333`, improving P00 by `0.052243` and P03 by
+`0.016404`; it therefore passed all three pre-registered selection conditions.
+
+P09 also passed the frozen temporal gate. Its mean M06/M07 AP improvement over
+P00 was `0.018699` in 2022 and `0.022378` in 2023. However, P09 differs from
+P03 in two coupled ways: correct five-year sample resolution and GroupDRO.
+These results establish a strong corrected-data candidate, not a causal claim
+that GroupDRO produced the gain. The next required run is one matched
+corrected-index, inverse-year-balanced ERM fine-tune with the same samples,
+seed, optimizer, learning rate, and 3,000-step budget.
+
 ## Fixed temporal test comparison
 
-| Year | Scenario | P00 AP | P03 AP | P03 minus P00 |
-|---:|---|---:|---:|---:|
-| 2022 | M00 | 0.281701 | 0.281701 | 0.000000 |
-| 2022 | M01 | 0.163668 | 0.163668 | 0.000000 |
-| 2022 | M06 | 0.128030 | 0.104961 | -0.023069 |
-| 2022 | M07 | 0.062677 | 0.036584 | -0.026093 |
-| 2023 | M00 | 0.406200 | 0.406200 | 0.000000 |
-| 2023 | M01 | 0.136357 | 0.136357 | 0.000000 |
-| 2023 | M06 | 0.195445 | 0.208950 | +0.013506 |
-| 2023 | M07 | 0.076796 | 0.086391 | +0.009595 |
+| Year | Scenario | P00 AP | P03 AP | P09 AP | P09 minus P00 |
+|---:|---|---:|---:|---:|---:|
+| 2022 | M00 | 0.281701 | 0.281701 | 0.281701 | 0.000000 |
+| 2022 | M01 | 0.163668 | 0.163668 | 0.163668 | 0.000000 |
+| 2022 | M06 | 0.128030 | 0.104961 | 0.145384 | +0.017354 |
+| 2022 | M07 | 0.062677 | 0.036584 | 0.082721 | +0.020044 |
+| 2023 | M00 | 0.406200 | 0.406200 | 0.406200 | 0.000000 |
+| 2023 | M01 | 0.136357 | 0.136357 | 0.136357 | 0.000000 |
+| 2023 | M06 | 0.195445 | 0.208950 | 0.220648 | +0.025203 |
+| 2023 | M07 | 0.076796 | 0.086391 | 0.096349 | +0.019554 |
 
-The spatial expert helps in 2021 and 2023 but harms both block-missingness
-conditions in 2022. This violates the cross-year robustness requirement. No
-P03 promotion or further tuning against 2022--2023 is authorized.
+P03 helps in 2021 and 2023 but harms both block-missingness conditions in 2022.
+P09 is positive in both test years, but its test results are final reporting
+evidence and cannot be used to tune either the corrected resolver or GroupDRO.
 
 ## Execution evidence
 
@@ -95,6 +126,18 @@ P03 promotion or further tuning against 2022--2023 is authorized.
   summary SHA-256: `ecbc80e624a769a02d7c22886cd07aa4265cd7fff21bafe78c38a807d398b30c`.
 - P08 scheduling attempts `20561593`, `20561616`, and `20561672` were cancelled
   before allocation and consumed no GPU time.
+- P09 selection: job `20563978` completed on Nibi node `g30` in 24:26 with
+  exit `0:0`. Checkpoint SHA-256:
+  `0b8787f53b024cd176c5e5a977f231d004bf0a4c575f53b37b546db5b01de680`;
+  2021 summary SHA-256:
+  `b70b8704858fb307685d12b974007c474c6866c57fefc27f5f0d68a516a8a6eb`.
+- P09 fixed tests: jobs `20564992` (2022, 9:30) and `20564993` (2023,
+  5:12) completed on `g30` with exit `0:0`. Summary SHA-256 values are
+  `a78cae9485342f40195357570606551d4d27e7271a73fe559bef0aee5d6440b1`
+  and `10c7439632f0dc945c9f58eb8cd303fea66eddf28cbcbe6065f4bbfb5ab9928c`.
+- P09 job `20563415` was cancelled after its diagnostics exposed the upstream
+  year-index bug. Jobs `20563639` and `20563807` were cancelled before a
+  scientific result because of allocation and wall-time constraints.
 - P03 fixed-test jobs: `20465333` (2022) and `20465334` (2023).
 - Failed fixed-test setup jobs `20464512`/`20464513` produced no result.
 

@@ -20,13 +20,17 @@ infrastructure needed to run the next experiments.
   missingness matrix have completed. Active-fire-history loss (M01) is the
   dominant diagnosed failure. See
   [`reproductions/wsts_fast_track/`](reproductions/wsts_fast_track/).
-- P00 (`FireDrop-C00`) remains the accepted mainline checkpoint. P01's
+- P00 (`FireDrop-C00`) remains the frozen legacy comparison checkpoint. P01's
   explicit active-fire-validity channel did not improve P00, while P02's
   structured BlockDrop exposed a useful spatial-missingness expert but harmed
   other regimes. P03 now routes frozen P00/P02 logits only inside known missing
   blocks: it preserved P00 and improved 2021 M06/M07, but the final held-out
   check was negative in 2022 and positive in 2023. P03 is therefore not
-  promoted. See
+  promoted. P09 corrected an upstream multi-year indexing defect and applied
+  year-corruption GroupDRO; it improved routed M06/M07 AP over P00 in 2021,
+  2022, and 2023. Because the index correction and GroupDRO changed together,
+  a matched corrected-index ERM control is required before attributing the
+  gain. See
   [`docs/experiments/p00_p06_rapid_reliability.md`](docs/experiments/p00_p06_rapid_reliability.md).
 
 ## Scientific boundary
@@ -111,5 +115,9 @@ P06 adapted the final decoder block and head while sharing the rest of P00. Job
 `20464396` reached 0.330240/0.141035 on 2021 M06/M07 and also failed to beat
 P03. The spatial-router branch then closed. Final P03 jobs `20465333/20465334`
 showed M06/M07 deltas of -0.0231/-0.0261 in 2022 and +0.0135/+0.0096 in 2023.
-The result is not cross-year robust, so P00 remains mainline and held-out years
-must not be used for further tuning.
+The P03 result is not cross-year robust. P09 subsequently produced positive
+M06/M07 deltas in both 2022 and 2023, but it also exposed and corrected an
+upstream multi-year sample resolver that had mapped pooled training indices to
+the final year. P09 is therefore the leading candidate, while its GroupDRO
+attribution remains pending a matched corrected-index ERM control. Held-out
+years must not be used for further tuning.
