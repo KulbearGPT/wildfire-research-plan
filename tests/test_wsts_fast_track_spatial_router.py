@@ -85,3 +85,16 @@ def test_default_baseline_strips_routing_mask_channel() -> None:
 
     assert tuple(logits.shape) == (2, 1, 3, 3)
     assert torch.count_nonzero(logits) == 0
+
+
+def test_reliability_router_uses_expert_everywhere_for_global_fire_loss() -> None:
+    from reproductions.wsts_fast_track.spatial_router import ReliabilityExpertRouter
+
+    routed_input = torch.zeros((2, 1, 41, 2, 3))
+    router = ReliabilityExpertRouter(
+        _ConstantExpert(2.0), _ConstantExpert(5.0), route_all=True
+    )
+
+    routed = router(routed_input)
+
+    torch.testing.assert_close(routed, torch.full((2, 1, 2, 3), 5.0))

@@ -6,6 +6,7 @@ import torch
 
 
 ROUTER_ID = "P03-SpatialExpertRouter-P00-P02"
+RELIABILITY_ROUTER_ID = "P11-MissingnessRouter-P00-P10"
 
 
 class RoutingInputModel(torch.nn.Module):
@@ -62,3 +63,24 @@ class SpatialExpertRouter(torch.nn.Module):
         self, logits: torch.Tensor, target: torch.Tensor
     ) -> torch.Tensor:
         return self.default_model.compute_loss(logits, target)
+
+
+class ReliabilityExpertRouter(SpatialExpertRouter):
+    """Route global fire loss or spatially missing pixels to one expert."""
+
+    def __init__(
+        self,
+        default_model: torch.nn.Module,
+        expert_model: torch.nn.Module,
+        *,
+        route_all: bool,
+    ) -> None:
+        super().__init__(default_model, expert_model)
+        self.route_all = route_all
+
+    def forward(self, routed_input: torch.Tensor) -> torch.Tensor:
+        if routed_input.ndim != 5 or routed_input.shape[2] != 41:
+            raise ValueError("router input must have shape (B, T, 41, H, W)")
+        if self.route_all:
+            return self.block_model(routed_input[:, :, :40])
+        return super().forward(routed_input)

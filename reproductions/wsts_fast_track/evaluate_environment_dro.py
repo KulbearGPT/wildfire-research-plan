@@ -26,7 +26,13 @@ from .prototype import (
     FIRE_DROPOUT_PROBABILITY,
     PROTOTYPE_ID as P00_ID,
 )
-from .spatial_router import ROUTER_ID, RoutingInputModel, SpatialExpertRouter
+from .spatial_router import (
+    RELIABILITY_ROUTER_ID,
+    ROUTER_ID,
+    ReliabilityExpertRouter,
+    RoutingInputModel,
+    SpatialExpertRouter,
+)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -35,6 +41,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--p02-record", type=Path, required=True)
     parser.add_argument("--dro-checkpoint", type=Path, required=True)
     parser.add_argument("--erm-checkpoint", type=Path)
+    parser.add_argument("--reliability-router", action="store_true")
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--upstream-root", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, required=True)
@@ -104,6 +111,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             or not isinstance(erm_payload.get("model_state"), dict)
         ):
             raise ValueError("invalid P10 matched ERM checkpoint")
+    if args.reliability_router and erm_payload is None:
+        raise ValueError("P11 reliability routing requires --erm-checkpoint")
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise ValueError("CUDA evaluation requested but unavailable")
@@ -139,6 +148,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     all_results: dict[str, dict[str, dict[str, int | float]]] = {
         label: {} for label, _, _ in models
     }
+    if args.reliability_router:
+        all_results["P11"] = {}
     for scenario_id in SCENARIOS:
         dataset = build_controlled_dataset(
             upstream_root=args.upstream_root,
@@ -157,7 +168,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             num_workers=args.num_workers,
             pin_memory=device.type == "cuda",
         )
-        for label, prototype_id, model in models:
+        scenario_models = list(models)
+        if args.reliability_router:
+            scenario_models.append(
+                (
+                    "P11",
+                    RELIABILITY_ROUTER_ID,
+                    ReliabilityExpertRouter(
+                        default_model,
+                        erm_expert,
+                        route_all=scenario_id == "M01",
+                    ),
+                )
+            )
+        for label, prototype_id, model in scenario_models:
             metrics = evaluate_batches(model, loader, device=device)
             result = {
                 "schema_version": 1,
@@ -178,7 +202,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "status": "pass",
         "mode": mode,
         "scientific_claim": scientific_claim,
-        "prototype_id": ERM_PROTOTYPE_ID if erm_payload is not None else PROTOTYPE_ID,
+        "prototype_id": (
+            RELIABILITY_ROUTER_ID
+            if args.reliability_router
+            else ERM_PROTOTYPE_ID if erm_payload is not None else PROTOTYPE_ID
+        ),
         "p00_record": str(args.p00_record.resolve(strict=True)),
         "p02_record": str(args.p02_record.resolve(strict=True)),
         "dro_checkpoint": str(args.dro_checkpoint.resolve(strict=True)),
