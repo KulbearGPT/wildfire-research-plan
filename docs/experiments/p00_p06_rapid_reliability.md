@@ -50,8 +50,11 @@ The run is fixed at one seed, four samples, Adam `1e-3`, and 3,000 steps on
 2016--2020, followed by 2021 M00/M01/M06/M07 selection. It does not access the
 2022--2023 test set unless it passes the written promotion rule.
 
-Nibi job `20561593` was submitted from commit `7496964` with one H100 40 GB MIG
-slice, 8 CPUs, 32 GB RAM, and a 30-minute limit. Its status is pending.
+Nibi job `20561688` was submitted from commit `7496964` with one full H100,
+8 CPUs, 32 GB RAM, and a 20-minute limit. Its status is pending. Earlier jobs
+`20561593`, `20561616`, and `20561672` were cancelled before allocation while
+working around a scheduler-level unavailable-node condition; none created a run
+or consumed GPU time.
 
 ## Fixed temporal test comparison
 
@@ -77,7 +80,7 @@ P03 promotion or further tuning against 2022--2023 is authorized.
 - P05: job `20464221`.
 - P06: job `20464396`; failed setup job `20464346` produced no result.
 - P07: job `20558998` completed on Nibi node `g30` in 10:58 with exit `0:0`.
-- P08: job `20561593` submitted; result pending.
+- P08: job `20561688` submitted; result pending.
 - P03 fixed-test jobs: `20465333` (2022) and `20465334` (2023).
 - Failed fixed-test setup jobs `20464512`/`20464513` produced no result.
 
