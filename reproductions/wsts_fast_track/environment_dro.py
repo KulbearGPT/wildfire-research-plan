@@ -56,6 +56,29 @@ def balanced_year_sampling_weights(dataset: Any) -> torch.DoubleTensor:
     return torch.tensor(weights, dtype=torch.double)
 
 
+def resolve_dataset_index(dataset: Any, target_id: int) -> tuple[int, str, int]:
+    """Resolve the first matching year/fire without the upstream loop leak."""
+
+    length = len(dataset)
+    if target_id < 0:
+        target_id += length
+    if target_id < 0 or target_id >= length:
+        raise RuntimeError(
+            f"Tried to access item {target_id}, but maximum index is {length - 1}."
+        )
+    remaining = target_id
+    per_fire = getattr(dataset, "datapoints_per_fire", None)
+    if not isinstance(per_fire, Mapping):
+        raise ValueError("dataset must expose per-fire datapoint counts")
+    for year, fires in per_fire.items():
+        for fire_name, count_value in fires.items():
+            count = int(count_value)
+            if remaining < count:
+                return int(year), str(fire_name), remaining
+            remaining -= count
+    raise RuntimeError(f"dataset index did not resolve: {target_id}")
+
+
 def group_dro_objective(
     per_sample_losses: torch.Tensor,
     group_ids: torch.Tensor,
@@ -141,3 +164,4 @@ def install_training_environment_groups(upstream_root: Path) -> None:
 
     dataset_class.load_imgs = load_imgs_with_environment
     dataset_class.__getitem__ = getitem_with_environment
+    dataset_class.find_image_index_from_dataset_index = resolve_dataset_index

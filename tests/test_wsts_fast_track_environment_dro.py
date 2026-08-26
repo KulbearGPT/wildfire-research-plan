@@ -20,6 +20,7 @@ def test_environment_groups_and_balanced_year_sampling_are_exact() -> None:
     from reproductions.wsts_fast_track.environment_dro import (
         balanced_year_sampling_weights,
         environment_group,
+        resolve_dataset_index,
     )
 
     assert environment_group(2016, 0) == 0
@@ -30,6 +31,10 @@ def test_environment_groups_and_balanced_year_sampling_are_exact() -> None:
     offsets = (0, 2, 6, 7, 12, 15)
     masses = [weights[start:end].sum() for start, end in zip(offsets, offsets[1:])]
     torch.testing.assert_close(torch.stack(masses), torch.ones(5, dtype=torch.double))
+    assert resolve_dataset_index(_TinyYearDataset(), 0) == (2016, "a", 0)
+    assert resolve_dataset_index(_TinyYearDataset(), 2) == (2017, "b", 0)
+    assert resolve_dataset_index(_TinyYearDataset(), 14) == (2020, "e", 2)
+    assert resolve_dataset_index(_TinyYearDataset(), -1) == (2020, "e", 2)
 
 
 def test_group_dro_upweights_harder_group_and_preserves_gradients() -> None:
