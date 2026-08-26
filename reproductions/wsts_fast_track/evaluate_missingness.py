@@ -127,28 +127,56 @@ def evaluate_batches(
     true_positive = false_positive = false_negative = 0
     sample_count = pixel_count = 0
     weighted_loss = 0.0
+    squared_probability_error = 0.0
+    predictive_variance_total = 0.0
+    has_predictive_variance = False
 
     with torch.inference_mode():
         for x, target in batches:
             x = x.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True).long()
-            logits = model(x)
+            uncertainty_forward = getattr(model, "forward_with_uncertainty", None)
+            if callable(uncertainty_forward):
+                logits, predictive_variance = uncertainty_forward(x)
+                has_predictive_variance = True
+            else:
+                logits = model(x)
+                predictive_variance = None
             if logits.ndim == target.ndim + 1 and logits.shape[1] == 1:
                 logits = logits.squeeze(1)
+            if (
+                predictive_variance is not None
+                and predictive_variance.ndim == target.ndim + 1
+                and predictive_variance.shape[1] == 1
+            ):
+                predictive_variance = predictive_variance.squeeze(1)
             if logits.shape != target.shape:
                 raise ValueError(
                     f"model output shape {tuple(logits.shape)} differs from target "
                     f"{tuple(target.shape)}"
                 )
+            if (
+                predictive_variance is not None
+                and predictive_variance.shape != target.shape
+            ):
+                raise ValueError("predictive variance shape differs from target")
             loss = model.compute_loss(logits, target)
             pixels = target.numel()
             weighted_loss += float(loss.detach().cpu()) * pixels
+            probabilities = torch.sigmoid(logits)
+            squared_probability_error += float(
+                (probabilities - target.float()).square().sum().detach().cpu()
+            )
+            if predictive_variance is not None:
+                predictive_variance_total += float(
+                    predictive_variance.sum().detach().cpu()
+                )
             pixel_count += pixels
             sample_count += target.shape[0]
 
             score_chunks.append(logits.detach().float().cpu().flatten())
             target_chunks.append(target.detach().bool().cpu().flatten())
-            prediction = torch.sigmoid(logits) >= 0.5
+            prediction = probabilities >= 0.5
             positive = target.bool()
             true_positive += int((prediction & positive).sum().item())
             false_positive += int((prediction & ~positive).sum().item())
@@ -188,7 +216,7 @@ def evaluate_batches(
     recall = true_positive / recall_denominator if recall_denominator else 0.0
     f1_denominator = 2 * true_positive + false_positive + false_negative
     iou_denominator = true_positive + false_positive + false_negative
-    return {
+    metrics: dict[str, int | float] = {
         "sample_count": sample_count,
         "pixel_count": pixel_count,
         "avg_precision": ap,
@@ -197,7 +225,13 @@ def evaluate_batches(
         "precision": precision,
         "recall": recall,
         "loss": weighted_loss / pixel_count,
+        "brier": squared_probability_error / pixel_count,
     }
+    if has_predictive_variance:
+        metrics["mean_predictive_variance"] = (
+            predictive_variance_total / pixel_count
+        )
+    return metrics
 
 
 def checkpoint_init_args(

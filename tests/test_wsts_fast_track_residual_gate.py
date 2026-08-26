@@ -133,3 +133,46 @@ def test_last_block_router_preserves_default_outside_mask() -> None:
 
     expected = torch.tensor([[[[2.0, 5.0], [2.0, 2.0]]]])
     torch.testing.assert_close(routed, expected)
+
+
+def test_stochastic_belief_preserves_unmasked_logits_and_round_trips() -> None:
+    from reproductions.wsts_fast_track.residual_gate import (
+        FrozenStochasticBeliefResidual,
+    )
+
+    routed_input = torch.zeros((1, 1, 41, 2, 2))
+    routed_input[:, :, 0] = 2.0
+    routed_input[:, :, 40, 0, 1] = 1.0
+    gate = FrozenStochasticBeliefResidual(_TinyDefault(), sample_count=4)
+    with torch.no_grad():
+        gate.belief_head.weight.zero_()
+        gate.belief_head.bias.zero_()
+        gate.output_head.weight.fill_(1.0 / 16.0)
+        gate.output_head.bias.zero_()
+
+    torch.manual_seed(7)
+    logits, variance = gate.forward_with_uncertainty(routed_input)
+    missing = routed_input[:, 0, 40:41].bool()
+
+    torch.testing.assert_close(logits[~missing], torch.full((3,), 4.0))
+    assert torch.count_nonzero(variance[~missing]) == 0
+    assert torch.isfinite(variance).all()
+    assert torch.all(variance >= 0)
+    assert float(variance[missing].item()) > 0.0
+    assert all(
+        parameter.requires_grad for parameter in gate.trainable_parameters()
+    )
+
+    clone = FrozenStochasticBeliefResidual(_TinyDefault(), sample_count=4)
+    clone.belief_head.load_state_dict(gate.belief_head.state_dict())
+    clone.output_head.load_state_dict(gate.output_head.state_dict())
+    torch.manual_seed(7)
+    cloned_logits, cloned_variance = clone.forward_with_uncertainty(routed_input)
+    torch.testing.assert_close(cloned_logits, logits)
+    torch.testing.assert_close(cloned_variance, variance)
+
+    loss = gate.compute_loss(logits.squeeze(1), torch.zeros((1, 2, 2)))
+    loss.backward()
+    assert any(
+        parameter.grad is not None for parameter in gate.trainable_parameters()
+    )

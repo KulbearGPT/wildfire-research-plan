@@ -17,7 +17,10 @@ from .missingness import structured_block_mask
 PROTOTYPE_ID = "P04-FrozenP00-SpatialResidualGate"
 SPATIAL_PROTOTYPE_ID = "P05-FrozenP00-SpatialResidualGate3x3"
 LAST_BLOCK_PROTOTYPE_ID = "P06-FrozenP00-LastBlockRouter"
+BELIEF_PROTOTYPE_ID = "P07-StochasticBeliefResidual"
 GATE_TRAINING_STEPS = 1_000
+BELIEF_TRAINING_STEPS = 3_000
+BELIEF_SAMPLE_COUNT = 4
 PROCESSED_DYNAMIC_NON_FIRE = tuple(range(12)) + (15,) + tuple(range(33, 38))
 
 
@@ -146,6 +149,88 @@ class FrozenSpatialResidualGate(torch.nn.Module):
         return apply_masked_residual(
             default_logits, residual_logits, missing_mask
         )
+
+    def compute_loss(
+        self, logits: torch.Tensor, target: torch.Tensor
+    ) -> torch.Tensor:
+        return self.default_model.compute_loss(logits, target)
+
+
+class FrozenStochasticBeliefResidual(torch.nn.Module):
+    """Marginalize sampled missing-region residuals over frozen P00 features."""
+
+    def __init__(
+        self,
+        default_model: torch.nn.Module,
+        *,
+        sample_count: int = BELIEF_SAMPLE_COUNT,
+    ) -> None:
+        super().__init__()
+        if sample_count < 2:
+            raise ValueError("belief residual requires at least two samples")
+        self.default_model = default_model
+        self.default_model.requires_grad_(False)
+        self.default_model.eval()
+        self.sample_count = sample_count
+        self.belief_head = torch.nn.Conv2d(17, 32, kernel_size=3, padding=1)
+        self.output_head = torch.nn.Conv2d(16, 1, kernel_size=1)
+        torch.nn.init.zeros_(self.belief_head.weight)
+        torch.nn.init.zeros_(self.belief_head.bias)
+        with torch.no_grad():
+            self.belief_head.bias[16:].fill_(-2.0)
+        torch.nn.init.zeros_(self.output_head.weight)
+        torch.nn.init.zeros_(self.output_head.bias)
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        self.default_model.eval()
+        return self
+
+    def trainable_parameters(self):
+        return (*self.belief_head.parameters(), *self.output_head.parameters())
+
+    def forward_with_uncertainty(
+        self, routed_input: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        if (
+            routed_input.ndim != 5
+            or routed_input.shape[1] != 1
+            or routed_input.shape[2] != 41
+        ):
+            raise ValueError("belief input must have shape (B, 1, 41, H, W)")
+        features = routed_input[:, 0, :40]
+        missing_mask = routed_input[:, 0, 40:41].bool()
+        mask_float = missing_mask.to(features.dtype)
+        with torch.no_grad():
+            encoded = self.default_model.model.encoder(features)
+            decoder_features = self.default_model.model.decoder(*encoded)
+            default_logits = self.default_model.model.segmentation_head(
+                decoder_features
+            )
+
+        belief_parameters = self.belief_head(
+            torch.cat((decoder_features.detach(), mask_float), dim=1)
+        )
+        mean, log_sigma = belief_parameters.chunk(2, dim=1)
+        sigma = torch.exp(log_sigma.clamp(min=-5.0, max=2.0))
+        sampled_probabilities = []
+        for _ in range(self.sample_count):
+            latent = mean + sigma * torch.randn_like(mean)
+            residual = self.output_head(latent)
+            sampled_logits = default_logits + residual * mask_float
+            sampled_probabilities.append(torch.sigmoid(sampled_logits))
+        probabilities = torch.stack(sampled_probabilities, dim=0)
+        mean_probability = probabilities.mean(dim=0)
+        belief_logits = torch.logit(
+            mean_probability.clamp(min=1e-6, max=1.0 - 1e-6)
+        )
+        mean_logits = torch.where(missing_mask, belief_logits, default_logits)
+        variance = probabilities.var(dim=0, unbiased=False) * mask_float
+        return mean_logits, variance
+
+    def forward(self, routed_input: torch.Tensor) -> torch.Tensor:
+        logits, _ = self.forward_with_uncertainty(routed_input)
+        return logits
 
     def compute_loss(
         self, logits: torch.Tensor, target: torch.Tensor

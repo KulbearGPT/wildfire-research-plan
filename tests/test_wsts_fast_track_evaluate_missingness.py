@@ -65,6 +65,10 @@ def test_evaluate_batches_computes_exact_streaming_binary_metrics() -> None:
     assert result["precision"] == pytest.approx(1.0)
     assert result["recall"] == pytest.approx(1.0)
     assert result["loss"] < 0.001
+    expected_brier = float(
+        (torch.sigmoid(logits.squeeze(1)) - target.float()).square().mean()
+    )
+    assert result["brier"] == pytest.approx(expected_brier)
 
 
 def _manifest(mode: str = "engineering") -> dict[str, object]:
