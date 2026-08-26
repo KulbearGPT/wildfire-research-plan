@@ -120,7 +120,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         else 1.0 - float(model.hparams.pos_class_weight)
     )
     print(
-        f"FOCAL_ALPHA_POLICY={'corrected-positive' if args.correct_focal_alpha else 'legacy-inverted'} "
+        f"FOCAL_ALPHA_POLICY={'corrected-positive' if args.correct_focal_alpha else 'legacy-disabled'} "
         f"FOCAL_ALPHA={focal_alpha:.12f}",
         flush=True,
     )
@@ -189,7 +189,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             else PROTOTYPE_ID if args.objective == "groupdro" else ERM_PROTOTYPE_ID
         ),
         "objective": args.objective,
-        "focal_alpha_policy": "corrected-positive" if args.correct_focal_alpha else "legacy-inverted",
+        "focal_alpha_policy": "corrected-positive" if args.correct_focal_alpha else "legacy-disabled",
         "focal_alpha": focal_alpha,
         "base_p02_record": str(args.p02_record.resolve(strict=True)),
         "base_p02_checkpoint": str(p02_checkpoint),

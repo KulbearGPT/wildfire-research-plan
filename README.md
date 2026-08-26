@@ -32,7 +32,11 @@ infrastructure needed to run the next experiments.
   GroupDRO with ordinary ERM. P09 and P10 were effectively tied across all
   three years, so the gain is attributed to corrected, year-balanced
   multi-year training rather than GroupDRO. P11 tried reusing P10 for complete
-  active-fire-history loss, but regressed 2021 M01 and was rejected. See
+  active-fire-history loss, but regressed 2021 M01 and was rejected. P12 then
+  replaced the accidentally disabled focal class weighting with the normalized
+  positive-class weight while keeping P10's 3,000-step recipe fixed. It caused
+  severe overprediction and regressed M01/M06/M07 on 2021, so it was
+  rejected without opening 2022--2023. See
   [`docs/experiments/p00_p06_rapid_reliability.md`](docs/experiments/p00_p06_rapid_reliability.md).
 
 ## Scientific boundary
@@ -125,4 +129,8 @@ effectively tied with P09 across 2021--2023. P10 is therefore the parsimonious
 leading candidate, and the evidence does not support a GroupDRO contribution.
 P11 preserved that block result but reduced M01 AP when it routed complete
 active-fire loss to P10, so no P11 held-out evaluation was run. Held-out years
-must not be used for further tuning.
+must not be used for further tuning. P12 properly enabled focal positive-class
+weighting (`alpha=0.998688`) in an otherwise matched P10 run, but reduced M01
+AP to 0.252888 and mean M06/M07 AP to 0.066132 through extreme overprediction.
+The prevalence-derived focal weighting is rejected; no P12 held-out evaluation
+was run.

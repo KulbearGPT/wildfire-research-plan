@@ -1,4 +1,4 @@
-# P00--P11 Rapid Reliability Prototypes
+# P00--P12 Rapid Reliability Prototypes
 
 ## Outcome
 
@@ -13,7 +13,9 @@ P00. P09 then passed the 2021 gate and improved M06/M07 over P00 in both fixed
 test years. P10 supplied the matched corrected-index ERM control and retained
 the gain, showing that GroupDRO adds no stable benefit. P11 then routed complete
 active-fire-history loss to P10, but its M01 AP regressed and the route was
-rejected without opening the held-out years.
+rejected without opening the held-out years. P12 isolated the previously
+disabled focal class weighting; enabling the normalized positive weight caused
+severe overprediction and was also rejected on 2021.
 
 ## 2021 selection results
 
@@ -29,6 +31,7 @@ rejected without opening the held-out years.
 | P09 year-corruption GroupDRO router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365531 | 0.185136 | Ablation; no stable ERM gain |
 | P10 corrected-index balanced ERM router | full P02 fine-tune | 0.585322 | 0.299465 | 0.365203 | 0.185669 | Parsimonious candidate |
 | P11 P00/P10 missingness router | 0 | 0.585322 | 0.291202 | 0.365203 | 0.185669 | Rejected: M01 regression |
+| P12 corrected-alpha ERM router | full P02 fine-tune | 0.585322 | 0.252888 | 0.070432 | 0.061832 | Rejected: severe overprediction |
 
 P03 improved P00 by 0.033872 AP on M06 and 0.037806 on M07 while preserving
 M00/M01 exactly. Increasing the capacity of the single-forward correction in
@@ -134,10 +137,25 @@ was not evaluated on 2022--2023.
 
 This negative result shows that P10's corrected five-year BlockDrop expert is
 not automatically interchangeable with a fire-history-loss expert under the
-legacy unweighted focal objective. P12 first isolates the upstream subclass
-hyperparameter overwrite that makes focal `alpha` negative and therefore
-disabled, while holding the complete P10 training recipe fixed; a dedicated
-FireDrop-only expert remains conditional on that one-variable result.
+legacy unweighted focal objective.
+
+## P12 corrected focal-alpha diagnostic
+
+P12 held fixed P10's P02 initialization, corrected resolver, inverse-year
+sampler, corruption and sample RNG, seed, batch size, AdamW optimizer, learning
+rate, and 3,000-step budget. The only training change was focal `alpha`. The
+upstream subclass overwrites the base class's normalized positive weight with
+the raw ratio (`761.078570`); the legacy expression then supplies a negative
+`alpha`, which makes torchvision skip alpha weighting. P12 normalizes that raw
+ratio to `0.998687799344` and passes it as the positive-class weight.
+
+This replacement failed decisively. M01 AP fell from P00's `0.299465` to
+`0.252888`, while recall rose to `0.939741` and precision collapsed to
+`0.024290`. M06/M07 AP fell from P10's `0.365203/0.185669` to
+`0.070432/0.061832`; their mean dropped by `0.209304`. The prevalence-derived
+weight makes positive pixels too dominant for this crop and sampling regime.
+P12 failed its 2021 gate and was not evaluated on 2022--2023. This rejects the
+specific near-one alpha, not every possible moderate class weight.
 
 ## Fixed temporal test comparison
 
@@ -193,6 +211,14 @@ evidence and cannot be used to tune the corrected resolver, ERM, or GroupDRO.
   exit `0:0`. Summary SHA-256:
   `d8ee79786f08db5026a45688ade33c52c0c78e87d42213656ba3f0ad2f496594`.
   P11 failed the 2021 M01 gate, so no fixed-test jobs were submitted.
+- P12 selection: job `20595907` completed on Nibi node `g30` in 27:43 with
+  exit `0:0`. Checkpoint SHA-256:
+  `3747f1ac13ae4e22bf8479e4e7067fb2ee0b11181863a5a0ecd9bead8e1e5b85`;
+  2021 summary SHA-256:
+  `a838507e007f30e92a00a2f34724b90fa3573ee15f0bec78421bf4a4892afbd7`.
+  Setup job `20591988` failed before training after exposing the raw-ratio
+  checkpoint metadata; it produced no scientific result. P12 failed the 2021
+  gate, so no fixed-test jobs were submitted.
 - P03 fixed-test jobs: `20465333` (2022) and `20465334` (2023).
 - Failed fixed-test setup jobs `20464512`/`20464513` produced no result.
 

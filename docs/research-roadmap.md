@@ -187,14 +187,17 @@ P10 is the parsimonious leading candidate. The 2022--2023 results remain
 reporting-only and cannot select further settings. P11 then tested whether the
 same P10 expert could also serve complete active-fire-history loss. It exactly
 retained P00 on M00 and P10 on M06/M07, but reduced 2021 M01 AP from `0.299465`
-to `0.291202`; P11 was rejected without held-out evaluation. P12 is the next
-single-variable diagnostic: repeat P10 exactly but normalize the raw positive
-class ratio and pass it as torchvision focal `alpha`. The legacy subclass
+to `0.291202`; P11 was rejected without held-out evaluation. P12 repeated P10
+exactly but normalized the raw positive
+class ratio and passed it as torchvision focal `alpha`. The legacy subclass
 restores the raw ratio after base-class normalization, making `1 - weight`
-negative and causing torchvision to skip alpha weighting entirely. P12's
-routed 2021 gate requires exact P00 M00, M01 AP above P00,
-and mean M06/M07 AP no more than `0.005` below P10. Only a passing frozen P12
-may be reported on 2022--2023.
+negative and causing torchvision to skip alpha weighting entirely. With
+`alpha=0.998688`, P12 preserved routed M00 but reduced M01 AP to `0.252888`
+and M06/M07 AP to `0.070432/0.061832`; precision collapsed while recall became
+extreme. P12 therefore failed its 2021 gate and was not evaluated on
+2022--2023. The next compact method hypothesis is a dedicated corrected-index
+FireDrop expert under the retained unweighted focal objective, not further
+tuning of the rejected prevalence-derived alpha on test feedback.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and
