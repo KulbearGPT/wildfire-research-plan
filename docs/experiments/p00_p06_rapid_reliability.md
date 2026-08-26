@@ -1,13 +1,15 @@
-# P00--P07 Rapid Reliability Prototypes
+# P00--P08 Rapid Reliability Prototypes
 
 ## Outcome
 
-The rapid spatial-reliability branch is complete. P03 was the strongest 2021
+The rapid spatial-reliability branch reached one final targeted probe. P03 was the strongest 2021
 prototype, but its fixed temporal test comparison was inconsistent across
 years. It is therefore retained as a diagnostic result rather than promoted as
 the main method. A later stochastic belief-residual probe (P07) improved P00
 under block missingness but collapsed to an effectively deterministic
-correction and did not beat P04. P00 remains the accepted mainline checkpoint.
+correction and did not beat P04. P08 now tests whether a training-only clean
+posterior can prevent that collapse; P00 remains the accepted mainline
+checkpoint unless P08 passes its fixed gate.
 
 ## 2021 selection results
 
@@ -39,6 +41,18 @@ construction. This is effectively posterior collapse: the learned predictor
 uses its mean correction but not a meaningful belief distribution. The P07
 checkpoint is therefore not advanced to the fixed 2022--2023 test set.
 
+## P08 teacher-posterior belief probe
+
+P08 keeps P00 frozen and trains 14,465 parameters in posterior, prior,
+feature-reconstruction, and output heads. Training uses the clean aligned input
+only as a posterior teacher; inference uses only the corrupted input and mask.
+The run is fixed at one seed, four samples, Adam `1e-3`, and 3,000 steps on
+2016--2020, followed by 2021 M00/M01/M06/M07 selection. It does not access the
+2022--2023 test set unless it passes the written promotion rule.
+
+Nibi job `20561593` was submitted from commit `7496964` with one H100 40 GB MIG
+slice, 8 CPUs, 32 GB RAM, and a 30-minute limit. Its status is pending.
+
 ## Fixed temporal test comparison
 
 | Year | Scenario | P00 AP | P03 AP | P03 minus P00 |
@@ -63,6 +77,7 @@ P03 promotion or further tuning against 2022--2023 is authorized.
 - P05: job `20464221`.
 - P06: job `20464396`; failed setup job `20464346` produced no result.
 - P07: job `20558998` completed on Nibi node `g30` in 10:58 with exit `0:0`.
+- P08: job `20561593` submitted; result pending.
 - P03 fixed-test jobs: `20465333` (2022) and `20465334` (2023).
 - Failed fixed-test setup jobs `20464512`/`20464513` produced no result.
 
