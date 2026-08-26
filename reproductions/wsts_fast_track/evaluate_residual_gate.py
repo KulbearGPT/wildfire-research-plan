@@ -21,9 +21,13 @@ from .residual_gate import (
     LAST_BLOCK_PROTOTYPE_ID,
     PROTOTYPE_ID,
     SPATIAL_PROTOTYPE_ID,
+    TEACHER_BELIEF_KL_WEIGHT,
+    TEACHER_BELIEF_PROTOTYPE_ID,
+    TEACHER_BELIEF_RECONSTRUCTION_WEIGHT,
     FrozenLastBlockRouter,
     FrozenSpatialResidualGate,
     FrozenStochasticBeliefResidual,
+    FrozenTeacherPosteriorBelief,
 )
 
 
@@ -43,9 +47,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--adapt-last-block", action="store_true")
     parser.add_argument("--stochastic-belief", action="store_true")
+    parser.add_argument("--teacher-belief", action="store_true")
     args = parser.parse_args(argv)
-    if args.adapt_last_block and args.stochastic_belief:
-        raise ValueError("choose either last-block or stochastic-belief adaptation")
+    if sum((args.adapt_last_block, args.stochastic_belief, args.teacher_belief)) > 1:
+        raise ValueError("choose only one residual adaptation")
 
     p00_checkpoint = _checkpoint_from_record(
         args.p00_record,
@@ -60,7 +65,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         map_location="cpu",
         weights_only=False,
     )
-    if args.stochastic_belief:
+    if args.teacher_belief:
+        prototype_id = TEACHER_BELIEF_PROTOTYPE_ID
+        gate_type = "teacher-posterior-belief"
+        training_steps = BELIEF_TRAINING_STEPS
+    elif args.stochastic_belief:
         prototype_id = BELIEF_PROTOTYPE_ID
         gate_type = "stochastic-belief"
         training_steps = BELIEF_TRAINING_STEPS
@@ -94,7 +103,31 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=args.upstream_root,
         device=device,
     )
-    if args.stochastic_belief:
+    if args.teacher_belief:
+        gate = FrozenTeacherPosteriorBelief(
+            default_model, sample_count=BELIEF_SAMPLE_COUNT
+        )
+        required_heads = (
+            "posterior_head",
+            "prior_head",
+            "reconstruction_head",
+            "output_head",
+        )
+        if (
+            gate_payload.get("sample_count") != BELIEF_SAMPLE_COUNT
+            or gate_payload.get("learning_rate") != 1e-3
+            or gate_payload.get("kl_weight") != TEACHER_BELIEF_KL_WEIGHT
+            or gate_payload.get("reconstruction_weight")
+            != TEACHER_BELIEF_RECONSTRUCTION_WEIGHT
+            or any(
+                not isinstance(gate_payload.get(name), dict)
+                for name in required_heads
+            )
+        ):
+            raise ValueError("P08 checkpoint lacks its teacher-belief heads")
+        for name in required_heads:
+            getattr(gate, name).load_state_dict(gate_payload[name], strict=True)
+    elif args.stochastic_belief:
         gate = FrozenStochasticBeliefResidual(
             default_model, sample_count=BELIEF_SAMPLE_COUNT
         )

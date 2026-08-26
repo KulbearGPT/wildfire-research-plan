@@ -101,6 +101,36 @@ def install_training_processed_block_dropout(upstream_root: Path) -> None:
     dataset_class.preprocess_and_augment = preprocess_with_block
 
 
+def install_training_teacher_belief_dropout(upstream_root: Path) -> None:
+    """Emit corrupted+mask and the aligned clean teacher during P08 training."""
+
+    upstream = Path(upstream_root).resolve()
+    sys.path.insert(0, str(upstream))
+    sys.path.insert(0, str(upstream / "src"))
+    dataset_module = importlib.import_module("dataloader.FireSpreadDataset")
+    dataset_class = dataset_module.FireSpreadDataset
+    original_preprocess = dataset_class.preprocess_and_augment
+
+    def preprocess_with_teacher(self: Any, *args: Any, **kwargs: Any):
+        processed, target = original_preprocess(self, *args, **kwargs)
+        if getattr(self, "is_train", False) is not True:
+            mask = processed.new_zeros(
+                (processed.shape[0], 1, processed.shape[-2], processed.shape[-1])
+            )
+            return torch.cat((processed, mask), dim=1), target
+        fraction = 0.25 if float(np.random.random()) < 0.5 else 0.50
+        normalized_zero = float(-self.means[0, 22, 0, 0] / self.stds[0, 22, 0, 0])
+        routed, _ = apply_processed_block_dropout(
+            processed,
+            fraction=fraction,
+            key_digest=np.random.bytes(32).hex(),
+            normalized_active_fire_zero=normalized_zero,
+        )
+        return torch.cat((routed, processed), dim=1), target
+
+    dataset_class.preprocess_and_augment = preprocess_with_teacher
+
+
 class FrozenSpatialResidualGate(torch.nn.Module):
     """Add a minimal spatial correction to frozen P00 decoder features."""
 

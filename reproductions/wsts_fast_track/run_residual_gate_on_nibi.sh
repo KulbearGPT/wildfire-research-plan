@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -lt 1 || $# -gt 2 ]]; then
-  echo "usage: $0 P00_COMPLETED_RECORD [1|3|last|belief]" >&2
+  echo "usage: $0 P00_COMPLETED_RECORD [1|3|last|belief|teacher]" >&2
   exit 2
 fi
 
@@ -14,7 +14,8 @@ case "${gate_variant}" in
   3) prototype_label=P05-residual-gate-3x3; gate_args=(--residual-kernel-size 3) ;;
   last) prototype_label=P06-last-block-router; gate_args=(--adapt-last-block) ;;
   belief) prototype_label=P07-stochastic-belief; gate_args=(--stochastic-belief) ;;
-  *) echo "gate variant must be 1, 3, last, or belief" >&2; exit 2 ;;
+  teacher) prototype_label=P08-teacher-posterior-belief; gate_args=(--teacher-belief) ;;
+  *) echo "gate variant must be 1, 3, last, belief, or teacher" >&2; exit 2 ;;
 esac
 runner_path=$(realpath "${BASH_SOURCE[0]}")
 repo=$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)

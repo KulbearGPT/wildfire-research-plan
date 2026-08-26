@@ -24,10 +24,15 @@ from .residual_gate import (
     LAST_BLOCK_PROTOTYPE_ID,
     PROTOTYPE_ID,
     SPATIAL_PROTOTYPE_ID,
+    TEACHER_BELIEF_KL_WEIGHT,
+    TEACHER_BELIEF_PROTOTYPE_ID,
+    TEACHER_BELIEF_RECONSTRUCTION_WEIGHT,
     FrozenLastBlockRouter,
     FrozenSpatialResidualGate,
     FrozenStochasticBeliefResidual,
+    FrozenTeacherPosteriorBelief,
     install_training_processed_block_dropout,
+    install_training_teacher_belief_dropout,
 )
 
 
@@ -46,9 +51,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--adapt-last-block", action="store_true")
     parser.add_argument("--stochastic-belief", action="store_true")
+    parser.add_argument("--teacher-belief", action="store_true")
     args = parser.parse_args(argv)
-    if args.adapt_last_block and args.stochastic_belief:
-        raise ValueError("choose either last-block or stochastic-belief adaptation")
+    if sum((args.adapt_last_block, args.stochastic_belief, args.teacher_belief)) > 1:
+        raise ValueError("choose only one residual adaptation")
 
     upstream = args.upstream_root.resolve()
     data_root = args.data_root.resolve()
@@ -63,7 +69,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     stats = load_training_stats(args.stats_path)
     _install_runtime_contract(upstream, "C00", stats)
-    install_training_processed_block_dropout(upstream)
+    if args.teacher_belief:
+        install_training_teacher_belief_dropout(upstream)
+    else:
+        install_training_processed_block_dropout(upstream)
     dataset_class = importlib.import_module(
         "dataloader.FireSpreadDataset"
     ).FireSpreadDataset
@@ -103,7 +112,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=upstream,
         device=device,
     )
-    if args.stochastic_belief:
+    if args.teacher_belief:
+        gate = FrozenTeacherPosteriorBelief(
+            default_model, sample_count=BELIEF_SAMPLE_COUNT
+        ).to(device)
+        prototype_id = TEACHER_BELIEF_PROTOTYPE_ID
+        gate_type = "teacher-posterior-belief"
+        training_steps = BELIEF_TRAINING_STEPS
+        learning_rate = 1e-3
+    elif args.stochastic_belief:
         gate = FrozenStochasticBeliefResidual(
             default_model, sample_count=BELIEF_SAMPLE_COUNT
         ).to(device)
@@ -132,7 +149,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parameters = tuple(gate.trainable_parameters())
     trainable_parameter_count = sum(parameter.numel() for parameter in parameters)
     expected_parameter_count = (
-        4_945
+        14_465
+        if args.teacher_belief
+        else 4_945
         if args.stochastic_belief
         else (17 if args.residual_kernel_size == 1 else 145)
     )
@@ -144,6 +163,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     gate.train()
     iterator = iter(loader)
     final_loss = float("nan")
+    final_components: dict[str, float] | None = None
     for step in range(1, training_steps + 1):
         try:
             x, target = next(iterator)
@@ -153,13 +173,30 @@ def main(argv: Sequence[str] | None = None) -> int:
         x = x.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True).long()
         optimizer.zero_grad(set_to_none=True)
-        logits = gate(x).squeeze(1)
-        loss = gate.compute_loss(logits, target)
+        if args.teacher_belief:
+            loss, components, _ = gate.training_objective(x, target)
+            final_components = {
+                name: float(value.detach().cpu())
+                for name, value in components.items()
+            }
+        else:
+            logits = gate(x).squeeze(1)
+            loss = gate.compute_loss(logits, target)
         loss.backward()
         optimizer.step()
         final_loss = float(loss.detach().cpu())
         if step == 1 or step % 100 == 0:
-            print(f"GATE_STEP={step} LOSS={final_loss:.8f}", flush=True)
+            if final_components is None:
+                print(f"GATE_STEP={step} LOSS={final_loss:.8f}", flush=True)
+            else:
+                print(
+                    "GATE_STEP="
+                    f"{step} LOSS={final_loss:.8f} "
+                    f"FORECAST={final_components['forecast']:.8f} "
+                    f"KL={final_components['kl']:.8f} "
+                    f"RECONSTRUCTION={final_components['reconstruction']:.8f}",
+                    flush=True,
+                )
 
     output = args.output_path.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -179,7 +216,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "learning_rate": learning_rate,
         "final_loss": final_loss,
     }
-    if args.stochastic_belief:
+    if args.teacher_belief:
+        payload["sample_count"] = gate.sample_count
+        payload["kl_weight"] = TEACHER_BELIEF_KL_WEIGHT
+        payload["reconstruction_weight"] = TEACHER_BELIEF_RECONSTRUCTION_WEIGHT
+        payload["loss_components"] = final_components
+        payload["posterior_head"] = gate.posterior_head.state_dict()
+        payload["prior_head"] = gate.prior_head.state_dict()
+        payload["reconstruction_head"] = gate.reconstruction_head.state_dict()
+        payload["output_head"] = gate.output_head.state_dict()
+    elif args.stochastic_belief:
         payload["sample_count"] = gate.sample_count
         payload["belief_head"] = gate.belief_head.state_dict()
         payload["output_head"] = gate.output_head.state_dict()
