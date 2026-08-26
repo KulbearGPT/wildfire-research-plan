@@ -47,8 +47,9 @@ this probe succeeds.
 - Train only the belief and output heads on 2016--2020.
 - Use one fixed seed and the existing 25%/50% structured BlockDrop training
   corruption.
-- Use a short run, initially 1,000 steps like P04--P06. Extend once only if the
-  loss is still clearly descending and the result is close to useful.
+- Use one fixed 3,000-step run. The stochastic head has higher optimization
+  variance than P04--P06, whose single-batch losses were still noisy at step
+  1,000. Do not add early stopping or sweep intermediate checkpoints.
 - Select using 2021 M00, M01, M06, and M07.
 - Compare P07 with P00 and the existing deterministic residual result; no new
   baseline campaign is required.
