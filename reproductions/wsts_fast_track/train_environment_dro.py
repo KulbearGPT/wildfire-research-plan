@@ -16,6 +16,7 @@ from .entrypoint import TRAIN_YEARS, _install_runtime_contract, load_training_st
 from .environment_dro import (
     CORRECTED_ALPHA_PROTOTYPE_ID,
     ERM_PROTOTYPE_ID,
+    FIRE_ONLY_PROTOTYPE_ID,
     GROUP_COUNT,
     GROUP_DRO_STEP_SIZE,
     LEARNING_RATE,
@@ -33,12 +34,14 @@ from .prototype import (
     BLOCK_DROPOUT_PROBABILITY,
     BLOCK_PROTOTYPE_ID,
     FIRE_DROPOUT_PROBABILITY,
+    PROTOTYPE_ID as P00_ID,
 )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--p02-record", type=Path, required=True)
+    parser.add_argument("--p02-record", type=Path)
+    parser.add_argument("--p00-record", type=Path)
     parser.add_argument("--upstream-root", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
@@ -48,26 +51,44 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--objective", choices=("groupdro", "erm"), default="groupdro")
     parser.add_argument("--correct-focal-alpha", action="store_true")
+    parser.add_argument("--fire-only", action="store_true")
     args = parser.parse_args(argv)
     if args.correct_focal_alpha and args.objective != "erm":
         raise ValueError("corrected focal alpha is only registered for matched ERM")
+    if args.fire_only:
+        if args.objective != "erm" or args.correct_focal_alpha:
+            raise ValueError("FireDrop-only training requires legacy ERM")
+        if args.p00_record is None or args.p02_record is not None:
+            raise ValueError("FireDrop-only training requires only --p00-record")
+    elif args.p02_record is None or args.p00_record is not None:
+        raise ValueError("year-corruption training requires only --p02-record")
 
     upstream = args.upstream_root.resolve()
     data_root = args.data_root.resolve()
     validate_inventory(data_root)
-    p02_checkpoint = _checkpoint_from_record(
-        args.p02_record,
-        prototype_id=BLOCK_PROTOTYPE_ID,
-        training_policy={
-            "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
-            "block_dropout_probability": BLOCK_DROPOUT_PROBABILITY,
-            "block_fractions": [0.25, 0.5],
-            "training_only": True,
-        },
-    )
+    if args.fire_only:
+        base_checkpoint = _checkpoint_from_record(
+            args.p00_record,
+            prototype_id=P00_ID,
+            training_policy={
+                "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
+                "training_only": True,
+            },
+        )
+    else:
+        base_checkpoint = _checkpoint_from_record(
+            args.p02_record,
+            prototype_id=BLOCK_PROTOTYPE_ID,
+            training_policy={
+                "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
+                "block_dropout_probability": BLOCK_DROPOUT_PROBABILITY,
+                "block_fractions": [0.25, 0.5],
+                "training_only": True,
+            },
+        )
     stats = load_training_stats(args.stats_path)
     _install_runtime_contract(upstream, "C00", stats)
-    install_training_environment_groups(upstream)
+    install_training_environment_groups(upstream, fire_only=args.fire_only)
     dataset_class = importlib.import_module(
         "dataloader.FireSpreadDataset"
     ).FireSpreadDataset
@@ -108,7 +129,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         persistent_workers=args.num_workers > 0,
     )
     model = load_checkpoint_model(
-        p02_checkpoint,
+        base_checkpoint,
         experiment_id="C00",
         upstream_root=upstream,
         device=device,
@@ -184,17 +205,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         "schema_version": 1,
         "status": "pass",
         "prototype_id": (
-            CORRECTED_ALPHA_PROTOTYPE_ID
+            FIRE_ONLY_PROTOTYPE_ID
+            if args.fire_only
+            else CORRECTED_ALPHA_PROTOTYPE_ID
             if args.correct_focal_alpha
             else PROTOTYPE_ID if args.objective == "groupdro" else ERM_PROTOTYPE_ID
         ),
         "objective": args.objective,
         "focal_alpha_policy": "corrected-positive" if args.correct_focal_alpha else "legacy-disabled",
         "focal_alpha": focal_alpha,
-        "base_p02_record": str(args.p02_record.resolve(strict=True)),
-        "base_p02_checkpoint": str(p02_checkpoint),
+        "base_p00_record": (
+            str(args.p00_record.resolve(strict=True)) if args.fire_only else None
+        ),
+        "base_p00_checkpoint": str(base_checkpoint) if args.fire_only else None,
+        "base_p02_record": (
+            str(args.p02_record.resolve(strict=True)) if not args.fire_only else None
+        ),
+        "base_p02_checkpoint": str(base_checkpoint) if not args.fire_only else None,
         "train_years": list(TRAIN_YEARS),
-        "block_states": [0.0, 0.25, 0.5],
+        "block_states": [0.0] if args.fire_only else [0.0, 0.25, 0.5],
+        "corruption_policy": "fire-only" if args.fire_only else "year-block",
         "group_count": GROUP_COUNT,
         "steps": TRAINING_STEPS,
         "seed": 0,

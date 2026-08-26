@@ -12,11 +12,13 @@ import torch
 from .environment_dro import (
     CORRECTED_ALPHA_PROTOTYPE_ID,
     ERM_PROTOTYPE_ID,
+    FIRE_ONLY_PROTOTYPE_ID,
     GROUP_COUNT,
     GROUP_DRO_STEP_SIZE,
     LEARNING_RATE,
     PROTOTYPE_ID,
     TRAINING_STEPS,
+    p13_expert_policy,
 )
 from .evaluate_missingness import evaluate_batches, load_checkpoint_model, write_result_new
 from .evaluate_spatial_router import SCENARIOS, _checkpoint_from_record, router_evaluation_boundary
@@ -43,6 +45,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--dro-checkpoint", type=Path, required=True)
     parser.add_argument("--erm-checkpoint", type=Path)
     parser.add_argument("--corrected-alpha-checkpoint", type=Path)
+    parser.add_argument("--fire-only-checkpoint", type=Path)
     parser.add_argument("--reliability-router", action="store_true")
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--upstream-root", type=Path, required=True)
@@ -136,6 +139,30 @@ def main(argv: Sequence[str] | None = None) -> int:
             or not isinstance(corrected_payload.get("model_state"), dict)
         ):
             raise ValueError("invalid P12 corrected-alpha checkpoint")
+    fire_payload = None
+    if args.fire_only_checkpoint is not None:
+        if erm_payload is None:
+            raise ValueError("P13 routing requires --erm-checkpoint")
+        fire_payload = torch.load(
+            args.fire_only_checkpoint.resolve(strict=True),
+            map_location="cpu",
+            weights_only=False,
+        )
+        if (
+            not isinstance(fire_payload, dict)
+            or fire_payload.get("status") != "pass"
+            or fire_payload.get("prototype_id") != FIRE_ONLY_PROTOTYPE_ID
+            or fire_payload.get("objective") != "erm"
+            or fire_payload.get("focal_alpha_policy") != "legacy-disabled"
+            or fire_payload.get("corruption_policy") != "fire-only"
+            or fire_payload.get("block_states") != [0.0]
+            or fire_payload.get("steps") != TRAINING_STEPS
+            or fire_payload.get("learning_rate") != LEARNING_RATE
+            or fire_payload.get("group_dro_step_size") is not None
+            or fire_payload.get("base_p00_checkpoint") != str(p00_checkpoint)
+            or not isinstance(fire_payload.get("model_state"), dict)
+        ):
+            raise ValueError("invalid P13 FireDrop-only checkpoint")
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise ValueError("CUDA evaluation requested but unavailable")
@@ -171,6 +198,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             p02_checkpoint, experiment_id="C00", upstream_root=args.upstream_root, device=device
         )
         corrected_expert.load_state_dict(corrected_payload["model_state"], strict=True)
+    fire_expert = None
+    if fire_payload is not None:
+        fire_expert = load_checkpoint_model(
+            p00_checkpoint, experiment_id="C00", upstream_root=args.upstream_root, device=device
+        )
+        fire_expert.load_state_dict(fire_payload["model_state"], strict=True)
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=False)
 
@@ -181,6 +214,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         all_results["P11"] = {}
     if corrected_expert is not None:
         all_results["P12"] = {}
+    if fire_expert is not None:
+        all_results["P13"] = {}
     for scenario_id in SCENARIOS:
         dataset = build_controlled_dataset(
             upstream_root=args.upstream_root,
@@ -224,6 +259,18 @@ def main(argv: Sequence[str] | None = None) -> int:
                     ),
                 )
             )
+        if fire_expert is not None:
+            policy = p13_expert_policy(scenario_id)
+            p13_model = (
+                baseline
+                if policy == "default"
+                else ReliabilityExpertRouter(default_model, fire_expert, route_all=True)
+                if policy == "fire"
+                else SpatialExpertRouter(default_model, erm_expert)
+            )
+            scenario_models.append(
+                ("P13", FIRE_ONLY_PROTOTYPE_ID, p13_model)
+            )
         for label, prototype_id, model in scenario_models:
             metrics = evaluate_batches(model, loader, device=device)
             result = {
@@ -246,7 +293,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "mode": mode,
         "scientific_claim": scientific_claim,
         "prototype_id": (
-            CORRECTED_ALPHA_PROTOTYPE_ID
+            FIRE_ONLY_PROTOTYPE_ID
+            if fire_expert is not None
+            else CORRECTED_ALPHA_PROTOTYPE_ID
             if corrected_expert is not None
             else RELIABILITY_ROUTER_ID
             if args.reliability_router
@@ -263,6 +312,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "corrected_alpha_checkpoint": (
             str(args.corrected_alpha_checkpoint.resolve(strict=True))
             if args.corrected_alpha_checkpoint is not None
+            else None
+        ),
+        "fire_only_checkpoint": (
+            str(args.fire_only_checkpoint.resolve(strict=True))
+            if args.fire_only_checkpoint is not None
             else None
         ),
         "year": args.year,

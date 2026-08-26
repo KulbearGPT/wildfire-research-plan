@@ -197,7 +197,13 @@ and M06/M07 AP to `0.070432/0.061832`; precision collapsed while recall became
 extreme. P12 therefore failed its 2021 gate and was not evaluated on
 2022--2023. The next compact method hypothesis is a dedicated corrected-index
 FireDrop expert under the retained unweighted focal objective, not further
-tuning of the rejected prevalence-derived alpha on test feedback.
+tuning of the rejected prevalence-derived alpha on test feedback. P13 starts
+from P00 and changes only its exposure to corrected-index, balanced 2016--2020
+FireDrop ERM for 3,000 steps. Its frozen router uses P00 for M00, P13 for M01,
+and P10 for M06/M07. The 2021 gate requires exact P00 M00, exact P10 M06/M07,
+and M01 AP above P00. Failure closes this engineering branch; success supports
+the later latent-state design but is not treated as the final method. Only a
+passing frozen P13 may be reported on 2022--2023.
 
 **Question:** Does explicit reliability conditioning improve robustness beyond
 simple filling, validity masks, uniform fusion, reconstruction, capacity, and

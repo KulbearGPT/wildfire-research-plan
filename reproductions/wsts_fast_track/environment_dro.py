@@ -21,11 +21,28 @@ from .prototype import (
 PROTOTYPE_ID = "P09-YearCorruptionGroupDRO"
 ERM_PROTOTYPE_ID = "P10-YearBalancedERM"
 CORRECTED_ALPHA_PROTOTYPE_ID = "P12-CorrectedFocalAlphaERM"
+FIRE_ONLY_PROTOTYPE_ID = "P13-CorrectedIndexFireDropERM"
 BLOCK_STATES = (0, 1, 2)
 GROUP_COUNT = len(TRAIN_YEARS) * len(BLOCK_STATES)
 TRAINING_STEPS = 3_000
 LEARNING_RATE = 1e-4
 GROUP_DRO_STEP_SIZE = 0.1
+
+
+def training_block_states(*, fire_only: bool) -> tuple[int, ...]:
+    """Return the registered block states for a training corruption policy."""
+
+    return (0,) if fire_only else BLOCK_STATES
+
+
+def p13_expert_policy(scenario_id: str) -> str:
+    """Select the frozen expert used by the P13 diagnostic router."""
+
+    policy = {"M00": "default", "M01": "fire", "M06": "block", "M07": "block"}
+    try:
+        return policy[scenario_id]
+    except KeyError as error:
+        raise ValueError(f"unsupported P13 scenario: {scenario_id}") from error
 
 
 def corrected_focal_alpha(positive_weight: float) -> float:
@@ -136,7 +153,9 @@ def group_dro_objective(
     return objective, reported, weights.detach().clone()
 
 
-def install_training_environment_groups(upstream_root: Path) -> None:
+def install_training_environment_groups(
+    upstream_root: Path, *, fire_only: bool = False
+) -> None:
     """Patch training samples with uniform block state and a 15-group ID."""
 
     upstream = Path(upstream_root).resolve()
@@ -146,6 +165,7 @@ def install_training_environment_groups(upstream_root: Path) -> None:
     dataset_class = dataset_module.FireSpreadDataset
     original_load_imgs = dataset_class.load_imgs
     original_getitem = dataset_class.__getitem__
+    block_states = training_block_states(fire_only=fire_only)
 
     def load_imgs_with_environment(
         self: Any,
@@ -159,7 +179,11 @@ def install_training_environment_groups(upstream_root: Path) -> None:
         if getattr(self, "is_train", False) is not True or found_fire_year not in TRAIN_YEARS:
             self._environment_group_id = None
             return loaded
-        block_state = int(np.random.randint(0, len(BLOCK_STATES)))
+        block_state = (
+            block_states[0]
+            if len(block_states) == 1
+            else int(np.random.randint(0, len(block_states)))
+        )
         self._environment_group_id = environment_group(
             int(found_fire_year), block_state
         )

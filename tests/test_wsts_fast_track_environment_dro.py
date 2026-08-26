@@ -73,3 +73,17 @@ def test_corrected_focal_alpha_weights_the_positive_class() -> None:
     assert corrected_focal_alpha(0.9) == 0.9
     raw_weight = 761.0785701324623
     assert corrected_focal_alpha(raw_weight) == raw_weight / (1.0 + raw_weight)
+
+
+def test_fire_only_training_disables_block_corruption() -> None:
+    from reproductions.wsts_fast_track.environment_dro import (
+        p13_expert_policy,
+        training_block_states,
+    )
+
+    assert training_block_states(fire_only=True) == (0,)
+    assert training_block_states(fire_only=False) == (0, 1, 2)
+    assert p13_expert_policy("M00") == "default"
+    assert p13_expert_policy("M01") == "fire"
+    assert p13_expert_policy("M06") == "block"
+    assert p13_expert_policy("M07") == "block"
