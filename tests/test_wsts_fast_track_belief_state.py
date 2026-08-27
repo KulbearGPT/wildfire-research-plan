@@ -84,4 +84,33 @@ def test_attention_state_is_history_matched_and_missing_fire_invariant() -> None
 
 
 # Reconstruction baseline
+def test_reconstruction_baseline_uses_state_loss_and_preserves_m00() -> None:
+    from reproductions.wsts_fast_track.latent_state_common import (
+        masked_unweighted_focal,
+        pack_observations,
+    )
+    from reproductions.wsts_fast_track.reconstruction_baseline import (
+        ReconstructionFirstBeliefState,
+    )
+
+    for history in (1, 5):
+        features = torch.randn((2, history, 40, 16, 16))
+        reliability = torch.ones((2, history, 1, 16, 16))
+        model = ReconstructionFirstBeliefState(_TinyDefault(), history)
+        assert torch.equal(
+            model(pack_observations(features, reliability)),
+            model.default_model(features[:, -1:]),
+        )
+        reliability[:, -1, :, :8] = 0
+        _, state_logits, _ = model.forward_state(pack_observations(features, reliability))
+        loss = masked_unweighted_focal(
+            state_logits, features[:, -1, 39:40], ~reliability[:, -1].bool()
+        )
+        loss.backward()
+        assert all(
+            p.grad is not None and torch.isfinite(p.grad).all()
+            for p in model.trainable_parameters()
+        )
+
+
 # Unified integration
