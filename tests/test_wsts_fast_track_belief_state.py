@@ -47,5 +47,41 @@ def test_common_contract_preserves_observations_and_masks_state_loss() -> None:
 
 # Recurrent filter
 # Temporal attention
+def test_attention_state_is_history_matched_and_missing_fire_invariant() -> None:
+    from reproductions.wsts_fast_track.latent_state_common import pack_observations
+    from reproductions.wsts_fast_track.state_attention import TemporalAttentionBeliefState
+
+    one = TemporalAttentionBeliefState(_TinyDefault(), 1)
+    five = TemporalAttentionBeliefState(_TinyDefault(), 5)
+    assert sum(p.numel() for p in one.trainable_parameters()) == sum(
+        p.numel() for p in five.trainable_parameters()
+    )
+    features = torch.randn((2, 5, 40, 12, 12))
+    reliability = torch.zeros((2, 5, 1, 12, 12))
+    changed = features.clone()
+    changed[:, :, 38:40] = 1000.0
+    torch.testing.assert_close(
+        five.infer_state_logits(features, reliability),
+        five.infer_state_logits(changed, reliability),
+    )
+    weights = five.attention_weights(features, reliability)
+    assert weights.shape == (2, 6, 12, 12)
+    assert torch.isfinite(weights).all()
+    torch.testing.assert_close(weights.sum(1), torch.ones_like(weights[:, 0]))
+    reliability[:, :-1] = 1
+    forecast = five(pack_observations(features, reliability))
+    forecast.mean().backward()
+    assert all(
+        p.grad is not None and torch.isfinite(p.grad).all()
+        for p in five.trainable_parameters()
+    )
+
+    reliability.fill_(1)
+    assert torch.equal(
+        five(pack_observations(features, reliability)),
+        five.default_model(features[:, -1:]),
+    )
+
+
 # Reconstruction baseline
 # Unified integration
