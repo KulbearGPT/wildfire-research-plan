@@ -46,6 +46,27 @@ def test_common_contract_preserves_observations_and_masks_state_loss() -> None:
 
 
 # Recurrent filter
+def test_recurrent_filter_supports_both_histories_and_keeps_m00_exact() -> None:
+    from reproductions.wsts_fast_track.latent_state_common import pack_observations
+    from reproductions.wsts_fast_track.state_filter import RecurrentBeliefFilter
+
+    for history in (1, 5):
+        features = torch.randn((2, history, 40, 16, 16))
+        reliability = torch.ones((2, history, 1, 16, 16))
+        model = RecurrentBeliefFilter(_TinyDefault(), history)
+        forecast, state_logits, state = model.forward_state(
+            pack_observations(features, reliability)
+        )
+        assert state_logits.shape == state.shape == (2, 1, 16, 16)
+        assert torch.equal(forecast, model.default_model(features[:, -1:]))
+        reliability[:, -1, :, :8] = 0
+        model(pack_observations(features, reliability)).mean().backward()
+        assert all(
+            parameter.grad is not None and torch.isfinite(parameter.grad).all()
+            for parameter in model.trainable_parameters()
+        )
+
+
 # Temporal attention
 def test_attention_state_is_history_matched_and_missing_fire_invariant() -> None:
     from reproductions.wsts_fast_track.latent_state_common import pack_observations
