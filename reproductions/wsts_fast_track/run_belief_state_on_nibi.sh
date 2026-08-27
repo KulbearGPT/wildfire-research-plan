@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 3 ]]; then
-  echo "usage: $0 P00_COMPLETED_RECORD {filter|attention|reconstruction} {1|5}" >&2
+if [[ $# -ne 3 && $# -ne 5 ]]; then
+  echo "usage: $0 P00_COMPLETED_RECORD {filter|attention|reconstruction} {1|5} [BATCH_SIZE ACCUMULATION_STEPS]" >&2
   exit 2
 fi
 
@@ -11,6 +11,8 @@ fi
 p00_record=$(realpath "$1")
 method=$2
 history=$3
+batch_size=${4:-64}
+accumulation_steps=${5:-1}
 case "${method}" in
   filter|attention|reconstruction) ;;
   *) echo "method must be filter, attention, or reconstruction" >&2; exit 2 ;;
@@ -19,6 +21,15 @@ case "${history}" in
   1|5) ;;
   *) echo "history must be 1 or 5" >&2; exit 2 ;;
 esac
+if [[ "${batch_size}:${accumulation_steps}" != "64:1" && \
+      "${batch_size}:${accumulation_steps}" != "32:2" ]]; then
+  echo "batch/accumulation must be 64/1 or the bounded OOM fallback 32/2" >&2
+  exit 2
+fi
+if [[ "${batch_size}:${accumulation_steps}" == "32:2" && "${history}" != "5" ]]; then
+  echo "the 32/2 OOM fallback is restricted to history 5" >&2
+  exit 2
+fi
 
 runner_path=$(realpath "${BASH_SOURCE[0]}")
 repo=$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)
@@ -70,6 +81,8 @@ python -m reproductions.wsts_fast_track.train_belief_state \
   --stats-path "${stats}" \
   --output-path "${belief_checkpoint}" \
   --git-commit "${commit}" \
+  --batch-size "${batch_size}" \
+  --accumulation-steps "${accumulation_steps}" \
   --device cuda 2>&1 | tee "${run_root}/training.log"
 
 python -m reproductions.wsts_fast_track.evaluate_belief_state \
