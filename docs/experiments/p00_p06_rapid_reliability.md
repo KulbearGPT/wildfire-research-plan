@@ -300,6 +300,22 @@ and reconstruction `20670988`, using batch 32, four workers, 64 GB host memory,
 and separate `results-2021-directcrop-b32-w4` directories. They were initially
 pending for priority.
 
+Review found the first direct-crop test used spatially constant planes. The
+test-only follow-up `6e28efa` encodes row/column position and compares raw,
+target, and stale reads against the old materialized oracle for larger, equal,
+and single-axis-smaller images. CPU Slurm job `20671057` passed all nine related
+cases, and the focused re-review approved the fix.
+
+Direct-crop attention job `20670987` completed with M00 exact and APs
+`0.585323/0.265400/0.316956/0.130732` for M00/M01/M06/M07. Its corrupted AP
+deltas were `-0.034065/-0.000050/+0.001556`; mean delta `-0.010853` and only
+one improved scenario make the frozen screen fail. Filter `20670986` completed
+M00/M01 before host OOM in M06, while reconstruction `20670988` OOMed during
+the M00 P00 traversal. Their checkpoints remain valid. Only these two failed
+evaluations were resubmitted, using direct-crop, batch 8, no workers, and 256 GB
+host memory: filter `20671736` and reconstruction `20671737`. Both were
+immediately running on `g31`; no training or metric definition changed.
+
 Status is **running**. One immediate scheduler inspection after the first
 six-job replacement submission showed three jobs running on GPU compute nodes
 and three waiting only for the per-user QoS concurrency limit. No dataset,
