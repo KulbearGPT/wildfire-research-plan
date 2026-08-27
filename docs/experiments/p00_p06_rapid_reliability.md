@@ -235,9 +235,23 @@ the runner and scientific protocol unchanged.
 | reconstruction | 1 | `20655227` | `prototype-fire-belief-reconstruction-t1-20655227` | `PD` `(QOSMaxJobsPerUserLimit)` |
 | reconstruction | 5 | `20655228` | `prototype-fire-belief-reconstruction-t5-20655228` | `PD` `(QOSMaxJobsPerUserLimit)` |
 
-Status is **running/pending**. One immediate scheduler inspection after the
-replacement submission showed three jobs running on GPU compute nodes and
-three waiting only for the per-user QoS concurrency limit. No dataset,
+At the first coarse monitor, filter T=1 (`20655223`) and attention T=1
+(`20655225`) completed, while their T=5 counterparts `20655224` and `20655226`
+were killed for GPU memory before evaluation. The pre-registered bounded
+fallback was implemented in `c8ae91f`: only T=5 may change from physical batch
+64/accumulation 1 to physical batch 32/accumulation 2, preserving effective
+batch 64 and every scientific setting. A one-core CPU Slurm job, `20657191`,
+validated the runner syntax and diff before the commit. Only the two failed
+configurations were resubmitted:
+
+| Method | History | Replacement job | Physical batch / accumulation | Immediate state |
+|---|---:|---:|---:|---|
+| filter | 5 | `20657718` | `32 / 2` | `R` on `g31` |
+| attention | 5 | `20657719` | `32 / 2` | `R` on `g32` |
+
+Status is **running**. One immediate scheduler inspection after the first
+six-job replacement submission showed three jobs running on GPU compute nodes
+and three waiting only for the per-user QoS concurrency limit. No dataset,
 checkpoint, trainer, evaluator, CUDA probe, test, or scientific result was
 accessed on the login node; it performed only permitted read-only input and
 failure checks, `sbatch` submissions, scheduler inspection, and this
