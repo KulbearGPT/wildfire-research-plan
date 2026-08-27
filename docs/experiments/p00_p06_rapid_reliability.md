@@ -316,6 +316,16 @@ evaluations were resubmitted, using direct-crop, batch 8, no workers, and 256 GB
 host memory: filter `20671736` and reconstruction `20671737`. Both were
 immediately running on `g31`; no training or metric definition changed.
 
+Those two processes each completed exact M00 but exhausted 256 GB while moving
+to the next scenario, confirming cross-scenario retained memory rather than a
+single-scenario requirement. Commit `86a8abf` adds only a bounded `--scenario`
+evaluation mode; CPU Slurm RED/GREEN jobs `20675333` and `20675624` verify its
+selection contract. M00 is reused, and the six remaining isolated evaluations
+are filter M01/M06/M07 `20675921/20675922/20675923` and reconstruction
+M01/M06/M07 `20675924/20675925/20675926`. Each uses the same checkpoint,
+direct-crop evaluator, batch 8, no workers, and 256 GB; all were initially
+pending for priority.
+
 Status is **running**. One immediate scheduler inspection after the first
 six-job replacement submission showed three jobs running on GPU compute nodes
 and three waiting only for the per-user QoS concurrency limit. No dataset,
