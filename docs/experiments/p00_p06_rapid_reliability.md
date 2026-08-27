@@ -182,7 +182,7 @@ in favor of explicit latent fire-state inference.
 | 2022 | 0.163668 | 0.161609 | -0.002058 |
 | 2023 | 0.136357 | 0.156285 | +0.019928 |
 
-## Fire belief-state 2021 screen — submitted
+## Fire belief-state 2021 screen — resubmitted after launch-only failure
 
 This is a separate, frozen follow-up to the completed P00--P13 engineering
 branch. The approved design is `2e9bf3c` and the execution plan is `b560075`.
@@ -218,23 +218,32 @@ The submissions were made independently on account `def-vislearn_gpu`, QoS
 and a one-hour limit. The intended run roots were absent before submission
 because their scheduler IDs were newly allocated.
 
-| Method | History | Slurm job | Intended run root | Immediate acceptance state |
-|---|---:|---:|---|---|
-| filter | 1 | `20653449` | `prototype-fire-belief-filter-t1-20653449` | `PD` `(Priority)` |
-| filter | 5 | `20653450` | `prototype-fire-belief-filter-t5-20653450` | `PD` `(Priority)` |
-| attention | 1 | `20653451` | `prototype-fire-belief-attention-t1-20653451` | `PD` `(Priority)` |
-| attention | 5 | `20653452` | `prototype-fire-belief-attention-t5-20653452` | `PD` `(Priority)` |
-| reconstruction | 1 | `20653453` | `prototype-fire-belief-reconstruction-t1-20653453` | `PD` `(Priority)` |
-| reconstruction | 5 | `20653454` | `prototype-fire-belief-reconstruction-t5-20653454` | `PD` `(Priority)` |
+The first submission (`20653449`--`20653454`) never reached training. All six
+jobs terminated at runner startup because `SLURM_SUBMIT_DIR` inherited
+`/scratch/kulbear`, which is not a Git repository; consequently no model,
+dataset, checkpoint, or evaluation was loaded and no scientific result was
+produced. This was a submission-context error rather than a code or compute
+failure. The jobs were resubmitted from the immutable worktree itself, leaving
+the runner and scientific protocol unchanged.
 
-Status is **pending**. The only immediate scheduler inspection was one
-post-submission `squeue` acceptance check, which showed all six jobs pending
-for priority. No dataset, checkpoint, trainer, evaluator, CUDA probe, test, or
-scientific result was accessed on the login node; it performed only the
-permitted read-only input checks, `sbatch` submissions, that single scheduler
-inspection, and this documentation update. The 2021 screen and any
-promote/stop decision remain deliberately unmade until the submitted compute
-jobs produce terminal evidence.
+| Method | History | Replacement job | Intended run root | Immediate acceptance state |
+|---|---:|---:|---|---|
+| filter | 1 | `20655223` | `prototype-fire-belief-filter-t1-20655223` | `R` on `g32` |
+| filter | 5 | `20655224` | `prototype-fire-belief-filter-t5-20655224` | `R` on `g32` |
+| attention | 1 | `20655225` | `prototype-fire-belief-attention-t1-20655225` | `R` on `g35` |
+| attention | 5 | `20655226` | `prototype-fire-belief-attention-t5-20655226` | `PD` `(QOSMaxJobsPerUserLimit)` |
+| reconstruction | 1 | `20655227` | `prototype-fire-belief-reconstruction-t1-20655227` | `PD` `(QOSMaxJobsPerUserLimit)` |
+| reconstruction | 5 | `20655228` | `prototype-fire-belief-reconstruction-t5-20655228` | `PD` `(QOSMaxJobsPerUserLimit)` |
+
+Status is **running/pending**. One immediate scheduler inspection after the
+replacement submission showed three jobs running on GPU compute nodes and
+three waiting only for the per-user QoS concurrency limit. No dataset,
+checkpoint, trainer, evaluator, CUDA probe, test, or scientific result was
+accessed on the login node; it performed only permitted read-only input and
+failure checks, `sbatch` submissions, scheduler inspection, and this
+documentation update. The 2021 screen and any promote/stop decision remain
+deliberately unmade until the replacement compute jobs produce terminal
+evidence.
 
 ## Fixed temporal test comparison
 
