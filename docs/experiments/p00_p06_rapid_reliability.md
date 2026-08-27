@@ -252,6 +252,19 @@ fallback only after its own OOM terminal state:
 | attention | 5 | `20657719` | `32 / 2` | `R` on `g32` |
 | reconstruction | 5 | `20659132` | `32 / 2` | `R` on `g31` |
 
+The first two fallback jobs reached only steps 1500--1600 after about 32
+minutes, so the one-hour limit could not cover 3,000 steps plus evaluation.
+Nibi denied an in-place time-limit extension. Jobs `20657718`, `20657719`, and
+the newly started `20659132` were therefore cancelled before their predictable
+timeouts and replaced immediately with the same committed code and exact
+scientific configuration, changing only the resource wall time to two hours:
+
+| Method | History | Final replacement job | Physical batch / accumulation | Immediate state |
+|---|---:|---:|---:|---|
+| filter | 5 | `20659221` | `32 / 2` | `R` on `g33` |
+| attention | 5 | `20659234` | `32 / 2` | `R` on `g30` |
+| reconstruction | 5 | `20659235` | `32 / 2` | `R` on `g33` |
+
 Status is **running**. One immediate scheduler inspection after the first
 six-job replacement submission showed three jobs running on GPU compute nodes
 and three waiting only for the per-user QoS concurrency limit. No dataset,
