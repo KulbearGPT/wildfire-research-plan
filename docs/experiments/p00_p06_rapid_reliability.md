@@ -288,6 +288,18 @@ examples or metrics: filter `20666788`, attention `20666789`, and reconstruction
 `20666790`. Each writes to its own `results-2021-b8-w0` directory; all three
 were initially pending for priority.
 
+All three worker-free jobs still exhausted 128 GB. Static diagnosis found the
+actual cause: controlled evaluation materialized each full-resolution T-day
+HDF5 slice before applying the 128-pixel center crop. Commit `b75380c` moves
+that identical center slice into the HDF5 read and retains the old padding path
+for images smaller than the crop. Focused CPU Slurm RED job `20669325` failed
+before the helper existed; GREEN job `20670008` passed four targeted crop,
+spatial-mask, and T=1/T=5 population cases. The three existing checkpoints are
+now evaluated without retraining by filter `20670986`, attention `20670987`,
+and reconstruction `20670988`, using batch 32, four workers, 64 GB host memory,
+and separate `results-2021-directcrop-b32-w4` directories. They were initially
+pending for priority.
+
 Status is **running**. One immediate scheduler inspection after the first
 six-job replacement submission showed three jobs running on GPU compute nodes
 and three waiting only for the per-user QoS concurrency limit. No dataset,
