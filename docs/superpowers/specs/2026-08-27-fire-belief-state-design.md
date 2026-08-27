@@ -1,7 +1,7 @@
 # Observation-Consistent Fire Belief-State Prototype Design
 
-**Date:** 2026-08-27  
-**Status:** Approved design, implementation not started  
+**Date:** 2026-08-27
+**Status:** Approved design, implementation not started
 **Scope:** Six fast prototypes: three state-inference directions crossed with
 `T=1` and `T=5`
 
