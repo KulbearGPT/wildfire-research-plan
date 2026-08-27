@@ -182,6 +182,60 @@ in favor of explicit latent fire-state inference.
 | 2022 | 0.163668 | 0.161609 | -0.002058 |
 | 2023 | 0.136357 | 0.156285 | +0.019928 |
 
+## Fire belief-state 2021 screen — submitted
+
+This is a separate, frozen follow-up to the completed P00--P13 engineering
+branch. The approved design is `2e9bf3c` and the execution plan is `b560075`.
+The immutable implementation lineage is `eaad31f` (common data/state
+contract), `7965c44` (temporal attention), `33a1bc6` (reconstruction-first),
+`9102655` (recurrent filter), `71cc582` (matched trainer/evaluator/runner
+integration), and `baaa62c` (crop-leakage fix). All six submissions use the
+clean immutable worktree
+`/scratch/kulbear/wildfire-research-plan/.worktrees/belief-submit` at
+`baaa62c`.
+
+The frozen P00 input is
+`/project/6085198/kulbear/wildfire/runs/prototype-P00-FireDrop-C00-20398173/completed.json`.
+The protocol crosses recurrent `filter`, temporal `attention`, and
+`reconstruction`-first state proposals with history `T=1` and `T=5`. It keeps
+the corrected resolver, inverse-year sampler, seed 0, 3,000 steps, effective
+batch 64, AdamW `1e-3`, the frozen P00 Res18-U-Net spread predictor, and the
+2021 M00/M01/M06/M07 evaluation fixed. The active-fire observation correction
+preserves valid pixels exactly; `T=1` and `T=5` predict the same sixth-day
+target. Training corruption is the uniform M01/M06/M07 choice after one shared
+crop/augmentation. Filter and attention use forecast plus `0.1` state loss;
+reconstruction uses state loss only.
+
+The final implementation fix is material to this protocol: its
+target-independent augmentation chooses crop geometry without ranking candidate
+crops by the target, carries the target through the selected geometric
+transform, and uses `drop_last=True` so every optimizer microbatch has the
+configured physical size. The focused CPU verification jobs recorded for this
+implementation are `20651743`, `20652580`, and `20653344`.
+
+The submissions were made independently on account `def-vislearn_gpu`, QoS
+`interac`, with one `nvidia_h100_80gb_hbm3_3g.40gb` slice, eight CPUs, 32 GB,
+and a one-hour limit. The intended run roots were absent before submission
+because their scheduler IDs were newly allocated.
+
+| Method | History | Slurm job | Intended run root | Immediate acceptance state |
+|---|---:|---:|---|---|
+| filter | 1 | `20653449` | `prototype-fire-belief-filter-t1-20653449` | `PD` `(Priority)` |
+| filter | 5 | `20653450` | `prototype-fire-belief-filter-t5-20653450` | `PD` `(Priority)` |
+| attention | 1 | `20653451` | `prototype-fire-belief-attention-t1-20653451` | `PD` `(Priority)` |
+| attention | 5 | `20653452` | `prototype-fire-belief-attention-t5-20653452` | `PD` `(Priority)` |
+| reconstruction | 1 | `20653453` | `prototype-fire-belief-reconstruction-t1-20653453` | `PD` `(Priority)` |
+| reconstruction | 5 | `20653454` | `prototype-fire-belief-reconstruction-t5-20653454` | `PD` `(Priority)` |
+
+Status is **pending**. The only immediate scheduler inspection was one
+post-submission `squeue` acceptance check, which showed all six jobs pending
+for priority. No dataset, checkpoint, trainer, evaluator, CUDA probe, test, or
+scientific result was accessed on the login node; it performed only the
+permitted read-only input checks, `sbatch` submissions, that single scheduler
+inspection, and this documentation update. The 2021 screen and any
+promote/stop decision remain deliberately unmade until the submitted compute
+jobs produce terminal evidence.
+
 ## Fixed temporal test comparison
 
 | Year | Scenario | P00 AP | P03 AP | P09 AP | P10 AP | P10 minus P00 | P10 minus P09 |
