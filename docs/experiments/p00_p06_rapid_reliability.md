@@ -272,6 +272,13 @@ was repeated. Eval-only job `20662156` runs the archived project and checkpoint
 with batch 8 into the new non-overwriting `results-2021-b8` directory; all
 metric definitions and samples remain unchanged.
 
+The first eval-only attempt also terminated before a scenario: `MaxRSS` reached
+the 32 GB allocation and the traceback identified a killed DataLoader worker,
+confirming host-memory rather than GPU-memory pressure. Its replacement,
+`20663826`, keeps batch 8, reduces workers from 8 to 2, requests 64 GB host
+memory, and writes to `results-2021-b8-w2`. No checkpoint or metric setting is
+changed.
+
 Status is **running**. One immediate scheduler inspection after the first
 six-job replacement submission showed three jobs running on GPU compute nodes
 and three waiting only for the per-user QoS concurrency limit. No dataset,
