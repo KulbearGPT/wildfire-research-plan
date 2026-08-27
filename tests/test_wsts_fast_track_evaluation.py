@@ -123,6 +123,21 @@ def test_spatial_fraction_is_exact_on_the_model_visible_center_crop(
     assert x.shape[-2:] == (8, 8)
 
 
+def test_hdf5_center_crop_matches_materialized_crop_without_full_read(
+    tmp_path: Path,
+) -> None:
+    path = _event(tmp_path, height=14, width=12)
+    with h5py.File(path, "r") as handle:
+        data = handle["data"]
+        selection = (slice(1, 6), slice(None))
+        expected = evaluation._center_crop_last_two(
+            np.asarray(data[selection], dtype=np.float32), 8
+        )
+        actual = evaluation._read_center_crop(data, selection, 8)
+
+    np.testing.assert_array_equal(actual, expected)
+
+
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [

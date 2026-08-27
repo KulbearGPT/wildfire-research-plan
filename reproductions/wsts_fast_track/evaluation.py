@@ -54,6 +54,29 @@ def _center_crop_last_two(values: np.ndarray, side: int) -> np.ndarray:
     return np.asarray(array[..., top : top + side, left : left + side]).copy()
 
 
+def _read_center_crop(
+    dataset: h5py.Dataset,
+    selection: tuple[object, ...],
+    side: int,
+) -> np.ndarray:
+    """Read only the model-visible center crop from one HDF5 dataset."""
+
+    height, width = dataset.shape[-2:]
+    if height < side or width < side:
+        return _center_crop_last_two(
+            np.asarray(dataset[selection], dtype=np.float32), side
+        )
+    top = int(round((height - side) / 2.0))
+    left = int(round((width - side) / 2.0))
+    spatial_selection = (
+        slice(top, top + side),
+        slice(left, left + side),
+    )
+    return np.asarray(
+        dataset[selection + spatial_selection], dtype=np.float32
+    ).copy()
+
+
 class ControlledMissingnessDataset:
     """Wrap the pinned upstream dataset and corrupt raw inputs before preprocessing."""
 
@@ -137,27 +160,32 @@ class ControlledMissingnessDataset:
     ) -> tuple[CorruptionResult, np.ndarray]:
         path = self.data_root / descriptor.event_relative_path
         history = self.base.n_leading_observations
+        crop_side = self.base.crop_side_length
         with h5py.File(path, "r") as handle:
             data = handle["data"]
-            raw = np.asarray(
-                data[descriptor.raw_start_index : descriptor.target_index],
-                dtype=np.float32,
+            raw = _read_center_crop(
+                data,
+                (
+                    slice(descriptor.raw_start_index, descriptor.target_index),
+                    slice(None),
+                ),
+                crop_side,
             )
-            target = np.asarray(data[descriptor.target_index, -1], dtype=np.float32)
+            target = _read_center_crop(
+                data,
+                (descriptor.target_index, -1),
+                crop_side,
+            )
             stale = None
             if self.scenario_id == "M02":
                 stale_start = descriptor.raw_start_index - 1
                 if stale_start < 0:
                     raise ValueError("M02 predecessor is unavailable")
-                stale = np.asarray(
-                    data[stale_start : stale_start + history, -1],
-                    dtype=np.float32,
+                stale = _read_center_crop(
+                    data,
+                    (slice(stale_start, stale_start + history), -1),
+                    crop_side,
                 )
-        crop_side = self.base.crop_side_length
-        raw = _center_crop_last_two(raw, crop_side)
-        target = _center_crop_last_two(target, crop_side)
-        if stale is not None:
-            stale = _center_crop_last_two(stale, crop_side)
         corruption = apply_corruption(
             raw,
             self.scenario_id,
