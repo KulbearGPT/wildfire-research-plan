@@ -182,7 +182,7 @@ in favor of explicit latent fire-state inference.
 | 2022 | 0.163668 | 0.161609 | -0.002058 |
 | 2023 | 0.136357 | 0.156285 | +0.019928 |
 
-## Fire belief-state 2021 screen — resubmitted after launch-only failure
+## Fire belief-state 2021 screen — complete, no promotion
 
 This is a separate, frozen follow-up to the completed P00--P13 engineering
 branch. The approved design is `2e9bf3c` and the execution plan is `b560075`.
@@ -326,15 +326,39 @@ M01/M06/M07 `20675924/20675925/20675926`. Each uses the same checkpoint,
 direct-crop evaluator, batch 8, no workers, and 256 GB; all were initially
 pending for priority.
 
-Status is **running**. One immediate scheduler inspection after the first
-six-job replacement submission showed three jobs running on GPU compute nodes
-and three waiting only for the per-user QoS concurrency limit. No dataset,
-checkpoint, trainer, evaluator, CUDA probe, test, or scientific result was
-accessed on the login node; it performed only permitted read-only input and
-failure checks, `sbatch` submissions, scheduler inspection, and this
-documentation update. The 2021 screen and any promote/stop decision remain
-deliberately unmade until the replacement compute jobs produce terminal
-evidence.
+All six isolated jobs completed. CPU metadata job `20676758` read only the six
+small checkpoint records and confirmed the trainable parameter counts below.
+Mean delta is the mean M01/M06/M07 AP change against the P00 result evaluated
+in the same route. A/B minus C compares corrupted-scenario mean AP with the
+matched reconstruction baseline at the same history.
+
+| Method | T | Trainable params | Final loss | M00 AP / exact | M01 AP | M06 AP | M07 AP | Mean delta | A/B minus C | Screen |
+|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---|
+| filter | 1 | 391,745 | 0.003879 | 0.585322 / yes | 0.260952 | 0.316738 | 0.131167 | -0.012264 | +0.019116 | fail |
+| filter | 5 | 391,745 | 0.012004 | 0.585321 / yes | 0.255844 | 0.317777 | 0.133643 | -0.012794 | +0.013886 | fail |
+| attention | 1 | 1,521 | 0.006301 | 0.585322 / yes | 0.274733 | 0.316787 | 0.130474 | -0.007884 | +0.023496 | fail |
+| attention | 5 | 1,521 | 0.010850 | 0.585323 / yes | 0.265400 | 0.316956 | 0.130732 | -0.010853 | +0.015828 | fail |
+| reconstruction | 1 | 391,889 | 0.004719 | 0.585322 / yes | 0.206976 | 0.315143 | 0.129389 | -0.031380 | -- | fail |
+| reconstruction | 5 | 412,625 | 0.010589 | 0.585321 / yes | 0.220937 | 0.315243 | 0.129423 | -0.026680 | -- | fail |
+
+Filter and attention exceed their matched reconstruction controls, so the
+learned task-oriented state heads contain more useful signal than explicit
+reconstruction alone. That relative result is insufficient for promotion:
+every method/history loses substantially on full FireDrop M01, no configuration
+has positive corrupted mean delta, and all six fail the frozen signal screen.
+The strongest M01 result here, attention T=1 at `0.274733`, is also below P00
+`0.299465` and P13 `0.304237`; M06/M07 remain far below P10
+`0.365203/0.185669`. T=5 does not rescue filter or attention and therefore does
+not establish useful historical state inference under this interface.
+
+The final decision is **stop this three-direction screen without tuning and do
+not open 2022--2023**. The direct-HDF5 crop and isolated-scenario evaluation
+remain as bounded operational fixes, but none of the six models is a research
+candidate. All large data, training, model, and metric computation ran through
+Slurm compute jobs. The login node was limited to source inspection and edits,
+small JSON/log reads, Git operations, submissions, and coarse scheduler checks;
+it did not load a dataset or model, run pytest, or execute CPU/GPU scientific
+work.
 
 ## Fixed temporal test comparison
 
