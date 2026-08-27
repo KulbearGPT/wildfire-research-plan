@@ -328,6 +328,6 @@ def screen_2021(results: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
         "pass": (
             mean_delta > 0.0
             and improved_scenarios >= 2
-            and worst_delta >= -0.01
+            and worst_delta >= -0.01 - 1e-12
         ),
     }

@@ -135,3 +135,25 @@ def test_reconstruction_baseline_uses_state_loss_and_preserves_m00() -> None:
 
 
 # Unified integration
+def test_objective_and_screen_are_frozen() -> None:
+    from reproductions.wsts_fast_track.evaluate_belief_state import screen_payload
+    from reproductions.wsts_fast_track.train_belief_state import combine_losses
+
+    forecast, state = torch.tensor(2.0), torch.tensor(3.0)
+    torch.testing.assert_close(combine_losses("filter", forecast, state), torch.tensor(2.3))
+    torch.testing.assert_close(combine_losses("attention", forecast, state), torch.tensor(2.3))
+    torch.testing.assert_close(combine_losses("reconstruction", forecast, state), state)
+    results = {
+        scenario: {
+            "model": {"metrics": {"avg_precision": a}},
+            "p00": {"metrics": {"avg_precision": b}},
+        }
+        for scenario, a, b in (
+            ("M01", 0.11, 0.10),
+            ("M06", 0.31, 0.30),
+            ("M07", 0.19, 0.20),
+        )
+    }
+    screen = screen_payload(results)
+    assert screen["pass"] is True
+    assert screen["improved_scenarios"] == 2
