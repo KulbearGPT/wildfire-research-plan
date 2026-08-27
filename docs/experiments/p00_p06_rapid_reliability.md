@@ -241,13 +241,16 @@ were killed for GPU memory before evaluation. The pre-registered bounded
 fallback was implemented in `c8ae91f`: only T=5 may change from physical batch
 64/accumulation 1 to physical batch 32/accumulation 2, preserving effective
 batch 64 and every scientific setting. A one-core CPU Slurm job, `20657191`,
-validated the runner syntax and diff before the commit. Only the two failed
-configurations were resubmitted:
+validated the runner syntax and diff before the commit. Filter and attention
+were resubmitted as soon as their terminal failures were observed;
+reconstruction T=5 was left untouched while running and received the identical
+fallback only after its own OOM terminal state:
 
 | Method | History | Replacement job | Physical batch / accumulation | Immediate state |
 |---|---:|---:|---:|---|
 | filter | 5 | `20657718` | `32 / 2` | `R` on `g31` |
 | attention | 5 | `20657719` | `32 / 2` | `R` on `g32` |
+| reconstruction | 5 | `20659132` | `32 / 2` | `R` on `g31` |
 
 Status is **running**. One immediate scheduler inspection after the first
 six-job replacement submission showed three jobs running on GPU compute nodes
