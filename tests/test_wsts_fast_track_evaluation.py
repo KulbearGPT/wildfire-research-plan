@@ -123,19 +123,36 @@ def test_spatial_fraction_is_exact_on_the_model_visible_center_crop(
     assert x.shape[-2:] == (8, 8)
 
 
+@pytest.mark.parametrize(
+    ("height", "width"),
+    [(14, 12), (8, 8), (6, 10), (10, 6)],
+)
 def test_hdf5_center_crop_matches_materialized_crop_without_full_read(
-    tmp_path: Path,
+    tmp_path: Path, height: int, width: int,
 ) -> None:
-    path = _event(tmp_path, height=14, width=12)
+    path = _event(tmp_path, height=height, width=width)
+    rows = np.arange(height, dtype=np.float32)[:, None]
+    columns = np.arange(width, dtype=np.float32)[None, :]
+    spatial = rows * 100 + columns
+    with h5py.File(path, "r+") as handle:
+        data = handle["data"]
+        for day in range(data.shape[0]):
+            for feature in range(data.shape[1]):
+                data[day, feature] = day * 100_000 + feature * 1_000 + spatial
+
+    selections = {
+        "raw": (slice(1, 6), slice(None)),
+        "target": (6, -1),
+        "stale": (slice(0, 5), -1),
+    }
     with h5py.File(path, "r") as handle:
         data = handle["data"]
-        selection = (slice(1, 6), slice(None))
-        expected = evaluation._center_crop_last_two(
-            np.asarray(data[selection], dtype=np.float32), 8
-        )
-        actual = evaluation._read_center_crop(data, selection, 8)
-
-    np.testing.assert_array_equal(actual, expected)
+        for selection in selections.values():
+            expected = evaluation._center_crop_last_two(
+                np.asarray(data[selection], dtype=np.float32), 8
+            )
+            actual = evaluation._read_center_crop(data, selection, 8)
+            np.testing.assert_array_equal(actual, expected)
 
 
 @pytest.mark.parametrize(
