@@ -265,6 +265,13 @@ scientific configuration, changing only the resource wall time to two hours:
 | attention | 5 | `20659234` | `32 / 2` | `R` on `g30` |
 | reconstruction | 5 | `20659235` | `32 / 2` | `R` on `g33` |
 
+Attention T=5 completed all 3,000 training steps in `20659234` and wrote its
+checkpoint, but the default evaluation batch of 64 caused a separate OOM
+before any scenario completed. The checkpoint was preserved and no training
+was repeated. Eval-only job `20662156` runs the archived project and checkpoint
+with batch 8 into the new non-overwriting `results-2021-b8` directory; all
+metric definitions and samples remain unchanged.
+
 Status is **running**. One immediate scheduler inspection after the first
 six-job replacement submission showed three jobs running on GPU compute nodes
 and three waiting only for the per-user QoS concurrency limit. No dataset,
