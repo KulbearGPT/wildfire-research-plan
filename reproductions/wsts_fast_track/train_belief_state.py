@@ -7,6 +7,7 @@ import importlib
 import re
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
@@ -37,6 +38,7 @@ LEARNING_RATE = 1e-3
 STATE_WEIGHT = 0.1
 EFFECTIVE_BATCH_SIZE = 64
 SEED = 0
+TARGET_CARRIER_CHANNEL = 16
 
 
 def build_model(
@@ -70,6 +72,75 @@ def combine_losses(
     if method in {"filter", "attention"}:
         return forecast_loss + STATE_WEIGHT * state_loss
     raise ValueError(f"unknown belief-state method: {method}")
+
+
+def install_target_independent_augmentation(dataset_class: type) -> None:
+    """Patch training geometry to transform targets without ranking crops by them."""
+
+    original_augment = dataset_class.augment
+    if getattr(original_augment, "_belief_target_independent", False):
+        return
+
+    def target_independent_augment(
+        self: Any,
+        x: torch.Tensor,
+        y: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        if (
+            x.ndim != 4
+            or y.ndim != 2
+            or x.shape[0] <= 0
+            or x.shape[1] <= TARGET_CARRIER_CHANNEL
+            or x.shape[-2:] != y.shape
+        ):
+            raise ValueError("raw training inputs and target have incompatible shapes")
+        if TARGET_CARRIER_CHANNEL in getattr(
+            self, "indices_of_degree_features", ()
+        ):
+            raise ValueError("target carrier channel cannot be angle-adjusted")
+
+        carrier = torch.zeros_like(x[:1])
+        carrier[0, TARGET_CARRIER_CHANNEL] = y.to(dtype=x.dtype)
+        carried_x = torch.cat((x, carrier), dim=0)
+        dummy_target = torch.zeros_like(y)
+        transformed_x, transformed_dummy = original_augment(
+            self, carried_x, dummy_target
+        )
+        if (
+            transformed_x.ndim != 4
+            or transformed_x.shape[:2] != carried_x.shape[:2]
+            or transformed_x.shape[0] != x.shape[0] + 1
+            or transformed_dummy.shape != transformed_x.shape[-2:]
+        ):
+            raise ValueError("upstream augmentation changed the carrier contract")
+        transformed_target = transformed_x[-1, TARGET_CARRIER_CHANNEL].to(
+            dtype=y.dtype
+        )
+        return transformed_x[:-1], transformed_target.clone()
+
+    target_independent_augment._belief_target_independent = True  # type: ignore[attr-defined]
+    dataset_class.augment = target_independent_augment
+
+
+def build_training_loader(
+    dataset: Any,
+    sampler: torch.utils.data.Sampler,
+    *,
+    batch_size: int,
+    num_workers: int,
+    device: torch.device,
+) -> torch.utils.data.DataLoader:
+    """Build a loader whose every emitted microbatch has the physical batch size."""
+
+    return torch.utils.data.DataLoader(
+        dataset,
+        batch_size=batch_size,
+        sampler=sampler,
+        num_workers=num_workers,
+        pin_memory=device.type == "cuda",
+        persistent_workers=num_workers > 0,
+        drop_last=True,
+    )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -139,6 +210,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "dataloader.FireSpreadDataset"
     ).FireSpreadDataset
     dataset_class.find_image_index_from_dataset_index = resolve_dataset_index
+    install_target_independent_augmentation(dataset_class)
     base = dataset_class(
         data_dir=str(data_root),
         included_fire_years=list(TRAIN_YEARS),
@@ -167,13 +239,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         replacement=True,
         generator=torch.Generator().manual_seed(SEED),
     )
-    loader = torch.utils.data.DataLoader(
+    loader = build_training_loader(
         dataset,
+        sampler,
         batch_size=args.batch_size,
-        sampler=sampler,
         num_workers=args.num_workers,
-        pin_memory=device.type == "cuda",
-        persistent_workers=args.num_workers > 0,
+        device=device,
     )
 
     if args.method == "reconstruction":

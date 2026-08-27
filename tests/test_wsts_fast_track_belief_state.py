@@ -157,3 +157,83 @@ def test_objective_and_screen_are_frozen() -> None:
     screen = screen_payload(results)
     assert screen["pass"] is True
     assert screen["improved_scenarios"] == 2
+
+
+def test_training_augmentation_is_target_independent_and_aligned() -> None:
+    import numpy as np
+
+    from reproductions.wsts_fast_track.train_belief_state import (
+        install_target_independent_augmentation,
+    )
+
+    class _LeakyCropDataset:
+        crop_side_length = 3
+        indices_of_degree_features = (7, 13, 19)
+
+        def augment(
+            self, x: torch.Tensor, y: torch.Tensor
+        ) -> tuple[torch.Tensor, torch.Tensor]:
+            best_score = -1.0
+            best_crop = None
+            for _ in range(10):
+                top = int(np.random.randint(0, x.shape[-2] - self.crop_side_length))
+                left = int(np.random.randint(0, x.shape[-1] - self.crop_side_length))
+                x_crop = x[
+                    ..., top : top + self.crop_side_length,
+                    left : left + self.crop_side_length,
+                ]
+                y_crop = y[
+                    top : top + self.crop_side_length,
+                    left : left + self.crop_side_length,
+                ]
+                score = float(x_crop[:, -1].mean() + 1000 * y_crop.float().mean())
+                if score > best_score:
+                    best_score = score
+                    best_crop = (x_crop, y_crop)
+            assert best_crop is not None
+            x_crop, y_crop = best_crop
+            if np.random.random() > 0.5:
+                x_crop = torch.flip(x_crop, dims=(-1,))
+                y_crop = torch.flip(y_crop, dims=(-1,))
+            if np.random.random() > 0.5:
+                x_crop = torch.flip(x_crop, dims=(-2,))
+                y_crop = torch.flip(y_crop, dims=(-2,))
+            rotations = int(np.floor(np.random.random() * 4))
+            return (
+                torch.rot90(x_crop, rotations, dims=(-2, -1)),
+                torch.rot90(y_crop, rotations, dims=(-2, -1)),
+            )
+
+    install_target_independent_augmentation(_LeakyCropDataset)
+    dataset = _LeakyCropDataset()
+    source_ids = torch.arange(36).reshape(6, 6)
+    x = torch.zeros((1, 23, 6, 6))
+    x[0, 0] = source_ids
+    first_target = (source_ids % 2 == 0).long()
+    second_target = ((source_ids // 6) % 2 == 0).long()
+
+    np.random.seed(17)
+    first_x, transformed_first = dataset.augment(x.clone(), first_target)
+    np.random.seed(17)
+    second_x, transformed_second = dataset.augment(x.clone(), second_target)
+
+    assert torch.equal(first_x, second_x)
+    selected_source_ids = first_x[0, 0].long()
+    assert torch.equal(transformed_first, first_target.flatten()[selected_source_ids])
+    assert torch.equal(transformed_second, second_target.flatten()[selected_source_ids])
+
+
+def test_training_loader_drops_partial_physical_batches() -> None:
+    from reproductions.wsts_fast_track.train_belief_state import (
+        build_training_loader,
+    )
+
+    dataset = torch.utils.data.TensorDataset(torch.arange(5))
+    loader = build_training_loader(
+        dataset,
+        torch.utils.data.SequentialSampler(dataset),
+        batch_size=2,
+        num_workers=0,
+        device=torch.device("cpu"),
+    )
+    assert [batch[0].shape[0] for batch in loader] == [2, 2]
