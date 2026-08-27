@@ -279,6 +279,15 @@ confirming host-memory rather than GPU-memory pressure. Its replacement,
 memory, and writes to `results-2021-b8-w2`. No checkpoint or metric setting is
 changed.
 
+That two-worker attempt reached `MaxRSS` of about 64 GB and was likewise killed
+during the repeated P00 traversal. By then filter `20659221` and reconstruction
+`20659235` had also completed 3,000 training steps and preserved checkpoints
+before their default evaluations OOMed. Final eval-only jobs use batch 8,
+`num_workers=0`, and 128 GB host memory, avoiding worker copies without changing
+examples or metrics: filter `20666788`, attention `20666789`, and reconstruction
+`20666790`. Each writes to its own `results-2021-b8-w0` directory; all three
+were initially pending for priority.
+
 Status is **running**. One immediate scheduler inspection after the first
 six-job replacement submission showed three jobs running on GPU compute nodes
 and three waiting only for the per-user QoS concurrency limit. No dataset,
