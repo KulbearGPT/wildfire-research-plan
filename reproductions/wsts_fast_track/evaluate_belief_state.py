@@ -69,6 +69,16 @@ _CHECKPOINT_KEYS = {
 }
 
 
+def selected_scenarios(scenario_id: str | None) -> tuple[str, ...]:
+    """Select one isolated scenario or the complete frozen evaluation matrix."""
+
+    if scenario_id is None:
+        return SCENARIOS
+    if scenario_id not in SCENARIOS:
+        raise ValueError(f"unknown belief-state scenario: {scenario_id}")
+    return (scenario_id,)
+
+
 class LatestDayP00(torch.nn.Module):
     """Forecast the corrupted latest 40-feature day with frozen P00."""
 
@@ -96,6 +106,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--stats-path", type=Path, required=True)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument("--scenario", choices=SCENARIOS)
     parser.add_argument("--device", default="cuda")
     return parser
 
@@ -275,7 +286,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_root.mkdir(parents=True, exist_ok=False)
 
     results: dict[str, dict[str, Any]] = {}
-    for scenario_id in SCENARIOS:
+    for scenario_id in selected_scenarios(args.scenario):
         dataset = _build_evaluation_dataset(
             dataset_class,
             data_root=data_root,
@@ -318,6 +329,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         write_result_new(output_root / f"{scenario_id}.json", result)
         results[scenario_id] = result
         print(json.dumps(result, sort_keys=True), flush=True)
+
+    if args.scenario is not None:
+        return 0
 
     screened_results = {
         scenario_id: results[scenario_id] for scenario_id in TRAIN_SCENARIOS

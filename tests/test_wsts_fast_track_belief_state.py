@@ -136,7 +136,10 @@ def test_reconstruction_baseline_uses_state_loss_and_preserves_m00() -> None:
 
 # Unified integration
 def test_objective_and_screen_are_frozen() -> None:
-    from reproductions.wsts_fast_track.evaluate_belief_state import screen_payload
+    from reproductions.wsts_fast_track.evaluate_belief_state import (
+        screen_payload,
+        selected_scenarios,
+    )
     from reproductions.wsts_fast_track.train_belief_state import combine_losses
 
     forecast, state = torch.tensor(2.0), torch.tensor(3.0)
@@ -157,6 +160,8 @@ def test_objective_and_screen_are_frozen() -> None:
     screen = screen_payload(results)
     assert screen["pass"] is True
     assert screen["improved_scenarios"] == 2
+    assert selected_scenarios(None) == ("M00", "M01", "M06", "M07")
+    assert selected_scenarios("M06") == ("M06",)
 
 
 def test_training_augmentation_is_target_independent_and_aligned() -> None:
