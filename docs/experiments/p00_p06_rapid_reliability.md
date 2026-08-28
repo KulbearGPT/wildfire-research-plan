@@ -330,10 +330,16 @@ All six isolated jobs completed. CPU metadata job `20676758` read only the six
 small checkpoint records and confirmed the trainable parameter counts below.
 Mean delta is the mean M01/M06/M07 AP change against the P00 result evaluated
 in the same route. A/B minus C compares corrupted-scenario mean AP with the
-matched reconstruction baseline at the same history.
+matched reconstruction baseline at the same history. P00 is the direct delta
+baseline; P10 and P13 are historical promotion references rather than members
+of the matched T=1/T=5 factorial, so their parameter and loss entries are not
+directly comparable.
 
 | Method | T | Trainable params | Final loss | M00 AP / exact | M01 AP | M06 AP | M07 AP | Mean delta | A/B minus C | Screen |
 |---|---:|---:|---:|---|---:|---:|---:|---:|---:|---|
+| P00 FireDrop baseline | -- | full C00 | -- | 0.585322 / reference | 0.299465 | 0.317005 | 0.129176 | 0.000000 | -- | reference |
+| P10 block baseline | -- | full P02 fine-tune | -- | 0.585322 / yes | 0.299465 | 0.365203 | 0.185669 | +0.034897 | -- | pass (reference) |
+| P13 routed baseline | -- | full P00 fine-tune | -- | 0.585322 / yes | 0.304237 | 0.365203 | 0.185669 | +0.036488 | -- | pass (reference) |
 | filter | 1 | 391,745 | 0.003879 | 0.585322 / yes | 0.260952 | 0.316738 | 0.131167 | -0.012264 | +0.019116 | fail |
 | filter | 5 | 391,745 | 0.012004 | 0.585321 / yes | 0.255844 | 0.317777 | 0.133643 | -0.012794 | +0.013886 | fail |
 | attention | 1 | 1,521 | 0.006301 | 0.585322 / yes | 0.274733 | 0.316787 | 0.130474 | -0.007884 | +0.023496 | fail |
@@ -346,10 +352,13 @@ learned task-oriented state heads contain more useful signal than explicit
 reconstruction alone. That relative result is insufficient for promotion:
 every method/history loses substantially on full FireDrop M01, no configuration
 has positive corrupted mean delta, and all six fail the frozen signal screen.
-The strongest M01 result here, attention T=1 at `0.274733`, is also below P00
-`0.299465` and P13 `0.304237`; M06/M07 remain far below P10
-`0.365203/0.185669`. T=5 does not rescue filter or attention and therefore does
-not establish useful historical state inference under this interface.
+The strongest new M01 result, attention T=1 at `0.274733`, trails P00 by
+`0.024732` and P13 by `0.029504`. The strongest new block results are filter
+T=5 at `0.317777/0.133643`; these improve P00 by only
+`0.000772/0.004467` and trail P10 by `0.047426/0.052026` on M06/M07. In
+contrast, the P10/P13 reference rows have positive mean deltas and pass the
+same signal rule. T=5 therefore does not rescue filter or attention or
+establish useful historical state inference under this interface.
 
 The final decision is **stop this three-direction screen without tuning and do
 not open 2022--2023**. The direct-HDF5 crop and isolated-scenario evaluation
