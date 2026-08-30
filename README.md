@@ -51,7 +51,10 @@ Collection 2 can recover acquisition time, pixel coverage, and fire-mask QA for
 the selected samples. That field is not yet integrated into the full training
 or evaluation population, and availability time and target-validity provenance
 remain unresolved. The repository therefore does not yet establish
-natural-missingness or operational-deployment performance.
+natural-missingness or operational-deployment performance. A model-aligned
+24-sample diagnostic found only `+0.000287` AP from feeding natural reliability
+to the existing synthetic-reliability attention head, with worse F1 and Brier;
+this does not justify a full training-provenance expansion yet.
 
 The twelve-fold publication supports released-weight executable
 reproducibility. Its agreement with the paper reference does not prove

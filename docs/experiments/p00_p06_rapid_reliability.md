@@ -410,6 +410,43 @@ not yet establish natural-missingness performance: it covers a fixed 2021 gate,
 not the 2016--2020 training population, and it recovers acquisition time rather
 than operational availability time. No 2022--2023 data was opened.
 
+### Model-aligned natural-reliability mini-screen
+
+The original provenance samples are all event-sequence index 4, while the
+frozen T=1/T=5 evaluation population uses index 5 as its latest observation
+and index 6 as target. Metadata-only jobs `20807539`, `20807868`, and
+`20807891` traced this one-day mismatch and confirmed that shifting each fixed
+event by one day yields 24/24 valid latest-observation/next-day-target pairs.
+Commit `9a2168e` therefore adds a separate `model` gate without changing the
+original provenance gate. CPU job `20807932` completed the 24 shifted samples
+in 1:59:08 with exit `0:0`, aggregating 84 overpasses. Mean reliability was
+`0.858389`, with sample range `0.052830--0.985290`; batch MaxRSS was
+`4,167,520 K`.
+
+Commit `a04fa5b` adds a diagnostic-only adapter that changes only packed input
+channel 40 to the natural reliability center crop. It keeps all 40 WSTS
+features and the target unchanged, evaluates only the existing attention T=1
+checkpoint, and compares it with P00 on the same 24 samples. Observation age
+is recorded but is not consumed. Pending MIG jobs `20814273` and `20814284`
+were cancelled before allocation because the MIG nodes were unavailable.
+Full-H100 job `20814289` completed the two-forward-pass screen in 36 seconds
+with exit `0:0`; both cancelled jobs consumed zero GPU time.
+
+| Model | AP | F1 | IoU | Brier | Loss |
+|---|---:|---:|---:|---:|---:|
+| P00 | 0.382293 | 0.268530 | 0.155088 | 0.008252 | 0.004339 |
+| Attention T=1 + natural R | 0.382579 | 0.263203 | 0.151545 | 0.008278 | 0.004346 |
+| Attention minus P00 | +0.000287 | -0.005328 | -0.003543 | +0.000026 | +0.000007 |
+
+This is a neutral/negative method result, not a promotion. The AP change is too
+small to distinguish from subset variation, while F1, IoU, Brier, and loss all
+worsen. The existing attention head was trained on synthetic reliability and
+does not make useful use of the recovered natural signal. The project will not
+expand provenance collection over all 2016--2020 training samples on this
+evidence. Any renewed method attempt must first pre-register a bounded
+real-reliability/age training cohort and a matched P00 comparison; it must not
+tune on this 24-sample result. No 2022--2023 data was opened.
+
 ## Fixed temporal test comparison
 
 | Year | Scenario | P00 AP | P03 AP | P09 AP | P10 AP | P10 minus P00 | P10 minus P09 |
