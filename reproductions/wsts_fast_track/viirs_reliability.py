@@ -297,6 +297,21 @@ def _write_output(
     return target
 
 
+def archive_member(
+    archive: zipfile.ZipFile, year: int, event: str, day: str
+) -> str:
+    """Resolve the two observed WSTS archive root layouts."""
+
+    relative = f"{year}/{event}/{day}.tif"
+    for candidate in (relative, f"WSTSPlus/{relative}"):
+        try:
+            archive.getinfo(candidate)
+        except KeyError:
+            continue
+        return candidate
+    raise KeyError(f"no WSTS raster for {relative}")
+
+
 def _process_sample(
     archive: zipfile.ZipFile,
     event: str,
@@ -310,7 +325,7 @@ def _process_sample(
     from rasterio.io import MemoryFile
     from rasterio.warp import transform_bounds
 
-    member = f"{year}/{event}/{day}.tif"
+    member = archive_member(archive, year, event, day)
     with MemoryFile(archive.read(member)) as memory_file, memory_file.open() as source:
         active_fire = source.read(23)
         affine = source.transform

@@ -1,8 +1,23 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import zipfile
 
 import numpy as np
+
+
+def test_archive_member_accepts_wstsplus_root_prefix(tmp_path) -> None:
+    from reproductions.wsts_fast_track.viirs_reliability import archive_member
+
+    archive_path = tmp_path / "wstsplus.zip"
+    with zipfile.ZipFile(archive_path, "w") as output:
+        output.writestr(
+            "WSTSPlus/2016/fire_19409282/2016-04-02.tif", b"fixture"
+        )
+    with zipfile.ZipFile(archive_path) as archive:
+        assert archive_member(
+            archive, 2016, "fire_19409282", "2016-04-02"
+        ) == "WSTSPlus/2016/fire_19409282/2016-04-02.tif"
 
 
 def test_latest_reliable_viirs_observation_ignores_invalid_and_low_fire() -> None:
