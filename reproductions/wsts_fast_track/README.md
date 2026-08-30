@@ -228,11 +228,11 @@ steps. No reliability channel is added to the model.
 
 | Candidate | Changed variable | Direct baseline | 2021 decision |
 | --- | --- | --- | --- |
-| Legacy cohort control | Ordinary alpha-disabled focal on every pixel | Frozen P00 | Pending job `20828988` |
-| Target-censored cohort | Exclude only unreliable zero target pixels | Matched legacy cohort control | Pending job `20828989` |
-| Final comparison | Standard and QA-censored metrics on the fixed 24 samples | Both rows above, with frozen P00 also reported | Pending job `20828992` |
+| Legacy cohort control | Ordinary alpha-disabled focal on every pixel | Frozen P00 | Pending job `20843009` |
+| Target-censored cohort | Exclude only unreliable zero target pixels | Matched legacy cohort control | Pending job `20843010` |
+| Final comparison | Standard and QA-censored metrics on the fixed 24 samples | Both rows above, with frozen P00 also reported | Pending job `20843013` |
 
-CPU job `20828982` selects the frozen cohort and extracts its 40 target-day QA
+CPU job `20842976` selects the frozen cohort and extracts its 40 target-day QA
 fields. It is the only data-processing job. The two training jobs depend on it
 and run in parallel on separate H100 MIG compute allocations; evaluation
 depends on both. The login node performed only Git, scheduler queries, and
@@ -240,3 +240,10 @@ submission. Promotion requires higher QA-censored AP, lower QA Brier and focal
 loss, and non-worse standard AP against the matched legacy control. An AP
 effect below `1e-3` or conflicting directions is recorded as null/reject; this
 screen does not open 2022--2023.
+
+The first preparation attempt, job `20828982`, selected all 40 samples but
+failed before extraction because its runner pointed to `WildfireSpreadTS.zip`,
+which has no 2016--2017 members. Commit `c688cae` switches this cohort path to
+the verified `WSTSPlus.zip` and supports its explicit `WSTSPlus/` archive-root
+prefix. The three never-runnable dependent jobs were cancelled and replaced by
+the IDs above; no GPU task started during the failed attempt.
