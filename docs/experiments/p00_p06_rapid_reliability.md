@@ -369,6 +369,47 @@ small JSON/log reads, Git operations, submissions, and coarse scheduler checks;
 it did not load a dataset or model, run pytest, or execute CPU/GPU scientific
 work.
 
+## VIIRS acquisition-reliability gate
+
+The next bounded data gate tested whether the reliability signal missing from
+the public WSTS active-fire band can be recovered from official S-NPP VIIRS
+Collection 2 products. Commit `b48d74c` adds one extractor, one Nibi CPU
+payload, and one focused test file. The extractor queries every causal
+VNP14IMG overpass for 24 fixed 2021 event-days, uses the paired VNP03IMG
+geolocation, and keeps the latest reliable observation per WSTS pixel. Fire
+mask classes 5, 8, and 9 are reliable; cloud, invalid, water, unclassified, and
+low-confidence fire do not overwrite an older reliable observation. Existing
+WSTS positive HHMM pixels are merged exactly. The output contains only binary
+reliability and finite age in hours; unobserved pixels use age 24.
+
+The initial job `20800889` completed 12 samples before a CMR TLS connection
+reset terminated the process. It produced no completion manifest. Commit
+`567600b` adds a bounded three-attempt retry only for idempotent CMR metadata
+requests; it does not retry LAADS data transfer or change any scientific
+setting. Replacement job `20804128` then completed all 24 samples in 39:28
+with exit `0:0` and batch MaxRSS `4,167,596 K`. Focused verification jobs
+`20800805`, `20804110`, and result validator `20807473` passed; the last
+checked all output hashes, shapes, binary reliability values, finite ages, and
+the age-24 unknown convention.
+
+| Quantity | Result |
+|---|---:|
+| Fixed 2021 samples | 24 |
+| Causal VNP14IMG/VNP03IMG overpasses | 83 |
+| Granules per sample, min / mean / max | 1 / 3.46 / 5 |
+| Reliable fraction, min / mean / max | 0.6661 / 0.9096 / 0.9855 |
+| Mean reliable age, min / mean / max | 2.70 / 6.09 / 10.29 h |
+| Samples with / without WSTS positive pixels | 13 / 11 |
+| Persistent granule cache | 14 GB |
+| Reliability output | 25 files, 711,133 bytes |
+
+This is a **conditional go** for a provenance-derived reliability input. The
+signal is spatially non-degenerate and remains present in 11 samples with zero
+positive fire pixels, so it is not a copy of the fire target. The result does
+not yet establish natural-missingness performance: it covers a fixed 2021 gate,
+not the 2016--2020 training population, and it recovers acquisition time rather
+than operational availability time. No 2022--2023 data was opened.
+
 ## Fixed temporal test comparison
 
 | Year | Scenario | P00 AP | P03 AP | P09 AP | P10 AP | P10 minus P00 | P10 minus P09 |

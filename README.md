@@ -46,9 +46,12 @@ infrastructure needed to run the next experiments.
 
 The target is a next-calendar-day active-fire proxy, not a complete fire
 perimeter. The current public data contract supports prespecified controlled
-missingness. It does not establish natural-missingness or
-operational-deployment performance because acquisition time, availability time,
-QA, coverage, and target-validity provenance are not all recoverable.
+missingness. A fixed 24-sample 2021 gate now demonstrates that S-NPP VIIRS
+Collection 2 can recover acquisition time, pixel coverage, and fire-mask QA for
+the selected samples. That field is not yet integrated into the full training
+or evaluation population, and availability time and target-validity provenance
+remain unresolved. The repository therefore does not yet establish
+natural-missingness or operational-deployment performance.
 
 The twelve-fold publication supports released-weight executable
 reproducibility. Its agreement with the paper reference does not prove
