@@ -48,6 +48,17 @@ FIXED_2021_GATE = (
     ("fire_25548269", "2021-09-13"),
     ("fire_25639315", "2021-10-21"),
 )
+FIXED_2021_MODEL_GATE = tuple(
+    (
+        event,
+        (datetime.fromisoformat(day) + timedelta(days=1)).date().isoformat(),
+    )
+    for event, day in FIXED_2021_GATE
+)
+GATES = {
+    "provenance": FIXED_2021_GATE,
+    "model": FIXED_2021_MODEL_GATE,
+}
 
 
 @dataclass(frozen=True)
@@ -370,7 +381,11 @@ def build_fixed_gate(
     output_root: Path,
     cache_root: Path,
     token_path: Path,
+    *,
+    gate: str = "provenance",
 ) -> dict[str, Any]:
+    if gate not in GATES:
+        raise ValueError(f"unknown reliability gate: {gate}")
     if output_root.exists():
         raise FileExistsError(f"refusing existing output root: {output_root}")
     token = token_path.read_text(encoding="utf-8").strip()
@@ -380,11 +395,12 @@ def build_fixed_gate(
     with zipfile.ZipFile(archive_path) as archive:
         records = [
             _process_sample(archive, event, day, output_root, cache_root, token)
-            for event, day in FIXED_2021_GATE
+            for event, day in GATES[gate]
         ]
     summary = {
         "schema_version": 1,
-        "purpose": "fixed 24-sample 2021 VIIRS reliability gate",
+        "purpose": f"fixed 24-sample 2021 VIIRS reliability {gate} gate",
+        "gate": gate,
         "prediction_anchor": "next-calendar-day 00:00 UTC",
         "valid_fire_mask_classes": list(VALID_FIRE_MASK_CLASSES),
         "unknown_age_hours": 24.0,
@@ -409,6 +425,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--cache-root", type=Path, required=True)
     parser.add_argument("--token-file", type=Path, required=True)
+    parser.add_argument("--gate", choices=tuple(GATES), default="provenance")
     return parser
 
 
@@ -419,6 +436,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         arguments.output_root,
         arguments.cache_root,
         arguments.token_file,
+        gate=arguments.gate,
     )
     return 0
 

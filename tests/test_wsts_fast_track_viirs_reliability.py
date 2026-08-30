@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 
@@ -113,3 +113,17 @@ def test_cmr_json_retries_transient_connection_resets_only_until_success() -> No
     assert payload == {"ok": True}
     assert calls == 3
     assert delays == [1.0, 4.0]
+
+
+def test_model_gate_shifts_every_provenance_sample_by_exactly_one_day() -> None:
+    from reproductions.wsts_fast_track.viirs_reliability import (
+        FIXED_2021_GATE,
+        FIXED_2021_MODEL_GATE,
+    )
+
+    assert len(FIXED_2021_GATE) == len(FIXED_2021_MODEL_GATE) == 24
+    for provenance, model in zip(FIXED_2021_GATE, FIXED_2021_MODEL_GATE, strict=True):
+        assert provenance[0] == model[0]
+        assert datetime.fromisoformat(model[1]) == (
+            datetime.fromisoformat(provenance[1]) + timedelta(days=1)
+        )

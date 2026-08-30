@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 0 ]]; then
-  echo "usage: $0" >&2
+if [[ $# -gt 1 ]]; then
+  echo "usage: $0 [provenance|model]" >&2
+  exit 2
+fi
+gate=${1:-provenance}
+if [[ "${gate}" != provenance && "${gate}" != model ]]; then
+  echo "gate must be provenance or model" >&2
   exit 2
 fi
 
@@ -12,7 +17,7 @@ base=/project/6085198/kulbear/wildfire
 archive=${base}/downloads/WildfireSpreadTS.zip
 cache_root=${base}/cache/viirs-c2
 token_file=${HOME}/.config/wildfire/earthdata_token
-run_root=${base}/runs/viirs-reliability-24-${SLURM_JOB_ID}
+run_root=${base}/runs/viirs-reliability-24-${gate}-${SLURM_JOB_ID}
 output_root=${run_root}/output
 
 test -f "${archive}"
@@ -46,13 +51,15 @@ printf '%q ' python -m reproductions.wsts_fast_track.viirs_reliability \
   --archive "${archive}" \
   --output-root "${output_root}" \
   --cache-root "${cache_root}" \
-  --token-file '<mode-600-token-file>' > "${run_root}/command.txt"
+  --token-file '<mode-600-token-file>' \
+  --gate "${gate}" > "${run_root}/command.txt"
 printf '\n' >> "${run_root}/command.txt"
 
 python -m reproductions.wsts_fast_track.viirs_reliability \
   --archive "${archive}" \
   --output-root "${output_root}" \
   --cache-root "${cache_root}" \
-  --token-file "${token_file}" 2>&1 | tee "${run_root}/extraction.log"
+  --token-file "${token_file}" \
+  --gate "${gate}" 2>&1 | tee "${run_root}/extraction.log"
 
 test -f "${output_root}/manifest.json"
