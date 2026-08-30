@@ -41,6 +41,13 @@ infrastructure needed to run the next experiments.
   not remain positive in both fixed test years, closing the engineering
   expert-tuning branch. See
   [`docs/experiments/p00_p06_rapid_reliability.md`](docs/experiments/p00_p06_rapid_reliability.md).
+- The fixed 24-sample 2021 target-QA audit found that 49,310 of 393,216 pixels
+  (12.54%) are zero labels without a reliable target-day VIIRS observation.
+  Recomputing metrics on positives plus reliably observed zeros changed P00 AP
+  from 0.382293 to 0.398789 and reversed the tiny attention/P00 ordering. A
+  minimal matched training test is now queued: a fixed 40-event 2016--2020
+  cohort, ordinary focal versus target-censored focal, 3,000 steps each, and
+  only the existing 2021 QA gate for selection.
 
 ## Scientific boundary
 
@@ -48,13 +55,14 @@ The target is a next-calendar-day active-fire proxy, not a complete fire
 perimeter. The current public data contract supports prespecified controlled
 missingness. A fixed 24-sample 2021 gate now demonstrates that S-NPP VIIRS
 Collection 2 can recover acquisition time, pixel coverage, and fire-mask QA for
-the selected samples. That field is not yet integrated into the full training
-or evaluation population, and availability time and target-validity provenance
-remain unresolved. The repository therefore does not yet establish
-natural-missingness or operational-deployment performance. A model-aligned
-24-sample diagnostic found only `+0.000287` AP from feeding natural reliability
-to the existing synthetic-reliability attention head, with worse F1 and Brier;
-this does not justify a full training-provenance expansion yet.
+the selected samples. The target-QA field is now integrated only into a fixed
+40-event training prototype and the fixed 24-sample evaluation gate; it is not
+a full-population provenance reconstruction. The repository therefore does not
+yet establish natural-missingness or operational-deployment performance. A
+model-aligned diagnostic gave attention versus P00 AP deltas of `+0.000287`
+under standard labels but `-0.000878` after target-QA censoring. This ranking
+flip rejects the current attention head and motivates the smaller matched loss
+experiment, not a full training-provenance expansion.
 
 The twelve-fold publication supports released-weight executable
 reproducibility. Its agreement with the paper reference does not prove

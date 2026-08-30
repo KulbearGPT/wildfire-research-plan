@@ -210,3 +210,33 @@ AP deltas were -0.0231/-0.0261 in 2022 (job `20465333`) and +0.0135/+0.0096 in
 2023 (job `20465334`); M00/M01 were exactly preserved. This mixed result fails
 the cross-year robustness requirement. P03 is not promoted, P00 remains the
 mainline checkpoint, and 2022--2023 are closed to further prototype tuning.
+
+## Target-QA censored-loss prototype
+
+The fixed 24-sample 2021 target audit found 49,310/393,216 (12.54%) zero-label
+pixels without a reliable target-day VIIRS observation. P00 scored 0.382293 AP
+on all pixels and 0.398789 AP after retaining all positives plus only reliably
+observed zeros. The earlier attention model scored 0.382579 and 0.397911,
+respectively, so target QA reverses its otherwise negligible standard-label
+advantage. Attention is not the baseline for the next test.
+
+The next experiment changes only the loss mask between two matched P00
+fine-tunes. Both use the same deterministic 40-event training cohort (eight per
+year in 2016--2020, balanced four positive/four zero targets), P00
+initialization, seed 0, sampled crops, AdamW at `1e-4`, batch 64, and 3,000
+steps. No reliability channel is added to the model.
+
+| Candidate | Changed variable | Direct baseline | 2021 decision |
+| --- | --- | --- | --- |
+| Legacy cohort control | Ordinary alpha-disabled focal on every pixel | Frozen P00 | Pending job `20828988` |
+| Target-censored cohort | Exclude only unreliable zero target pixels | Matched legacy cohort control | Pending job `20828989` |
+| Final comparison | Standard and QA-censored metrics on the fixed 24 samples | Both rows above, with frozen P00 also reported | Pending job `20828992` |
+
+CPU job `20828982` selects the frozen cohort and extracts its 40 target-day QA
+fields. It is the only data-processing job. The two training jobs depend on it
+and run in parallel on separate H100 MIG compute allocations; evaluation
+depends on both. The login node performed only Git, scheduler queries, and
+submission. Promotion requires higher QA-censored AP, lower QA Brier and focal
+loss, and non-worse standard AP against the matched legacy control. An AP
+effect below `1e-3` or conflicting directions is recorded as null/reject; this
+screen does not open 2022--2023.
