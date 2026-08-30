@@ -55,9 +55,17 @@ FIXED_2021_MODEL_GATE = tuple(
     )
     for event, day in FIXED_2021_GATE
 )
+FIXED_2021_TARGET_GATE = tuple(
+    (
+        event,
+        (datetime.fromisoformat(day) + timedelta(days=1)).date().isoformat(),
+    )
+    for event, day in FIXED_2021_MODEL_GATE
+)
 GATES = {
     "provenance": FIXED_2021_GATE,
     "model": FIXED_2021_MODEL_GATE,
+    "target": FIXED_2021_TARGET_GATE,
 }
 
 

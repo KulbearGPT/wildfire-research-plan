@@ -127,3 +127,17 @@ def test_model_gate_shifts_every_provenance_sample_by_exactly_one_day() -> None:
         assert datetime.fromisoformat(model[1]) == (
             datetime.fromisoformat(provenance[1]) + timedelta(days=1)
         )
+
+
+def test_target_gate_shifts_every_model_sample_by_exactly_one_day() -> None:
+    from reproductions.wsts_fast_track.viirs_reliability import GATES
+
+    model_gate = GATES["model"]
+    target_gate = GATES["target"]
+
+    assert len(model_gate) == len(target_gate) == 24
+    for model, target in zip(model_gate, target_gate, strict=True):
+        assert model[0] == target[0]
+        assert datetime.fromisoformat(target[1]) == (
+            datetime.fromisoformat(model[1]) + timedelta(days=1)
+        )

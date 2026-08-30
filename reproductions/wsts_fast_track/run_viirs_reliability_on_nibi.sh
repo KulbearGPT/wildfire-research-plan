@@ -2,12 +2,12 @@
 set -euo pipefail
 
 if [[ $# -gt 1 ]]; then
-  echo "usage: $0 [provenance|model]" >&2
+  echo "usage: $0 [provenance|model|target]" >&2
   exit 2
 fi
 gate=${1:-provenance}
-if [[ "${gate}" != provenance && "${gate}" != model ]]; then
-  echo "gate must be provenance or model" >&2
+if [[ "${gate}" != provenance && "${gate}" != model && "${gate}" != target ]]; then
+  echo "gate must be provenance, model, or target" >&2
   exit 2
 fi
 
