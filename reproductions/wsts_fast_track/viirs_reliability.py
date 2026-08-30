@@ -8,11 +8,12 @@ import json
 import os
 import re
 import subprocess
+import time
 import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import h5py
 import numpy as np
@@ -116,13 +117,33 @@ def finalize_reliability(
     return reliability, age_hours
 
 
+def request_json_with_retries(
+    request: Callable[[], Any],
+    retry_errors: tuple[type[BaseException], ...],
+    *,
+    sleeper: Callable[[float], Any] = time.sleep,
+    attempts: int = 3,
+) -> Mapping[str, Any]:
+    """Retry one idempotent metadata request after transient transport errors."""
+    if attempts < 1:
+        raise ValueError("attempts must be positive")
+    for attempt in range(attempts):
+        try:
+            response = request()
+            response.raise_for_status()
+            return response.json()
+        except retry_errors:
+            if attempt + 1 == attempts:
+                raise
+            sleeper(float(4**attempt))
+    raise AssertionError("unreachable retry state")
+
+
 def _cmr_entries(day: str, bounding_box: Sequence[float]) -> list[Mapping[str, Any]]:
     import requests
 
     start = datetime.fromisoformat(day).replace(tzinfo=timezone.utc)
-    response = requests.get(
-        CMR_URL,
-        params={
+    parameters = {
             "collection_concept_id": VNP14IMG_COLLECTION_ID,
             "bounding_box": ",".join(str(value) for value in bounding_box),
             "temporal": (
@@ -130,12 +151,17 @@ def _cmr_entries(day: str, bounding_box: Sequence[float]) -> list[Mapping[str, A
                 f"{(start + timedelta(days=1)).isoformat().replace('+00:00', 'Z')}"
             ),
             "page_size": 100,
-        },
-        headers={"User-Agent": "wildfire-viirs-reliability/1"},
-        timeout=60,
+    }
+    payload = request_json_with_retries(
+        lambda: requests.get(
+            CMR_URL,
+            params=parameters,
+            headers={"User-Agent": "wildfire-viirs-reliability/1"},
+            timeout=60,
+        ),
+        (requests.ConnectionError, requests.Timeout),
     )
-    response.raise_for_status()
-    return list(response.json()["feed"]["entry"])
+    return list(payload["feed"]["entry"])
 
 
 def _laads_location(product: str, producer_id: str) -> tuple[str, str, str]:

@@ -77,3 +77,39 @@ def test_cmr_selection_is_causal_sorted_and_deduplicated() -> None:
         "VNP14IMG.A2021158.0900.002.def.nc",
         "VNP14IMG.A2021158.2024.002.abc.nc",
     ]
+
+
+def test_cmr_json_retries_transient_connection_resets_only_until_success() -> None:
+    from reproductions.wsts_fast_track.viirs_reliability import (
+        request_json_with_retries,
+    )
+
+    class TemporaryNetworkError(Exception):
+        pass
+
+    class Response:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, bool]:
+            return {"ok": True}
+
+    calls = 0
+    delays: list[float] = []
+
+    def request():
+        nonlocal calls
+        calls += 1
+        if calls < 3:
+            raise TemporaryNetworkError("connection reset")
+        return Response()
+
+    payload = request_json_with_retries(
+        request,
+        (TemporaryNetworkError,),
+        sleeper=delays.append,
+    )
+
+    assert payload == {"ok": True}
+    assert calls == 3
+    assert delays == [1.0, 4.0]
