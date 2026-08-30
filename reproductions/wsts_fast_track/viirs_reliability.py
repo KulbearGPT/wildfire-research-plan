@@ -304,11 +304,13 @@ def _process_sample(
     output_root: Path,
     cache_root: Path,
     token: str,
+    *,
+    year: int = 2021,
 ) -> dict[str, Any]:
     from rasterio.io import MemoryFile
     from rasterio.warp import transform_bounds
 
-    member = f"2021/{event}/{day}.tif"
+    member = f"{year}/{event}/{day}.tif"
     with MemoryFile(archive.read(member)) as memory_file, memory_file.open() as source:
         active_fire = source.read(23)
         affine = source.transform
@@ -368,6 +370,7 @@ def _process_sample(
     target = _write_output(output_root, event, day, reliability, age_hours)
     reliable = reliability.astype(bool)
     record = {
+        "year": year,
         "event": event,
         "day": day,
         "output": str(target.relative_to(output_root)),
@@ -382,6 +385,63 @@ def _process_sample(
     }
     print(json.dumps(record, sort_keys=True), flush=True)
     return record
+
+
+def build_training_cohort_gate(
+    archive_path: Path,
+    cohort_path: Path,
+    output_root: Path,
+    cache_root: Path,
+    token_path: Path,
+) -> dict[str, Any]:
+    """Extract target-day reliability for a preselected training cohort."""
+
+    from .censored_training import load_cohort_manifest
+
+    if output_root.exists():
+        raise FileExistsError(f"refusing existing output root: {output_root}")
+    token = token_path.read_text(encoding="utf-8").strip()
+    if not token:
+        raise ValueError("Earthdata token file is empty")
+    cohort = load_cohort_manifest(cohort_path)
+    output_root.mkdir(parents=True)
+    records: list[dict[str, Any]] = []
+    with zipfile.ZipFile(archive_path) as archive:
+        for sample in cohort:
+            year = int(sample["year"])
+            year_root = output_root / str(year)
+            record = _process_sample(
+                archive,
+                str(sample["event"]),
+                str(sample["target_day"]),
+                year_root,
+                cache_root,
+                token,
+                year=year,
+            )
+            record["output"] = str(Path(str(year)) / str(record["output"]))
+            records.append(record)
+    summary = {
+        "schema_version": 1,
+        "purpose": "fixed 40-event training target reliability cohort",
+        "gate": "training-cohort-target",
+        "prediction_anchor": "next-calendar-day 00:00 UTC",
+        "valid_fire_mask_classes": list(VALID_FIRE_MASK_CLASSES),
+        "unknown_age_hours": 24.0,
+        "cohort_manifest": str(cohort_path.resolve(strict=True)),
+        "samples": records,
+        "summary": {
+            "sample_count": len(records),
+            "granule_count": sum(record["granules"] for record in records),
+            "cache_hits": sum(record["cache_hits"] for record in records),
+            "mean_reliable_fraction": sum(record["reliable_fraction"] for record in records)
+            / len(records),
+        },
+    }
+    manifest = output_root / "manifest.json"
+    manifest.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print("summary", json.dumps(summary["summary"], sort_keys=True), flush=True)
+    return summary
 
 
 def build_fixed_gate(
@@ -433,19 +493,33 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--cache-root", type=Path, required=True)
     parser.add_argument("--token-file", type=Path, required=True)
-    parser.add_argument("--gate", choices=tuple(GATES), default="provenance")
+    parser.add_argument("--gate", choices=(*GATES, "training-cohort-target"), default="provenance")
+    parser.add_argument("--cohort-manifest", type=Path)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
-    build_fixed_gate(
-        arguments.archive,
-        arguments.output_root,
-        arguments.cache_root,
-        arguments.token_file,
-        gate=arguments.gate,
-    )
+    if arguments.gate == "training-cohort-target":
+        if arguments.cohort_manifest is None:
+            raise ValueError("training cohort extraction requires --cohort-manifest")
+        build_training_cohort_gate(
+            arguments.archive,
+            arguments.cohort_manifest,
+            arguments.output_root,
+            arguments.cache_root,
+            arguments.token_file,
+        )
+    else:
+        if arguments.cohort_manifest is not None:
+            raise ValueError("--cohort-manifest is only valid for training cohort extraction")
+        build_fixed_gate(
+            arguments.archive,
+            arguments.output_root,
+            arguments.cache_root,
+            arguments.token_file,
+            gate=arguments.gate,
+        )
     return 0
 
 
