@@ -45,9 +45,11 @@ infrastructure needed to run the next experiments.
   (12.54%) are zero labels without a reliable target-day VIIRS observation.
   Recomputing metrics on positives plus reliably observed zeros changed P00 AP
   from 0.382293 to 0.398789 and reversed the tiny attention/P00 ordering. A
-  minimal matched training test is now queued: a fixed 40-event 2016--2020
-  cohort, ordinary focal versus target-censored focal, 3,000 steps each, and
-  only the existing 2021 QA gate for selection.
+  proposed 40-event 2016--2020 training cohort was stopped before training:
+  the added-year TIFFs have no CRS/geotransform needed to align LAADS QA with
+  the WSTS crops. The two preparation jobs failed in 1--2 minutes, and their
+  dependent training jobs were cancelled. This remains a 2021 case study, not
+  a forecasting-method contribution.
 
 ## Scientific boundary
 
@@ -55,14 +57,15 @@ The target is a next-calendar-day active-fire proxy, not a complete fire
 perimeter. The current public data contract supports prespecified controlled
 missingness. A fixed 24-sample 2021 gate now demonstrates that S-NPP VIIRS
 Collection 2 can recover acquisition time, pixel coverage, and fire-mask QA for
-the selected samples. The target-QA field is now integrated only into a fixed
-40-event training prototype and the fixed 24-sample evaluation gate; it is not
-a full-population provenance reconstruction. The repository therefore does not
+the selected samples. The target-QA field is integrated only into the fixed
+24-sample evaluation gate; the infeasible 40-event training cohort is not
+used. It is not a full-population provenance reconstruction. The repository
+therefore does not
 yet establish natural-missingness or operational-deployment performance. A
 model-aligned diagnostic gave attention versus P00 AP deltas of `+0.000287`
 under standard labels but `-0.000878` after target-QA censoring. This ranking
-flip rejects the current attention head and motivates the smaller matched loss
-experiment, not a full training-provenance expansion.
+flip rejects the current attention head; the unavailable geolocation closes
+the proposed target-censored training branch.
 
 The twelve-fold publication supports released-weight executable
 reproducibility. Its agreement with the paper reference does not prove
