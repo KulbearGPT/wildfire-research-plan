@@ -9,10 +9,14 @@ the evidence levels in
 
 | ID | Training policy | Matched baseline | Slurm job | Resource | State | 2021 M00 AP | M01 AP | M06 AP | M07 AP | Classification |
 | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| B0 | clean C00 | -- | not submitted | -- | candidate | -- | -- | -- | -- | baseline repair |
-| B1 | clean C02 | B0 | not submitted | -- | candidate | -- | -- | -- | -- | temporal baseline repair |
-| B2 | FireDrop C00 | B0 | not submitted | -- | candidate | -- | -- | -- | -- | training baseline |
-| B3 | FireDrop + BlockDrop C00 | B0/B2 | not submitted | -- | candidate | -- | -- | -- | -- | joint training baseline |
+| B0 | clean C00 | -- | `21093263` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | baseline repair |
+| B1 | clean C02 | B0 | `21093264` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | temporal baseline repair |
+| B2 | FireDrop C00 | B0 | `21093265` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | training baseline |
+| B3 | FireDrop + BlockDrop C00 | B0/B2 | `21093266` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | joint training baseline |
+
+Submission snapshot at 2026-09-03 15:59 EDT showed five pending 20GB H100
+MIG requests, compared with 353 pending 40GB MIG, 34 pending A100, and 868
+pending full-H100 requests. The baseline wave therefore selected 20GB MIG.
 
 ## Follow-on candidate register
 

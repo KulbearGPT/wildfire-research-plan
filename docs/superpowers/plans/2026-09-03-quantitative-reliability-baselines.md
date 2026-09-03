@@ -191,11 +191,11 @@ git commit -m "feat: evaluate corrected baseline wave"
 - Consumes: committed Task 3 runner and live Nibi scheduler state.
 - Produces: four terminal records and a matched 2021 baseline table.
 
-- [ ] **Step 1: Inspect scheduler demand**
+- [x] **Step 1: Inspect scheduler demand**
 
 Run `squeue -h -t PD -o '%b' | sort | uniq -c | sort -nr`, `sinfo -p gpubackfill -N -o '%N %G %t %C'`, and `sprio -u kulbear`. Compare 10GB/20GB/40GB MIG, A100, and full-H100 demand.
 
-- [ ] **Step 2: Submit the smallest fast-starting compatible requests**
+- [x] **Step 2: Submit the smallest fast-starting compatible requests**
 
 Use one GPU per job, four CPUs, 16--32GB host RAM, and a one-hour wall time.
 Submit B0--B3 only; do not run any training on the login node. Record job IDs
