@@ -46,7 +46,12 @@ new matched candidates are designed to close that attribution gap.
 | B1 | clean C02 | B0 | `21093264` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | temporal baseline repair |
 | B2 | FireDrop C00 | B0 | `21093265` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | training baseline |
 | B3 | FireDrop + BlockDrop C00 | B0/B2 | `21093266` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | joint training baseline |
-| B4 | B3 + equal-year sampling | B3 | not submitted | -- | candidate | -- | -- | -- | -- | sole tuning/training candidate |
+| B4 | B3 + equal-year sampling | B3 | `21094665` (`afterok:21093263`) | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted/dependency | -- | -- | -- | -- | sole tuning/training candidate |
+
+B4 was submitted at 2026-09-03 16:23 EDT. The live queue still showed five
+pending 20GB MIG requests versus 354 pending 40GB MIG, 34 pending A100, and
+867 pending full-H100 requests. Its dependency prevents execution unless the
+common B0 runner succeeds.
 
 Submission snapshot at 2026-09-03 15:59 EDT showed five pending 20GB H100
 MIG requests, compared with 353 pending 40GB MIG, 34 pending A100, and 868
