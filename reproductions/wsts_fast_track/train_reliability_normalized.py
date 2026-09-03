@@ -19,6 +19,7 @@ from .evaluate_missingness import load_checkpoint_model
 from .missingness import structured_block_mask
 from .prototype import BLOCK_DROPOUT_PROBABILITY, FIRE_DROPOUT_PROBABILITY
 from .reliability_normalized_conv import InputReliabilityNormalizedConv2d
+from .reliability_token_conv import InputReliabilityTokenConv2d
 from .train_predictive_consistency import validate_b3_record
 
 
@@ -110,7 +111,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
     parser.add_argument("--output-path", type=Path, required=True)
-    parser.add_argument("--variant", choices=("standard", "rnc"), required=True)
+    parser.add_argument(
+        "--variant", choices=("standard", "rnc", "token"), required=True
+    )
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
@@ -179,6 +182,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         model.model.encoder.conv1 = InputReliabilityNormalizedConv2d(
             model.model.encoder.conv1
         ).to(device)
+    elif args.variant == "token":
+        model.model.encoder.conv1 = InputReliabilityTokenConv2d(
+            model.model.encoder.conv1
+        ).to(device)
     model.train()
     parameters = tuple(
         parameter for parameter in model.parameters() if parameter.requires_grad
@@ -195,7 +202,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         x = x.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True).long()
         optimizer.zero_grad(set_to_none=True)
-        model_input = x if args.variant == "rnc" else x[:, :, :-1]
+        model_input = x if args.variant in {"rnc", "token"} else x[:, :, :-1]
         logits = model(model_input).squeeze(1)
         loss = model.compute_loss(logits, target)
         loss.backward()
@@ -214,8 +221,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "candidate_id": "D2-RNC" if args.variant == "rnc" else "D2-STD",
-        "matched_pair": "D2",
+        "candidate_id": {
+            "standard": "D2-STD",
+            "rnc": "D2-RNC",
+            "token": "D4-TOKEN",
+        }[args.variant],
+        "matched_pair": "D4" if args.variant == "token" else "D2",
         "variant": args.variant,
         "base_b3_record": str(record_path),
         "base_b3_checkpoint": str(checkpoint),

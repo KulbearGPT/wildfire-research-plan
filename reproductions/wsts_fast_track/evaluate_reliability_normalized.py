@@ -21,18 +21,24 @@ from .evaluate_missingness import (
 )
 from .evaluation import build_controlled_dataset
 from .reliability_normalized_conv import InputReliabilityNormalizedConv2d
+from .reliability_token_conv import InputReliabilityTokenConv2d
 
 
 def validate_d2_checkpoint(payload: Mapping[str, object]) -> str:
     """Return the variant after enforcing the exact matched D2 contract."""
 
     variant = str(payload.get("variant"))
-    expected_id = {"standard": "D2-STD", "rnc": "D2-RNC"}.get(variant)
+    expected = {
+        "standard": ("D2-STD", "D2"),
+        "rnc": ("D2-RNC", "D2"),
+        "token": ("D4-TOKEN", "D4"),
+    }.get(variant)
     valid = (
         payload.get("schema_version") == 1
         and payload.get("status") == "pass"
-        and payload.get("candidate_id") == expected_id
-        and payload.get("matched_pair") == "D2"
+        and expected is not None
+        and payload.get("candidate_id") == expected[0]
+        and payload.get("matched_pair") == expected[1]
         and payload.get("experiment") == "C00"
         and payload.get("steps") == 3_000
         and payload.get("seed") == 0
@@ -40,8 +46,8 @@ def validate_d2_checkpoint(payload: Mapping[str, object]) -> str:
         and isinstance(payload.get("hyper_parameters"), Mapping)
         and isinstance(payload.get("state_dict"), Mapping)
     )
-    if expected_id is None or not valid:
-        raise ValueError("D2 checkpoint contract is invalid")
+    if expected is None or not valid:
+        raise ValueError("D2/D4 checkpoint contract is invalid")
     return variant
 
 
@@ -54,7 +60,7 @@ class D2EvaluationModel(nn.Module):
         self.variant = variant
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        model_input = x if self.variant == "rnc" else x[:, :, :-1]
+        model_input = x if self.variant in {"rnc", "token"} else x[:, :, :-1]
         return self.model(model_input)
 
     def compute_loss(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -78,6 +84,10 @@ def load_d2_model(
     model = model_class(**init_args)
     if variant == "rnc":
         model.model.encoder.conv1 = InputReliabilityNormalizedConv2d(
+            model.model.encoder.conv1
+        )
+    elif variant == "token":
+        model.model.encoder.conv1 = InputReliabilityTokenConv2d(
             model.model.encoder.conv1
         )
     model.load_state_dict(payload["state_dict"], strict=True)

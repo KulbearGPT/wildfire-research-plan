@@ -14,6 +14,9 @@ from reproductions.wsts_fast_track.reliability_normalized_conv import (
     InputReliabilityNormalizedConv2d,
     ReliabilityNormalizedConv2d,
 )
+from reproductions.wsts_fast_track.reliability_token_conv import (
+    InputReliabilityTokenConv2d,
+)
 from reproductions.wsts_fast_track.train_reliability_normalized import (
     PROCESSED_ACTIVE_FIRE_BINARY,
     PROCESSED_ACTIVE_FIRE_VALUE,
@@ -110,6 +113,31 @@ def test_processed_corruption_appends_aligned_invalidity_channel() -> None:
     assert torch.all(result[:, 40, ~invalid] == 0.0)
 
 
+def test_missing_token_is_exact_standard_conv_when_all_valid() -> None:
+    source = torch.nn.Conv2d(2, 3, kernel_size=3, padding=1, bias=True)
+    layer = InputReliabilityTokenConv2d(source)
+    features = torch.randn(2, 2, 7, 7)
+    invalid = torch.zeros(2, 1, 7, 7)
+
+    torch.testing.assert_close(
+        layer(torch.cat((features, invalid), dim=1)), source(features)
+    )
+    assert layer.invalid_token.numel() == source.out_channels
+
+
+def test_missing_token_receives_gradient_only_when_invalidity_is_present() -> None:
+    source = torch.nn.Conv2d(2, 3, kernel_size=3, padding=1, bias=False)
+    layer = InputReliabilityTokenConv2d(source)
+    features = torch.randn(2, 2, 7, 7)
+    invalid = torch.zeros(2, 1, 7, 7)
+    invalid[:, :, 2:5, 2:5] = 1.0
+
+    layer(torch.cat((features, invalid), dim=1)).sum().backward()
+
+    assert layer.invalid_token.grad is not None
+    assert torch.count_nonzero(layer.invalid_token.grad) == source.out_channels
+
+
 def test_d2_checkpoint_requires_one_of_the_matched_variants() -> None:
     payload = {
         "schema_version": 1,
@@ -127,8 +155,25 @@ def test_d2_checkpoint_requires_one_of_the_matched_variants() -> None:
     assert validate_d2_checkpoint(payload) == "rnc"
 
     payload["variant"] = "standard"
-    with pytest.raises(ValueError, match="D2 checkpoint"):
+    with pytest.raises(ValueError, match="D2/D4 checkpoint"):
         validate_d2_checkpoint(payload)
+
+
+def test_d4_checkpoint_uses_the_token_variant() -> None:
+    payload = {
+        "schema_version": 1,
+        "status": "pass",
+        "candidate_id": "D4-TOKEN",
+        "matched_pair": "D4",
+        "variant": "token",
+        "experiment": "C00",
+        "steps": 3_000,
+        "seed": 0,
+        "processed_space_matched_corruption": True,
+        "hyper_parameters": {"n_channels": 40},
+        "state_dict": {"weight": torch.tensor(1.0)},
+    }
+    assert validate_d2_checkpoint(payload) == "token"
 
 
 def test_d2_runner_rejects_unknown_variant_before_cluster_setup(
@@ -153,7 +198,7 @@ def test_d2_runner_rejects_unknown_variant_before_cluster_setup(
         check=False,
     )
     assert invalid.returncode == 2
-    assert "variant must be standard or rnc" in invalid.stderr
+    assert "variant must be standard, rnc, or token" in invalid.stderr
     text = runner.read_text(encoding="utf-8")
     assert "sbatch" not in text
     assert "train_reliability_normalized" in text

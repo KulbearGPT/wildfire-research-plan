@@ -8,9 +8,10 @@ fi
 b3_record=$(realpath "$1")
 variant=$2
 case "${variant}" in
-  standard|rnc) ;;
+  standard|rnc) prefix=D2 ;;
+  token) prefix=D4 ;;
   *)
-    echo "variant must be standard or rnc" >&2
+    echo "variant must be standard, rnc, or token" >&2
     exit 2
     ;;
 esac
@@ -21,8 +22,8 @@ base=/project/6085198/kulbear/wildfire
 upstream=${base}/cache/WildfireSpreadTS-res18-runtime
 data=${base}/hdf5/wstsplus-active-fixed
 stats=${base}/runs/nibi-wstsplus-data-20260823/train-2016-2020-stats.npz
-run_root=${base}/runs/D2-${variant}-S0-3K-${SLURM_JOB_ID}
-checkpoint=${run_root}/D2-${variant}.pt
+run_root=${base}/runs/${prefix}-${variant}-S0-3K-${SLURM_JOB_ID}
+checkpoint=${run_root}/${prefix}-${variant}.pt
 output_root=${run_root}/results-2021
 
 test -f "${b3_record}"
