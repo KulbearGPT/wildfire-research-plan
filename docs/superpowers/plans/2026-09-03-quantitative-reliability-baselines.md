@@ -308,13 +308,13 @@ evaluated on 2022 and 2023 once; otherwise record rejection.
 - Consumes: B1 C02 input sequence and time-resolved validity masks.
 - Produces: masked temporal-softmax helper and a C02-compatible model class.
 
-- [ ] **Step 1: Write failing masked-softmax tests**
+- [x] **Step 1: Write failing masked-softmax tests**
 
 Assert all-valid equivalence to ordinary softmax, exactly zero mass for invalid
 time steps, unit mass over remaining steps, and finite behavior when only one
 time step is valid.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the D3 test module and expect import failure.
 
