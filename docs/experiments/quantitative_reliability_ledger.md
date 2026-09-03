@@ -90,8 +90,8 @@ therefore rejected without held-out evaluation.
 | --- | --- | --- | --- | --- | --- |
 | D1-ERM | paired clean-corrupt supervised continuation | same B3 checkpoint | mean M01/M06/M07 AP | candidate/control | retry `21102676`; no result yet |
 | D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | candidate | retry `21102677`; metric frozen before execution |
-| D2-STD | standard first convolution continuation | same B3 checkpoint | mean M06/M07 AP | candidate/control | job `21094929`, `afterok:21093266`; no result yet |
-| D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | candidate | job `21094930`, `afterok:21093266`; no result yet |
+| D2-STD | standard first convolution continuation | same B3 checkpoint | mean M06/M07 AP | matched control | M00/M06/M07 0.583073/0.368775/0.189082 |
+| D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | rejected | primary delta -0.003218; M07 delta -0.007200 |
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | not identifiable on current scenarios | gated | M01 has no valid fire step; M06/M07 use one block across all steps; no GPU run |
 | T1 | corruption mixture/curriculum | corrected B3 policy | declared joint mean AP | candidate | no new result yet; at most one tuning contribution |
 
@@ -116,6 +116,9 @@ matched retries were submitted after the 2026-09-03 19:04 EDT queue check.
 | R1: observable FireDrop specialist (B0/B2 route) | training/augmentation | 2021 | 0.039387 | 0.262091 | +0.222704 | 0.000000 | frozen screen |
 | R1: observable FireDrop specialist (B0/B2 route) | training/augmentation | 2022 | 0.006669 | 0.130812 | +0.124143 | 0.000000 | held-out |
 | R1: observable FireDrop specialist (B0/B2 route) | training/augmentation | 2023 | 0.010101 | 0.113583 | +0.103482 | 0.000000 | held-out |
+| R2: incremental BlockDrop (B2 to B3) | training/augmentation | 2021 | 0.216982 | 0.257548 | +0.040566 | -0.000964 | frozen screen |
+| R2: incremental BlockDrop (B2 to B3) | training/augmentation | 2022 | 0.099024 | 0.118356 | +0.019331 | +0.009361 | held-out |
+| R2: incremental BlockDrop (B2 to B3) | training/augmentation | 2023 | 0.132137 | 0.155703 | +0.023566 | +0.012106 | held-out |
 
 R1 has positive M01 AP deltas in all three years and a three-year mean delta
 of +0.150109. It therefore reaches level 4, **reliable contribution
@@ -123,3 +126,15 @@ candidate**. This consumes the single training/tuning contribution slot. The
 standalone B2 checkpoint remains fully disclosed: its M00 deltas are
 -0.021705/-0.002329/-0.024170 in 2021/2022/2023 and do not meet the reliable
 clean guardrail. Held-out jobs were `21098505/21098506`.
+
+R2 has positive mean M06/M07 AP deltas in all three years and a three-year
+mean delta of +0.027821, with no clean regression below the -0.010 guardrail.
+It therefore also reaches level 4. R1 and R2 are separate quantitatively
+supported directions/ablations, but contribution accounting combines them as
+one dual-regime corruption-training contribution rather than claiming two
+method contributions. B3 held-out job was `21099907`.
+
+D2 jobs `21094929/21094930` completed their strict matched comparison. RNC
+changed M06/M07 by +0.000764/-0.007200 relative to the standard continuation,
+for a -0.003218 primary delta; M00 also changed by -0.009428. D2 fails the
+2021 screen and is rejected without held-out evaluation.
