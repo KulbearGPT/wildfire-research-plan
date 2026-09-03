@@ -28,7 +28,25 @@ training exposure, although single-year controlled evaluation is unaffected.
 P09 installs a local first-match resolver. Earlier checkpoints remain frozen
 legacy comparisons; corrected-data claims require matched reruns.
 
-## Active Fast Experiment Track — 2026-08-23
+## Active Quantitative Reliability Track — 2026-09-03
+
+The active sequence is now the baseline-first funnel in
+[`2026-09-03-quantitative-reliability-baselines-design.md`](superpowers/specs/2026-09-03-quantitative-reliability-baselines-design.md).
+It first trains B0--B3 from scratch with the corrected resolver, then tests
+clean-corrupt predictive consistency, a reliability-normalized encoder, and
+reliability-conditioned temporal fusion as single-variable hypotheses. These
+are **candidates, not reliable contributions**, until matched AP evidence
+satisfies the predeclared multi-year support rule. The live baseline/method
+comparison belongs in
+[`quantitative_reliability_ledger.md`](experiments/quantitative_reliability_ledger.md).
+
+This track retains rapid prototyping: seed 0 and 3,000 steps for 2021 screens,
+10,000 steps and extra seeds only after a quantitative signal, and one-time
+separate 2022/2023 evaluation only after freezing the selected configuration.
+At most one corruption-mixture or other hyperparameter result may be counted
+as a tuning contribution.
+
+## Legacy Fast Experiment Track — 2026-08-23
 
 The immediate priority is to begin new learned experiments. The remaining
 Stage 0 checkpoint-equivalence work and Stage 1 positive-weight sensitivity
