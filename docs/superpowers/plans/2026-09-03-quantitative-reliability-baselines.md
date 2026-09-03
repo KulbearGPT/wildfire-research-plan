@@ -4,7 +4,7 @@
 
 **Goal:** Produce corrected-index baselines and retain at least three follow-on directions only after matched quantitative evidence supports them.
 
-**Architecture:** A small registry defines B0--B3 and installs the already tested first-match resolver before any upstream dataset is constructed. One generic train/evaluate runner emits immutable records for the four baselines; follow-on methods reuse the same evaluation path so each experiment changes one factor and names its matched control.
+**Architecture:** A small registry defines B0--B4 and installs the already tested first-match resolver before any upstream dataset is constructed. One generic train/evaluate runner emits immutable records for the baselines; follow-on methods reuse the same evaluation path so each experiment changes one factor and names its matched control.
 
 **Tech Stack:** Python 3.10, PyTorch, LightningCLI, segmentation-models-pytorch, NumPy, pytest, Bash, Slurm on Nibi.
 
@@ -146,11 +146,11 @@ git commit -m "feat: train corrected baselines from scratch"
 
 - [x] **Step 1: Write failing record-boundary and shell tests**
 
-Assert that evaluation accepts only a passing B0--B3 record with
+Assert that evaluation accepts only a passing B0--B4 record with
 `max_steps=3000`, `seed=0`, `corrected_index=true`,
 `initialization=from_scratch`, and 2021 without held-out authorization. Run
 `bash -n` on the runner and assert it contains no `sbatch`, archives committed
-HEAD, accepts exactly B0--B3, and invokes train, completion, and evaluation.
+HEAD, accepts exactly B0--B4, and invokes train, completion, and evaluation.
 
 - [x] **Step 2: Verify RED**
 
@@ -181,7 +181,7 @@ git add reproductions/wsts_fast_track/evaluate_corrected_baseline.py reproductio
 git commit -m "feat: evaluate corrected baseline wave"
 ```
 
-### Task 4: Submit and classify B0--B3
+### Task 4: Submit and classify B0--B4
 
 **Files:**
 - Modify: `docs/experiments/quantitative_reliability_ledger.md`
@@ -189,7 +189,7 @@ git commit -m "feat: evaluate corrected baseline wave"
 
 **Interfaces:**
 - Consumes: committed Task 3 runner and live Nibi scheduler state.
-- Produces: four terminal records and a matched 2021 baseline table.
+- Produces: five terminal records and a matched 2021 baseline table.
 
 - [x] **Step 1: Inspect scheduler demand**
 
@@ -197,9 +197,10 @@ Run `squeue -h -t PD -o '%b' | sort | uniq -c | sort -nr`, `sinfo -p gpubackfill
 
 - [x] **Step 2: Submit the smallest fast-starting compatible requests**
 
-Use one GPU per job, four CPUs, 16--32GB host RAM, and a one-hour wall time.
-Submit B0--B3 only; do not run any training on the login node. Record job IDs
-and exact resource requests in the ledger.
+Use one GPU per job, eight CPUs, 16--32GB host RAM, and a one-hour wall time.
+Submit B0--B3 as the first wave. Submit B4 as the one-variable year-sampling
+control when a QOS slot becomes available; do not run any training on the login
+node. Record job IDs and exact resource requests in the ledger.
 
 - [ ] **Step 3: Monitor terminal state and inspect records**
 
