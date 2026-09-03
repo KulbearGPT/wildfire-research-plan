@@ -144,7 +144,7 @@ git commit -m "feat: train corrected baselines from scratch"
 - Consumes: corrected completion record, `evaluation.build_controlled_dataset`, and `evaluate_missingness.evaluate_batches`.
 - Produces: one Slurm job per baseline containing training plus frozen 2021 M00/M01/M06/M07 evaluation and `results-2021/summary.json`.
 
-- [ ] **Step 1: Write failing record-boundary and shell tests**
+- [x] **Step 1: Write failing record-boundary and shell tests**
 
 Assert that evaluation accepts only a passing B0--B3 record with
 `max_steps=3000`, `seed=0`, `corrected_index=true`,
@@ -152,21 +152,21 @@ Assert that evaluation accepts only a passing B0--B3 record with
 `bash -n` on the runner and assert it contains no `sbatch`, archives committed
 HEAD, accepts exactly B0--B3, and invokes train, completion, and evaluation.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 `/project/6085198/kulbear/wildfire/envs/wildfire-audit/bin/python -m pytest -q tests/test_wsts_fast_track_corrected_runner.py`
 
 Expected: collection fails because the evaluator and runner do not exist.
 
-- [ ] **Step 3: Implement evaluator and shell runner**
+- [x] **Step 3: Implement evaluator and shell runner**
 
 The evaluator loads one checkpoint, evaluates exactly the four declared
 scenarios on 2021, and writes AP/F1/IoU/precision/recall/loss/Brier plus AP
 deltas from M00. The shell runner records git/upstream state, environment,
 command, GPU inventory, resource metadata, and refuses existing run roots.
 
-- [ ] **Step 4: Verify GREEN and focused regression**
+- [x] **Step 4: Verify GREEN and focused regression**
 
 Run:
 `/project/6085198/kulbear/wildfire/envs/wildfire-audit/bin/python -m pytest -q tests/test_wsts_fast_track_corrected_baselines.py tests/test_wsts_fast_track_corrected_training.py tests/test_wsts_fast_track_corrected_runner.py tests/test_wsts_fast_track_prototype.py tests/test_wsts_fast_track_environment_dro.py`
@@ -174,7 +174,7 @@ Run:
 Expected: all focused tests pass. Also run
 `bash -n reproductions/wsts_fast_track/run_corrected_baseline_on_nibi.sh`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add reproductions/wsts_fast_track/evaluate_corrected_baseline.py reproductions/wsts_fast_track/run_corrected_baseline_on_nibi.sh tests/test_wsts_fast_track_corrected_runner.py
