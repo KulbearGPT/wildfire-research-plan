@@ -46,6 +46,7 @@ new matched candidates are designed to close that attribution gap.
 | B1 | clean C02 | B0 | `21093264` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | temporal baseline repair |
 | B2 | FireDrop C00 | B0 | `21093265` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | training baseline |
 | B3 | FireDrop + BlockDrop C00 | B0/B2 | `21093266` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | joint training baseline |
+| B4 | B3 + equal-year sampling | B3 | not submitted | -- | candidate | -- | -- | -- | -- | sole tuning/training candidate |
 
 Submission snapshot at 2026-09-03 15:59 EDT showed five pending 20GB H100
 MIG requests, compared with 353 pending 40GB MIG, 34 pending A100, and 868

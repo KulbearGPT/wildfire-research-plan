@@ -26,8 +26,9 @@ scratch:
 | B1 | C02 Res18-UTAE, T=5 | clean ERM | corrected temporal reference |
 | B2 | C00 Res18-U-Net, T=1 | 30% FireDrop | corrected M01 baseline |
 | B3 | C00 Res18-U-Net, T=1 | 30% FireDrop + 30% BlockDrop | corrected joint reliability baseline |
+| B4 | C00 Res18-U-Net, T=1 | B3 + equal total sampler mass per year | matched year-balance training control |
 
-All four runs use the same train-only statistics, 2016--2020 training years,
+All five runs use the same train-only statistics, 2016--2020 training years,
 2021 validation population, optimizer settings inherited from the pinned
 upstream baseline, batch size 64, and seed 0. Their engineering evaluation is
 limited to M00/M01/M06/M07 on 2021.
@@ -62,6 +63,10 @@ for this comparison.
 At most one tuning contribution may be retained. Test a three-arm corruption
 mixture/curriculum only as a control for D1--D3. It cannot be counted as a
 module or architecture contribution.
+
+B4 is the first T1 arm because P10 supplied prior quantitative motivation for
+equal-year sampling. It differs from B3 only in sampler mass. Do not introduce
+another tuning contribution if B4 is retained.
 
 ## Quantitative evidence levels
 
