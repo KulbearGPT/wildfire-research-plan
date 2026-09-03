@@ -99,21 +99,21 @@ git commit -m "feat: define corrected reliability baselines"
 - Consumes: `corrected_baseline_spec`, `install_corrected_baseline`, `entrypoint._install_runtime_contract`, `contract.upstream_arguments`, and `completion.last_metric`.
 - Produces: CLI `python -m reproductions.wsts_fast_track.train_corrected_baseline --baseline-id B0 ...` and immutable `completed.json` with `corrected_index: true` and `initialization: from_scratch`.
 
-- [ ] **Step 1: Write failing completion tests**
+- [x] **Step 1: Write failing completion tests**
 
 Create a synthetic 3,000-step training log and fake checkpoint loader. Assert
 that `finalize_corrected_baseline` accepts the exact marker, records B0's
 identity and policy, and rejects a missing completion marker or pre-existing
 output.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 `/project/6085198/kulbear/wildfire/envs/wildfire-audit/bin/python -m pytest -q tests/test_wsts_fast_track_corrected_training.py`
 
 Expected: collection fails because the two modules do not exist.
 
-- [ ] **Step 3: Implement training entrypoint and completion writer**
+- [x] **Step 3: Implement training entrypoint and completion writer**
 
 The entrypoint validates the inventory/statistics, installs the upstream
 runtime contract, installs the corrected baseline before dataset creation,
@@ -122,11 +122,11 @@ runs the pinned `train.py`. The completion writer requires one checkpoint, a
 positive CUDA peak marker, finite validation AP/F1/loss, and writes the exact
 training policy plus the corrected-index/from-scratch flags.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the Task 2 test command and expect all tests to pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add reproductions/wsts_fast_track/train_corrected_baseline.py reproductions/wsts_fast_track/complete_corrected_baseline.py tests/test_wsts_fast_track_corrected_training.py
