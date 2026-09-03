@@ -31,7 +31,7 @@
 - Consumes: `environment_dro.resolve_dataset_index`, `prototype.install_training_fire_dropout`, and `prototype.install_training_fire_and_block_dropout`.
 - Produces: `CorrectedBaselineSpec`, `CORRECTED_BASELINES`, `corrected_baseline_spec(baseline_id)`, and `install_corrected_baseline(upstream_root, baseline_id)`.
 
-- [ ] **Step 1: Write the failing registry/resolver test**
+- [x] **Step 1: Write the failing registry/resolver test**
 
 ```python
 def test_corrected_baselines_are_from_scratch_single_variable_controls():
@@ -48,14 +48,14 @@ The same test module uses a fake upstream dataset module and asserts that
 `find_image_index_from_dataset_index` with the first-match resolver before
 installing the selected corruption policy.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 `/project/6085198/kulbear/wildfire/envs/wildfire-audit/bin/python -m pytest -q tests/test_wsts_fast_track_corrected_baselines.py`
 
 Expected: collection fails because `corrected_baselines` does not exist.
 
-- [ ] **Step 3: Implement the minimal registry**
+- [x] **Step 3: Implement the minimal registry**
 
 ```python
 @dataclass(frozen=True)
@@ -77,11 +77,11 @@ CORRECTED_BASELINES = {
 `install_corrected_baseline` imports the upstream dataset class, assigns
 `resolve_dataset_index`, and installs only the selected training corruption.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the Task 1 test command and expect all tests to pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add reproductions/wsts_fast_track/corrected_baselines.py tests/test_wsts_fast_track_corrected_baselines.py
