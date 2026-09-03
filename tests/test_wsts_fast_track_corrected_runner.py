@@ -7,6 +7,7 @@ import pytest
 
 from reproductions.wsts_fast_track.evaluate_corrected_baseline import (
     SCREEN_SCENARIOS,
+    evaluation_boundary,
     validate_evaluation_record,
 )
 
@@ -17,6 +18,12 @@ RUNNER = (
     / "reproductions"
     / "wsts_fast_track"
     / "run_corrected_baseline_on_nibi.sh"
+)
+HELDOUT_RUNNER = (
+    ROOT
+    / "reproductions"
+    / "wsts_fast_track"
+    / "run_reliability_evaluation_on_nibi.sh"
 )
 
 
@@ -84,3 +91,34 @@ def test_corrected_runner_is_safe_and_self_contained() -> None:
     assert "complete_corrected_baseline" in text
     assert "evaluate_corrected_baseline" in text
     assert 'SLURM_SUBMIT_DIR:-$PWD' in text
+
+
+def test_reliability_evaluation_boundary_requires_explicit_heldout_authorization() -> None:
+    assert evaluation_boundary(2021, heldout_authorized=False) == (
+        "reliability-validation",
+        False,
+    )
+    assert evaluation_boundary(2022, heldout_authorized=True) == (
+        "reliability-formal",
+        True,
+    )
+    with pytest.raises(ValueError, match="explicit authorization"):
+        evaluation_boundary(2023, heldout_authorized=False)
+    with pytest.raises(ValueError, match="2021, 2022, or 2023"):
+        evaluation_boundary(2020, heldout_authorized=True)
+
+
+def test_reliability_evaluation_runner_is_small_and_safe() -> None:
+    syntax = subprocess.run(
+        ["bash", "-n", str(HELDOUT_RUNNER)],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert syntax.returncode == 0, syntax.stderr
+    text = HELDOUT_RUNNER.read_text(encoding="utf-8")
+    assert "sbatch" not in text
+    assert "--heldout-authorized" in text
+    assert "evaluate_corrected_baseline" in text
+    assert "evaluate_predictive_consistency" in text
+    assert "evaluate_reliability_normalized" in text

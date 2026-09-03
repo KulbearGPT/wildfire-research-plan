@@ -21,6 +21,20 @@ from .evaluation import build_controlled_dataset
 SCREEN_SCENARIOS = ("M00", "M01", "M06", "M07")
 
 
+def evaluation_boundary(
+    year: int, *, heldout_authorized: bool
+) -> tuple[str, bool]:
+    """Resolve the frozen validation or one-time held-out evaluation mode."""
+
+    if year == 2021 and heldout_authorized is False:
+        return "reliability-validation", False
+    if year in {2022, 2023} and heldout_authorized is True:
+        return "reliability-formal", True
+    if year in {2022, 2023}:
+        raise ValueError("held-out evaluation requires explicit authorization")
+    raise ValueError("reliability evaluation year must be 2021, 2022, or 2023")
+
+
 def validate_evaluation_record(
     record: Mapping[str, object],
 ) -> CorrectedBaselineSpec:
@@ -57,6 +71,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--upstream-root", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
+    parser.add_argument("--year", type=int, choices=(2021, 2022, 2023), default=2021)
+    parser.add_argument("--heldout-authorized", action="store_true")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
@@ -67,6 +83,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not isinstance(payload, dict):
         raise ValueError("corrected baseline completion record must be an object")
     baseline = validate_evaluation_record(payload)
+    mode, scientific_claim = evaluation_boundary(
+        args.year, heldout_authorized=args.heldout_authorized
+    )
     checkpoint = Path(str(payload["checkpoint"])).resolve(strict=True)
     if args.batch_size <= 0 or args.num_workers < 0:
         raise ValueError("batch size must be positive and workers nonnegative")
@@ -90,8 +109,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             stats_path=args.stats_path,
             experiment_id=baseline.experiment_id,
             scenario_id=scenario_id,
-            evaluation_year=2021,
-            heldout_authorized=False,
+            evaluation_year=args.year,
+            heldout_authorized=scientific_claim,
         )
         loader = torch.utils.data.DataLoader(
             dataset,
@@ -104,12 +123,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = {
             "schema_version": 1,
             "status": "pass",
-            "mode": "corrected-baseline-validation",
-            "scientific_claim": False,
+            "mode": mode,
+            "scientific_claim": scientific_claim,
             "baseline_id": baseline.baseline_id,
             "record": str(record_path),
             "scenario_id": scenario_id,
-            "year": 2021,
+            "year": args.year,
             "metrics": metrics,
         }
         write_result_new(output_root / f"{scenario_id}.json", result)
@@ -120,11 +139,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     summary = {
         "schema_version": 1,
         "status": "pass",
-        "mode": "corrected-baseline-validation",
-        "scientific_claim": False,
+        "mode": mode,
+        "scientific_claim": scientific_claim,
         "baseline_id": baseline.baseline_id,
         "record": str(record_path),
-        "year": 2021,
+        "year": args.year,
         "scenario_count": len(SCREEN_SCENARIOS),
         "results": {
             scenario_id: {

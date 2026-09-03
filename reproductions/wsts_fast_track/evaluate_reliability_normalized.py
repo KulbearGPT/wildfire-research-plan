@@ -13,7 +13,7 @@ from typing import Any
 import torch
 from torch import nn
 
-from .evaluate_corrected_baseline import SCREEN_SCENARIOS
+from .evaluate_corrected_baseline import SCREEN_SCENARIOS, evaluation_boundary
 from .evaluate_missingness import (
     checkpoint_init_args,
     evaluate_batches,
@@ -91,6 +91,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--upstream-root", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
+    parser.add_argument("--year", type=int, choices=(2021, 2022, 2023), default=2021)
+    parser.add_argument("--heldout-authorized", action="store_true")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
@@ -102,6 +104,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise ValueError("D2 checkpoint must be a mapping")
     variant = validate_d2_checkpoint(payload)
     candidate_id = str(payload["candidate_id"])
+    mode, scientific_claim = evaluation_boundary(
+        args.year, heldout_authorized=args.heldout_authorized
+    )
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=False)
     device = torch.device(args.device)
@@ -117,8 +122,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             stats_path=args.stats_path,
             experiment_id="C00",
             scenario_id=scenario_id,
-            evaluation_year=2021,
-            heldout_authorized=False,
+            evaluation_year=args.year,
+            heldout_authorized=scientific_claim,
             routing_mask_channel=True,
         )
         loader = torch.utils.data.DataLoader(
@@ -132,13 +137,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = {
             "schema_version": 1,
             "status": "pass",
-            "mode": "D2-validation",
-            "scientific_claim": False,
+            "mode": mode,
+            "scientific_claim": scientific_claim,
             "candidate_id": candidate_id,
             "variant": variant,
             "checkpoint": str(checkpoint),
             "scenario_id": scenario_id,
-            "year": 2021,
+            "year": args.year,
             "metrics": metrics,
         }
         write_result_new(output_root / f"{scenario_id}.json", result)
@@ -149,12 +154,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     summary = {
         "schema_version": 1,
         "status": "pass",
-        "mode": "D2-validation",
-        "scientific_claim": False,
+        "mode": mode,
+        "scientific_claim": scientific_claim,
         "candidate_id": candidate_id,
         "variant": variant,
         "checkpoint": str(checkpoint),
-        "year": 2021,
+        "year": args.year,
         "results": {
             scenario_id: {
                 "metrics": metrics,
