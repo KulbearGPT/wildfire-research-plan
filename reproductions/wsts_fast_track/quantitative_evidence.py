@@ -48,9 +48,16 @@ def compare_2021(
     if not primary_scenarios or len(set(primary_scenarios)) != len(primary_scenarios):
         raise ValueError("primary scenarios must be nonempty and unique")
     scenarios = ("M00", *primary_scenarios)
-    deltas = {
+    baseline_ap = {
+        scenario: _scenario_ap(baseline, scenario, expected_year=2021)
+        for scenario in scenarios
+    }
+    candidate_ap = {
         scenario: _scenario_ap(candidate, scenario, expected_year=2021)
-        - _scenario_ap(baseline, scenario, expected_year=2021)
+        for scenario in scenarios
+    }
+    deltas = {
+        scenario: candidate_ap[scenario] - baseline_ap[scenario]
         for scenario in scenarios
     }
     primary_delta = sum(deltas[item] for item in primary_scenarios) / len(
@@ -66,6 +73,8 @@ def compare_2021(
         "schema_version": 1,
         "year": 2021,
         "primary_scenarios": list(primary_scenarios),
+        "baseline_scenario_ap": baseline_ap,
+        "candidate_scenario_ap": candidate_ap,
         "scenario_ap_delta": deltas,
         "primary_ap_delta": primary_delta,
         "clean_ap_delta": deltas["M00"],
@@ -90,15 +99,34 @@ def compare_three_years(
     by_year: dict[int, dict[str, object]] = {}
     for baseline, candidate in pairs:
         year = baseline.get("year")
-        if not isinstance(year, int) or candidate.get("year") != year or year in by_year:
+        if (
+            not isinstance(year, int)
+            or candidate.get("year") != year
+            or year in by_year
+        ):
             raise ValueError("comparison requires exactly 2021, 2022, and 2023")
         scenarios = ("M00", *primary_scenarios)
-        deltas = {
+        baseline_ap = {
+            scenario: _scenario_ap(baseline, scenario, expected_year=year)
+            for scenario in scenarios
+        }
+        candidate_ap = {
             scenario: _scenario_ap(candidate, scenario, expected_year=year)
-            - _scenario_ap(baseline, scenario, expected_year=year)
+            for scenario in scenarios
+        }
+        deltas = {
+            scenario: candidate_ap[scenario] - baseline_ap[scenario]
             for scenario in scenarios
         }
         by_year[year] = {
+            "baseline_scenario_ap": baseline_ap,
+            "candidate_scenario_ap": candidate_ap,
+            "baseline_primary_ap": sum(baseline_ap[item] for item in primary_scenarios)
+            / len(primary_scenarios),
+            "candidate_primary_ap": sum(
+                candidate_ap[item] for item in primary_scenarios
+            )
+            / len(primary_scenarios),
             "scenario_ap_delta": deltas,
             "primary_ap_delta": sum(deltas[item] for item in primary_scenarios)
             / len(primary_scenarios),

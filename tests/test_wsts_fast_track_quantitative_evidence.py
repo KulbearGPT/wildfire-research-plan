@@ -36,6 +36,8 @@ def test_compare_2021_applies_predeclared_screen_gate() -> None:
     assert comparison["scenario_ap_delta"]["M01"] == pytest.approx(0.02)
     assert comparison["primary_ap_delta"] == pytest.approx(0.02)
     assert comparison["clean_ap_delta"] == pytest.approx(-0.005)
+    assert comparison["baseline_scenario_ap"]["M01"] == pytest.approx(0.10)
+    assert comparison["candidate_scenario_ap"]["M01"] == pytest.approx(0.12)
     assert comparison["screen_positive"] is True
 
 
@@ -92,6 +94,12 @@ def test_compare_three_years_separates_supported_from_reliable() -> None:
 
     assert comparison["positive_year_count"] == 2
     assert comparison["mean_primary_ap_delta"] == pytest.approx(0.017 / 3)
+    assert comparison["years"]["2022"]["baseline_primary_ap"] == pytest.approx(
+        0.2
+    )
+    assert comparison["years"]["2022"]["candidate_primary_ap"] == pytest.approx(
+        0.208
+    )
     assert comparison["quantitatively_supported"] is True
     assert comparison["reliable_contribution_candidate"] is False
 
