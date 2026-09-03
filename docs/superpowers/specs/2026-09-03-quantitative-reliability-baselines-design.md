@@ -97,6 +97,14 @@ method explicitly designed for both families. F1, IoU, Brier, precision,
 recall, and loss are reported as diagnostics, not substituted for the declared
 primary AP after results are known.
 
+A modality-specialist baseline may use a deterministic router only when the
+trigger is directly observable from the input, such as complete active-fire
+history absence. Its routing rule must be frozen before opening 2022/2023,
+reuse the matched baseline outside the intended failure regime, and report
+both standalone checkpoints as well as the composed system. This does not turn
+routing into a method contribution; it prevents a deliberately specialized
+training baseline from hiding its clean-performance trade-off.
+
 The project will continue experiments until three directions have at least
 level 3 evidence, or until the candidate set is exhausted and a new design
 decision is required. Unrun hypotheses will never be reported as reliable.
