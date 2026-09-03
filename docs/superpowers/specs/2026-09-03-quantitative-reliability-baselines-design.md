@@ -41,7 +41,9 @@ Use paired clean and synthetically corrupted views of the same crop. Optimize
 the same supervised objective as the matched B3 continuation plus a
 stop-gradient Bernoulli KL term from the clean prediction to the corrupt
 prediction. A matched continuation without KL is mandatory, so any gain is not
-attributed to additional optimizer steps.
+attributed to additional optimizer steps. Its primary metric is frozen before
+execution as mean M01/M06/M07 AP because the paired corrupt view contains both
+FireDrop and BlockDrop; M00 AP remains the clean-performance guardrail.
 
 ### D2: reliability-normalized encoder
 

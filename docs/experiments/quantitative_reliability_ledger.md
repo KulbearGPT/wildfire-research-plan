@@ -61,7 +61,7 @@ pending full-H100 requests. The baseline wave therefore selected 20GB MIG.
 
 | ID | Hypothesis | Matched control | Primary metric | Evidence level | Quantitative conclusion |
 | --- | --- | --- | --- | --- | --- |
-| D1 | clean-corrupt predictive consistency | matched ERM continuation | M01 or declared joint mean AP | candidate | no new result yet |
+| D1 | clean-corrupt predictive consistency | matched ERM continuation | mean M01/M06/M07 AP | candidate | metric frozen before execution; no new result yet |
 | D2 | reliability-normalized first convolution | standard first convolution | mean M06/M07 AP | candidate | no new result yet |
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | declared temporal reliability AP | candidate | no new result yet |
 | T1 | corruption mixture/curriculum | corrected B3 policy | declared joint mean AP | candidate | no new result yet; at most one tuning contribution |
