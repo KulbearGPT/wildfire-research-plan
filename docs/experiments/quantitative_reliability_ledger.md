@@ -45,8 +45,8 @@ new matched candidates are designed to close that attribution gap.
 | B0 | clean C00 | -- | `21093263` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.580988 | 0.039387 | 0.323805 | 0.133672 | corrected baseline |
 | B1 | clean C02 | B0 | `21096854` | H100 MIG 20GB, 8 CPU, 32GB, 2h | resubmitted | -- | -- | -- | -- | temporal baseline repair |
 | B2 | FireDrop C00 | B0 | `21093265` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.559282 | 0.262091 | 0.308248 | 0.125715 | specialist baseline; standalone clean gate fails |
-| B3 | FireDrop + BlockDrop C00 | B0/B2 | `21093266` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | joint training baseline |
-| B4 | B3 + equal-year sampling | B3 | `21094665` (`afterok:21093263`) | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted/dependency | -- | -- | -- | -- | sole tuning/training candidate |
+| B3 | FireDrop + BlockDrop C00 | B2 | `21093266` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.558318 | 0.276890 | 0.343010 | 0.172086 | screen-positive joint training baseline |
+| B4 | B3 + equal-year sampling | B3 | `21094665` (`afterok:21093263`) | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.534606 | 0.252345 | 0.329461 | 0.166855 | rejected tuning candidate |
 
 B4 was submitted at 2026-09-03 16:23 EDT. The live queue still showed five
 pending 20GB MIG requests versus 354 pending 40GB MIG, 34 pending A100, and
@@ -74,6 +74,13 @@ for P03/P10, the held-out candidate is the explicit B0/B2 route: B0 for M00
 and B2 only for M01. That composed baseline has zero M00 delta and passes the
 2021 screen. Jobs `21098505` and `21098506` evaluate both standalone
 checkpoints on 2022 and 2023; routing is applied only during aggregation.
+
+B3 completed at 2026-09-03 17:37 EDT in 18m02s. Relative to B2 it changes
+M00/M06/M07 AP by -0.000964/+0.034762/+0.046371, for a +0.040566 block mean;
+it passes every 2021 screen condition. The frozen B3 checkpoint is queued for
+both held-out years in job `21099907`. B4 completed at 17:56 EDT but regressed
+M00 by 0.023712 and mean M06/M07 by 0.009390 versus B3. Equal-year sampling is
+therefore rejected without held-out evaluation.
 
 ## Follow-on candidate register
 
