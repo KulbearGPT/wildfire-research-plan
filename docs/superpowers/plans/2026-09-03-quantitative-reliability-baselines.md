@@ -325,11 +325,12 @@ Reuse the C02 encoder/decoder and add the validity bias immediately before
 temporal attention normalization. Do not add reconstruction, an auxiliary
 network, or additional temporal history.
 
-- [ ] **Step 4: Verify and submit only if B1 remains eligible**
+- [x] **Step 4: Verify and submit only if B1 remains eligible**
 
-If B1 is not competitive with B0 or shows no useful temporal robustness, record
-D3 as gated and do not spend GPU time. Otherwise run focused tests, commit,
-check the scheduler, and submit D3 plus the matched C02 control.
+The protocol audit found a stronger gate: M01 removes active fire at every
+history step and M06/M07 reuse one spatial block across every history step.
+The temporal selector has no alternative observation to select, so D3 is not
+identifiable under the current primary scenarios and no GPU job is submitted.
 
 - [ ] **Step 5: Freeze or reject**
 

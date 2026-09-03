@@ -74,7 +74,7 @@ scientific configuration and 20GB MIG request fixed but uses a two-hour limit.
 | D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | candidate | job `21094928`, `afterok:21093266`; metric frozen before execution |
 | D2-STD | standard first convolution continuation | same B3 checkpoint | mean M06/M07 AP | candidate/control | job `21094929`, `afterok:21093266`; no result yet |
 | D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | candidate | job `21094930`, `afterok:21093266`; no result yet |
-| D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | declared temporal reliability AP | candidate | no new result yet |
+| D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | not identifiable on current scenarios | gated | M01 has no valid fire step; M06/M07 use one block across all steps; no GPU run |
 | T1 | corruption mixture/curriculum | corrected B3 policy | declared joint mean AP | candidate | no new result yet; at most one tuning contribution |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do

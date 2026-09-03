@@ -54,11 +54,14 @@ encoder/decoder. Compare it with the same training policy and budget as B3.
 
 ### D3: reliability-conditioned temporal fusion
 
-Start only if B1 demonstrates useful T=5 behavior. Inject per-time/per-pixel
-validity into the temporal attention normalization of the full C02 encoder.
-Compare against B1 under the same optimizer, steps, feature set, and temporal
-history. The failed frozen shallow-attention experiments are not a substitute
-for this comparison.
+This direction is gated under the current controlled scenarios. M01 removes
+active fire at every history step, while M06/M07 apply the same spatial block
+at every history step. A temporal softmax therefore has no valid alternative
+observation to select inside the intended missing region. The masked-softmax
+primitive is retained, but no GPU run is justified unless a predeclared
+time-varying missingness scenario makes the mechanism identifiable. B1 remains
+a corrected temporal baseline, not permission to invent such a scenario after
+seeing test results.
 
 ### T1: corruption-mixture tuning control
 
