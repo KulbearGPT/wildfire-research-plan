@@ -99,3 +99,25 @@ class ReliabilityNormalizedConv2d(nn.Module):
         if self.bias is not None:
             normalized = normalized + self.bias[None, :, None, None]
         return normalized * has_valid.to(dtype=normalized.dtype)
+
+
+class InputReliabilityNormalizedConv2d(nn.Module):
+    """Consume features plus one final invalidity channel inside an encoder."""
+
+    def __init__(self, source: nn.Conv2d) -> None:
+        super().__init__()
+        self.normalized = ReliabilityNormalizedConv2d.from_conv(source)
+        self.in_channels = source.in_channels + 1
+        self.out_channels = source.out_channels
+        self.kernel_size = source.kernel_size
+        self.stride = source.stride
+        self.padding = source.padding
+        self.dilation = source.dilation
+        self.groups = source.groups
+
+    def forward(self, combined: torch.Tensor) -> torch.Tensor:
+        if combined.ndim != 4 or combined.shape[1] != self.in_channels:
+            raise ValueError("combined encoder input must end with invalidity")
+        features = combined[:, :-1]
+        invalidity = combined[:, -1:].clamp(0.0, 1.0)
+        return self.normalized(features, 1.0 - invalidity)

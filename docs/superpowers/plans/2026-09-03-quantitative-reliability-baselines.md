@@ -270,17 +270,17 @@ it passes, freeze lambda 0.1 and evaluate both frozen checkpoints on 2022 and
 - Consumes: B3 policy and spatial validity generated before NaN replacement.
 - Produces: `ReliabilityNormalizedConv2d` and one D2 checkpoint matched to a standard-convolution control.
 
-- [ ] **Step 1: Write failing operator tests**
+- [x] **Step 1: Write failing operator tests**
 
 Assert exact equality with `torch.nn.functional.conv2d` for an all-valid mask,
 invariance to placeholder values under an invalid mask, correct output shape,
 and finite gradients for weights and valid inputs.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the D2 test module and expect import failure.
 
-- [ ] **Step 3: Implement the one-layer intervention**
+- [x] **Step 3: Implement the one-layer intervention**
 
 Compute masked convolution and divide by the valid fraction in each receptive
 field with a clamped denominator. Preserve the original bias and initialize
