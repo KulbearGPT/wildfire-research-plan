@@ -43,7 +43,7 @@ new matched candidates are designed to close that attribution gap.
 | ID | Training policy | Matched baseline | Slurm job | Resource | State | 2021 M00 AP | M01 AP | M06 AP | M07 AP | Classification |
 | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
 | B0 | clean C00 | -- | `21093263` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.580988 | 0.039387 | 0.323805 | 0.133672 | corrected baseline |
-| B1 | clean C02 | B0 | `21093264` | H100 MIG 20GB, 8 CPU, 32GB, 1h | running | -- | -- | -- | -- | temporal baseline repair |
+| B1 | clean C02 | B0 | `21096854` | H100 MIG 20GB, 8 CPU, 32GB, 2h | resubmitted | -- | -- | -- | -- | temporal baseline repair |
 | B2 | FireDrop C00 | B0 | `21093265` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | training baseline |
 | B3 | FireDrop + BlockDrop C00 | B0/B2 | `21093266` | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted | -- | -- | -- | -- | joint training baseline |
 | B4 | B3 + equal-year sampling | B3 | `21094665` (`afterok:21093263`) | H100 MIG 20GB, 8 CPU, 32GB, 1h | submitted/dependency | -- | -- | -- | -- | sole tuning/training candidate |
@@ -60,6 +60,11 @@ pending full-H100 requests. The baseline wave therefore selected 20GB MIG.
 B0 completed successfully at 2026-09-03 16:26 EDT in 26m51s. Its archived
 record confirms corrected indexing, from-scratch initialization, seed 0, and
 3,000 maximum steps; the four reported scenarios each contain 3,181 samples.
+
+At the 2026-09-03 16:57 EDT monitor, B1 job `21093264` had used 31m02s but was
+only 1,363/3,000 steps through the slower T=5 model. It had produced no result
+and was cancelled before its one-hour limit; replacement `21096854` keeps the
+scientific configuration and 20GB MIG request fixed but uses a two-hour limit.
 
 ## Follow-on candidate register
 
