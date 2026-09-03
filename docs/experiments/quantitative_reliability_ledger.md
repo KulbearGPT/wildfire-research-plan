@@ -61,10 +61,17 @@ pending full-H100 requests. The baseline wave therefore selected 20GB MIG.
 
 | ID | Hypothesis | Matched control | Primary metric | Evidence level | Quantitative conclusion |
 | --- | --- | --- | --- | --- | --- |
-| D1 | clean-corrupt predictive consistency | matched ERM continuation | mean M01/M06/M07 AP | candidate | metric frozen before execution; no new result yet |
-| D2 | reliability-normalized first convolution | standard first convolution | mean M06/M07 AP | candidate | no new result yet |
+| D1-ERM | paired clean-corrupt supervised continuation | same B3 checkpoint | mean M01/M06/M07 AP | candidate/control | job `21094927`, `afterok:21093266`; no result yet |
+| D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | candidate | job `21094928`, `afterok:21093266`; metric frozen before execution |
+| D2-STD | standard first convolution continuation | same B3 checkpoint | mean M06/M07 AP | candidate/control | job `21094929`, `afterok:21093266`; no result yet |
+| D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | candidate | job `21094930`, `afterok:21093266`; no result yet |
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | declared temporal reliability AP | candidate | no new result yet |
 | T1 | corruption mixture/curriculum | corrected B3 policy | declared joint mean AP | candidate | no new result yet; at most one tuning contribution |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
 not quantitatively validate D1--D3.
+
+The D1/D2 jobs were submitted at 2026-09-03 16:28 EDT with the same 20GB
+H100 MIG, 8 CPU, 32GB, and one-hour request as the corrected baseline wave.
+All four are held on the B3 success dependency, so no continuation can run
+against a missing or failed base checkpoint.
