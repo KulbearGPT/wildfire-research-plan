@@ -13,25 +13,27 @@ SCREEN_CLEAN_FLOOR = -0.010
 SCREEN_SCENARIO_FLOOR = -0.005
 
 
-def _scenario_ap(summary: Mapping[str, object], scenario_id: str) -> float:
+def _scenario_ap(
+    summary: Mapping[str, object], scenario_id: str, *, expected_year: int
+) -> float:
     if (
         summary.get("schema_version") != 1
         or summary.get("status") != "pass"
-        or summary.get("year") != 2021
+        or summary.get("year") != expected_year
     ):
-        raise ValueError("comparison requires a passing 2021 summary")
+        raise ValueError(f"comparison requires a passing {expected_year} summary")
     results = summary.get("results")
     if not isinstance(results, Mapping):
-        raise ValueError("comparison requires a passing 2021 summary")
+        raise ValueError(f"comparison requires a passing {expected_year} summary")
     scenario = results.get(scenario_id)
     if not isinstance(scenario, Mapping):
-        raise ValueError(f"2021 summary lacks scenario {scenario_id}")
+        raise ValueError(f"{expected_year} summary lacks scenario {scenario_id}")
     metrics = scenario.get("metrics")
     if not isinstance(metrics, Mapping):
-        raise ValueError(f"2021 summary lacks scenario {scenario_id} metrics")
+        raise ValueError(f"{expected_year} summary lacks scenario {scenario_id} metrics")
     value = metrics.get("avg_precision")
     if not isinstance(value, (int, float)) or not 0.0 <= float(value) <= 1.0:
-        raise ValueError(f"2021 summary has invalid {scenario_id} AP")
+        raise ValueError(f"{expected_year} summary has invalid {scenario_id} AP")
     return float(value)
 
 
@@ -47,8 +49,8 @@ def compare_2021(
         raise ValueError("primary scenarios must be nonempty and unique")
     scenarios = ("M00", *primary_scenarios)
     deltas = {
-        scenario: _scenario_ap(candidate, scenario)
-        - _scenario_ap(baseline, scenario)
+        scenario: _scenario_ap(candidate, scenario, expected_year=2021)
+        - _scenario_ap(baseline, scenario, expected_year=2021)
         for scenario in scenarios
     }
     primary_delta = sum(deltas[item] for item in primary_scenarios) / len(
@@ -73,6 +75,59 @@ def compare_2021(
             "per_primary_scenario_delta_min": SCREEN_SCENARIO_FLOOR,
         },
         "screen_positive": screen_positive,
+    }
+
+
+def compare_three_years(
+    pairs: Sequence[tuple[Mapping[str, object], Mapping[str, object]]],
+    *,
+    primary_scenarios: tuple[str, ...],
+) -> dict[str, object]:
+    """Apply the frozen level-3 and reliable-candidate rules across test years."""
+
+    if not primary_scenarios or len(set(primary_scenarios)) != len(primary_scenarios):
+        raise ValueError("primary scenarios must be nonempty and unique")
+    by_year: dict[int, dict[str, object]] = {}
+    for baseline, candidate in pairs:
+        year = baseline.get("year")
+        if not isinstance(year, int) or candidate.get("year") != year or year in by_year:
+            raise ValueError("comparison requires exactly 2021, 2022, and 2023")
+        scenarios = ("M00", *primary_scenarios)
+        deltas = {
+            scenario: _scenario_ap(candidate, scenario, expected_year=year)
+            - _scenario_ap(baseline, scenario, expected_year=year)
+            for scenario in scenarios
+        }
+        by_year[year] = {
+            "scenario_ap_delta": deltas,
+            "primary_ap_delta": sum(deltas[item] for item in primary_scenarios)
+            / len(primary_scenarios),
+            "clean_ap_delta": deltas["M00"],
+        }
+    if set(by_year) != {2021, 2022, 2023}:
+        raise ValueError("comparison requires exactly 2021, 2022, and 2023")
+    primary_deltas = [
+        float(by_year[year]["primary_ap_delta"]) for year in sorted(by_year)
+    ]
+    clean_deltas = [float(by_year[year]["clean_ap_delta"]) for year in sorted(by_year)]
+    positive_year_count = sum(delta > 0.0 for delta in primary_deltas)
+    mean_primary_delta = sum(primary_deltas) / 3
+    quantitatively_supported = (
+        positive_year_count >= 2 and mean_primary_delta >= SCREEN_PRIMARY_DELTA
+    )
+    reliable = (
+        quantitatively_supported
+        and positive_year_count == 3
+        and min(clean_deltas) >= SCREEN_CLEAN_FLOOR
+    )
+    return {
+        "schema_version": 1,
+        "primary_scenarios": list(primary_scenarios),
+        "years": {str(year): by_year[year] for year in sorted(by_year)},
+        "positive_year_count": positive_year_count,
+        "mean_primary_ap_delta": mean_primary_delta,
+        "quantitatively_supported": quantitatively_supported,
+        "reliable_contribution_candidate": reliable,
     }
 
 
