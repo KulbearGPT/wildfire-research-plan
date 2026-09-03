@@ -43,7 +43,7 @@ new matched candidates are designed to close that attribution gap.
 | ID | Training policy | Matched baseline | Slurm job | Resource | State | 2021 M00 AP | M01 AP | M06 AP | M07 AP | Classification |
 | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
 | B0 | clean C00 | -- | `21093263` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.580988 | 0.039387 | 0.323805 | 0.133672 | corrected baseline |
-| B1 | clean C02 | B0 | `21096854` | H100 MIG 20GB, 8 CPU, 32GB, 2h | resubmitted | -- | -- | -- | -- | temporal baseline repair |
+| B1 | clean C02 | B0 | `21102675` | H100 MIG 20GB, 8 CPU, 64GB, 2h | resubmitted | -- | -- | -- | -- | temporal baseline repair |
 | B2 | FireDrop C00 | B0 | `21093265` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.559282 | 0.262091 | 0.308248 | 0.125715 | specialist baseline; standalone clean gate fails |
 | B3 | FireDrop + BlockDrop C00 | B2 | `21093266` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.558318 | 0.276890 | 0.343010 | 0.172086 | screen-positive joint training baseline |
 | B4 | B3 + equal-year sampling | B3 | `21094665` (`afterok:21093263`) | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.534606 | 0.252345 | 0.329461 | 0.166855 | rejected tuning candidate |
@@ -65,6 +65,8 @@ At the 2026-09-03 16:57 EDT monitor, B1 job `21093264` had used 31m02s but was
 only 1,363/3,000 steps through the slower T=5 model. It had produced no result
 and was cancelled before its one-hour limit; replacement `21096854` keeps the
 scientific configuration and 20GB MIG request fixed but uses a two-hour limit.
+That replacement reached 2,444/3,000 steps but was killed at 41m14s after using
+31.97/32GB host memory. Retry `21102675` changes only host memory to 64GB.
 
 B2 completed at 2026-09-03 17:19 EDT in 22m13s. Against B0, M01 AP improves
 by 0.222704 but M00 AP drops by 0.021705, so the standalone checkpoint fails
@@ -86,8 +88,8 @@ therefore rejected without held-out evaluation.
 
 | ID | Hypothesis | Matched control | Primary metric | Evidence level | Quantitative conclusion |
 | --- | --- | --- | --- | --- | --- |
-| D1-ERM | paired clean-corrupt supervised continuation | same B3 checkpoint | mean M01/M06/M07 AP | candidate/control | job `21094927`, `afterok:21093266`; no result yet |
-| D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | candidate | job `21094928`, `afterok:21093266`; metric frozen before execution |
+| D1-ERM | paired clean-corrupt supervised continuation | same B3 checkpoint | mean M01/M06/M07 AP | candidate/control | retry `21102676`; no result yet |
+| D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | candidate | retry `21102677`; metric frozen before execution |
 | D2-STD | standard first convolution continuation | same B3 checkpoint | mean M06/M07 AP | candidate/control | job `21094929`, `afterok:21093266`; no result yet |
 | D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | candidate | job `21094930`, `afterok:21093266`; no result yet |
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | not identifiable on current scenarios | gated | M01 has no valid fire step; M06/M07 use one block across all steps; no GPU run |
@@ -100,3 +102,9 @@ The D1/D2 jobs were submitted at 2026-09-03 16:28 EDT with the same 20GB
 H100 MIG, 8 CPU, 32GB, and one-hour request as the corrected baseline wave.
 All four are held on the B3 success dependency, so no continuation can run
 against a missing or failed base checkpoint.
+
+Initial D1 jobs `21094927/21094928` failed before optimization because applying
+FireDrop before the upstream fire-aware crop could select a different crop for
+the corrupt view despite identical RNG state. Commit `3c70a99` now performs
+the single upstream crop first and corrupts that exact processed tensor. The
+matched retries were submitted after the 2026-09-03 19:04 EDT queue check.
