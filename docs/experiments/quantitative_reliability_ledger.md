@@ -108,3 +108,18 @@ FireDrop before the upstream fire-aware crop could select a different crop for
 the corrupt view despite identical RNG state. Commit `3c70a99` now performs
 the single upstream crop first and corrupts that exact processed tensor. The
 matched retries were submitted after the 2026-09-03 19:04 EDT queue check.
+
+## Cross-year quantitative directions
+
+| Direction | Category | Year | Matched baseline primary AP | Candidate primary AP | Primary delta | M00 delta | Evidence |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| R1: observable FireDrop specialist (B0/B2 route) | training/augmentation | 2021 | 0.039387 | 0.262091 | +0.222704 | 0.000000 | frozen screen |
+| R1: observable FireDrop specialist (B0/B2 route) | training/augmentation | 2022 | 0.006669 | 0.130812 | +0.124143 | 0.000000 | held-out |
+| R1: observable FireDrop specialist (B0/B2 route) | training/augmentation | 2023 | 0.010101 | 0.113583 | +0.103482 | 0.000000 | held-out |
+
+R1 has positive M01 AP deltas in all three years and a three-year mean delta
+of +0.150109. It therefore reaches level 4, **reliable contribution
+candidate**. This consumes the single training/tuning contribution slot. The
+standalone B2 checkpoint remains fully disclosed: its M00 deltas are
+-0.021705/-0.002329/-0.024170 in 2021/2022/2023 and do not meet the reliable
+clean guardrail. Held-out jobs were `21098505/21098506`.
