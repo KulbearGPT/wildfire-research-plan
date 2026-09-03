@@ -232,17 +232,17 @@ git commit -m "docs: record corrected baseline evidence"
 - Consumes: frozen B3 checkpoint and paired clean/corrupt samples.
 - Produces: `bernoulli_kl_from_logits(clean_logits, corrupt_logits)` and two matched 3,000-step continuations, D1-KL and D1-ERM.
 
-- [ ] **Step 1: Write a failing loss test**
+- [x] **Step 1: Write a failing loss test**
 
 Use literal logits and assert KL is zero for identical predictions, positive
 for different predictions, finite for logits `[-20, 20]`, and sends gradients
 only through corrupt logits when clean logits are detached.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the D1 test module and expect import failure.
 
-- [ ] **Step 3: Implement the minimal paired-view objective**
+- [x] **Step 3: Implement the minimal paired-view objective**
 
 Train D1-KL and D1-ERM from the same B3 checkpoint, with identical sample
 order, corruptions, optimizer, learning rate, and 3,000 additional steps. The
