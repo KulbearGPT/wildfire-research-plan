@@ -93,6 +93,7 @@ therefore rejected without held-out evaluation.
 | D2-STD | standard first convolution continuation | same B3 checkpoint | mean M06/M07 AP | matched control | M00/M06/M07 0.583073/0.368775/0.189082 |
 | D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | rejected | primary delta -0.003218; M07 delta -0.007200 |
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | not identifiable on current scenarios | gated | M01 has no valid fire step; M06/M07 use one block across all steps; no GPU run |
+| D4-TOKEN | 64-parameter invalid-region token after standard first convolution | D2-STD | mean M06/M07 AP | candidate | job `21103691`; zero-initialized, all-valid exactness |
 | T1 | corruption mixture/curriculum | corrected B3 policy | declared joint mean AP | candidate | no new result yet; at most one tuning contribution |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -138,3 +139,10 @@ D2 jobs `21094929/21094930` completed their strict matched comparison. RNC
 changed M06/M07 by +0.000764/-0.007200 relative to the standard continuation,
 for a -0.003218 primary delta; M00 also changed by -0.009428. D2 fails the
 2021 screen and is rejected without held-out evaluation.
+
+D4 is the single smallest follow-up to the D2 failure: it retains the standard
+convolution and adds one learned scalar per output channel, activated in
+proportion to local invalid coverage. It is exactly D2-STD when inputs are all
+valid, adds 64 parameters, and reuses the completed D2-STD control. Fifteen
+focused D2/D4 and runner tests passed before job `21103691` was submitted on
+the least-contended 20GB MIG class at 2026-09-03 19:39 EDT.
