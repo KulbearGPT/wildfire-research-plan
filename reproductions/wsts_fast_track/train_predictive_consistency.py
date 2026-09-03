@@ -106,10 +106,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         stats_years=list(TRAIN_YEARS),
         is_pad=False,
     )
+    means = np.asarray(base_dataset.means)
+    stds = np.asarray(base_dataset.stds)
+    active_fire_missing_value = float(
+        (0.0 - means[0, 22, 0, 0]) / stds[0, 22, 0, 0]
+    )
     dataset = CleanCorruptPairDataset(
         base_dataset,
         fire_probability=FIRE_DROPOUT_PROBABILITY,
         block_probability=BLOCK_DROPOUT_PROBABILITY,
+        active_fire_missing_value=active_fire_missing_value,
     )
 
     torch.manual_seed(0)

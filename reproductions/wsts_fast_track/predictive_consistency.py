@@ -8,7 +8,13 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from .prototype import apply_training_fire_and_block_dropout
+from .missingness import structured_block_mask
+
+
+PROCESSED_FEATURE_COUNT = 40
+PROCESSED_ACTIVE_FIRE_VALUE = 38
+PROCESSED_ACTIVE_FIRE_BINARY = 39
+PROCESSED_DYNAMIC_NON_FIRE = tuple(range(12)) + (15,) + tuple(range(33, 38))
 
 
 def bernoulli_kl_from_logits(
@@ -37,6 +43,7 @@ class CleanCorruptPairDataset:
         *,
         fire_probability: float,
         block_probability: float,
+        active_fire_missing_value: float,
     ) -> None:
         if getattr(base_dataset, "is_train", None) is not True:
             raise ValueError("paired corruption requires an upstream training dataset")
@@ -49,6 +56,7 @@ class CleanCorruptPairDataset:
         self.base = base_dataset
         self.fire_probability = fire_probability
         self.block_probability = block_probability
+        self.active_fire_missing_value = float(active_fire_missing_value)
 
     def __len__(self) -> int:
         return len(self.base)
@@ -63,35 +71,44 @@ class CleanCorruptPairDataset:
         return x
 
     def __getitem__(self, index: int):
-        year, fire_name, in_fire_index = (
-            self.base.find_image_index_from_dataset_index(index)
-        )
-        loaded = self.base.load_imgs(year, fire_name, in_fire_index)
-        if len(loaded) != 2:
-            raise ValueError("paired corruption requires upstream x/y samples")
-        clean_x = np.asarray(loaded[0]).copy()
-        target = np.asarray(loaded[1]).copy()
-        (corrupt_x, corrupt_target), _ = apply_training_fire_and_block_dropout(
-            (clean_x, target),
-            is_train=True,
-            fire_probability=self.fire_probability,
-            block_probability=self.block_probability,
-            fire_random_value=float(np.random.random()),
-            block_random_value=float(np.random.random()),
-            fraction_random_value=float(np.random.random()),
-            key_digest=np.random.bytes(32).hex(),
-        )
-
-        augmentation_state = np.random.get_state()
-        processed_clean, clean_target = self.base.preprocess_and_augment(
-            clean_x, target
-        )
-        np.random.set_state(augmentation_state)
-        processed_corrupt, corrupt_processed_target = (
-            self.base.preprocess_and_augment(corrupt_x, corrupt_target)
-        )
-        if not torch.equal(clean_target, corrupt_processed_target):
-            raise RuntimeError("paired augmentation produced different targets")
+        processed_clean, clean_target = self.base[index]
+        if (
+            processed_clean.ndim != 4
+            or processed_clean.shape[1] != PROCESSED_FEATURE_COUNT
+        ):
+            raise ValueError("paired processed input must have shape (T, 40, H, W)")
+        processed_corrupt = processed_clean.clone()
+        if float(np.random.random()) < self.fire_probability:
+            processed_corrupt[:, PROCESSED_ACTIVE_FIRE_VALUE] = (
+                self.active_fire_missing_value
+            )
+            processed_corrupt[:, PROCESSED_ACTIVE_FIRE_BINARY] = 0.0
+        if float(np.random.random()) < self.block_probability:
+            fraction = 0.25 if float(np.random.random()) < 0.5 else 0.50
+            mask = torch.as_tensor(
+                structured_block_mask(
+                    processed_clean.shape[-2],
+                    processed_clean.shape[-1],
+                    fraction,
+                    key_digest=np.random.bytes(32).hex(),
+                ),
+                dtype=torch.bool,
+            )
+            processed_corrupt[:, PROCESSED_DYNAMIC_NON_FIRE] = (
+                processed_corrupt[:, PROCESSED_DYNAMIC_NON_FIRE].masked_fill(
+                    mask[None, None], 0.0
+                )
+            )
+            processed_corrupt[:, PROCESSED_ACTIVE_FIRE_VALUE] = (
+                processed_corrupt[:, PROCESSED_ACTIVE_FIRE_VALUE].masked_fill(
+                    mask[None], self.active_fire_missing_value
+                )
+            )
+            processed_corrupt[:, PROCESSED_ACTIVE_FIRE_BINARY] = (
+                processed_corrupt[:, PROCESSED_ACTIVE_FIRE_BINARY].masked_fill(
+                    mask[None], 0.0
+                )
+            )
         return (
             self._select_features(processed_clean),
             self._select_features(processed_corrupt),

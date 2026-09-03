@@ -41,22 +41,19 @@ class _FakeBaseDataset:
     remove_duplicate_features = False
     features_to_keep = None
     return_doy = False
+    n_leading_observations = 1
 
     def __len__(self) -> int:
         return 1
 
-    def find_image_index_from_dataset_index(self, index: int):
+    def __getitem__(self, index: int):
         assert index == 0
-        return 2016, "fire", 0
-
-    def load_imgs(self, _year: int, _name: str, _index: int):
-        x = np.ones((1, 23, 4, 4), dtype=np.float32)
+        x = torch.ones((1, 40, 4, 4), dtype=torch.float32)
         y = np.arange(16, dtype=np.float32).reshape(4, 4)
-        return x, y
+        return x, torch.from_numpy(y)
 
-    def preprocess_and_augment(self, x: np.ndarray, y: np.ndarray):
-        offset = float(np.random.random())
-        return torch.from_numpy(x.copy()) + offset, torch.from_numpy(y.copy()) + offset
+    def preprocess_and_augment(self, *_args):
+        raise AssertionError("paired dataset must not augment twice")
 
 
 def test_clean_corrupt_pair_reuses_exact_augmentation_and_target() -> None:
@@ -64,16 +61,16 @@ def test_clean_corrupt_pair_reuses_exact_augmentation_and_target() -> None:
         _FakeBaseDataset(),
         fire_probability=1.0,
         block_probability=0.0,
+        active_fire_missing_value=-2.0,
     )
 
     clean, corrupt, target = dataset[0]
 
-    torch.testing.assert_close(clean[:, :22], corrupt[:, :22])
-    assert torch.count_nonzero(clean[:, 22]) == clean[:, 22].numel()
-    torch.testing.assert_close(clean[:, 22] - corrupt[:, 22], torch.ones_like(clean[:, 22]))
-    expected_offset = target[0, 0]
-    torch.testing.assert_close(clean[0, 0, 0, 0], expected_offset + 1.0)
-    torch.testing.assert_close(corrupt[0, 0, 0, 0], expected_offset + 1.0)
+    torch.testing.assert_close(clean[:, :38], corrupt[:, :38])
+    assert torch.all(clean[:, 38:40] == 1.0)
+    assert torch.all(corrupt[:, 38] == -2.0)
+    assert torch.count_nonzero(corrupt[:, 39]) == 0
+    torch.testing.assert_close(target, torch.arange(16.0).reshape(4, 4))
 
 
 def test_paired_objective_changes_only_by_declared_consistency_term() -> None:
