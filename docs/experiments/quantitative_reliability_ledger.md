@@ -108,6 +108,7 @@ therefore rejected without held-out evaluation.
 | D7-CRA | joint two-regime counterfactual reliability adapter | D1-ERM; D5-CIWC closest ablation | mean M01/M06/M07 AP | rejected | primary delta +0.015015, below frozen +0.020 target; no held-out evaluation |
 | D8-FFCA | failure-factorized BlockDrop-only counterfactual adapter | D1-ERM; D5-CIWC and D7-CRA closest ablations | mean M01/M06/M07 AP | rejected | primary delta +0.014379, below frozen +0.020 target; no held-out evaluation |
 | D9-CEPR | intervention-selected positive/negative error-pair ranking | D1-ERM; D5-CIWC closest ablation | mean M01/M06/M07 AP | rejected | primary delta -0.016265; M00 -0.054101; pair term dominated; no held-out evaluation |
+| D10-RPP | five-scale spatial reliability prompt pyramid | D2-STD; D4-TOKEN closest ablation | mean M01/M06/M07 AP | attribution reject | total delta vs D1-ERM +0.026610, but module delta vs D2-STD only +0.002915 and mean below D4; no held-out evaluation |
 | T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -336,6 +337,17 @@ and shell syntax. At 2026-09-04 02:17 EDT, all three tested H100 sizes had the
 same immediate predicted start. Job `21120041` therefore requested the
 smallest option: one 20GB H100 MIG, 8 CPU, 32GB, and 30 minutes. It started on
 `g30` within seconds. Training and 2021 evaluation run entirely inside Slurm.
+
+Job `21120041` completed in 14m32s with exit `0:0`. D10 produced
+M00/M01/M06/M07 AP `0.583725/0.302593/0.374300/0.191693`. Its deltas versus
+D1-ERM are `+0.000704/+0.051227/+0.013064/+0.015541`, so the total primary
+gain is `+0.026610` and passes the requested materiality level. However, the
+module deltas versus matched D2-STD are only
+`+0.000652/+0.000611/+0.005524/+0.002610`, a primary mean of `+0.002915`.
+Its primary mean is also `-0.001078` below D4-TOKEN. D10 therefore fails the
+predeclared attribution gates and is not opened on held-out years. The result
+supports deep reliability prompting but cannot separate it strongly enough
+from the single-corrupt-view training policy.
 
 ## Contribution accounting and stop decision
 
