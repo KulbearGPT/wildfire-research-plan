@@ -40,23 +40,30 @@ history step and M06/M07 reuse one block across all steps, leaving temporal
 selection unidentifiable. The complete baseline/method comparison is in
 [`quantitative_reliability_ledger.md`](experiments/quantitative_reliability_ledger.md).
 
-Three directions satisfy the predeclared level-4 rule with positive primary AP
-deltas in all three years: FireDrop for complete active-fire-history absence
-(three-year mean delta +0.150109), incremental BlockDrop for spatial
-missingness (+0.027821), and paired predictive consistency over matched ERM
-(+0.008970). FireDrop and BlockDrop are two supported ablations but count
-together as one dual-regime corruption-training contribution; consistency is
-the independent method contribution. Equal-year sampling and
-reliability-normalized convolution were rejected, while the learned
-missing-token result missed the 2021 gate by 0.00004025 and was not opened on
-held-out years. A stricter follow-up now seeks one additional method with at
-least `+0.020` three-year mean primary AP. D5 counterfactual impact-weighted
-consistency improved the 2021 mean M01/M06/M07 AP by `+0.015468` over its
-matched D1-ERM control and by `+0.006265` over global D1-KL, but missed the
-frozen target and was rejected without held-out evaluation. Its gain was
-concentrated on M01, so the next approved candidate targets preservation of
-the spatial risk ranking under corrupted observations rather than increasing
-the pixelwise consistency weight.
+FireDrop for complete active-fire-history absence (three-year mean delta
+`+0.150109`), incremental BlockDrop for spatial missingness (`+0.027821`), and
+paired predictive consistency over matched ERM (`+0.008970`) satisfy the
+original level-4 rule. FireDrop and BlockDrop count together as one dual-regime
+corruption-training contribution; consistency is the first method
+contribution.
+
+The stricter follow-up sought one additional method with at least `+0.020`
+three-year mean primary AP. D5--D9 failed the 2021 materiality or guardrail
+gates. D10 and D11 exceeded `+0.020` in total but failed the independent module
+attribution gate. D12 froze the complement exposed by those ablations: 25%
+BlockDrop activates only deep reliability prompts, while 50% BlockDrop
+activates only the input token. It passes the full frozen rule. Total mean
+M01/M06/M07 AP improves over D1-ERM by
+`+0.028574/+0.019252/+0.014271` in 2021/2022/2023, for `+0.020699` on average.
+The M06/M07 module delta over matched D2-STD is
+`+0.006875/+0.008763/+0.001654`, for `+0.005764` on average. D12 is retained as
+an incremental severity-to-prompt-depth contribution on D2's training recipe.
+Its 2022 clean M00 caveat versus D1-ERM (`-0.011891`) remains explicit; D12
+improves clean M00 over its registered D2 module control in that year.
+
+The architecture-search branch is frozen. The next justified compute is
+multi-seed or longer-budget confirmation of the unchanged D12 recipe, not
+selection against 2022--2023.
 
 ## Legacy Fast Experiment Track — 2026-08-23
 

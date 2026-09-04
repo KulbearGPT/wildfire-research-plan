@@ -110,6 +110,7 @@ therefore rejected without held-out evaluation.
 | D9-CEPR | intervention-selected positive/negative error-pair ranking | D1-ERM; D5-CIWC closest ablation | mean M01/M06/M07 AP | rejected | primary delta -0.016265; M00 -0.054101; pair term dominated; no held-out evaluation |
 | D10-RPP | five-scale spatial reliability prompt pyramid | D2-STD; D4-TOKEN closest ablation | mean M01/M06/M07 AP | attribution reject | total delta vs D1-ERM +0.026610, but module delta vs D2-STD only +0.002915 and mean below D4; no held-out evaluation |
 | D11-CRPP | input-to-semantic complete reliability prompt pyramid | D2-STD; D4-TOKEN and D10-RPP ablations | total joint and module block AP | attribution reject | total joint delta +0.026356; module block delta +0.004928, just below +0.005; no held-out evaluation |
+| D12-SARP | observed-severity routing between input and deep reliability prompts | D1-ERM total control; D2-STD module control; D4/D10/D11 ablations | total joint and module block AP | retained (frozen D12 gate) | three-year total delta vs D1-ERM +0.020699 and module delta vs D2-STD +0.005764; both positive every year |
 | T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -139,6 +140,9 @@ matched retries were submitted after the 2026-09-03 19:04 EDT queue check.
 | R3: predictive consistency (D1-ERM to D1-KL) | method | 2021 | 0.262918 | 0.272121 | +0.009203 | +0.001355 | frozen screen |
 | R3: predictive consistency (D1-ERM to D1-KL) | method | 2022 | 0.120516 | 0.133662 | +0.013146 | +0.005051 | held-out |
 | R3: predictive consistency (D1-ERM to D1-KL) | method | 2023 | 0.140323 | 0.144884 | +0.004561 | +0.001804 | held-out |
+| R4: severity-adaptive reliability prompting (D1-ERM to D12-SARP) | method | 2021 | 0.262918 | 0.291492 | +0.028574 | +0.002131 | frozen screen |
+| R4: severity-adaptive reliability prompting (D1-ERM to D12-SARP) | method | 2022 | 0.120516 | 0.139768 | +0.019252 | -0.011891 | held-out |
+| R4: severity-adaptive reliability prompting (D1-ERM to D12-SARP) | method | 2023 | 0.140323 | 0.154594 | +0.014271 | -0.003310 | held-out |
 
 R1 has positive M01 AP deltas in all three years and a three-year mean delta
 of +0.150109. It therefore reaches level 4, **reliable contribution
@@ -414,6 +418,24 @@ it has more compute than the 20GB slice at the same queue delay and serially
 evaluates D12 and D2-STD on both frozen years in one allocation. No held-out
 variant or threshold is selected from these results.
 
+Job `21122938` completed in 5m18s with exit `0:0`. D12's total joint delta
+versus D1-ERM is `+0.028574/+0.019252/+0.014271` in 2021/2022/2023, positive
+in every year with three-year mean `+0.020699`. Its module M06/M07 delta versus
+D2-STD is `+0.006875/+0.008763/+0.001654`, also positive in every year with
+three-year mean `+0.005764`. All M00/M01 deltas versus the matched D2 module
+control exceed `-0.010`: `+0.002079/+0.000886` in 2021,
+`+0.002806/+0.015071` in 2022, and `-0.001593/-0.000762` in 2023. D12 passes
+the complete frozen retention rule.
+
+The full D12 stack's 2022 M00 delta versus the earlier D1-ERM total control is
+`-0.011891`, which is disclosed because it narrowly misses the generic
+single-control level-4 clean guardrail. This does not fail D12's registered
+module guardrail: D12 is a module layered on D2-STD and improves D2's 2022 M00
+by `+0.002806`. The evidence therefore supports severity-to-depth prompting as
+an incremental method contribution on the corrected single-corrupt-view
+training recipe, not a claim that every component of the full stack dominates
+D1-ERM on clean inputs.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
@@ -421,17 +443,21 @@ variant or threshold is selected from these results.
 | R1 FireDrop specialist | B0 clean to B2 FireDrop; observable route selects one checkpoint | 0 | 3K from scratch each | +0.150109 | reliable, level 4 |
 | R2 incremental BlockDrop | B2 FireDrop to B3 FireDrop + BlockDrop | 0 | 3K from scratch each | +0.027821 | reliable, level 4 |
 | R3 predictive consistency | D1-ERM to D1-KL, lambda 0.1 | 0 | 3K continuation each from B3 | +0.008970 | reliable, level 4 |
+| R4 severity-adaptive reliability prompting | D1-ERM total; D2-STD module; D4/D10/D11 prompt-depth ablations | 1,088 | 3K continuation from B3 | +0.020699 total; +0.005764 module | retained under frozen D12 gate |
 
-The required three quantitatively reliable directions are now present:
+Four quantitatively reliable directions are now present:
 
 1. R1 FireDrop specialist for complete active-fire-history absence;
 2. R2 incremental BlockDrop for structured spatial missingness;
-3. R3 clean-corrupt predictive consistency beyond its matched continuation.
+3. R3 clean-corrupt predictive consistency beyond its matched continuation;
+4. R4 observed-severity routing between input and deep reliability prompts.
 
 R1 and R2 are two supported ablation directions but form one publishable
 dual-regime corruption-training contribution. R3 is the independent method
-contribution. B4, D2, and D4 are quantitative negative controls; D3 is gated
-because the frozen scenarios cannot identify temporal selection. No result is
-promoted merely from code or motivation. The next compute, if pursued, is
-multi-seed/longer-budget confirmation of the combined B3 + D1-KL recipe, not
-another test-year-guided architecture search.
+contribution. R4 is a second incremental method contribution on the D2
+training recipe, with its D1 clean-input caveat retained above. B4, D2-RNC,
+and D4 are quantitative negative controls; D3 is gated because the frozen
+scenarios cannot identify temporal selection. No result is promoted merely
+from code or motivation. The next compute, if pursued, is multi-seed and
+longer-budget confirmation of the frozen D12 recipe, not another
+test-year-guided architecture search.
