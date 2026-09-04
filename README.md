@@ -55,7 +55,11 @@ infrastructure needed to run the next experiments.
   D12's full stack has a 2022 M00 delta of `-0.011891` versus D1-ERM, but the
   registered module comparison improves D2-STD M00 by `+0.002806`; the claim is
   therefore an incremental prompt-routing contribution on D2's training
-  recipe, not universal clean dominance. See
+  recipe, not universal clean dominance. A matched T=5 Res18-UTAE transfer
+  then produced only `+0.002577` mean M06/M07 AP for SARP over its standard
+  continuation on 2021, below the frozen `+0.005` gate. The prompt contribution
+  is therefore retained at T=1 but not claimed to transfer to T=5; D13 did not
+  open the 2022--2023 test years. See
   [`docs/experiments/quantitative_reliability_ledger.md`](docs/experiments/quantitative_reliability_ledger.md).
 - The fixed 24-sample 2021 target-QA audit found that 49,310 of 393,216 pixels
   (12.54%) are zero labels without a reliable target-day VIIRS observation.

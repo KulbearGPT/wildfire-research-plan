@@ -467,6 +467,35 @@ resource-overflow limit while avoiding the queue. Matched jobs `21149784`
 8 CPU, 64GB host memory, and 90 minutes; both started on `g33` within seconds.
 All continuation training and evaluation run inside Slurm.
 
+Both continuation jobs completed all 3,000 training steps and wrote valid
+checkpoints, but their bundled evaluators exited `1:0` because the shared
+dataset builder still restricted routing masks to C00. Root-cause tracing also
+showed that C02 must append invalidity after its 33-feature selection. Commit
+`72ae635` makes that ordering explicit; the new regression plus the related T5
+and C00 router checks passed (`12 passed`). The first evaluation-only retry,
+jobs `21151981/21151982`, then established that 32GB host memory is
+insufficient (`MaxRSS` reached the cgroup limit). Scheduler probes with 64GB
+host memory predicted a greater-than-10-minute wait for 20GB MIG but immediate
+40GB MIG starts, so jobs `21152301/21152302` used the allowed 2x GPU option and
+completed in 3m48s/2m52s with exit `0:0`.
+
+The resulting matched 2021 AP comparison is:
+
+| Candidate | M00 | M01 | M06 | M07 | mean M06/M07 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| B5 pre-continuation reference | 0.557715 | 0.288461 | 0.336086 | 0.158021 | 0.247054 |
+| D13-STD-T5 | 0.600267 | 0.357375 | 0.387873 | 0.196784 | 0.292329 |
+| D13-SARP-T5 | 0.602925 | 0.355388 | 0.389202 | 0.200609 | 0.294906 |
+| SARP minus matched STD | +0.002658 | -0.001988 | +0.001329 | +0.003825 | +0.002577 |
+
+SARP passes every guardrail: neither M06 nor M07 falls, and M00/M01 remain
+above `-0.010` relative to STD. Its mean M06/M07 gain is only `+0.002577`,
+however, below the frozen `+0.005` promotion threshold. D13 therefore rejects
+cross-architecture T=5 transfer of the prompt module. Per the predeclared
+boundary, 2022--2023 remain unopened for D13; the negative validation decision
+must not be tuned against test years. The stronger shared continuation result
+is attributed to the matched T=5 reliability-training recipe, not to SARP.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
@@ -474,7 +503,7 @@ All continuation training and evaluation run inside Slurm.
 | R1 FireDrop specialist | B0 clean to B2 FireDrop; observable route selects one checkpoint | 0 | 3K from scratch each | +0.150109 | reliable, level 4 |
 | R2 incremental BlockDrop | B2 FireDrop to B3 FireDrop + BlockDrop | 0 | 3K from scratch each | +0.027821 | reliable, level 4 |
 | R3 predictive consistency | D1-ERM to D1-KL, lambda 0.1 | 0 | 3K continuation each from B3 | +0.008970 | reliable, level 4 |
-| R4 severity-adaptive reliability prompting | D1-ERM total; D2-STD module; D4/D10/D11 prompt-depth ablations | 1,088 | 3K continuation from B3 | +0.020699 total; +0.005764 module | retained under frozen D12 gate |
+| R4 severity-adaptive reliability prompting | D1-ERM total; D2-STD module; D4/D10/D11 prompt-depth ablations | 1,088 | 3K continuation from B3 | +0.020699 total; +0.005764 module | retained at T=1; T=5 transfer rejected |
 
 Four quantitatively reliable directions are now present:
 
@@ -488,7 +517,8 @@ dual-regime corruption-training contribution. R3 is the independent method
 contribution. R4 is a second incremental method contribution on the D2
 training recipe, with its D1 clean-input caveat retained above. B4, D2-RNC,
 and D4 are quantitative negative controls; D3 is gated because the frozen
-scenarios cannot identify temporal selection. No result is promoted merely
-from code or motivation. The next compute, if pursued, is multi-seed and
-longer-budget confirmation of the frozen D12 recipe, not another
-test-year-guided architecture search.
+scenarios cannot identify temporal selection. D13 now bounds R4 to the T=1
+architecture: its matched T=5 module gain was positive but sub-threshold. No
+result is promoted merely from code or motivation. The next compute, if
+pursued, is multi-seed and longer-budget confirmation of the frozen D12 recipe,
+not another test-year-guided architecture search.
