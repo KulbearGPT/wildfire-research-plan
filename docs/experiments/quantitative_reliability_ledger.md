@@ -267,6 +267,22 @@ therefore rejected without held-out evaluation. This complementary pattern
 quantitatively motivates separating global FireDrop consistency from a
 BlockDrop-only correction instead of sharing one adapter across both regimes.
 
+## D8 failure-factorized counterfactual adapter
+
+D8 implements the D5/D7 complementary finding as one shared-backbone model:
+CIWC handles FireDrop-only samples with an exact adapter bypass, while a
+2,625-parameter residual activates only when BlockDrop is present. The fixed
+architecture, unchanged loss, novelty boundary, and decision rule are recorded
+in
+`docs/superpowers/specs/2026-09-04-failure-factorized-counterfactual-adapter-design.md`.
+
+The D8-focused and related checks passed (`26 passed`), including an explicit
+nonzero-weight FireDrop bypass test, Python compilation, and shell syntax. At
+2026-09-04 00:59 EDT, `sbatch --test-only` predicted an immediate 40GB MIG
+start and a 20GB MIG start about one minute later. Job `21116301` requested
+one 40GB H100 MIG, 8 CPU, 32GB, and 30 minutes, and started on `g30` within
+seconds. Training and 2021 evaluation run only inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
