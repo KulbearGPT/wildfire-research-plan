@@ -193,8 +193,12 @@ requires positive primary deltas in every year plus a three-year mean of at
 least `+0.020`.
 
 Focused implementation checks passed (`17 passed`) before job `21108872` was
-submitted at 2026-09-03 22:29 EDT. The job requests one 20GB H100 MIG, 8 CPU,
-32GB, and 30 minutes; all training and evaluation occur inside Slurm.
+submitted at 2026-09-03 22:29 EDT with one 20GB H100 MIG. Its scheduler
+estimate slipped to 01:07 EDT without starting. At the planned 23:00 queue
+check, `sbatch --test-only` predicted immediate starts for both 40GB MIG and a
+full H100. The untouched pending job was cancelled and replaced by job
+`21111043` on one 40GB H100 MIG, 8 CPU, 32GB, and 30 minutes; it started on
+`g30` in four seconds. All training and evaluation occur inside Slurm.
 
 ## Contribution accounting and stop decision
 
