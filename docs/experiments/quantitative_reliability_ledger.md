@@ -376,6 +376,26 @@ and is not evaluated on held-out years. D10's advantage is concentrated on
 M06, while D4's is concentrated on M07, motivating a fixed severity-dependent
 choice of prompt depth rather than simultaneous addition.
 
+## D12 severity-adaptive reliability prompting
+
+D12 freezes one observation-driven routing rule from the D4/D10 complement:
+missingness severity at or below `0.375` activates only the post-input prompt
+pyramid, while greater severity activates only the input token. This adds no
+searched threshold and keeps the complete 1,088-parameter prompt hierarchy;
+its design, novelty boundary, 2021 attribution gates, and held-out protocol are
+registered in
+`docs/superpowers/specs/2026-09-04-severity-adaptive-reliability-prompting-design.md`.
+
+The focused D12/D11/D10/D4 checks passed (`25 passed`), together with Python
+compilation, runner shell syntax, and an explicit gradient-routing check: 25%
+BlockDrop updates only deep prompts and 50% BlockDrop updates only the input
+token. At 2026-09-04 03:29 EDT, both a 20GB H100 MIG and a full H100 had an
+immediate predicted start, while a 40GB MIG was predicted for 03:50. Because
+D11 used 28m46s of its 30-minute allocation on the 20GB MIG, job `21122172`
+requested the immediately available full H100, 8 CPU, 32GB, and 30 minutes to
+avoid a likely timeout/requeue. Training and 2021 evaluation run entirely
+inside Slurm; no model compute runs on the login node.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
