@@ -436,6 +436,22 @@ an incremental method contribution on the corrected single-corrupt-view
 training recipe, not a claim that every component of the full stack dominates
 D1-ERM on clean inputs.
 
+## D13 T=5 cross-architecture transfer
+
+D13 tests whether D12's severity-to-prompt-depth mechanism transfers from C00
+Res18-U-Net (`T=1`) to C02 Res18-UTAE (`T=5`). The frozen design is recorded in
+`docs/superpowers/specs/2026-09-04-t5-severity-adaptive-reliability-prompting-design.md`.
+It first trains B5, the exact T=5 analogue of B3, then branches matched standard
+and SARP continuations from the same B5 checkpoint. D13 is confirmation of the
+existing mechanism, not a separately tuned contribution.
+
+The 15 focused B5/D13 tests, Python compilation, and runner syntax checks
+passed. At 2026-09-04 13:36 EDT, 20GB MIG, 40GB MIG, and full H100 requests all
+had immediate predicted starts. Because the previous C02 run took 44m18s and
+nearly exhausted 32GB host memory, B5 job `21144563` requested the immediately
+available full H100, 8 CPU, 64GB host memory, and 90 minutes. Training and 2021
+evaluation run entirely inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
