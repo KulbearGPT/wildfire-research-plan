@@ -20,6 +20,11 @@ def test_corrected_baselines_are_from_scratch_single_variable_controls() -> None
         corrected_baselines.corrected_baseline_spec("B4").training_policy
         == "year-balanced-fire-block"
     )
+    assert corrected_baselines.corrected_baseline_spec("B5").experiment_id == "C02"
+    assert (
+        corrected_baselines.corrected_baseline_spec("B5").training_policy
+        == "fire-block"
+    )
     assert all(
         spec.seed == 0 and spec.max_steps == 3_000
         for spec in corrected_baselines.CORRECTED_BASELINES.values()

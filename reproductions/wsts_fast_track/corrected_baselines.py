@@ -40,6 +40,7 @@ CORRECTED_BASELINES: Final[dict[str, CorrectedBaselineSpec]] = {
     "B2": CorrectedBaselineSpec("B2", "C00", "fire"),
     "B3": CorrectedBaselineSpec("B3", "C00", "fire-block"),
     "B4": CorrectedBaselineSpec("B4", "C00", "year-balanced-fire-block"),
+    "B5": CorrectedBaselineSpec("B5", "C02", "fire-block"),
 }
 
 
