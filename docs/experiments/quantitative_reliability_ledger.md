@@ -349,6 +349,22 @@ predeclared attribution gates and is not opened on held-out years. The result
 supports deep reliability prompting but cannot separate it strongly enough
 from the single-corrupt-view training policy.
 
+## D11 complete reliability prompt pyramid
+
+D11 combines D4's locally coverage-scaled first-convolution token with D10's
+five post-input encoder prompts, producing one input-to-semantic reliability
+hierarchy with 1,088 parameters. The frozen design requires at least `+0.020`
+total primary AP over D1-ERM, at least `+0.005` module AP over D2-STD, and a
+primary mean above both D4 and D10. Its bounded novelty boundary is recorded in
+`docs/superpowers/specs/2026-09-04-complete-reliability-prompt-pyramid-design.md`.
+
+The D11/D10/D4 focused checks passed (`21 passed`), plus Python compilation,
+shell syntax, and an explicit absence-of-placeholder check on the runner. At
+2026-09-04 02:53 EDT, all three H100 sizes had the same immediate predicted
+start. Job `21121610` therefore requested the smallest option: one 20GB H100
+MIG, 8 CPU, 32GB, and 30 minutes. It started on `g31` within seconds; all
+training and 2021 evaluation run inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
