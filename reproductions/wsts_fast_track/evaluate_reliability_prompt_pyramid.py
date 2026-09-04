@@ -24,8 +24,10 @@ from .reliability_prompt_pyramid import (
     PROMPT_CHANNELS,
     PROMPT_PARAMETER_COUNT,
     PROMPT_POOLING,
+    SEVERITY_THRESHOLD,
     CompleteReliabilityPromptPyramid,
     ReliabilityPromptPyramid,
+    SeverityAdaptiveReliabilityPrompting,
 )
 
 
@@ -83,7 +85,41 @@ def validate_crpp_checkpoint(payload: Mapping[str, object]) -> str:
     return "D11-CRPP"
 
 
+def validate_sarp_checkpoint(payload: Mapping[str, object]) -> str:
+    """Require the exact fixed D12 severity-adaptive contract."""
+
+    valid = (
+        payload.get("schema_version") == 1
+        and payload.get("status") == "pass"
+        and payload.get("candidate_id") == "D12-SARP"
+        and payload.get("matched_pair") == "D12"
+        and payload.get("base_control") == "D2-STD"
+        and payload.get("closest_ablations")
+        == ["D4-TOKEN", "D10-RPP", "D11-CRPP"]
+        and payload.get("experiment") == "C00"
+        and payload.get("steps") == 3_000
+        and payload.get("seed") == 0
+        and payload.get("variant") == "severity-adaptive-prompts"
+        and payload.get("processed_space_matched_corruption") is True
+        and payload.get("prompt_channels") == list(PROMPT_CHANNELS)
+        and payload.get("prompt_parameter_count")
+        == PROMPT_PARAMETER_COUNT + PROMPT_CHANNELS[0]
+        and payload.get("prompt_pooling") == PROMPT_POOLING
+        and payload.get("input_prompt") == INPUT_PROMPT
+        and payload.get("severity_threshold") == SEVERITY_THRESHOLD
+        and payload.get("mild_prompt") == "hierarchical"
+        and payload.get("severe_prompt") == "input"
+        and isinstance(payload.get("hyper_parameters"), Mapping)
+        and isinstance(payload.get("state_dict"), Mapping)
+    )
+    if not valid:
+        raise ValueError("SARP checkpoint contract is invalid")
+    return "D12-SARP"
+
+
 def validate_prompt_checkpoint(payload: Mapping[str, object]) -> str:
+    if payload.get("candidate_id") == "D12-SARP":
+        return validate_sarp_checkpoint(payload)
     if payload.get("candidate_id") == "D11-CRPP":
         return validate_crpp_checkpoint(payload)
     return validate_rpp_checkpoint(payload)
@@ -100,11 +136,13 @@ def load_rpp_model(
     model_class = getattr(importlib.import_module("models.SMPModel"), "SMPModel")
     init_args = checkpoint_init_args(payload["hyper_parameters"], experiment_id="C00")
     base_model = model_class(**init_args)
-    model_class = (
-        CompleteReliabilityPromptPyramid
-        if payload.get("candidate_id") == "D11-CRPP"
-        else ReliabilityPromptPyramid
-    )
+    model_class = {
+        "D10-RPP": ReliabilityPromptPyramid,
+        "D11-CRPP": CompleteReliabilityPromptPyramid,
+        "D12-SARP": SeverityAdaptiveReliabilityPrompting,
+    }.get(str(payload.get("candidate_id")))
+    if model_class is None:
+        raise ValueError("unknown reliability prompt candidate")
     model = model_class(base_model)
     model.load_state_dict(payload["state_dict"], strict=True)
     return model.to(device)

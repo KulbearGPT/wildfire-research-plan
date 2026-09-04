@@ -19,8 +19,10 @@ from .prototype import BLOCK_DROPOUT_PROBABILITY, FIRE_DROPOUT_PROBABILITY
 from .reliability_prompt_pyramid import (
     INPUT_PROMPT,
     PROMPT_POOLING,
+    SEVERITY_THRESHOLD,
     CompleteReliabilityPromptPyramid,
     ReliabilityPromptPyramid,
+    SeverityAdaptiveReliabilityPrompting,
 )
 from .train_predictive_consistency import validate_b3_record
 from .train_reliability_normalized import ProcessedReliabilityDataset
@@ -42,7 +44,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--device", default="cuda")
     parser.add_argument(
         "--variant",
-        choices=("prompt-pyramid", "complete-prompt-pyramid"),
+        choices=(
+            "prompt-pyramid",
+            "complete-prompt-pyramid",
+            "severity-adaptive-prompts",
+        ),
         default="prompt-pyramid",
     )
     args = parser.parse_args(argv)
@@ -108,11 +114,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=upstream,
         device=device,
     )
-    model_class = (
-        CompleteReliabilityPromptPyramid
-        if args.variant == "complete-prompt-pyramid"
-        else ReliabilityPromptPyramid
-    )
+    model_class = {
+        "prompt-pyramid": ReliabilityPromptPyramid,
+        "complete-prompt-pyramid": CompleteReliabilityPromptPyramid,
+        "severity-adaptive-prompts": SeverityAdaptiveReliabilityPrompting,
+    }[args.variant]
     model = model_class(base_model).to(device)
     if tuple(model.prompt_channels) != (64, 64, 128, 256, 512):
         raise ValueError("D10 requires the fixed ResNet-18 encoder channels")
@@ -144,14 +150,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     if output.exists():
         raise FileExistsError(output)
     complete = args.variant == "complete-prompt-pyramid"
+    adaptive = args.variant == "severity-adaptive-prompts"
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "candidate_id": "D11-CRPP" if complete else "D10-RPP",
-        "matched_pair": "D11" if complete else "D10",
+        "candidate_id": (
+            "D12-SARP" if adaptive else "D11-CRPP" if complete else "D10-RPP"
+        ),
+        "matched_pair": "D12" if adaptive else "D11" if complete else "D10",
         "base_control": "D2-STD",
         "closest_ablation": "D4-TOKEN",
-        "closest_ablations": ["D4-TOKEN", "D10-RPP"] if complete else None,
+        "closest_ablations": (
+            ["D4-TOKEN", "D10-RPP", "D11-CRPP"]
+            if adaptive
+            else ["D4-TOKEN", "D10-RPP"]
+            if complete
+            else None
+        ),
         "base_b3_record": str(record_path),
         "base_b3_checkpoint": str(checkpoint),
         "experiment": "C00",
@@ -167,7 +182,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "prompt_channels": list(model.prompt_channels),
         "prompt_parameter_count": model.prompt_parameter_count,
         "prompt_pooling": PROMPT_POOLING,
-        "input_prompt": INPUT_PROMPT if complete else None,
+        "input_prompt": INPUT_PROMPT if complete or adaptive else None,
+        "severity_threshold": SEVERITY_THRESHOLD if adaptive else None,
+        "mild_prompt": "hierarchical" if adaptive else None,
+        "severe_prompt": "input" if adaptive else None,
         "final_loss": final_loss,
         "hyper_parameters": dict(model.base_model.hparams),
         "state_dict": model.state_dict(),

@@ -14,6 +14,7 @@ PROMPT_CHANNELS = (64, 64, 128, 256, 512)
 PROMPT_PARAMETER_COUNT = sum(PROMPT_CHANNELS)
 PROMPT_POOLING = "adaptive-area-average"
 INPUT_PROMPT = "local-invalid-coverage-token"
+SEVERITY_THRESHOLD = 0.375
 
 
 def apply_reliability_prompts(
@@ -109,6 +110,33 @@ class CompleteReliabilityPromptPyramid(ReliabilityPromptPyramid):
             raise ValueError("runtime encoder channels differ from CRPP initialization")
         prompted = apply_reliability_prompts(
             encoded[1:], invalidity, self.prompt_tokens
+        )
+        decoder_features = self.base_model.model.decoder(encoded[0], *prompted)
+        return self.base_model.model.segmentation_head(decoder_features)
+
+
+class SeverityAdaptiveReliabilityPrompting(CompleteReliabilityPromptPyramid):
+    """Route mild blocks to deep prompts and severe blocks to the input token."""
+
+    def forward(self, packed: torch.Tensor) -> torch.Tensor:
+        if packed.ndim != 5 or packed.shape[1] != 1 or packed.shape[2] != 41:
+            raise ValueError("SARP input must have shape [B,1,41,H,W]")
+        features = packed[:, 0, :40]
+        invalidity = packed[:, 0, 40:41].clamp(0.0, 1.0)
+        severity = invalidity.mean(dim=(2, 3), keepdim=True)
+        severe = severity > SEVERITY_THRESHOLD
+        mild = (severity > 0.0) & ~severe
+        input_invalidity = invalidity * severe.to(invalidity.dtype)
+        deep_invalidity = invalidity * mild.to(invalidity.dtype)
+        encoded = tuple(
+            self.base_model.model.encoder(
+                torch.cat((features, input_invalidity), dim=1)
+            )
+        )
+        if tuple(feature.shape[1] for feature in encoded[1:]) != self.prompt_channels:
+            raise ValueError("runtime encoder channels differ from SARP initialization")
+        prompted = apply_reliability_prompts(
+            encoded[1:], deep_invalidity, self.prompt_tokens
         )
         decoder_features = self.base_model.model.decoder(encoded[0], *prompted)
         return self.base_model.model.segmentation_head(decoder_features)

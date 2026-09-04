@@ -10,9 +10,12 @@ import torch.nn.functional as F
 
 from reproductions.wsts_fast_track.evaluate_reliability_prompt_pyramid import (
     validate_crpp_checkpoint,
+    validate_sarp_checkpoint,
 )
 from reproductions.wsts_fast_track.reliability_prompt_pyramid import (
     CompleteReliabilityPromptPyramid,
+    SEVERITY_THRESHOLD,
+    SeverityAdaptiveReliabilityPrompting,
 )
 
 
@@ -87,6 +90,29 @@ def test_complete_pyramid_updates_input_and_hierarchical_tokens() -> None:
     assert all(torch.count_nonzero(token.grad) > 0 for token in model.prompt_tokens)
 
 
+@pytest.mark.parametrize(
+    ("missing_rows", "input_active", "deep_active"),
+    ((1, False, True), (2, True, False)),
+)
+def test_severity_routes_gradient_to_exactly_one_prompt_family(
+    missing_rows: int, input_active: bool, deep_active: bool
+) -> None:
+    model = SeverityAdaptiveReliabilityPrompting(_Base())
+    features = torch.randn(2, 1, 40, 4, 4)
+    invalid = torch.zeros(2, 1, 1, 4, 4)
+    invalid[:, :, :, :missing_rows] = 1.0
+
+    model(torch.cat((features, invalid), dim=2)).sum().backward()
+
+    input_nonzero = bool(torch.count_nonzero(model.input_token.invalid_token.grad))
+    deep_nonzero = any(
+        bool(torch.count_nonzero(token.grad)) for token in model.prompt_tokens
+    )
+    assert input_nonzero is input_active
+    assert deep_nonzero is deep_active
+    assert SEVERITY_THRESHOLD == 0.375
+
+
 def test_crpp_checkpoint_requires_complete_contract() -> None:
     payload = {
         "schema_version": 1,
@@ -113,6 +139,37 @@ def test_crpp_checkpoint_requires_complete_contract() -> None:
     payload["prompt_parameter_count"] = 1_024
     with pytest.raises(ValueError, match="CRPP checkpoint"):
         validate_crpp_checkpoint(payload)
+
+
+def test_sarp_checkpoint_requires_fixed_severity_contract() -> None:
+    payload = {
+        "schema_version": 1,
+        "status": "pass",
+        "candidate_id": "D12-SARP",
+        "matched_pair": "D12",
+        "base_control": "D2-STD",
+        "closest_ablations": ["D4-TOKEN", "D10-RPP", "D11-CRPP"],
+        "experiment": "C00",
+        "steps": 3_000,
+        "seed": 0,
+        "variant": "severity-adaptive-prompts",
+        "processed_space_matched_corruption": True,
+        "prompt_channels": [64, 64, 128, 256, 512],
+        "prompt_parameter_count": 1_088,
+        "prompt_pooling": "adaptive-area-average",
+        "input_prompt": "local-invalid-coverage-token",
+        "severity_threshold": 0.375,
+        "mild_prompt": "hierarchical",
+        "severe_prompt": "input",
+        "hyper_parameters": {"n_channels": 40},
+        "state_dict": {"weight": torch.tensor(1.0)},
+    }
+
+    assert validate_sarp_checkpoint(payload) == "D12-SARP"
+
+    payload["severity_threshold"] = 0.4
+    with pytest.raises(ValueError, match="SARP checkpoint"):
+        validate_sarp_checkpoint(payload)
 
 
 def test_crpp_runner_has_valid_shell_contract(tmp_path: Path) -> None:
@@ -161,3 +218,46 @@ def test_generic_heldout_runner_accepts_crpp_before_year_validation(
 
     assert result.returncode == 2
     assert "year must be 2022 or 2023" in result.stderr
+
+
+def test_sarp_runner_and_heldout_dispatch_have_fixed_shell_contract(
+    tmp_path: Path,
+) -> None:
+    root = Path(__file__).resolve().parents[1]
+    runner = (
+        root
+        / "reproductions"
+        / "wsts_fast_track"
+        / "run_severity_adaptive_reliability_prompting_on_nibi.sh"
+    )
+    syntax = subprocess.run(
+        ["bash", "-n", str(runner)], text=True, capture_output=True, check=False
+    )
+    assert syntax.returncode == 0, syntax.stderr
+    record = tmp_path / "b3.json"
+    record.write_text("{}\n", encoding="utf-8")
+    invalid = subprocess.run(
+        [str(runner), str(record), "extra"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert invalid.returncode == 2
+    assert "usage:" in invalid.stderr
+
+    heldout = (
+        root
+        / "reproductions"
+        / "wsts_fast_track"
+        / "run_reliability_evaluation_on_nibi.sh"
+    )
+    checkpoint = tmp_path / "sarp.pt"
+    checkpoint.write_bytes(b"placeholder")
+    heldout_invalid = subprocess.run(
+        [str(heldout), "sarp", str(checkpoint), "2021", "D12-SARP"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert heldout_invalid.returncode == 2
+    assert "year must be 2022 or 2023" in heldout_invalid.stderr
