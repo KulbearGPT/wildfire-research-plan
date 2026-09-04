@@ -43,7 +43,7 @@ new matched candidates are designed to close that attribution gap.
 | ID | Training policy | Matched baseline | Slurm job | Resource | State | 2021 M00 AP | M01 AP | M06 AP | M07 AP | Classification |
 | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
 | B0 | clean C00 | -- | `21093263` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.580988 | 0.039387 | 0.323805 | 0.133672 | corrected baseline |
-| B1 | clean C02 | B0 | `21102675` | H100 MIG 20GB, 8 CPU, 64GB, 2h | resubmitted | -- | -- | -- | -- | temporal baseline repair |
+| B1 | clean C02 | B0 | `21102675` | H100 MIG 20GB, 8 CPU, 64GB, 2h | completed | 0.595265 | 0.093697 | 0.329582 | 0.140190 | corrected temporal baseline |
 | B2 | FireDrop C00 | B0 | `21093265` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.559282 | 0.262091 | 0.308248 | 0.125715 | specialist baseline; standalone clean gate fails |
 | B3 | FireDrop + BlockDrop C00 | B2 | `21093266` | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.558318 | 0.276890 | 0.343010 | 0.172086 | screen-positive joint training baseline |
 | B4 | B3 + equal-year sampling | B3 | `21094665` (`afterok:21093263`) | H100 MIG 20GB, 8 CPU, 32GB, 1h | completed | 0.534606 | 0.252345 | 0.329461 | 0.166855 | rejected tuning candidate |
@@ -67,6 +67,9 @@ and was cancelled before its one-hour limit; replacement `21096854` keeps the
 scientific configuration and 20GB MIG request fixed but uses a two-hour limit.
 That replacement reached 2,444/3,000 steps but was killed at 41m14s after using
 31.97/32GB host memory. Retry `21102675` changes only host memory to 64GB.
+It completed successfully in 44m18s. B1 exceeds B0 on all four 2021 scenarios;
+job `21104532` performs the frozen 2022/2023 baseline evaluation. B1 remains an
+existing temporal architecture baseline, not a new contribution.
 
 B2 completed at 2026-09-03 17:19 EDT in 22m13s. Against B0, M01 AP improves
 by 0.222704 but M00 AP drops by 0.021705, so the standalone checkpoint fails
