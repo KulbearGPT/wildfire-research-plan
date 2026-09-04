@@ -44,6 +44,7 @@ class CleanCorruptPairDataset:
         fire_probability: float,
         block_probability: float,
         active_fire_missing_value: float,
+        return_reliability: bool = False,
     ) -> None:
         if getattr(base_dataset, "is_train", None) is not True:
             raise ValueError("paired corruption requires an upstream training dataset")
@@ -57,6 +58,7 @@ class CleanCorruptPairDataset:
         self.fire_probability = fire_probability
         self.block_probability = block_probability
         self.active_fire_missing_value = float(active_fire_missing_value)
+        self.return_reliability = bool(return_reliability)
 
     def __len__(self) -> int:
         return len(self.base)
@@ -78,11 +80,16 @@ class CleanCorruptPairDataset:
         ):
             raise ValueError("paired processed input must have shape (T, 40, H, W)")
         processed_corrupt = processed_clean.clone()
+        fire_missing = processed_clean.new_zeros(
+            (processed_clean.shape[0], 1, *processed_clean.shape[-2:])
+        )
+        block_missing = torch.zeros_like(fire_missing)
         if float(np.random.random()) < self.fire_probability:
             processed_corrupt[:, PROCESSED_ACTIVE_FIRE_VALUE] = (
                 self.active_fire_missing_value
             )
             processed_corrupt[:, PROCESSED_ACTIVE_FIRE_BINARY] = 0.0
+            fire_missing.fill_(1.0)
         if float(np.random.random()) < self.block_probability:
             fraction = 0.25 if float(np.random.random()) < 0.5 else 0.50
             mask = torch.as_tensor(
@@ -94,6 +101,7 @@ class CleanCorruptPairDataset:
                 ),
                 dtype=torch.bool,
             )
+            block_missing[:, 0] = mask
             processed_corrupt[:, PROCESSED_DYNAMIC_NON_FIRE] = (
                 processed_corrupt[:, PROCESSED_DYNAMIC_NON_FIRE].masked_fill(
                     mask[None, None], 0.0
@@ -109,8 +117,11 @@ class CleanCorruptPairDataset:
                     mask[None], 0.0
                 )
             )
-        return (
+        result = (
             self._select_features(processed_clean),
             self._select_features(processed_corrupt),
             clean_target,
         )
+        if self.return_reliability:
+            return (*result, fire_missing, block_missing)
+        return result
