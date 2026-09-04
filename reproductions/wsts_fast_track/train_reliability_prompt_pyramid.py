@@ -16,7 +16,12 @@ from .corrected_baselines import install_corrected_baseline
 from .entrypoint import TRAIN_YEARS, _install_runtime_contract, load_training_stats
 from .evaluate_missingness import load_checkpoint_model
 from .prototype import BLOCK_DROPOUT_PROBABILITY, FIRE_DROPOUT_PROBABILITY
-from .reliability_prompt_pyramid import PROMPT_POOLING, ReliabilityPromptPyramid
+from .reliability_prompt_pyramid import (
+    INPUT_PROMPT,
+    PROMPT_POOLING,
+    CompleteReliabilityPromptPyramid,
+    ReliabilityPromptPyramid,
+)
 from .train_predictive_consistency import validate_b3_record
 from .train_reliability_normalized import ProcessedReliabilityDataset
 
@@ -35,6 +40,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--variant",
+        choices=("prompt-pyramid", "complete-prompt-pyramid"),
+        default="prompt-pyramid",
+    )
     args = parser.parse_args(argv)
 
     record_path = args.b3_record.resolve(strict=True)
@@ -98,7 +108,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=upstream,
         device=device,
     )
-    model = ReliabilityPromptPyramid(base_model).to(device)
+    model_class = (
+        CompleteReliabilityPromptPyramid
+        if args.variant == "complete-prompt-pyramid"
+        else ReliabilityPromptPyramid
+    )
+    model = model_class(base_model).to(device)
     if tuple(model.prompt_channels) != (64, 64, 128, 256, 512):
         raise ValueError("D10 requires the fixed ResNet-18 encoder channels")
     model.train()
@@ -128,13 +143,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         raise FileExistsError(output)
+    complete = args.variant == "complete-prompt-pyramid"
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "candidate_id": "D10-RPP",
-        "matched_pair": "D10",
+        "candidate_id": "D11-CRPP" if complete else "D10-RPP",
+        "matched_pair": "D11" if complete else "D10",
         "base_control": "D2-STD",
         "closest_ablation": "D4-TOKEN",
+        "closest_ablations": ["D4-TOKEN", "D10-RPP"] if complete else None,
         "base_b3_record": str(record_path),
         "base_b3_checkpoint": str(checkpoint),
         "experiment": "C00",
@@ -143,13 +160,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         "seed": 0,
         "batch_size": args.batch_size,
         "learning_rate": LEARNING_RATE,
-        "variant": "prompt-pyramid",
+        "variant": args.variant,
         "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
         "block_dropout_probability": BLOCK_DROPOUT_PROBABILITY,
         "processed_space_matched_corruption": True,
         "prompt_channels": list(model.prompt_channels),
         "prompt_parameter_count": model.prompt_parameter_count,
         "prompt_pooling": PROMPT_POOLING,
+        "input_prompt": INPUT_PROMPT if complete else None,
         "final_loss": final_loss,
         "hyper_parameters": dict(model.base_model.hparams),
         "state_dict": model.state_dict(),

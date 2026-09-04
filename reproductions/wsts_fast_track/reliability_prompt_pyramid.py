@@ -7,10 +7,13 @@ from collections.abc import Sequence
 import torch
 import torch.nn.functional as F
 
+from .reliability_token_conv import InputReliabilityTokenConv2d
+
 
 PROMPT_CHANNELS = (64, 64, 128, 256, 512)
 PROMPT_PARAMETER_COUNT = sum(PROMPT_CHANNELS)
 PROMPT_POOLING = "adaptive-area-average"
+INPUT_PROMPT = "local-invalid-coverage-token"
 
 
 def apply_reliability_prompts(
@@ -78,3 +81,34 @@ class ReliabilityPromptPyramid(torch.nn.Module):
         self, logits: torch.Tensor, target: torch.Tensor
     ) -> torch.Tensor:
         return self.base_model.compute_loss(logits, target)
+
+
+class CompleteReliabilityPromptPyramid(ReliabilityPromptPyramid):
+    """Combine D4's input token with prompts at every encoder scale."""
+
+    def __init__(self, base_model: torch.nn.Module) -> None:
+        base_model.model.encoder.conv1 = InputReliabilityTokenConv2d(
+            base_model.model.encoder.conv1
+        )
+        super().__init__(base_model)
+        self.prompt_parameter_count += self.input_token.invalid_token.numel()
+
+    @property
+    def input_token(self) -> InputReliabilityTokenConv2d:
+        return self.base_model.model.encoder.conv1
+
+    def forward(self, packed: torch.Tensor) -> torch.Tensor:
+        if packed.ndim != 5 or packed.shape[1] != 1 or packed.shape[2] != 41:
+            raise ValueError("complete RPP input must have shape [B,1,41,H,W]")
+        features_and_invalidity = packed[:, 0]
+        invalidity = features_and_invalidity[:, 40:41].clamp(0.0, 1.0)
+        encoded = tuple(
+            self.base_model.model.encoder(features_and_invalidity)
+        )
+        if tuple(feature.shape[1] for feature in encoded[1:]) != self.prompt_channels:
+            raise ValueError("runtime encoder channels differ from CRPP initialization")
+        prompted = apply_reliability_prompts(
+            encoded[1:], invalidity, self.prompt_tokens
+        )
+        decoder_features = self.base_model.model.decoder(encoded[0], *prompted)
+        return self.base_model.model.segmentation_head(decoder_features)

@@ -20,9 +20,11 @@ from .evaluate_missingness import (
 )
 from .evaluation import build_controlled_dataset
 from .reliability_prompt_pyramid import (
+    INPUT_PROMPT,
     PROMPT_CHANNELS,
     PROMPT_PARAMETER_COUNT,
     PROMPT_POOLING,
+    CompleteReliabilityPromptPyramid,
     ReliabilityPromptPyramid,
 )
 
@@ -53,6 +55,40 @@ def validate_rpp_checkpoint(payload: Mapping[str, object]) -> str:
     return "D10-RPP"
 
 
+def validate_crpp_checkpoint(payload: Mapping[str, object]) -> str:
+    """Require the exact fixed D11 complete-pyramid contract."""
+
+    valid = (
+        payload.get("schema_version") == 1
+        and payload.get("status") == "pass"
+        and payload.get("candidate_id") == "D11-CRPP"
+        and payload.get("matched_pair") == "D11"
+        and payload.get("base_control") == "D2-STD"
+        and payload.get("closest_ablations") == ["D4-TOKEN", "D10-RPP"]
+        and payload.get("experiment") == "C00"
+        and payload.get("steps") == 3_000
+        and payload.get("seed") == 0
+        and payload.get("variant") == "complete-prompt-pyramid"
+        and payload.get("processed_space_matched_corruption") is True
+        and payload.get("prompt_channels") == list(PROMPT_CHANNELS)
+        and payload.get("prompt_parameter_count")
+        == PROMPT_PARAMETER_COUNT + PROMPT_CHANNELS[0]
+        and payload.get("prompt_pooling") == PROMPT_POOLING
+        and payload.get("input_prompt") == INPUT_PROMPT
+        and isinstance(payload.get("hyper_parameters"), Mapping)
+        and isinstance(payload.get("state_dict"), Mapping)
+    )
+    if not valid:
+        raise ValueError("CRPP checkpoint contract is invalid")
+    return "D11-CRPP"
+
+
+def validate_prompt_checkpoint(payload: Mapping[str, object]) -> str:
+    if payload.get("candidate_id") == "D11-CRPP":
+        return validate_crpp_checkpoint(payload)
+    return validate_rpp_checkpoint(payload)
+
+
 def load_rpp_model(
     payload: Mapping[str, Any], *, upstream_root: Path, device: torch.device
 ) -> ReliabilityPromptPyramid:
@@ -64,7 +100,12 @@ def load_rpp_model(
     model_class = getattr(importlib.import_module("models.SMPModel"), "SMPModel")
     init_args = checkpoint_init_args(payload["hyper_parameters"], experiment_id="C00")
     base_model = model_class(**init_args)
-    model = ReliabilityPromptPyramid(base_model)
+    model_class = (
+        CompleteReliabilityPromptPyramid
+        if payload.get("candidate_id") == "D11-CRPP"
+        else ReliabilityPromptPyramid
+    )
+    model = model_class(base_model)
     model.load_state_dict(payload["state_dict"], strict=True)
     return model.to(device)
 
@@ -89,7 +130,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
     if not isinstance(payload, Mapping):
         raise ValueError("RPP checkpoint must be a mapping")
-    candidate_id = validate_rpp_checkpoint(payload)
+    candidate_id = validate_prompt_checkpoint(payload)
     mode, scientific_claim = evaluation_boundary(
         args.year, heldout_authorized=args.heldout_authorized
     )
