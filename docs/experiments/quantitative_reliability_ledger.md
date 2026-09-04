@@ -174,6 +174,28 @@ D4 completed in job `21103691`. Its M06/M07 deltas are
 primary result misses the predeclared +0.005 threshold by 0.00004025, so D4 is
 recorded as a borderline negative and is not evaluated on held-out years.
 
+## D5 counterfactual impact-weighted consistency
+
+D5 tests whether D1's global consistency signal was diluted by forecast pixels
+that did not respond to the synthetic observation failure. CIWC weights each
+pixel's Bernoulli KL by the stop-gradiented clean/corrupt probability change,
+normalizes the weights per sample, and otherwise keeps D1-KL's B3
+initialization, paired sample stream, optimizer, 3,000 steps, and
+`lambda=0.1` fixed. The novelty claim is limited to this same-model
+counterfactual forecast-impact support; masking, consistency, and disagreement
+weighting alone are not claimed as new.
+
+The gate was frozen before training: relative to D1-ERM, 2021 mean
+M01/M06/M07 AP must improve by at least `+0.020`, every primary scenario must
+remain above `-0.005`, and M00 must remain above `-0.010`; CIWC must also beat
+global D1-KL. Only a passing model may access 2022--2023, and final retention
+requires positive primary deltas in every year plus a three-year mean of at
+least `+0.020`.
+
+Focused implementation checks passed (`17 passed`) before job `21108872` was
+submitted at 2026-09-03 22:29 EDT. The job requests one 20GB H100 MIG, 8 CPU,
+32GB, and 30 minutes; all training and evaluation occur inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
