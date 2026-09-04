@@ -8,6 +8,7 @@ import torch
 
 
 ADAPTER_PARAMETER_COUNT = 2_769
+BLOCK_ADAPTER_PARAMETER_COUNT = 2_625
 RELIABILITY_MAPS = ("fire-drop", "block-drop")
 
 
@@ -39,11 +40,17 @@ def pack_reliability_input(
 class CounterfactualReliabilityAdapter(torch.nn.Module):
     """Joint base forecast plus a small reliability-conditioned logit adapter."""
 
-    def __init__(self, base_model: torch.nn.Module) -> None:
+    def __init__(
+        self, base_model: torch.nn.Module, *, adapter_scope: str = "all"
+    ) -> None:
         super().__init__()
+        if adapter_scope not in {"all", "block"}:
+            raise ValueError("adapter scope must be all or block")
         self.base_model = base_model
+        self.adapter_scope = adapter_scope
+        adapter_input_channels = 19 if adapter_scope == "all" else 18
         self.adapter = torch.nn.Sequential(
-            torch.nn.Conv2d(19, 16, kernel_size=3, padding=1),
+            torch.nn.Conv2d(adapter_input_channels, 16, kernel_size=3, padding=1),
             torch.nn.GELU(),
             torch.nn.Conv2d(16, 1, kernel_size=1),
         )
@@ -52,7 +59,12 @@ class CounterfactualReliabilityAdapter(torch.nn.Module):
         self.adapter_parameter_count = sum(
             parameter.numel() for parameter in self.adapter.parameters()
         )
-        if self.adapter_parameter_count != ADAPTER_PARAMETER_COUNT:
+        expected_count = (
+            ADAPTER_PARAMETER_COUNT
+            if adapter_scope == "all"
+            else BLOCK_ADAPTER_PARAMETER_COUNT
+        )
+        if self.adapter_parameter_count != expected_count:
             raise RuntimeError("unexpected CRA parameter count")
 
     def _base_forward(
@@ -73,17 +85,24 @@ class CounterfactualReliabilityAdapter(torch.nn.Module):
         block_fraction = block_missing.mean(dim=(2, 3), keepdim=True).expand_as(
             block_missing
         )
-        residual = self.adapter(
-            torch.cat(
+        if self.adapter_scope == "all":
+            adapter_input = torch.cat(
                 (decoder_features, fire_missing, block_missing, block_fraction),
                 dim=1,
             )
-        )
-        any_missing = (
-            (fire_missing.amax(dim=(1, 2, 3), keepdim=True) > 0)
-            | (block_missing.amax(dim=(1, 2, 3), keepdim=True) > 0)
-        ).to(logits.dtype)
-        return logits + any_missing * residual
+            apply_adapter = (
+                (fire_missing.amax(dim=(1, 2, 3), keepdim=True) > 0)
+                | (block_missing.amax(dim=(1, 2, 3), keepdim=True) > 0)
+            )
+        else:
+            adapter_input = torch.cat(
+                (decoder_features, block_missing, block_fraction), dim=1
+            )
+            apply_adapter = block_missing.amax(
+                dim=(1, 2, 3), keepdim=True
+            ) > 0
+        residual = self.adapter(adapter_input)
+        return logits + apply_adapter.to(logits.dtype) * residual
 
     def clean_forward(self, features: torch.Tensor) -> torch.Tensor:
         """Run the exact base path without constructing or applying an adapter."""

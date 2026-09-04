@@ -20,6 +20,7 @@ from .counterfactual_impact_consistency import (
 )
 from .counterfactual_reliability_adapter import (
     ADAPTER_PARAMETER_COUNT,
+    BLOCK_ADAPTER_PARAMETER_COUNT,
     RELIABILITY_MAPS,
     CounterfactualReliabilityAdapter,
     pack_reliability_input,
@@ -65,6 +66,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--adapter-scope", choices=("all", "block"), default="all"
+    )
     args = parser.parse_args(argv)
 
     record_path = args.b3_record.resolve(strict=True)
@@ -132,7 +136,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         upstream_root=upstream,
         device=device,
     )
-    model = CounterfactualReliabilityAdapter(base_model).to(device)
+    model = CounterfactualReliabilityAdapter(
+        base_model, adapter_scope=args.adapter_scope
+    ).to(device)
     model.train()
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
     iterator = iter(loader)
@@ -173,13 +179,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         raise FileExistsError(output)
+    block_scope = args.adapter_scope == "block"
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "candidate_id": "D7-CRA",
-        "matched_pair": "D7",
+        "candidate_id": "D8-FFCA" if block_scope else "D7-CRA",
+        "matched_pair": "D8" if block_scope else "D7",
         "base_control": "D1-ERM",
-        "closest_ablations": ["D5-CIWC", "D4-TOKEN", "P04-P06"],
+        "closest_ablations": (
+            ["D5-CIWC", "D7-CRA", "D4-TOKEN", "P04-P06"]
+            if block_scope
+            else ["D5-CIWC", "D4-TOKEN", "P04-P06"]
+        ),
         "base_b3_record": str(record_path),
         "base_b3_checkpoint": str(checkpoint),
         "experiment": "C00",
@@ -190,7 +201,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         "learning_rate": LEARNING_RATE,
         "lambda_ciwc": CIWC_WEIGHT,
         "impact_weighting": IMPACT_WEIGHTING,
-        "adapter_parameter_count": ADAPTER_PARAMETER_COUNT,
+        "adapter_scope": args.adapter_scope,
+        "adapter_parameter_count": (
+            BLOCK_ADAPTER_PARAMETER_COUNT
+            if block_scope
+            else ADAPTER_PARAMETER_COUNT
+        ),
         "reliability_maps": list(RELIABILITY_MAPS),
         "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
         "block_dropout_probability": BLOCK_DROPOUT_PROBABILITY,

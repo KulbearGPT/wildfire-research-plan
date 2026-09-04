@@ -11,6 +11,7 @@ import torch
 
 from .counterfactual_reliability_adapter import (
     ADAPTER_PARAMETER_COUNT,
+    BLOCK_ADAPTER_PARAMETER_COUNT,
     RELIABILITY_MAPS,
     CounterfactualReliabilityAdapter,
     TwoRegimeReliabilityDataset,
@@ -50,6 +51,42 @@ def validate_cra_checkpoint(payload: Mapping[str, object]) -> str:
     return "D7-CRA"
 
 
+def validate_ffca_checkpoint(payload: Mapping[str, object]) -> str:
+    """Require the exact fixed D8 failure-factorized checkpoint contract."""
+
+    valid = (
+        payload.get("schema_version") == 1
+        and payload.get("status") == "pass"
+        and payload.get("candidate_id") == "D8-FFCA"
+        and payload.get("matched_pair") == "D8"
+        and payload.get("base_control") == "D1-ERM"
+        and payload.get("closest_ablations")
+        == ["D5-CIWC", "D7-CRA", "D4-TOKEN", "P04-P06"]
+        and payload.get("experiment") == "C00"
+        and payload.get("steps") == 3_000
+        and payload.get("seed") == 0
+        and payload.get("lambda_ciwc") == 0.1
+        and payload.get("adapter_scope") == "block"
+        and payload.get("adapter_parameter_count")
+        == BLOCK_ADAPTER_PARAMETER_COUNT
+        and payload.get("reliability_maps") == list(RELIABILITY_MAPS)
+        and isinstance(payload.get("hyper_parameters"), Mapping)
+        and isinstance(payload.get("base_state_dict"), Mapping)
+        and isinstance(payload.get("adapter_state_dict"), Mapping)
+    )
+    if not valid:
+        raise ValueError("FFCA checkpoint contract is invalid")
+    return "D8-FFCA"
+
+
+def validate_adapter_checkpoint(payload: Mapping[str, object]) -> str:
+    """Dispatch only to one of the two frozen adapter contracts."""
+
+    if payload.get("candidate_id") == "D8-FFCA":
+        return validate_ffca_checkpoint(payload)
+    return validate_cra_checkpoint(payload)
+
+
 def load_cra_model(
     payload: Mapping[str, object], *, upstream_root: Path, device: torch.device
 ) -> CounterfactualReliabilityAdapter:
@@ -65,7 +102,10 @@ def load_cra_model(
         device=device,
     )
     base_model.load_state_dict(payload["base_state_dict"], strict=True)
-    model = CounterfactualReliabilityAdapter(base_model).to(device)
+    adapter_scope = "block" if payload.get("candidate_id") == "D8-FFCA" else "all"
+    model = CounterfactualReliabilityAdapter(
+        base_model, adapter_scope=adapter_scope
+    ).to(device)
     model.adapter.load_state_dict(payload["adapter_state_dict"], strict=True)
     return model
 
@@ -90,7 +130,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
     if not isinstance(payload, Mapping):
         raise ValueError("CRA checkpoint must be a mapping")
-    candidate_id = validate_cra_checkpoint(payload)
+    candidate_id = validate_adapter_checkpoint(payload)
     mode, scientific_claim = evaluation_boundary(
         args.year, heldout_authorized=args.heldout_authorized
     )
