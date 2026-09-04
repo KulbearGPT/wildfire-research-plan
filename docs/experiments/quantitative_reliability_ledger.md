@@ -459,6 +459,14 @@ AP is `0.557715/0.288461/0.336086/0.158021` on M00/M01/M06/M07, respectively
 reference. The matched D13 standard and SARP arms must both start from this
 exact checkpoint and retain identical allocation and continuation settings.
 
+At 2026-09-04 15:02 EDT, scheduler probes predicted starts at 15:21 for a
+20GB H100 MIG, immediately for a 40GB MIG, and 15:26 for a full H100. The
+40GB option is exactly twice the 20GB minimum and therefore satisfies the
+resource-overflow limit while avoiding the queue. Matched jobs `21149784`
+(`D13-STD-T5`) and `21149785` (`D13-SARP-T5`) each requested one 40GB MIG,
+8 CPU, 64GB host memory, and 90 minutes; both started on `g33` within seconds.
+All continuation training and evaluation run inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
