@@ -452,6 +452,13 @@ nearly exhausted 32GB host memory, B5 job `21144563` requested the immediately
 available full H100, 8 CPU, 64GB host memory, and 90 minutes. Training and 2021
 evaluation run entirely inside Slurm.
 
+Job `21144563` completed with exit `0:0` in 1h19m36s. The corrected B5
+checkpoint reached validation AP `0.406790` at step 2941; its 2021 reliability
+AP is `0.557715/0.288461/0.336086/0.158021` on M00/M01/M06/M07, respectively
+(M06/M07 mean `0.247054`). These values are the frozen pre-continuation T=5
+reference. The matched D13 standard and SARP arms must both start from this
+exact checkpoint and retain identical allocation and continuation settings.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
