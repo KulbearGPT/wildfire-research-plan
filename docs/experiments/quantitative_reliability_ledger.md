@@ -104,6 +104,7 @@ therefore rejected without held-out evaluation.
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | not identifiable on current scenarios | gated | M01 has no valid fire step; M06/M07 use one block across all steps; no GPU run |
 | D4-TOKEN | 64-parameter invalid-region token after standard first convolution | D2-STD | mean M06/M07 AP | borderline reject | primary delta +0.004960, below frozen +0.005 gate |
 | D5-CIWC | counterfactual impact-weighted consistency | D1-ERM; D1-KL closest ablation | mean M01/M06/M07 AP | rejected | primary delta +0.015468, below frozen +0.020 target; no held-out evaluation |
+| D6-CIRC | CIWC plus counterfactual spatial-risk rank consistency | D1-ERM; D1-KL and D5-CIWC closest ablations | mean M01/M06/M07 AP | rejected | primary delta +0.008733; M00 -0.012626 and M06 -0.006122 fail guardrails; no held-out evaluation |
 | T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -227,6 +228,15 @@ MIG and full H100 could start immediately. Job `21112470` therefore requested
 the smaller immediately available option: one 40GB H100 MIG, 8 CPU, 32GB,
 and 30 minutes. It started on `g36` within seconds. Training and 2021
 evaluation run entirely inside Slurm.
+
+Job `21112470` completed in 8m24s with exit `0:0`. D6 produced
+M00/M01/M06/M07 AP `0.570395/0.280630/0.355114/0.179208`. Relative to
+D1-ERM, the deltas are `-0.012626/+0.029264/-0.006122/+0.003056`, giving a
+primary mean of only `+0.008733`. D6 is also `-0.006735` below D5-CIWC on the
+primary mean. It therefore misses the target and violates both the M00 and
+per-scenario guardrails. D6 is rejected without 2022--2023 evaluation or a
+rank-weight sweep. The listwise term weakened the useful D5 signal instead of
+repairing BlockDrop ranking.
 
 ## Contribution accounting and stop decision
 
