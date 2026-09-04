@@ -396,6 +396,17 @@ requested the immediately available full H100, 8 CPU, 32GB, and 30 minutes to
 avoid a likely timeout/requeue. Training and 2021 evaluation run entirely
 inside Slurm; no model compute runs on the login node.
 
+Job `21122172` completed in 28m03s with exit `0:0`. D12 produced
+M00/M01/M06/M07 AP `0.585151/0.302867/0.376175/0.195433`. Its total joint
+M01/M06/M07 delta versus D1-ERM is `+0.028574`. Relative to D2-STD, its
+scenario deltas are `+0.002079/+0.000886/+0.007399/+0.006351`; the
+module-relevant M06/M07 mean is `+0.006875`. Its BlockDrop mean also exceeds
+D4-TOKEN, D10-RPP, and D11-CRPP by `+0.001916`, `+0.002807`, and `+0.001947`,
+respectively. D12 therefore passes every frozen 2021 total-effect,
+module-attribution, competitor, and guardrail gate. This result authorizes one
+fixed held-out allocation evaluating both D12 and D2-STD on 2022 and 2023;
+those years remain unavailable for variant selection.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
