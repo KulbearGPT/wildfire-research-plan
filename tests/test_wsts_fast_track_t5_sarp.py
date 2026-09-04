@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import copy
+import subprocess
+from pathlib import Path
 
 import pytest
 import torch
 import torch.nn.functional as F
 
 from reproductions.wsts_fast_track.contract import MULTI_FEATURES
+from reproductions.wsts_fast_track.evaluate_temporal_reliability_prompting import (
+    validate_t5_reliability_checkpoint,
+)
 from reproductions.wsts_fast_track.temporal_reliability_prompting import (
     TemporalSeverityAdaptiveReliabilityPrompting,
     apply_processed_temporal_reliability_corruption,
@@ -140,3 +145,73 @@ def test_t5_severity_routes_gradient_to_one_prompt_family(
     )
     assert input_nonzero is input_active
     assert deep_nonzero is deep_active
+
+
+def _checkpoint_payload(variant: str) -> dict[str, object]:
+    sarp = variant == "sarp"
+    return {
+        "schema_version": 1,
+        "status": "pass",
+        "candidate_id": "D13-SARP-T5" if sarp else "D13-STD-T5",
+        "matched_pair": "D13-T5",
+        "base_control": "B5",
+        "experiment": "C02",
+        "steps": 3_000,
+        "seed": 0,
+        "variant": variant,
+        "processed_space_matched_corruption": True,
+        "temporal_steps": 5,
+        "feature_count": 33,
+        "prompt_channels": [64, 64, 128, 256, 512] if sarp else None,
+        "prompt_parameter_count": 1_088 if sarp else 0,
+        "prompt_pooling": "adaptive-area-average" if sarp else None,
+        "severity_threshold": 0.375 if sarp else None,
+        "mild_prompt": "hierarchical-before-temporal-fusion" if sarp else None,
+        "severe_prompt": "per-step-input" if sarp else None,
+        "hyper_parameters": {"n_channels": 33},
+        "state_dict": {"weight": torch.tensor(1.0)},
+    }
+
+
+def test_t5_checkpoint_contract_distinguishes_standard_and_sarp() -> None:
+    assert validate_t5_reliability_checkpoint(_checkpoint_payload("standard")) == (
+        "standard"
+    )
+    assert validate_t5_reliability_checkpoint(_checkpoint_payload("sarp")) == "sarp"
+
+    invalid = _checkpoint_payload("sarp")
+    invalid["severity_threshold"] = 0.4
+    with pytest.raises(ValueError, match="T5 reliability checkpoint"):
+        validate_t5_reliability_checkpoint(invalid)
+
+
+def test_t5_runners_have_minimal_shell_contract(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    training = (
+        root
+        / "reproductions"
+        / "wsts_fast_track"
+        / "run_t5_reliability_on_nibi.sh"
+    )
+    heldout = (
+        root
+        / "reproductions"
+        / "wsts_fast_track"
+        / "run_t5_sarp_heldout_on_nibi.sh"
+    )
+    for runner in (training, heldout):
+        syntax = subprocess.run(
+            ["bash", "-n", str(runner)], text=True, capture_output=True, check=False
+        )
+        assert syntax.returncode == 0, syntax.stderr
+
+    record = tmp_path / "b5.json"
+    record.write_text("{}\n", encoding="utf-8")
+    rejected = subprocess.run(
+        [str(training), "unknown", str(record)],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert rejected.returncode == 2
+    assert "variant must be standard or sarp" in rejected.stderr
