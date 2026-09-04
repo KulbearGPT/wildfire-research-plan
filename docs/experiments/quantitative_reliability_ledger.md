@@ -210,6 +210,24 @@ D5 is therefore rejected without accessing 2022--2023. The result supports
 counterfactual focusing for complete FireDrop but shows that pixelwise impact
 weighting does not recover BlockDrop ranking.
 
+## D6 counterfactual impact-and-rank consistency
+
+D6 keeps D5-CIWC and adds a fixed `0.01` normalized Jensen-Shannon divergence
+between the clean and corrupt forecasts' spatial softmax distributions. This
+is a listwise constraint on future-risk ordering, aimed directly at the M06
+and M07 weakness exposed by D5. The novelty boundary, exact objective, matched
+contract, and unchanged `+0.020` decision gate were frozen before code or
+training in
+`docs/superpowers/specs/2026-09-03-counterfactual-rank-consistency-design.md`.
+
+The new focused tests and its D5/D1 dependencies passed (`19 passed`), along
+with Python compilation and shell syntax. At 2026-09-03 23:45 EDT,
+`sbatch --test-only` estimated a 20GB H100 MIG start at 00:51, while a 40GB
+MIG and full H100 could start immediately. Job `21112470` therefore requested
+the smaller immediately available option: one 40GB H100 MIG, 8 CPU, 32GB,
+and 30 minutes. It started on `g36` within seconds. Training and 2021
+evaluation run entirely inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
