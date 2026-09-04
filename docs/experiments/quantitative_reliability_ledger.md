@@ -321,6 +321,22 @@ rejected without held-out evaluation or coefficient tuning. Future work may
 normalize gradients, but that would be a new loss design rather than evidence
 for this frozen candidate.
 
+## D10 reliability prompt pyramid
+
+D10 returns to D2's quantitatively strong single-corrupt-view control and
+injects the observable invalid-cell coverage at all five post-input ResNet
+encoder scales through 1,024 learned channel prompts. It must satisfy both a
+`+0.020` total primary delta over D1-ERM and a `+0.005` module delta over
+D2-STD while beating D4-TOKEN. The fixed method and bounded novelty claim are
+recorded in
+`docs/superpowers/specs/2026-09-04-reliability-prompt-pyramid-design.md`.
+
+The D10 and D2/D4 focused checks passed (`16 passed`), plus Python compilation
+and shell syntax. At 2026-09-04 02:17 EDT, all three tested H100 sizes had the
+same immediate predicted start. Job `21120041` therefore requested the
+smallest option: one 20GB H100 MIG, 8 CPU, 32GB, and 30 minutes. It started on
+`g30` within seconds. Training and 2021 evaluation run entirely inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
