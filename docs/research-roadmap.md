@@ -49,8 +49,14 @@ together as one dual-regime corruption-training contribution; consistency is
 the independent method contribution. Equal-year sampling and
 reliability-normalized convolution were rejected, while the learned
 missing-token result missed the 2021 gate by 0.00004025 and was not opened on
-held-out years. The next justified stage is multi-seed/10,000-step confirmation
-of the combined B3 + D1-KL recipe, not further tuning on 2022--2023.
+held-out years. A stricter follow-up now seeks one additional method with at
+least `+0.020` three-year mean primary AP. D5 counterfactual impact-weighted
+consistency improved the 2021 mean M01/M06/M07 AP by `+0.015468` over its
+matched D1-ERM control and by `+0.006265` over global D1-KL, but missed the
+frozen target and was rejected without held-out evaluation. Its gain was
+concentrated on M01, so the next approved candidate targets preservation of
+the spatial risk ranking under corrupted observations rather than increasing
+the pixelwise consistency weight.
 
 ## Legacy Fast Experiment Track — 2026-08-23
 

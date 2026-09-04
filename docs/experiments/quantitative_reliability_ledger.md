@@ -103,6 +103,7 @@ therefore rejected without held-out evaluation.
 | D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | rejected | primary delta -0.003218; M07 delta -0.007200 |
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | not identifiable on current scenarios | gated | M01 has no valid fire step; M06/M07 use one block across all steps; no GPU run |
 | D4-TOKEN | 64-parameter invalid-region token after standard first convolution | D2-STD | mean M06/M07 AP | borderline reject | primary delta +0.004960, below frozen +0.005 gate |
+| D5-CIWC | counterfactual impact-weighted consistency | D1-ERM; D1-KL closest ablation | mean M01/M06/M07 AP | rejected | primary delta +0.015468, below frozen +0.020 target; no held-out evaluation |
 | T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -199,6 +200,15 @@ check, `sbatch --test-only` predicted immediate starts for both 40GB MIG and a
 full H100. The untouched pending job was cancelled and replaced by job
 `21111043` on one 40GB H100 MIG, 8 CPU, 32GB, and 30 minutes; it started on
 `g30` in four seconds. All training and evaluation occur inside Slurm.
+
+Job `21111043` completed in 10m03s with exit `0:0`. CIWC produced
+M00/M01/M06/M07 AP `0.584364/0.294861/0.361160/0.179137`. Relative to
+D1-ERM, the scenario deltas are `+0.001344/+0.043494/-0.000076/+0.002985`;
+the primary mean is `+0.015468`. It also improves the primary mean over global
+D1-KL by `+0.006265`, but the predeclared `+0.020` requirement is not met.
+D5 is therefore rejected without accessing 2022--2023. The result supports
+counterfactual focusing for complete FireDrop but shows that pixelwise impact
+weighting does not recover BlockDrop ranking.
 
 ## Contribution accounting and stop decision
 
