@@ -123,6 +123,27 @@ def test_spatial_fraction_is_exact_on_the_model_visible_center_crop(
     assert x.shape[-2:] == (8, 8)
 
 
+def test_c02_routing_mask_is_appended_after_feature_selection(tmp_path: Path) -> None:
+    base = FakeDataset(_event(tmp_path), history=5)
+    base.features_to_keep = contract.MULTI_FEATURES
+
+    def preprocess_c02(x: np.ndarray, y: np.ndarray):
+        expanded = torch.zeros((5, 40, 8, 8), dtype=torch.float32)
+        expanded[:, :23] = torch.from_numpy(x.copy())
+        return expanded, torch.from_numpy((y > 0).astype(np.int64))
+
+    base.preprocess_and_augment = preprocess_c02
+    dataset = evaluation.ControlledMissingnessDataset(
+        base, "M06", routing_mask_channel=True
+    )
+
+    x, _ = dataset[0]
+
+    assert x.shape == (5, len(contract.MULTI_FEATURES) + 1, 8, 8)
+    assert torch.equal(x[:, -1], x[:1, -1].expand(5, -1, -1))
+    assert int(x[0, -1].sum()) == 16
+
+
 @pytest.mark.parametrize(
     ("height", "width"),
     [(14, 12), (8, 8), (6, 10), (10, 6)],

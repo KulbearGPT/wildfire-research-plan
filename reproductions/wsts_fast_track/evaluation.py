@@ -211,15 +211,21 @@ class ControlledMissingnessDataset:
             validity = 0.0 if self.scenario_id == "M01" else 1.0
             x = append_fire_validity_channel(x, validity)
 
+        routing_mask_tensor = None
         if self.routing_mask_channel:
             import torch
 
             mask = corruption.spatial_mask
             if mask is None:
                 mask = np.zeros(x.shape[-2:], dtype=bool)
-            mask_tensor = torch.as_tensor(mask, dtype=x.dtype, device=x.device)
-            mask_tensor = mask_tensor[None, None].expand(x.shape[0], 1, -1, -1)
-            x = torch.cat((x, mask_tensor), dim=1)
+            routing_mask_tensor = torch.as_tensor(
+                mask, dtype=x.dtype, device=x.device
+            )
+            routing_mask_tensor = routing_mask_tensor[None, None].expand(
+                x.shape[0], 1, -1, -1
+            )
+            if self.base.features_to_keep is None:
+                x = torch.cat((x, routing_mask_tensor), dim=1)
 
         if self.base.remove_duplicate_features and self.base.n_leading_observations > 1:
             x = self.base.flatten_and_remove_duplicate_features_(x)
@@ -227,6 +233,11 @@ class ControlledMissingnessDataset:
             if len(x.shape) != 4:
                 raise ValueError("feature selection requires a four-dimensional tensor")
             x = x[:, self.base.features_to_keep, ...]
+
+        if routing_mask_tensor is not None and self.base.features_to_keep is not None:
+            import torch
+
+            x = torch.cat((x, routing_mask_tensor), dim=1)
 
         if self.base.return_doy:
             raise ValueError("controlled evaluation does not permit day-of-year output")
@@ -317,8 +328,6 @@ def build_controlled_dataset(
     spec = experiment_spec(experiment_id)
     if active_fire_validity_channel and experiment_id != "C00":
         raise ValueError("active-fire validity prototype requires C00")
-    if routing_mask_channel and experiment_id != "C00":
-        raise ValueError("spatial routing prototype requires C00")
     stats = load_training_stats(stats_path)
     _install_runtime_contract(upstream, experiment_id, stats)
     dataset_module = importlib.import_module("dataloader.FireSpreadDataset")
