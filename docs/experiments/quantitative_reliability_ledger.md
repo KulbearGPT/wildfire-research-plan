@@ -107,6 +107,7 @@ therefore rejected without held-out evaluation.
 | D6-CIRC | CIWC plus counterfactual spatial-risk rank consistency | D1-ERM; D1-KL and D5-CIWC closest ablations | mean M01/M06/M07 AP | rejected | primary delta +0.008733; M00 -0.012626 and M06 -0.006122 fail guardrails; no held-out evaluation |
 | D7-CRA | joint two-regime counterfactual reliability adapter | D1-ERM; D5-CIWC closest ablation | mean M01/M06/M07 AP | rejected | primary delta +0.015015, below frozen +0.020 target; no held-out evaluation |
 | D8-FFCA | failure-factorized BlockDrop-only counterfactual adapter | D1-ERM; D5-CIWC and D7-CRA closest ablations | mean M01/M06/M07 AP | rejected | primary delta +0.014379, below frozen +0.020 target; no held-out evaluation |
+| D9-CEPR | intervention-selected positive/negative error-pair ranking | D1-ERM; D5-CIWC closest ablation | mean M01/M06/M07 AP | rejected | primary delta -0.016265; M00 -0.054101; pair term dominated; no held-out evaluation |
 | T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -309,6 +310,16 @@ for a 40GB MIG, 10 minutes for a full H100, and 14 minutes for a 20GB MIG.
 Job `21117395` therefore requested one 40GB H100 MIG, 8 CPU, 32GB, and 30
 minutes; it started on `g33` shortly after submission. Training and 2021
 evaluation run entirely inside Slurm.
+
+Job `21117395` completed in 17m07s with exit `0:0`. D9 produced
+M00/M01/M06/M07 AP `0.528919/0.260790/0.325537/0.153634`. Relative to
+D1-ERM, the deltas are `-0.054101/+0.009423/-0.035699/-0.022517`, giving a
+primary mean delta of `-0.016265`. The final normalized pair loss remained
+`0.917812`, so its fixed `0.01` term was larger than the supervised and CIWC
+terms combined and changed the shared representation destructively. D9 is
+rejected without held-out evaluation or coefficient tuning. Future work may
+normalize gradients, but that would be a new loss design rather than evidence
+for this frozen candidate.
 
 ## Contribution accounting and stop decision
 
