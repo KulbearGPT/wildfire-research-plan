@@ -202,19 +202,19 @@ Submit B0--B3 as the first wave. Submit B4 as the one-variable year-sampling
 control when a QOS slot becomes available; do not run any training on the login
 node. Record job IDs and exact resource requests in the ledger.
 
-- [ ] **Step 3: Monitor terminal state and inspect records**
+- [x] **Step 3: Monitor terminal state and inspect records**
 
 Poll no more frequently than every 30 minutes unless Slurm reports a terminal
 failure. On failure, inspect the log, apply the smallest root-cause fix under a
 new test, commit, and resubmit only the affected job.
 
-- [ ] **Step 4: Classify the corrected baselines**
+- [x] **Step 4: Classify the corrected baselines**
 
 Create a table with M00/M01/M06/M07 AP and deltas against B0. Explicitly state
 whether B1, B2, and B3 are baseline evidence, tuning evidence, or a rejected
 configuration; do not call them new method contributions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/experiments/quantitative_reliability_ledger.md docs/research-roadmap.md
@@ -249,12 +249,12 @@ Train D1-KL and D1-ERM from the same B3 checkpoint, with identical sample
 order, corruptions, optimizer, learning rate, and 3,000 additional steps. The
 only difference is `lambda_consistency=0.1` versus `0.0`.
 
-- [ ] **Step 4: Verify and submit after a fresh queue check**
+- [x] **Step 4: Verify and submit after a fresh queue check**
 
 Run only the D1 and corrected-runner tests, commit, inspect Nibi demand, and
 submit the two matched jobs. Evaluate M00/M01/M06/M07 on 2021.
 
-- [ ] **Step 5: Freeze or reject**
+- [x] **Step 5: Freeze or reject**
 
 If D1-KL does not meet the screen-positive rule against D1-ERM, reject it. If
 it passes, freeze lambda 0.1 and evaluate both frozen checkpoints on 2022 and
@@ -288,12 +288,12 @@ field with a clamped denominator. Preserve the original bias and initialize
 from the matched standard convolution. Add no deeper mask propagation in this
 first prototype.
 
-- [ ] **Step 4: Verify and submit after a fresh queue check**
+- [x] **Step 4: Verify and submit after a fresh queue check**
 
 Run only D2 and corrected-baseline tests, commit, then submit the D2 and matched
 standard-convolution jobs with identical B3 corruption and 3,000-step budgets.
 
-- [ ] **Step 5: Freeze or reject**
+- [x] **Step 5: Freeze or reject**
 
 Use mean M06/M07 AP as primary. A passing 2021 configuration is frozen and
 evaluated on 2022 and 2023 once; otherwise record rejection.
@@ -332,7 +332,7 @@ history step and M06/M07 reuse one spatial block across every history step.
 The temporal selector has no alternative observation to select, so D3 is not
 identifiable under the current primary scenarios and no GPU job is submitted.
 
-- [ ] **Step 5: Freeze or reject**
+- [x] **Step 5: Freeze or reject**
 
 Use the predeclared primary AP and the same 2021-to-held-out procedure as D1/D2.
 
@@ -347,31 +347,31 @@ Use the predeclared primary AP and the same 2021-to-held-out procedure as D1/D2.
 - Consumes: all terminal JSON records from Tasks 4--7.
 - Produces: final baseline comparison and a list containing only directions with level-3 or level-4 quantitative support.
 
-- [ ] **Step 1: Build the evidence table**
+- [x] **Step 1: Build the evidence table**
 
 For each candidate, report matched baseline, parameter delta, training budget,
 2021/2022/2023 primary AP, per-year delta, three-year mean delta, clean AP
 delta, and evidence level.
 
-- [ ] **Step 2: Enforce contribution accounting**
+- [x] **Step 2: Enforce contribution accounting**
 
 Classify each retained item as reproduction/baseline, tuning/training,
 incremental module, or method. Count at most one tuning/training contribution.
 
-- [ ] **Step 3: Continue or stop honestly**
+- [x] **Step 3: Continue or stop honestly**
 
 If fewer than three directions reach level 3, report the shortfall and design
 the next smallest one-variable candidate instead of relabeling unsupported
 hypotheses. If three reach level 3, identify which ones merit multi-seed 10K
 confirmation.
 
-- [ ] **Step 4: Run fresh verification**
+- [x] **Step 4: Run fresh verification**
 
 Run focused tests for every changed method, `bash -n` for every submitted
 runner, parse every cited JSON record, and inspect `git diff --check` and
 `git status --short`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/experiments/quantitative_reliability_ledger.md docs/research-roadmap.md README.md

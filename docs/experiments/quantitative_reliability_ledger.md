@@ -98,12 +98,12 @@ therefore rejected without held-out evaluation.
 | ID | Hypothesis | Matched control | Primary metric | Evidence level | Quantitative conclusion |
 | --- | --- | --- | --- | --- | --- |
 | D1-ERM | paired clean-corrupt supervised continuation | same B3 checkpoint | mean M01/M06/M07 AP | matched control | M00/M01/M06/M07 0.583021/0.251367/0.361236/0.176152 |
-| D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | screen-positive | joint delta +0.009203; job `21105328` evaluates frozen pair on 2022/2023 |
+| D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | reliable (level 4) | three-year mean delta +0.008970; all years positive |
 | D2-STD | standard first convolution continuation | same B3 checkpoint | mean M06/M07 AP | matched control | M00/M06/M07 0.583073/0.368775/0.189082 |
 | D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | rejected | primary delta -0.003218; M07 delta -0.007200 |
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | not identifiable on current scenarios | gated | M01 has no valid fire step; M06/M07 use one block across all steps; no GPU run |
 | D4-TOKEN | 64-parameter invalid-region token after standard first convolution | D2-STD | mean M06/M07 AP | borderline reject | primary delta +0.004960, below frozen +0.005 gate |
-| T1 | corruption mixture/curriculum | corrected B3 policy | declared joint mean AP | candidate | no new result yet; at most one tuning contribution |
+| T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
 not quantitatively validate D1--D3.
@@ -129,6 +129,9 @@ matched retries were submitted after the 2026-09-03 19:04 EDT queue check.
 | R2: incremental BlockDrop (B2 to B3) | training/augmentation | 2021 | 0.216982 | 0.257548 | +0.040566 | -0.000964 | frozen screen |
 | R2: incremental BlockDrop (B2 to B3) | training/augmentation | 2022 | 0.099024 | 0.118356 | +0.019331 | +0.009361 | held-out |
 | R2: incremental BlockDrop (B2 to B3) | training/augmentation | 2023 | 0.132137 | 0.155703 | +0.023566 | +0.012106 | held-out |
+| R3: predictive consistency (D1-ERM to D1-KL) | method | 2021 | 0.262918 | 0.272121 | +0.009203 | +0.001355 | frozen screen |
+| R3: predictive consistency (D1-ERM to D1-KL) | method | 2022 | 0.120516 | 0.133662 | +0.013146 | +0.005051 | held-out |
+| R3: predictive consistency (D1-ERM to D1-KL) | method | 2023 | 0.140323 | 0.144884 | +0.004561 | +0.001804 | held-out |
 
 R1 has positive M01 AP deltas in all three years and a three-year mean delta
 of +0.150109. It therefore reaches level 4, **reliable contribution
@@ -159,10 +162,36 @@ the least-contended 20GB MIG class at 2026-09-03 19:39 EDT.
 D1 retries `21102676/21102677` completed successfully. KL improves the frozen
 mean M01/M06/M07 AP by +0.009203 versus paired ERM, with scenario deltas
 +0.016018/+0.003003/+0.008588 and M00 delta +0.001355. It passes the 2021
-screen; job `21105328` evaluates both frozen checkpoints on 2022 and 2023 in
+screen; job `21105328` evaluated both frozen checkpoints on 2022 and 2023 in
 one allocation.
+That job completed in 5m13s. D1-KL improves the joint primary AP in all three
+years by +0.009203/+0.013146/+0.004561, for a three-year mean of +0.008970;
+M00 deltas are +0.001355/+0.005051/+0.001804. D1 therefore reaches level 4,
+**reliable contribution candidate**.
 
 D4 completed in job `21103691`. Its M06/M07 deltas are
 +0.003115/+0.006804, primary mean +0.00495975, and M00 delta -0.005243. The
 primary result misses the predeclared +0.005 threshold by 0.00004025, so D4 is
 recorded as a borderline negative and is not evaluated on held-out years.
+
+## Contribution accounting and stop decision
+
+| Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
+| --- | --- | ---: | --- | ---: | --- |
+| R1 FireDrop specialist | B0 clean to B2 FireDrop; observable route selects one checkpoint | 0 | 3K from scratch each | +0.150109 | reliable, level 4 |
+| R2 incremental BlockDrop | B2 FireDrop to B3 FireDrop + BlockDrop | 0 | 3K from scratch each | +0.027821 | reliable, level 4 |
+| R3 predictive consistency | D1-ERM to D1-KL, lambda 0.1 | 0 | 3K continuation each from B3 | +0.008970 | reliable, level 4 |
+
+The required three quantitatively reliable directions are now present:
+
+1. R1 FireDrop specialist for complete active-fire-history absence;
+2. R2 incremental BlockDrop for structured spatial missingness;
+3. R3 clean-corrupt predictive consistency beyond its matched continuation.
+
+R1 and R2 are two supported ablation directions but form one publishable
+dual-regime corruption-training contribution. R3 is the independent method
+contribution. B4, D2, and D4 are quantitative negative controls; D3 is gated
+because the frozen scenarios cannot identify temporal selection. No result is
+promoted merely from code or motivation. The next compute, if pursued, is
+multi-seed/longer-budget confirmation of the combined B3 + D1-KL recipe, not
+another test-year-guided architecture search.

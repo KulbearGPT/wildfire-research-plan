@@ -30,21 +30,27 @@ legacy comparisons; corrected-data claims require matched reruns.
 
 ## Active Quantitative Reliability Track — 2026-09-03
 
-The active sequence is now the baseline-first funnel in
+The baseline-first funnel in
 [`2026-09-03-quantitative-reliability-baselines-design.md`](superpowers/specs/2026-09-03-quantitative-reliability-baselines-design.md).
-It first trains B0--B3 from scratch with the corrected resolver, then tests
-clean-corrupt predictive consistency, a reliability-normalized encoder, and
-reliability-conditioned temporal fusion as single-variable hypotheses. These
-are **candidates, not reliable contributions**, until matched AP evidence
-satisfies the predeclared multi-year support rule. The live baseline/method
-comparison belongs in
+is complete through the seed-0, 3,000-step quantitative stage. B0--B4 repaired
+the corrected-index baselines; D1 tested clean-corrupt consistency, D2 tested
+reliability-normalized convolution, and D4 tested the smallest learned
+missing-token replacement. D3 was not run because M01 removes every fire
+history step and M06/M07 reuse one block across all steps, leaving temporal
+selection unidentifiable. The complete baseline/method comparison is in
 [`quantitative_reliability_ledger.md`](experiments/quantitative_reliability_ledger.md).
 
-This track retains rapid prototyping: seed 0 and 3,000 steps for 2021 screens,
-10,000 steps and extra seeds only after a quantitative signal, and one-time
-separate 2022/2023 evaluation only after freezing the selected configuration.
-At most one corruption-mixture or other hyperparameter result may be counted
-as a tuning contribution.
+Three directions satisfy the predeclared level-4 rule with positive primary AP
+deltas in all three years: FireDrop for complete active-fire-history absence
+(three-year mean delta +0.150109), incremental BlockDrop for spatial
+missingness (+0.027821), and paired predictive consistency over matched ERM
+(+0.008970). FireDrop and BlockDrop are two supported ablations but count
+together as one dual-regime corruption-training contribution; consistency is
+the independent method contribution. Equal-year sampling and
+reliability-normalized convolution were rejected, while the learned
+missing-token result missed the 2021 gate by 0.00004025 and was not opened on
+held-out years. The next justified stage is multi-seed/10,000-step confirmation
+of the combined B3 + D1-KL recipe, not further tuning on 2022--2023.
 
 ## Legacy Fast Experiment Track — 2026-08-23
 

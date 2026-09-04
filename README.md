@@ -41,6 +41,18 @@ infrastructure needed to run the next experiments.
   not remain positive in both fixed test years, closing the engineering
   expert-tuning branch. See
   [`docs/experiments/p00_p06_rapid_reliability.md`](docs/experiments/p00_p06_rapid_reliability.md).
+- The corrected-index, from-scratch quantitative funnel is complete. Three
+  directions have positive primary AP deltas in 2021, 2022, and 2023:
+  observable FireDrop routing (`+0.150109` three-year mean M01 AP delta),
+  incremental BlockDrop (`+0.027821` mean M06/M07 AP delta), and paired
+  predictive consistency over its matched ERM continuation (`+0.008970` mean
+  M01/M06/M07 AP delta). FireDrop and BlockDrop are counted together as one
+  corruption-training contribution;
+  consistency is the independent method contribution. Equal-year sampling and
+  reliability-normalized convolution were negative; a 64-parameter missing
+  token missed the frozen screen by `0.00004025`; temporal reliability fusion
+  was not identifiable under the same-across-history corruption masks. See
+  [`docs/experiments/quantitative_reliability_ledger.md`](docs/experiments/quantitative_reliability_ledger.md).
 - The fixed 24-sample 2021 target-QA audit found that 49,310 of 393,216 pixels
   (12.54%) are zero labels without a reliable target-day VIIRS observation.
   Recomputing metrics on positives plus reliably observed zeros changed P00 AP
