@@ -407,6 +407,13 @@ module-attribution, competitor, and guardrail gate. This result authorizes one
 fixed held-out allocation evaluating both D12 and D2-STD on 2022 and 2023;
 those years remain unavailable for variant selection.
 
+At 2026-09-04 04:02 EDT, both 20GB and 40GB H100 MIG requests had immediate
+predicted starts, while a full H100 was predicted for 04:17. Held-out job
+`21122938` therefore requested one 40GB H100 MIG, 8 CPU, 32GB, and 30 minutes:
+it has more compute than the 20GB slice at the same queue delay and serially
+evaluates D12 and D2-STD on both frozen years in one allocation. No held-out
+variant or threshold is selected from these results.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
