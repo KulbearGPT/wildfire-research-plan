@@ -106,6 +106,7 @@ therefore rejected without held-out evaluation.
 | D5-CIWC | counterfactual impact-weighted consistency | D1-ERM; D1-KL closest ablation | mean M01/M06/M07 AP | rejected | primary delta +0.015468, below frozen +0.020 target; no held-out evaluation |
 | D6-CIRC | CIWC plus counterfactual spatial-risk rank consistency | D1-ERM; D1-KL and D5-CIWC closest ablations | mean M01/M06/M07 AP | rejected | primary delta +0.008733; M00 -0.012626 and M06 -0.006122 fail guardrails; no held-out evaluation |
 | D7-CRA | joint two-regime counterfactual reliability adapter | D1-ERM; D5-CIWC closest ablation | mean M01/M06/M07 AP | rejected | primary delta +0.015015, below frozen +0.020 target; no held-out evaluation |
+| D8-FFCA | failure-factorized BlockDrop-only counterfactual adapter | D1-ERM; D5-CIWC and D7-CRA closest ablations | mean M01/M06/M07 AP | rejected | primary delta +0.014379, below frozen +0.020 target; no held-out evaluation |
 | T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -282,6 +283,15 @@ nonzero-weight FireDrop bypass test, Python compilation, and shell syntax. At
 start and a 20GB MIG start about one minute later. Job `21116301` requested
 one 40GB H100 MIG, 8 CPU, 32GB, and 30 minutes, and started on `g30` within
 seconds. Training and 2021 evaluation run only inside Slurm.
+
+Job `21116301` completed in 8m26s with exit `0:0`. D8 produced
+M00/M01/M06/M07 AP `0.578203/0.289113/0.361630/0.181149`. Relative to
+D1-ERM, the deltas are `-0.004817/+0.037747/+0.000394/+0.004997`, giving a
+primary mean of `+0.014379`. It passes scenario guardrails but misses the
+materiality target and is `-0.001089` below D5 on the primary mean. D8 is
+rejected without held-out evaluation. Restricting the last-layer adapter
+recovers much of D5's FireDrop behavior but removes D7's block gain, so this
+output-adapter family is closed rather than widened or swept.
 
 ## Contribution accounting and stop decision
 
