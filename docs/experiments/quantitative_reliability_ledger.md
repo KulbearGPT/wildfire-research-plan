@@ -293,6 +293,23 @@ rejected without held-out evaluation. Restricting the last-layer adapter
 recovers much of D5's FireDrop behavior but removes D7's block gain, so this
 output-adapter family is closed rather than widened or swept.
 
+## D9 counterfactual error-pair ranking
+
+D9 adds no inference module. It selects target-positive pixels whose confidence
+drops most under clean-to-corrupt intervention and target-negative pixels whose
+confidence rises most, then applies a fixed pairwise ranking loss to those
+corruption-induced AP errors. General AP ranking and hard-pair mining are
+treated as prior art; the bounded new axis is counterfactual intervention-based
+pair selection. The fixed design and literature boundary are recorded in
+`docs/superpowers/specs/2026-09-04-counterfactual-error-pair-ranking-design.md`.
+
+The D9-focused and related checks passed (`25 passed`), plus Python compilation
+and shell syntax. At 2026-09-04 01:35 EDT, queue estimates were about 5 minutes
+for a 40GB MIG, 10 minutes for a full H100, and 14 minutes for a 20GB MIG.
+Job `21117395` therefore requested one 40GB H100 MIG, 8 CPU, 32GB, and 30
+minutes; it started on `g33` shortly after submission. Training and 2021
+evaluation run entirely inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
