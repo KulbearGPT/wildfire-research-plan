@@ -109,6 +109,7 @@ therefore rejected without held-out evaluation.
 | D8-FFCA | failure-factorized BlockDrop-only counterfactual adapter | D1-ERM; D5-CIWC and D7-CRA closest ablations | mean M01/M06/M07 AP | rejected | primary delta +0.014379, below frozen +0.020 target; no held-out evaluation |
 | D9-CEPR | intervention-selected positive/negative error-pair ranking | D1-ERM; D5-CIWC closest ablation | mean M01/M06/M07 AP | rejected | primary delta -0.016265; M00 -0.054101; pair term dominated; no held-out evaluation |
 | D10-RPP | five-scale spatial reliability prompt pyramid | D2-STD; D4-TOKEN closest ablation | mean M01/M06/M07 AP | attribution reject | total delta vs D1-ERM +0.026610, but module delta vs D2-STD only +0.002915 and mean below D4; no held-out evaluation |
+| D11-CRPP | input-to-semantic complete reliability prompt pyramid | D2-STD; D4-TOKEN and D10-RPP ablations | total joint and module block AP | attribution reject | total joint delta +0.026356; module block delta +0.004928, just below +0.005; no held-out evaluation |
 | T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -364,6 +365,16 @@ shell syntax, and an explicit absence-of-placeholder check on the runner. At
 start. Job `21121610` therefore requested the smallest option: one 20GB H100
 MIG, 8 CPU, 32GB, and 30 minutes. It started on `g31` within seconds; all
 training and 2021 evaluation run inside Slurm.
+
+Job `21121610` completed in 28m46s with exit `0:0`. D11 produced
+M00/M01/M06/M07 AP `0.583391/0.300108/0.375842/0.191872`. Its total joint
+primary delta versus D1-ERM is `+0.026356`. Relative to D2-STD, its scenario
+deltas are `+0.000319/-0.001874/+0.007067/+0.002790`; the module-relevant
+M06/M07 mean is `+0.004928`, just `0.000072` below `+0.005`. Its block mean is
+also `0.000031` below D4. D11 therefore fails attribution by the frozen rule
+and is not evaluated on held-out years. D10's advantage is concentrated on
+M06, while D4's is concentrated on M07, motivating a fixed severity-dependent
+choice of prompt depth rather than simultaneous addition.
 
 ## Contribution accounting and stop decision
 
