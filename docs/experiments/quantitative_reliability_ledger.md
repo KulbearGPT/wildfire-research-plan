@@ -238,6 +238,24 @@ per-scenario guardrails. D6 is rejected without 2022--2023 evaluation or a
 rank-weight sweep. The listwise term weakened the useful D5 signal instead of
 repairing BlockDrop ranking.
 
+## D7 counterfactual reliability adapter
+
+D7 is the final predeclared failure-ladder candidate. It keeps D5's paired
+supervision and CIWC objective, but jointly trains the base predictor with a
+2,769-parameter forecast-logit adapter conditioned on separate FireDrop and
+BlockDrop maps plus block extent. Fully observed samples bypass the adapter
+exactly. The method and bounded novelty claim were frozen in
+`docs/superpowers/specs/2026-09-04-counterfactual-reliability-adapter-design.md`;
+adapter, distillation, and reliability gating alone are explicitly treated as
+prior art.
+
+All D7 and related focused tests passed (`28 passed`), along with Python
+compilation and shell syntax. At 2026-09-04 00:23 EDT, `sbatch --test-only`
+estimated a 20GB H100 MIG start at 00:36, while 40GB MIG and full H100 were
+immediately available. Job `21114921` therefore requested one 40GB H100 MIG,
+8 CPU, 32GB, and 30 minutes. It started on `g30` within seconds; all training
+and 2021 evaluation run inside Slurm.
+
 ## Contribution accounting and stop decision
 
 | Direction | Matched change | Trainable parameter delta | Matched budget | Three-year mean primary delta | Final level |
