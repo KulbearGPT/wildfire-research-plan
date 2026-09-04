@@ -70,6 +70,12 @@ That replacement reached 2,444/3,000 steps but was killed at 41m14s after using
 It completed successfully in 44m18s. B1 exceeds B0 on all four 2021 scenarios;
 job `21104532` performs the frozen 2022/2023 baseline evaluation. B1 remains an
 existing temporal architecture baseline, not a new contribution.
+That job completed: B1 minus B0 M00/M01/M06/M07 AP deltas are
++0.014277/+0.054310/+0.005778/+0.006518 in 2021,
++0.039479/+0.041762/+0.016716/+0.013413 in 2022, and
++0.000400/+0.010055/-0.002538/-0.000651 in 2023. Thus C02 is the stronger
+clean/fire-missing architecture baseline, but its block advantage is not
+uniform and it does not replace the corruption-trained C00 comparisons.
 
 B2 completed at 2026-09-03 17:19 EDT in 22m13s. Against B0, M01 AP improves
 by 0.222704 but M00 AP drops by 0.021705, so the standalone checkpoint fails
@@ -91,12 +97,12 @@ therefore rejected without held-out evaluation.
 
 | ID | Hypothesis | Matched control | Primary metric | Evidence level | Quantitative conclusion |
 | --- | --- | --- | --- | --- | --- |
-| D1-ERM | paired clean-corrupt supervised continuation | same B3 checkpoint | mean M01/M06/M07 AP | candidate/control | retry `21102676`; no result yet |
-| D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | candidate | retry `21102677`; metric frozen before execution |
+| D1-ERM | paired clean-corrupt supervised continuation | same B3 checkpoint | mean M01/M06/M07 AP | matched control | M00/M01/M06/M07 0.583021/0.251367/0.361236/0.176152 |
+| D1-KL | clean-corrupt predictive consistency | D1-ERM | mean M01/M06/M07 AP | screen-positive | joint delta +0.009203; job `21105328` evaluates frozen pair on 2022/2023 |
 | D2-STD | standard first convolution continuation | same B3 checkpoint | mean M06/M07 AP | matched control | M00/M06/M07 0.583073/0.368775/0.189082 |
 | D2-RNC | reliability-normalized first convolution | D2-STD | mean M06/M07 AP | rejected | primary delta -0.003218; M07 delta -0.007200 |
 | D3 | reliability-conditioned temporal fusion | corrected C02 temporal fusion | not identifiable on current scenarios | gated | M01 has no valid fire step; M06/M07 use one block across all steps; no GPU run |
-| D4-TOKEN | 64-parameter invalid-region token after standard first convolution | D2-STD | mean M06/M07 AP | candidate | job `21103691`; zero-initialized, all-valid exactness |
+| D4-TOKEN | 64-parameter invalid-region token after standard first convolution | D2-STD | mean M06/M07 AP | borderline reject | primary delta +0.004960, below frozen +0.005 gate |
 | T1 | corruption mixture/curriculum | corrected B3 policy | declared joint mean AP | candidate | no new result yet; at most one tuning contribution |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -149,3 +155,14 @@ proportion to local invalid coverage. It is exactly D2-STD when inputs are all
 valid, adds 64 parameters, and reuses the completed D2-STD control. Fifteen
 focused D2/D4 and runner tests passed before job `21103691` was submitted on
 the least-contended 20GB MIG class at 2026-09-03 19:39 EDT.
+
+D1 retries `21102676/21102677` completed successfully. KL improves the frozen
+mean M01/M06/M07 AP by +0.009203 versus paired ERM, with scenario deltas
++0.016018/+0.003003/+0.008588 and M00 delta +0.001355. It passes the 2021
+screen; job `21105328` evaluates both frozen checkpoints on 2022 and 2023 in
+one allocation.
+
+D4 completed in job `21103691`. Its M06/M07 deltas are
++0.003115/+0.006804, primary mean +0.00495975, and M00 delta -0.005243. The
+primary result misses the predeclared +0.005 threshold by 0.00004025, so D4 is
+recorded as a borderline negative and is not evaluated on held-out years.
