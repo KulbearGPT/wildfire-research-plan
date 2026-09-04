@@ -105,6 +105,7 @@ therefore rejected without held-out evaluation.
 | D4-TOKEN | 64-parameter invalid-region token after standard first convolution | D2-STD | mean M06/M07 AP | borderline reject | primary delta +0.004960, below frozen +0.005 gate |
 | D5-CIWC | counterfactual impact-weighted consistency | D1-ERM; D1-KL closest ablation | mean M01/M06/M07 AP | rejected | primary delta +0.015468, below frozen +0.020 target; no held-out evaluation |
 | D6-CIRC | CIWC plus counterfactual spatial-risk rank consistency | D1-ERM; D1-KL and D5-CIWC closest ablations | mean M01/M06/M07 AP | rejected | primary delta +0.008733; M00 -0.012626 and M06 -0.006122 fail guardrails; no held-out evaluation |
+| D7-CRA | joint two-regime counterfactual reliability adapter | D1-ERM; D5-CIWC closest ablation | mean M01/M06/M07 AP | rejected | primary delta +0.015015, below frozen +0.020 target; no held-out evaluation |
 | T1/B4 | equal-year corruption sampling | corrected B3 policy | mean M06/M07 AP | rejected | primary delta -0.009390; no held-out evaluation |
 
 The older P00/P10 and target-QA measurements motivate these candidates but do
@@ -255,6 +256,16 @@ estimated a 20GB H100 MIG start at 00:36, while 40GB MIG and full H100 were
 immediately available. Job `21114921` therefore requested one 40GB H100 MIG,
 8 CPU, 32GB, and 30 minutes. It started on `g30` within seconds; all training
 and 2021 evaluation run inside Slurm.
+
+Job `21114921` completed in 8m33s with exit `0:0`. D7 produced
+M00/M01/M06/M07 AP `0.579199/0.281434/0.366924/0.185442`. Relative to
+D1-ERM, the deltas are `-0.003822/+0.030068/+0.005688/+0.009290`, for a
+primary mean of `+0.015015`. The clean and per-scenario guardrails pass, but
+the frozen materiality target does not. Relative to D5, D7 gains
+`+0.005763/+0.006305` on M06/M07 while losing `-0.013426` on M01. D7 is
+therefore rejected without held-out evaluation. This complementary pattern
+quantitatively motivates separating global FireDrop consistency from a
+BlockDrop-only correction instead of sharing one adapter across both regimes.
 
 ## Contribution accounting and stop decision
 
