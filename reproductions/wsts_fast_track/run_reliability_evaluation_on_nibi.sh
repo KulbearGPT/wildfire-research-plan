@@ -9,7 +9,7 @@ kind=$1
 input=$(realpath "$2")
 year=$3
 label=$4
-case "${kind}" in baseline|d1|d2|ciwc|circ|cra|ffca) ;; *) echo "kind must be baseline, d1, d2, ciwc, circ, cra, or ffca" >&2; exit 2 ;; esac
+case "${kind}" in baseline|d1|d2|ciwc|circ|cra|ffca|cepr) ;; *) echo "kind must be baseline, d1, d2, ciwc, circ, cra, ffca, or cepr" >&2; exit 2 ;; esac
 case "${year}" in 2022|2023) ;; *) echo "year must be 2022 or 2023" >&2; exit 2 ;; esac
 [[ "${label}" =~ ^[A-Za-z0-9-]+$ ]] || { echo "invalid label" >&2; exit 2; }
 
@@ -57,6 +57,7 @@ case "${kind}" in
   circ) python -m reproductions.wsts_fast_track.evaluate_counterfactual_rank_consistency --checkpoint "${input}" "${common[@]}" ;;
   cra) python -m reproductions.wsts_fast_track.evaluate_counterfactual_reliability_adapter --checkpoint "${input}" "${common[@]}" ;;
   ffca) python -m reproductions.wsts_fast_track.evaluate_counterfactual_reliability_adapter --checkpoint "${input}" "${common[@]}" ;;
+  cepr) python -m reproductions.wsts_fast_track.evaluate_counterfactual_error_pair_ranking --checkpoint "${input}" "${common[@]}" ;;
 esac 2>&1 | tee "${run_root}/evaluation-${year}.log"
 
 test -f "${output_root}/summary.json"
