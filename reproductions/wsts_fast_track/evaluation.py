@@ -11,7 +11,7 @@ import h5py
 import numpy as np
 
 from .contract import ExperimentSpec, experiment_spec
-from .entrypoint import TRAIN_YEARS, _install_runtime_contract, load_training_stats
+from .runtime import TRAIN_YEARS, _install_runtime_contract, load_training_stats
 from .matrix import CORRUPTIONS
 from .missingness import CorruptionResult, apply_corruption
 
@@ -87,7 +87,6 @@ class ControlledMissingnessDataset:
         *,
         evaluation_year: int = 2021,
         heldout_authorized: bool = False,
-        active_fire_validity_channel: bool = False,
         routing_mask_channel: bool = False,
     ) -> None:
         if scenario_id not in CORRUPTIONS:
@@ -112,8 +111,8 @@ class ControlledMissingnessDataset:
         ):
             raise ValueError("controlled evaluation requires history adjustment six")
         history = getattr(base_dataset, "n_leading_observations", None)
-        if type(history) is not int or history not in {1, 5}:
-            raise ValueError("controlled evaluation supports history one or five")
+        if history != 1:
+            raise ValueError("retained controlled evaluation requires T=1")
         if getattr(base_dataset, "skip_initial_samples", None) != EFFECTIVE_HISTORY - history:
             raise ValueError("upstream skip count differs from history adjustment")
         if tuple(getattr(base_dataset, "stats_years", ())) != TRAIN_YEARS:
@@ -123,7 +122,6 @@ class ControlledMissingnessDataset:
         self.scenario_id = scenario_id
         self.evaluation_year = evaluation_year
         self.heldout_authorized = heldout_authorized
-        self.active_fire_validity_channel = active_fire_validity_channel
         self.routing_mask_channel = routing_mask_channel
         self.data_root = Path(base_dataset.data_dir).resolve()
 
@@ -204,12 +202,6 @@ class ControlledMissingnessDataset:
         descriptor = self.describe(index)
         corruption, target = self._raw_corruption(descriptor)
         x, y = self.base.preprocess_and_augment(corruption.values, target)
-
-        if self.active_fire_validity_channel:
-            from .prototype import append_fire_validity_channel
-
-            validity = 0.0 if self.scenario_id == "M01" else 1.0
-            x = append_fire_validity_channel(x, validity)
 
         routing_mask_tensor = None
         if self.routing_mask_channel:
@@ -315,7 +307,6 @@ def build_controlled_dataset(
     scenario_id: str,
     evaluation_year: int,
     heldout_authorized: bool,
-    active_fire_validity_channel: bool = False,
     routing_mask_channel: bool = False,
 ) -> ControlledMissingnessDataset:
     """Build a pinned dataset after an explicit engineering/formal year gate."""
@@ -326,8 +317,6 @@ def build_controlled_dataset(
     if scenario_id not in CORRUPTIONS:
         raise ValueError(f"unknown controlled-missingness scenario: {scenario_id}")
     spec = experiment_spec(experiment_id)
-    if active_fire_validity_channel and experiment_id != "C00":
-        raise ValueError("active-fire validity prototype requires C00")
     stats = load_training_stats(stats_path)
     _install_runtime_contract(upstream, experiment_id, stats)
     dataset_module = importlib.import_module("dataloader.FireSpreadDataset")
@@ -344,6 +333,5 @@ def build_controlled_dataset(
         scenario_id,
         evaluation_year=evaluation_year,
         heldout_authorized=heldout_authorized,
-        active_fire_validity_channel=active_fire_validity_channel,
         routing_mask_channel=routing_mask_channel,
     )

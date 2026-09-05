@@ -1,13 +1,12 @@
-"""Run the matched D1 ERM/consistency continuation from corrected B3."""
+"""Train the retained D12 severity-adaptive reliability prompting method."""
 
 from __future__ import annotations
 
 import argparse
 import importlib
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import torch
@@ -15,52 +14,20 @@ import torch
 from .contract import experiment_spec, validate_inventory
 from .corrected_baselines import install_corrected_baseline
 from .runtime import TRAIN_YEARS, _install_runtime_contract, load_training_stats
-from .evaluate_corrected_baseline import validate_evaluation_record
 from .evaluate_missingness import load_checkpoint_model
-from .predictive_consistency import (
-    CleanCorruptPairDataset,
-    bernoulli_kl_from_logits,
-)
 from .corruption_training import BLOCK_DROPOUT_PROBABILITY, FIRE_DROPOUT_PROBABILITY
+from .processed_reliability import ProcessedReliabilityDataset
+from .severity_adaptive_reliability_prompting import (
+    INPUT_PROMPT,
+    PROMPT_POOLING,
+    SEVERITY_THRESHOLD,
+    SeverityAdaptiveReliabilityPrompting,
+)
+from .train_predictive_consistency import validate_b3_record
 
 
 TRAINING_STEPS = 3_000
 LEARNING_RATE = 1e-3
-
-
-def validate_b3_record(record: Mapping[str, object]) -> str:
-    """Return the checkpoint string from an exact corrected B3 record."""
-
-    try:
-        baseline = validate_evaluation_record(record)
-    except ValueError as error:
-        raise ValueError("D1 requires a corrected B3 completion record") from error
-    if baseline.baseline_id != "B3":
-        raise ValueError("D1 requires a corrected B3 completion record")
-    return str(record["checkpoint"])
-
-
-def paired_training_objective(
-    model: Any,
-    clean_logits: torch.Tensor,
-    corrupt_logits: torch.Tensor,
-    target: torch.Tensor,
-    *,
-    lambda_consistency: float,
-) -> tuple[torch.Tensor, dict[str, float]]:
-    """Return matched paired supervision with an optional KL contribution."""
-
-    if lambda_consistency < 0.0:
-        raise ValueError("consistency weight must be nonnegative")
-    clean_loss = model.compute_loss(clean_logits, target)
-    corrupt_loss = model.compute_loss(corrupt_logits, target)
-    supervised = 0.5 * (clean_loss + corrupt_loss)
-    consistency = bernoulli_kl_from_logits(clean_logits, corrupt_logits)
-    objective = supervised + lambda_consistency * consistency
-    return objective, {
-        "supervised": float(supervised.detach().cpu()),
-        "consistency": float(consistency.detach().cpu()),
-    }
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -70,8 +37,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
     parser.add_argument("--output-path", type=Path, required=True)
-    parser.add_argument("--lambda-consistency", type=float, choices=(0.0, 0.1), required=True)
-    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args(argv)
@@ -111,11 +77,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     active_fire_missing_value = float(
         (0.0 - means[0, 22, 0, 0]) / stds[0, 22, 0, 0]
     )
-    dataset = CleanCorruptPairDataset(
-        base_dataset,
-        fire_probability=FIRE_DROPOUT_PROBABILITY,
-        block_probability=BLOCK_DROPOUT_PROBABILITY,
-        active_fire_missing_value=active_fire_missing_value,
+    dataset = ProcessedReliabilityDataset(
+        base_dataset, active_fire_missing_value
     )
 
     torch.manual_seed(0)
@@ -134,49 +97,35 @@ def main(argv: Sequence[str] | None = None) -> int:
         pin_memory=device.type == "cuda",
         persistent_workers=args.num_workers > 0,
     )
-    model = load_checkpoint_model(
+    base_model = load_checkpoint_model(
         checkpoint,
         experiment_id="C00",
         upstream_root=upstream,
         device=device,
     )
+    model = SeverityAdaptiveReliabilityPrompting(base_model).to(device)
+    if tuple(model.prompt_channels) != (64, 64, 128, 256, 512):
+        raise ValueError("D12 requires the fixed ResNet-18 encoder channels")
     model.train()
-    parameters = tuple(
-        parameter for parameter in model.parameters() if parameter.requires_grad
-    )
-    optimizer = torch.optim.AdamW(parameters, lr=LEARNING_RATE)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
     iterator = iter(loader)
     final_loss = float("nan")
-    final_parts: dict[str, float] = {}
     for step in range(1, TRAINING_STEPS + 1):
         try:
-            clean_x, corrupt_x, target = next(iterator)
+            x, target = next(iterator)
         except StopIteration:
             iterator = iter(loader)
-            clean_x, corrupt_x, target = next(iterator)
-        clean_x = clean_x.to(device, non_blocking=True)
-        corrupt_x = corrupt_x.to(device, non_blocking=True)
+            x, target = next(iterator)
+        x = x.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True).long()
         optimizer.zero_grad(set_to_none=True)
-        clean_logits = model(clean_x).squeeze(1)
-        corrupt_logits = model(corrupt_x).squeeze(1)
-        loss, final_parts = paired_training_objective(
-            model,
-            clean_logits,
-            corrupt_logits,
-            target,
-            lambda_consistency=args.lambda_consistency,
-        )
+        logits = model(x).squeeze(1)
+        loss = model.compute_loss(logits, target)
         loss.backward()
         optimizer.step()
         final_loss = float(loss.detach().cpu())
         if step == 1 or step % 100 == 0:
-            print(
-                f"D1_STEP={step} LOSS={final_loss:.8f} "
-                f"SUPERVISED={final_parts['supervised']:.8f} "
-                f"CONSISTENCY={final_parts['consistency']:.8f}",
-                flush=True,
-            )
+            print(f"D12_STEP={step} LOSS={final_loss:.8f}", flush=True)
 
     output = args.output_path.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -185,8 +134,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "candidate_id": "D1-KL" if args.lambda_consistency else "D1-ERM",
-        "matched_pair": "D1",
+        "candidate_id": "D12-SARP",
+        "matched_pair": "D12",
+        "base_control": "D2-STD",
+        "closest_ablation": "D4-TOKEN",
+        "closest_ablations": ["D4-TOKEN", "D10-RPP", "D11-CRPP"],
         "base_b3_record": str(record_path),
         "base_b3_checkpoint": str(checkpoint),
         "experiment": "C00",
@@ -195,17 +147,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         "seed": 0,
         "batch_size": args.batch_size,
         "learning_rate": LEARNING_RATE,
-        "lambda_consistency": args.lambda_consistency,
+        "variant": "severity-adaptive-prompts",
         "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
         "block_dropout_probability": BLOCK_DROPOUT_PROBABILITY,
+        "processed_space_matched_corruption": True,
+        "prompt_channels": list(model.prompt_channels),
+        "prompt_parameter_count": model.prompt_parameter_count,
+        "prompt_pooling": PROMPT_POOLING,
+        "input_prompt": INPUT_PROMPT,
+        "severity_threshold": SEVERITY_THRESHOLD,
+        "mild_prompt": "hierarchical",
+        "severe_prompt": "input",
         "final_loss": final_loss,
-        "final_loss_components": final_parts,
-        "hyper_parameters": dict(model.hparams),
+        "hyper_parameters": dict(model.base_model.hparams),
         "state_dict": model.state_dict(),
         "global_step": TRAINING_STEPS,
     }
     torch.save(payload, output)
-    print(f"D1_CHECKPOINT={output}", flush=True)
+    print(f"D12_CHECKPOINT={output}", flush=True)
     return 0
 
 

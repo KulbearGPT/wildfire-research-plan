@@ -7,9 +7,9 @@ if [[ $# -ne 1 ]]; then
 fi
 baseline_id=$1
 case "${baseline_id}" in
-  B0|B1|B2|B3|B4|B5) ;;
+  B0|B2|B3) ;;
   *)
-    echo "baseline ID must be B0, B1, B2, B3, B4, or B5" >&2
+    echo "baseline ID must be B0, B2, or B3" >&2
     exit 2
     ;;
 esac

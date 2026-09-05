@@ -10,7 +10,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 
-from .entrypoint import TRAIN_YEARS
+from .runtime import TRAIN_YEARS
 
 
 FEATURE_COUNT = 23

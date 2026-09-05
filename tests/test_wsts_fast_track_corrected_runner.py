@@ -28,20 +28,16 @@ HELDOUT_RUNNER = (
 
 
 def _record(baseline_id: str = "B0") -> dict[str, object]:
-    experiment = "C02" if baseline_id in {"B1", "B5"} else "C00"
     policy = {
         "B0": "clean",
-        "B1": "clean",
         "B2": "fire",
         "B3": "fire-block",
-        "B4": "year-balanced-fire-block",
-        "B5": "fire-block",
     }[baseline_id]
     return {
         "schema_version": 1,
         "status": "pass",
         "baseline_id": baseline_id,
-        "experiment": experiment,
+        "experiment": "C00",
         "training_policy": policy,
         "seed": 0,
         "max_steps": 3_000,
@@ -73,8 +69,8 @@ def test_evaluation_record_requires_exact_corrected_from_scratch_contract() -> N
 
 
 def test_evaluation_record_rejects_mismatched_baseline_identity() -> None:
-    record = _record("B1")
-    record["experiment"] = "C00"
+    record = _record("B2")
+    record["experiment"] = "C02"
     with pytest.raises(ValueError, match="completion record"):
         validate_evaluation_record(record)
 
@@ -86,7 +82,7 @@ def test_corrected_runner_is_safe_and_self_contained() -> None:
     assert syntax.returncode == 0, syntax.stderr
     text = RUNNER.read_text(encoding="utf-8")
     assert "sbatch" not in text
-    assert "B0|B1|B2|B3|B4|B5" in text
+    assert "B0|B2|B3" in text
     assert "archive --format=tar HEAD" in text
     assert "train_corrected_baseline" in text
     assert "complete_corrected_baseline" in text
@@ -122,4 +118,5 @@ def test_reliability_evaluation_runner_is_small_and_safe() -> None:
     assert "--heldout-authorized" in text
     assert "evaluate_corrected_baseline" in text
     assert "evaluate_predictive_consistency" in text
-    assert "evaluate_reliability_normalized" in text
+    assert "evaluate_standard_reliability_control" in text
+    assert "evaluate_severity_adaptive_reliability_prompting" in text

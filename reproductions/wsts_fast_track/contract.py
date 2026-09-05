@@ -1,4 +1,4 @@
-"""Literal contract for the first two Nibi WSTS+ screening experiments."""
+"""Literal contract for the retained Nibi WSTS+ T=1 experiments."""
 
 from __future__ import annotations
 
@@ -18,43 +18,6 @@ EXPECTED_YEAR_COUNTS: Final[dict[int, int]] = {
     2022: 122,
     2023: 68,
 }
-
-MULTI_FEATURES: Final[tuple[int, ...]] = (
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    11,
-    12,
-    13,
-    14,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31,
-    32,
-    38,
-    39,
-)
-
 
 @dataclass(frozen=True)
 class ExperimentSpec:
@@ -76,15 +39,6 @@ _EXPERIMENTS: Final[dict[str, ExperimentSpec]] = {
         n_leading_observations=1,
         features_to_keep=None,
         remove_duplicate_features=True,
-    ),
-    "C02": ExperimentSpec(
-        experiment_id="C02",
-        model_name="Res18-UTAE",
-        data_config="cfgs/data_multitemporal_multi_features.yaml",
-        model_class_override="models.SMPTempModel",
-        n_leading_observations=5,
-        features_to_keep=MULTI_FEATURES,
-        remove_duplicate_features=False,
     ),
 }
 

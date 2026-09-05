@@ -4,23 +4,18 @@ from __future__ import annotations
 
 import importlib
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal
+from typing import Any, Final, Literal
 
-import torch
-
-from .environment_dro import balanced_year_sampling_weights
-from .environment_dro import resolve_dataset_index
-from .prototype import (
+from .corruption_training import (
     install_training_fire_and_block_dropout,
     install_training_fire_dropout,
 )
 
 
-TrainingPolicy = Literal[
-    "clean", "fire", "fire-block", "year-balanced-fire-block"
-]
+TrainingPolicy = Literal["clean", "fire", "fire-block"]
 
 
 @dataclass(frozen=True)
@@ -28,7 +23,7 @@ class CorrectedBaselineSpec:
     """One minimal corrected-index baseline screen."""
 
     baseline_id: str
-    experiment_id: Literal["C00", "C02"]
+    experiment_id: Literal["C00"]
     training_policy: TrainingPolicy
     seed: int = 0
     max_steps: int = 3_000
@@ -36,11 +31,8 @@ class CorrectedBaselineSpec:
 
 CORRECTED_BASELINES: Final[dict[str, CorrectedBaselineSpec]] = {
     "B0": CorrectedBaselineSpec("B0", "C00", "clean"),
-    "B1": CorrectedBaselineSpec("B1", "C02", "clean"),
     "B2": CorrectedBaselineSpec("B2", "C00", "fire"),
     "B3": CorrectedBaselineSpec("B3", "C00", "fire-block"),
-    "B4": CorrectedBaselineSpec("B4", "C00", "year-balanced-fire-block"),
-    "B5": CorrectedBaselineSpec("B5", "C02", "fire-block"),
 }
 
 
@@ -53,32 +45,27 @@ def corrected_baseline_spec(baseline_id: str) -> CorrectedBaselineSpec:
         raise ValueError(f"unknown corrected baseline: {baseline_id}") from error
 
 
-def install_balanced_year_training_loader(upstream_root: Path | str) -> None:
-    """Give each training year equal sampler mass without changing examples."""
+def resolve_dataset_index(dataset: Any, target_id: int) -> tuple[int, str, int]:
+    """Resolve the first matching year/fire without the upstream loop leak."""
 
-    upstream = Path(upstream_root).resolve()
-    sys.path.insert(0, str(upstream))
-    sys.path.insert(0, str(upstream / "src"))
-    datamodule = importlib.import_module("dataloader.FireSpreadDataModule")
-    datamodule_class = datamodule.FireSpreadDataModule
-
-    def train_dataloader_with_balanced_years(self):
-        weights = balanced_year_sampling_weights(self.train_dataset)
-        sampler = torch.utils.data.WeightedRandomSampler(
-            weights,
-            num_samples=len(self.train_dataset),
-            replacement=True,
-            generator=torch.Generator().manual_seed(0),
+    length = len(dataset)
+    if target_id < 0:
+        target_id += length
+    if target_id < 0 or target_id >= length:
+        raise RuntimeError(
+            f"Tried to access item {target_id}, but maximum index is {length - 1}."
         )
-        return torch.utils.data.DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            sampler=sampler,
-            num_workers=self.num_workers,
-            pin_memory=True,
-        )
-
-    datamodule_class.train_dataloader = train_dataloader_with_balanced_years
+    remaining = target_id
+    per_fire = getattr(dataset, "datapoints_per_fire", None)
+    if not isinstance(per_fire, Mapping):
+        raise ValueError("dataset must expose per-fire datapoint counts")
+    for year, fires in per_fire.items():
+        for fire_name, count_value in fires.items():
+            count = int(count_value)
+            if remaining < count:
+                return int(year), str(fire_name), remaining
+            remaining -= count
+    raise RuntimeError(f"dataset index did not resolve: {target_id}")
 
 
 def install_corrected_baseline(upstream_root: Path | str, baseline_id: str) -> None:
@@ -94,7 +81,5 @@ def install_corrected_baseline(upstream_root: Path | str, baseline_id: str) -> N
 
     if spec.training_policy == "fire":
         install_training_fire_dropout(upstream)
-    elif spec.training_policy in {"fire-block", "year-balanced-fire-block"}:
+    elif spec.training_policy == "fire-block":
         install_training_fire_and_block_dropout(upstream)
-        if spec.training_policy == "year-balanced-fire-block":
-            install_balanced_year_training_loader(upstream)

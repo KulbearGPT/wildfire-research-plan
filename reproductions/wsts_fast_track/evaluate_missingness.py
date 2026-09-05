@@ -1,115 +1,16 @@
-"""Evaluate one immutable checkpoint/scenario/year task without retraining."""
+"""Shared checkpoint loading and metrics for retained T=1 evaluations."""
 
 from __future__ import annotations
 
-import argparse
 import importlib
 import json
 import sys
-from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
 import torch
 
-from .evaluation import build_controlled_dataset
-from .matrix import CORRUPTIONS, run_spec
-
-
-@dataclass(frozen=True)
-class SelectedTask:
-    task: dict[str, object]
-    mode: str
-    heldout_authorized: bool
-
-
-def select_task(
-    manifest: Mapping[str, object], evaluation_id: str
-) -> SelectedTask:
-    """Select exactly one task after enforcing its engineering/formal boundary."""
-
-    if manifest.get("schema_version") != 1 or manifest.get(
-        "corruption_schema_version"
-    ) != 1:
-        raise ValueError("missingness manifest schema is unsupported")
-    mode = manifest.get("mode")
-    if mode not in {"engineering", "formal"}:
-        raise ValueError("missingness manifest mode is invalid")
-    records = manifest.get("records")
-    tasks = manifest.get("tasks")
-    if not isinstance(records, list) or not isinstance(tasks, list):
-        raise ValueError("missingness manifest records and tasks must be lists")
-    matches = [
-        task
-        for task in tasks
-        if isinstance(task, dict) and task.get("evaluation_id") == evaluation_id
-    ]
-    if not matches:
-        raise ValueError(f"evaluation task was not found: {evaluation_id}")
-    if len(matches) != 1:
-        raise ValueError("evaluation task must occur exactly once")
-    task = dict(matches[0])
-
-    required_task_keys = {
-        "evaluation_id",
-        "run_id",
-        "experiment_id",
-        "seed",
-        "checkpoint",
-        "scenario_id",
-        "matrix_seed",
-        "year",
-        "output",
-    }
-    if set(task) != required_task_keys:
-        raise ValueError("evaluation task fields differ from the required schema")
-    run = run_spec(str(task["run_id"]))
-    if run.max_steps != 10_000:
-        raise ValueError("missingness evaluation requires a clean 10K run")
-    if task["experiment_id"] != run.experiment_id or task["seed"] != run.seed:
-        raise ValueError("evaluation task run identity is inconsistent")
-    scenario_id = task["scenario_id"]
-    if scenario_id not in CORRUPTIONS:
-        raise ValueError("evaluation task scenario is unknown")
-    if task["matrix_seed"] != CORRUPTIONS[str(scenario_id)].matrix_seed:
-        raise ValueError("evaluation task matrix seed is inconsistent")
-
-    matching_records = [
-        record
-        for record in records
-        if isinstance(record, dict) and record.get("run_id") == task["run_id"]
-    ]
-    if len(matching_records) != 1:
-        raise ValueError("evaluation task must have exactly one checkpoint record")
-    if matching_records[0].get("checkpoint") != task["checkpoint"]:
-        raise ValueError("evaluation checkpoint differs from its clean record")
-
-    year = task["year"]
-    if mode == "engineering":
-        if (
-            manifest.get("scientific_claim") is not False
-            or manifest.get("heldout_access") is not False
-            or manifest.get("years") != [2021]
-            or year != 2021
-        ):
-            raise ValueError("engineering evaluation must remain on 2021")
-        heldout_authorized = False
-    else:
-        record_ids = {
-            record.get("run_id") for record in records if isinstance(record, dict)
-        }
-        if len(records) != 6 or len(record_ids) != 6:
-            raise ValueError("formal evaluation requires six unique clean records")
-        if (
-            manifest.get("scientific_claim") is not True
-            or manifest.get("heldout_access") is not True
-            or manifest.get("years") != [2022, 2023]
-            or year not in {2022, 2023}
-        ):
-            raise ValueError("formal evaluation boundary is invalid")
-        heldout_authorized = True
-    return SelectedTask(task, str(mode), heldout_authorized)
 
 
 def evaluate_batches(
@@ -243,8 +144,8 @@ def checkpoint_init_args(
 
     init_args = dict(hyperparameters)
     init_args["encoder_weights"] = None
-    if experiment_id == "C02":
-        init_args.pop("use_doy", None)
+    if experiment_id != "C00":
+        raise ValueError("retained checkpoint loader supports only C00")
     return init_args
 
 
@@ -255,14 +156,14 @@ def load_checkpoint_model(
     upstream_root: Path,
     device: torch.device,
 ) -> torch.nn.Module:
-    """Strict-load the declared C00/C02 architecture from a Lightning checkpoint."""
+    """Strict-load the retained C00 architecture from a checkpoint."""
 
     upstream = Path(upstream_root).resolve()
     sys.path.insert(0, str(upstream))
     sys.path.insert(0, str(upstream / "src"))
-    module_name = "models.SMPModel" if experiment_id == "C00" else "models.SMPTempModel"
-    class_name = "SMPModel" if experiment_id == "C00" else "SMPTempModel"
-    model_class = getattr(importlib.import_module(module_name), class_name)
+    if experiment_id != "C00":
+        raise ValueError("retained checkpoint loader supports only C00")
+    model_class = getattr(importlib.import_module("models.SMPModel"), "SMPModel")
 
     payload = torch.load(
         Path(checkpoint).resolve(strict=True), map_location="cpu", weights_only=False
@@ -288,77 +189,3 @@ def write_result_new(path: Path, payload: Mapping[str, object]) -> None:
     with target.open("x", encoding="utf-8", newline="\n") as handle:
         json.dump(payload, handle, indent=2, sort_keys=True)
         handle.write("\n")
-
-
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", type=Path, required=True)
-    parser.add_argument("--evaluation-id", required=True)
-    parser.add_argument("--upstream-root", type=Path, required=True)
-    parser.add_argument("--data-root", type=Path, required=True)
-    parser.add_argument("--stats-path", type=Path, required=True)
-    parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--num-workers", type=int, default=8)
-    parser.add_argument("--device", default="cuda")
-    return parser
-
-
-def main(argv: Sequence[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
-    manifest_path = args.manifest.resolve(strict=True)
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if not isinstance(manifest, dict):
-        raise ValueError("missingness manifest must be a JSON object")
-    selected = select_task(manifest, args.evaluation_id)
-    task = selected.task
-    device = torch.device(args.device)
-    if device.type == "cuda" and not torch.cuda.is_available():
-        raise ValueError("CUDA evaluation requested but unavailable")
-    if args.batch_size <= 0 or args.num_workers < 0:
-        raise ValueError("batch size must be positive and workers nonnegative")
-
-    dataset = build_controlled_dataset(
-        upstream_root=args.upstream_root,
-        data_root=args.data_root,
-        stats_path=args.stats_path,
-        experiment_id=str(task["experiment_id"]),
-        scenario_id=str(task["scenario_id"]),
-        evaluation_year=int(task["year"]),
-        heldout_authorized=selected.heldout_authorized,
-    )
-    loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.num_workers,
-        pin_memory=device.type == "cuda",
-    )
-    model = load_checkpoint_model(
-        Path(str(task["checkpoint"])),
-        experiment_id=str(task["experiment_id"]),
-        upstream_root=args.upstream_root,
-        device=device,
-    )
-    metrics = evaluate_batches(model, loader, device=device)
-    result = {
-        "schema_version": 1,
-        "status": "pass",
-        "mode": selected.mode,
-        "scientific_claim": selected.mode == "formal",
-        "manifest": str(manifest_path),
-        "task": task,
-        "metrics": metrics,
-        "boundary": {
-            "is_train": False,
-            "retraining": False,
-            "checkpoint_selection": False,
-            "natural_missingness_claim": False,
-        },
-    }
-    write_result_new(Path(str(task["output"])), result)
-    print(json.dumps(result, sort_keys=True))
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

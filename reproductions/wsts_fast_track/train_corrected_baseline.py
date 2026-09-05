@@ -16,7 +16,7 @@ from .corrected_baselines import (
     corrected_baseline_spec,
     install_corrected_baseline,
 )
-from .entrypoint import _install_runtime_contract, load_training_stats
+from .runtime import _install_runtime_contract, load_training_stats
 
 
 def main(argv: Sequence[str] | None = None) -> int:

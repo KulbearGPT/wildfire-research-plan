@@ -4,18 +4,49 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from .completion import _load_checkpoint, last_metric
 from .corrected_baselines import CORRECTED_BASELINES, corrected_baseline_spec
 
 
 MAX_STEPS = 3_000
+ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+NUMBER = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
 CheckpointLoader = Callable[[Path], Mapping[str, Any]]
+
+
+def last_metric(text: str, name: str) -> float:
+    """Return the last finite value logged for a named validation metric."""
+
+    normalized = ANSI.sub("", text).replace("\r", "\n")
+    values: list[float] = []
+    for line in normalized.splitlines():
+        match = re.search(rf"\b{re.escape(name)}\b", line)
+        if match is None:
+            continue
+        numeric = NUMBER.search(line[match.end() :])
+        if numeric is not None:
+            values.append(float(numeric.group(0)))
+    if not values:
+        raise ValueError(f"final validation metric is missing: {name}")
+    value = values[-1]
+    if not math.isfinite(value):
+        raise ValueError(f"final validation metric is non-finite: {name}={value}")
+    return value
+
+
+def _load_checkpoint(path: Path) -> Mapping[str, Any]:
+    import torch
+
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(payload, Mapping):
+        raise ValueError("checkpoint payload must be a mapping")
+    return payload
 
 
 def finalize_corrected_baseline(

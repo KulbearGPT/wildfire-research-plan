@@ -1,66 +1,26 @@
-"""Run the matched D1 ERM/consistency continuation from corrected B3."""
+"""Train the matched D2 standard-convolution continuation from B3."""
 
 from __future__ import annotations
 
 import argparse
 import importlib
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
-
 import numpy as np
 import torch
 
 from .contract import experiment_spec, validate_inventory
 from .corrected_baselines import install_corrected_baseline
 from .runtime import TRAIN_YEARS, _install_runtime_contract, load_training_stats
-from .evaluate_corrected_baseline import validate_evaluation_record
 from .evaluate_missingness import load_checkpoint_model
-from .predictive_consistency import (
-    CleanCorruptPairDataset,
-    bernoulli_kl_from_logits,
-)
 from .corruption_training import BLOCK_DROPOUT_PROBABILITY, FIRE_DROPOUT_PROBABILITY
+from .processed_reliability import ProcessedReliabilityDataset
+from .train_predictive_consistency import validate_b3_record
 
 
 TRAINING_STEPS = 3_000
 LEARNING_RATE = 1e-3
-
-
-def validate_b3_record(record: Mapping[str, object]) -> str:
-    """Return the checkpoint string from an exact corrected B3 record."""
-
-    try:
-        baseline = validate_evaluation_record(record)
-    except ValueError as error:
-        raise ValueError("D1 requires a corrected B3 completion record") from error
-    if baseline.baseline_id != "B3":
-        raise ValueError("D1 requires a corrected B3 completion record")
-    return str(record["checkpoint"])
-
-
-def paired_training_objective(
-    model: Any,
-    clean_logits: torch.Tensor,
-    corrupt_logits: torch.Tensor,
-    target: torch.Tensor,
-    *,
-    lambda_consistency: float,
-) -> tuple[torch.Tensor, dict[str, float]]:
-    """Return matched paired supervision with an optional KL contribution."""
-
-    if lambda_consistency < 0.0:
-        raise ValueError("consistency weight must be nonnegative")
-    clean_loss = model.compute_loss(clean_logits, target)
-    corrupt_loss = model.compute_loss(corrupt_logits, target)
-    supervised = 0.5 * (clean_loss + corrupt_loss)
-    consistency = bernoulli_kl_from_logits(clean_logits, corrupt_logits)
-    objective = supervised + lambda_consistency * consistency
-    return objective, {
-        "supervised": float(supervised.detach().cpu()),
-        "consistency": float(consistency.detach().cpu()),
-    }
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -70,8 +30,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--stats-path", type=Path, required=True)
     parser.add_argument("--output-path", type=Path, required=True)
-    parser.add_argument("--lambda-consistency", type=float, choices=(0.0, 0.1), required=True)
-    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args(argv)
@@ -111,11 +70,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     active_fire_missing_value = float(
         (0.0 - means[0, 22, 0, 0]) / stds[0, 22, 0, 0]
     )
-    dataset = CleanCorruptPairDataset(
-        base_dataset,
-        fire_probability=FIRE_DROPOUT_PROBABILITY,
-        block_probability=BLOCK_DROPOUT_PROBABILITY,
-        active_fire_missing_value=active_fire_missing_value,
+    dataset = ProcessedReliabilityDataset(
+        base_dataset, active_fire_missing_value
     )
 
     torch.manual_seed(0)
@@ -123,8 +79,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise ValueError("CUDA training requested but unavailable")
-    if args.batch_size <= 0 or args.num_workers < 0:
-        raise ValueError("batch size must be positive and workers nonnegative")
     loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -147,34 +101,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     optimizer = torch.optim.AdamW(parameters, lr=LEARNING_RATE)
     iterator = iter(loader)
     final_loss = float("nan")
-    final_parts: dict[str, float] = {}
     for step in range(1, TRAINING_STEPS + 1):
         try:
-            clean_x, corrupt_x, target = next(iterator)
+            x, target = next(iterator)
         except StopIteration:
             iterator = iter(loader)
-            clean_x, corrupt_x, target = next(iterator)
-        clean_x = clean_x.to(device, non_blocking=True)
-        corrupt_x = corrupt_x.to(device, non_blocking=True)
+            x, target = next(iterator)
+        x = x.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True).long()
         optimizer.zero_grad(set_to_none=True)
-        clean_logits = model(clean_x).squeeze(1)
-        corrupt_logits = model(corrupt_x).squeeze(1)
-        loss, final_parts = paired_training_objective(
-            model,
-            clean_logits,
-            corrupt_logits,
-            target,
-            lambda_consistency=args.lambda_consistency,
-        )
+        logits = model(x[:, :, :-1]).squeeze(1)
+        loss = model.compute_loss(logits, target)
         loss.backward()
         optimizer.step()
         final_loss = float(loss.detach().cpu())
         if step == 1 or step % 100 == 0:
             print(
-                f"D1_STEP={step} LOSS={final_loss:.8f} "
-                f"SUPERVISED={final_parts['supervised']:.8f} "
-                f"CONSISTENCY={final_parts['consistency']:.8f}",
+                f"D2_STD_STEP={step} LOSS={final_loss:.8f}",
                 flush=True,
             )
 
@@ -185,8 +128,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     payload = {
         "schema_version": 1,
         "status": "pass",
-        "candidate_id": "D1-KL" if args.lambda_consistency else "D1-ERM",
-        "matched_pair": "D1",
+        "candidate_id": "D2-STD",
+        "matched_pair": "D2",
+        "variant": "standard",
         "base_b3_record": str(record_path),
         "base_b3_checkpoint": str(checkpoint),
         "experiment": "C00",
@@ -195,17 +139,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "seed": 0,
         "batch_size": args.batch_size,
         "learning_rate": LEARNING_RATE,
-        "lambda_consistency": args.lambda_consistency,
         "active_fire_dropout_probability": FIRE_DROPOUT_PROBABILITY,
         "block_dropout_probability": BLOCK_DROPOUT_PROBABILITY,
+        "processed_space_matched_corruption": True,
         "final_loss": final_loss,
-        "final_loss_components": final_parts,
         "hyper_parameters": dict(model.hparams),
         "state_dict": model.state_dict(),
         "global_step": TRAINING_STEPS,
     }
     torch.save(payload, output)
-    print(f"D1_CHECKPOINT={output}", flush=True)
+    print(f"D2_CHECKPOINT={output}", flush=True)
     return 0
 
 

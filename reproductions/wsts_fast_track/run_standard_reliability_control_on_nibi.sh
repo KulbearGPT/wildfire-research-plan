@@ -13,8 +13,8 @@ base=/project/6085198/kulbear/wildfire
 upstream=${base}/cache/WildfireSpreadTS-res18-runtime
 data=${base}/hdf5/wstsplus-active-fixed
 stats=${base}/runs/nibi-wstsplus-data-20260823/train-2016-2020-stats.npz
-run_root=${base}/runs/D12-SARP-S0-3K-${SLURM_JOB_ID}
-checkpoint=${run_root}/D12-SARP.pt
+run_root=${base}/runs/D2-standard-S0-3K-${SLURM_JOB_ID}
+checkpoint=${run_root}/D2-standard.pt
 output_root=${run_root}/results-2021
 
 test -f "${b3_record}"
@@ -30,7 +30,7 @@ source "${base}/envs/wsts-res18-t1-nibi-smoke/bin/activate"
 
 mkdir -p "${run_root}/project"
 cp "${b3_record}" "${run_root}/b3-completed.json"
-cp "${runner_path}" "${run_root}/run_severity_adaptive_reliability_prompting_on_nibi.sh"
+cp "${runner_path}" "${run_root}/run_standard_reliability_control_on_nibi.sh"
 git -C "${repo}" rev-parse HEAD > "${run_root}/project-commit.txt"
 git -C "${repo}" status --porcelain=v1 > "${run_root}/project-status.txt"
 git -C "${repo}" archive --format=tar HEAD | tar -xf - -C "${run_root}/project"
@@ -48,7 +48,7 @@ export WANDB_SILENT=true
 export HDF5_USE_FILE_LOCKING=FALSE
 export PYTHONUNBUFFERED=1
 
-python -m reproductions.wsts_fast_track.train_severity_adaptive_reliability_prompting \
+python -m reproductions.wsts_fast_track.train_standard_reliability_control \
   --b3-record "${b3_record}" \
   --upstream-root "${upstream}" \
   --data-root "${data}" \
@@ -56,7 +56,7 @@ python -m reproductions.wsts_fast_track.train_severity_adaptive_reliability_prom
   --output-path "${checkpoint}" \
   --device cuda 2>&1 | tee "${run_root}/training.log"
 
-python -m reproductions.wsts_fast_track.evaluate_severity_adaptive_reliability_prompting \
+python -m reproductions.wsts_fast_track.evaluate_standard_reliability_control \
   --checkpoint "${checkpoint}" \
   --output-root "${output_root}" \
   --upstream-root "${upstream}" \

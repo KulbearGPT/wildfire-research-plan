@@ -9,7 +9,7 @@ kind=$1
 input=$(realpath "$2")
 year=$3
 label=$4
-case "${kind}" in baseline|d1|d2|ciwc|circ|cra|ffca|cepr|rpp|crpp|sarp) ;; *) echo "kind must be baseline, d1, d2, ciwc, circ, cra, ffca, cepr, rpp, crpp, or sarp" >&2; exit 2 ;; esac
+case "${kind}" in baseline|d1|d2|sarp) ;; *) echo "kind must be baseline, d1, d2, or sarp" >&2; exit 2 ;; esac
 case "${year}" in 2022|2023) ;; *) echo "year must be 2022 or 2023" >&2; exit 2 ;; esac
 [[ "${label}" =~ ^[A-Za-z0-9-]+$ ]] || { echo "invalid label" >&2; exit 2; }
 
@@ -52,15 +52,8 @@ common=(--output-root "${output_root}" --upstream-root "${upstream}" --data-root
 case "${kind}" in
   baseline) python -m reproductions.wsts_fast_track.evaluate_corrected_baseline --record "${input}" "${common[@]}" ;;
   d1) python -m reproductions.wsts_fast_track.evaluate_predictive_consistency --checkpoint "${input}" "${common[@]}" ;;
-  d2) python -m reproductions.wsts_fast_track.evaluate_reliability_normalized --checkpoint "${input}" "${common[@]}" ;;
-  ciwc) python -m reproductions.wsts_fast_track.evaluate_counterfactual_impact_consistency --checkpoint "${input}" "${common[@]}" ;;
-  circ) python -m reproductions.wsts_fast_track.evaluate_counterfactual_rank_consistency --checkpoint "${input}" "${common[@]}" ;;
-  cra) python -m reproductions.wsts_fast_track.evaluate_counterfactual_reliability_adapter --checkpoint "${input}" "${common[@]}" ;;
-  ffca) python -m reproductions.wsts_fast_track.evaluate_counterfactual_reliability_adapter --checkpoint "${input}" "${common[@]}" ;;
-  cepr) python -m reproductions.wsts_fast_track.evaluate_counterfactual_error_pair_ranking --checkpoint "${input}" "${common[@]}" ;;
-  rpp) python -m reproductions.wsts_fast_track.evaluate_reliability_prompt_pyramid --checkpoint "${input}" "${common[@]}" ;;
-  crpp) python -m reproductions.wsts_fast_track.evaluate_reliability_prompt_pyramid --checkpoint "${input}" "${common[@]}" ;;
-  sarp) python -m reproductions.wsts_fast_track.evaluate_reliability_prompt_pyramid --checkpoint "${input}" "${common[@]}" ;;
+  d2) python -m reproductions.wsts_fast_track.evaluate_standard_reliability_control --checkpoint "${input}" "${common[@]}" ;;
+  sarp) python -m reproductions.wsts_fast_track.evaluate_severity_adaptive_reliability_prompting --checkpoint "${input}" "${common[@]}" ;;
 esac 2>&1 | tee "${run_root}/evaluation-${year}.log"
 
 test -f "${output_root}/summary.json"
