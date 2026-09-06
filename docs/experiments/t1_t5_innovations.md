@@ -136,11 +136,14 @@ D2/D13 controls are context, not proof of any new direction.
 | X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | pending | pending |
-| X7 missingness-conditioned residual experts | fresh continuation | yes; late regime-specific correction module | screen `21214506` | screen `21214507` |
+| X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | smoke `21214598` | smoke `21214599` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
-running, before seeing their outcomes. It is the only added fallback: the
+running, before seeing their outcomes. The subsequent archive audit below
+invalidated its independence before a screen ran. X8 is a justified reopening
+of quantitatively promising D5 under the new cross-history objective; the
 register is otherwise closed until these results resolve. A failed row may
 receive one mechanism-driven repair, but no unrelated direction is added merely
 to accumulate positive experiments. Only rows with positive matched evidence
@@ -402,16 +405,31 @@ requirement for at least one direction, not a gate imposed on all three.
 `run.py --evaluate-only`
 already performs immutable 2022/2023 evaluation from a selected checkpoint.
 
-X7 uses two zero-initialized late residual experts selected by the observed
+X7 used two zero-initialized late residual experts selected by the observed
 corruption masks: one for global FireDrop evidence and one for a spatial data
 hole. A shared 3x3 decoder bottleneck receives decoder features plus both local
 masks, so each expert can adjust the full forecast while knowing where evidence
 was removed. Neither expert activates on a clean sample, and the untrained
 model is exactly the base forecast. This is distinct from X1 encoder transport,
 X3 fire-state marginalization, and loss/data-distribution candidates X5/X6.
-The same small module is used unchanged for both histories. Implementation is
+The same small module was implemented unchanged for both histories at
 `76cd083`; real-data one-batch T1/T5 smoke jobs `21214411/21214412` completed
 in 29/24 seconds with exact initial equivalence, successful backward and
-inference, and peak GPU allocation of 0.64/1.61GB. Formal 3000-step T1/T5
-screens `21214506/21214507` therefore use minimum 10GB H100 slices and the
-unchanged fresh-continuation control.
+inference, and peak GPU allocation of 0.64/1.61GB. Before the formal screens
+produced evidence, an archive audit found that its 3x3 late residual, explicit
+reliability maps, whole-forecast correction and jointly trained base materially
+repeat archived D7-CRA; two heads instead of one and removal of CIWC are not an
+independent contribution. Formal T1/T5 jobs `21214506/21214507` were therefore
+cancelled at 21/0 seconds. X7 is retained only as an overlap-audit record.
+
+X8 revisits archived D5 counterfactual-impact weighted consistency because the
+current goal changes its relevant decision boundary. D5 had corrected T1
+primary delta `+.015468` over D1-ERM, driven by M01 `+.043494`, and stopped
+only because the old campaign required every candidate to reach `+.020`; it
+was never tested at T5. Unlike X5-local, which assumes forecast impact lies on
+the input invalidity support, X8 weights clean-to-corrupt Bernoulli KL by the
+detached absolute change in predicted probability at each future pixel and
+normalizes impact per sample. It adds no inference parameters. X8 must improve
+over the unchanged global-D1 consistency control, not merely ERM, in both
+histories to count as a new incremental objective. The exact fixed 0.1 recipe
+is ported in `35695ec`; T1/T5 real-batch smoke jobs are `21214598/21214599`.
