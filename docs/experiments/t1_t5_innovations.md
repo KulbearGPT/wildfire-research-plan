@@ -180,6 +180,13 @@ strictly X23 versus X14; adoption additionally requires the routed result to
 beat fresh ERM in both histories. There is no consistency-weight sweep. The
 seed-0 gate remains primary `>= +.005` versus X14 in both T settings with the
 M00 guardrail; failure in either history closes X23 before confirmation.
+The T1/T5 real-data smoke jobs are `21228439/21228440`; dependency-gated
+seed-0 screens are `21228441/21228442`, all pinned to `a89c06f`. Queue probes
+placed the 10GB smoke profile about five minutes earlier than 20GB, so both
+smokes and T1 formal use 10GB. T5 formal uses 20GB because the identical
+paired clean/corrupt path previously exceeded 10GB at physical batch 64.
+The formal jobs retain 3000 steps and the X14 sampling recipe; no computation
+was performed on the login node.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
