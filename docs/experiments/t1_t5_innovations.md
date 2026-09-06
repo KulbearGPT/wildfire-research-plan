@@ -108,8 +108,26 @@ failed T1 and remains negative evidence.
 
 ## Status
 
-No new quantitative result yet. Historical B3/B5 and D2/D13 controls are
-starting evidence, not proof of any new direction.
+T1 seed-0 evidence is available for the first wave; cross-history support is
+not established until the matched T5 screens finish. Historical B3/B5 and
+D2/D13 controls are context, not proof of any new direction.
+
+### Frozen candidate register
+
+| Direction | Matched attribution control | Independent contribution? | T1 seed-0 | T5 seed-0 |
+| --- | --- | --- | --- | --- |
+| X1 context transport | fresh continuation; observable spatial route | yes | routed pass, +.005954 | running |
+| X1 frozen adapter | frozen initial B3/B5 | alternative X1 implementation | pending | pending |
+| X2 feature distillation | fresh continuation | yes | original rejected; block-local revision running | running |
+| X3 latent transition | fresh continuation | yes | pass, +.011831 | running |
+| X4 spatial risk weighting | fresh continuation | one training-objective contribution | running | running |
+| X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
+| X1+X3 composition | fresh continuation / component ablations | no; interaction only | pending | pending |
+
+This register is now closed until these results are resolved. A failed row may
+receive one mechanism-driven repair, but no unrelated direction is added merely
+to accumulate positive experiments. Only rows with positive matched evidence
+in both history settings can advance to seed confirmation.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
