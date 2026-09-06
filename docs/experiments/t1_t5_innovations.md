@@ -259,6 +259,9 @@ already-used 64GB, with zero training steps and a pinned source revision.
 The four T1 values match the source B3 `results-2021/summary.json` exactly at
 full stored precision, independently confirming that the new wrapper and AP
 path introduce no evaluation drift before adapter attribution.
+The archived B5 reference fixes the expected T5 values at
+M00/M01/M06/M07 `.557715/.288461/.336086/.158021`; replacement `21212423`
+must reproduce them at full stored precision before its use as a control.
 
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
