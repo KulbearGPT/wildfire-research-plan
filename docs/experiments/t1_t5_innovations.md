@@ -139,6 +139,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | routed +.007239; confirm s1/s2 | routed +.005132; confirm s1/s2 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | screen `21217161` | screen `21217162` |
+| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | implementation | implementation |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -146,7 +147,9 @@ running, before seeing their outcomes. The subsequent archive audit below
 invalidated its independence before a screen ran. X8 is a justified reopening
 of quantitatively promising D5 under the new cross-history objective. X9 was
 registered only after X6 closed and targets the remaining block-specific gap;
-the register is otherwise closed until these results resolve. A failed row may
+X10 was registered before either X9 screen started and tests a distinct
+input-space mechanism rather than a revision selected from X9 results. The
+register is otherwise closed until these results resolve. A failed row may
 receive one mechanism-driven repair, but no unrelated direction is added merely
 to accumulate positive experiments. Only rows with positive matched evidence
 in both history settings can advance to seed confirmation.
@@ -530,3 +533,33 @@ slices. Both reported exact initial equivalence, a successful backward update,
 and inference; peak allocation was 0.61/1.58GB. Fixed seed-0 3000-step screens
 are T1/T5 `21217161/21217162`, using the same physical batch 64 and minimum
 10GB slices, pinned to `a39fc53`.
+
+X10 forecast-aware dynamic inpainting targets the part of M06/M07 that neither
+fire-map reconstruction nor decoder calibration models explicitly: the block
+also removes dynamic environmental fields. For every history day, a compact
+dilated CNN receives the corrupt typed input, its valid-region channel means,
+static local context, and the spatial mask. It predicts corrections only for
+the 18 T1 or 11 T5 retained dynamic non-fire channels and applies them only
+inside the missing block. Observed values, static variables, active-fire
+channels, M00, and complete-FireDrop inputs are unchanged by construction. The
+zero-initialized final layer makes the initial predictor exactly the base.
+There is no reconstruction coefficient: the downstream forecast loss decides
+which physically typed values are useful, avoiding an image-fidelity tuning
+branch.
+
+The bounded claim is forecast-aware restoration of missing environmental
+drivers, not novelty of masked reconstruction itself. Yang et al.'s
+[wildfire reconstruction pipeline](https://arxiv.org/abs/2603.09042)
+reconstructs fire maps before a separate forecaster and assumes environmental
+fields remain observed. General masked spatiotemporal pretraining is covered by
+[STD-MAE](https://arxiv.org/abs/2312.00516), while
+[DIS2](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html)
+compensates missing remote-sensing modalities in latent space. X10 differs in
+the acted-on object (typed wildfire drivers), its observation-clamped input
+correction, and direct forecast supervision. A reviewer-style pre-run audit is
+`Accept with Revisions, pending the validation experiment`: the main risk is
+incremental novelty, defended only if the same fixed module improves routed
+M06/M07 performance in both T settings. Its implementation is intentionally
+small (33,202 T1 / 28,939 T5 parameters); the decisive experiment is the same
+seed-0 spatial-route screen used for X9, followed by unchanged confirmation
+and heldout gates rather than an imputation benchmark or coefficient sweep.

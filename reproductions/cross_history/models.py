@@ -95,6 +95,33 @@ class SpatialImpactFiLM(nn.Module):
         return decoded + active*(decoded*torch.tanh(scale)+bias)
 
 
+class ForecastAwareDynamicInpainting(nn.Module):
+    """Fill only missing dynamic fields from valid and static context."""
+    def __init__(self, channels, dynamic):
+        super().__init__()
+        self.dynamic = tuple(dynamic)
+        self.predictor = nn.Sequential(
+            nn.Conv2d(2*channels+1,32,3,padding=1), nn.SiLU(),
+            nn.Conv2d(32,32,3,padding=4,dilation=4), nn.SiLU(),
+            nn.Conv2d(32,len(self.dynamic),1),
+        )
+        nn.init.zeros_(self.predictor[-1].weight)
+        nn.init.zeros_(self.predictor[-1].bias)
+
+    def forward(self, x, spatial):
+        batch,time,channels,height,width = x.shape
+        flat = x.reshape(batch*time,channels,height,width)
+        mask = spatial[:,None].expand(batch,time,1,height,width).reshape(
+            batch*time,1,height,width)
+        valid = 1-mask
+        context = (flat*valid).sum(dim=(-2,-1),keepdim=True)
+        context = context/valid.sum(dim=(-2,-1),keepdim=True).clamp_min(1.)
+        residual = self.predictor(torch.cat((flat,context.expand_as(flat),mask),dim=1))
+        filled = flat.clone()
+        filled[:,self.dynamic] = filled[:,self.dynamic] + mask*residual
+        return filled.reshape(batch,time,channels,height,width)
+
+
 class Forecaster(nn.Module):
     def __init__(self, base, history, method):
         super().__init__()
@@ -117,6 +144,13 @@ class Forecaster(nn.Module):
         if method == 'spatial_impact_film':
             decoder_channels = base.model.segmentation_head[0].in_channels
             self.spatial_impact_film = SpatialImpactFiLM(decoder_channels)
+        if method == 'dynamic_inpaint':
+            columns = tuple(range(40)) if history == 1 else (
+                0,1,2,3,4,5,6,7,8,9,11,12,13,14,16,17,18,19,20,21,
+                22,23,24,25,26,27,28,29,30,31,32,38,39)
+            dynamic_source = set(range(12)) | {15} | set(range(33,38))
+            dynamic = tuple(i for i,column in enumerate(columns) if column in dynamic_source)
+            self.dynamic_inpaint = ForecastAwareDynamicInpainting(self.channels,dynamic)
 
     def features(self, x):
         encoder = self.base.model.encoder
@@ -133,6 +167,8 @@ class Forecaster(nn.Module):
         x = packed[:,:,:self.channels]
         spatial = packed[:,-1,self.channels:self.channels+1]
         fire_invalid = packed[:,-1,self.channels+1:self.channels+2]
+        if self.method == 'dynamic_inpaint':
+            x = self.dynamic_inpaint(x,spatial)
         features = self.features(x)
         if self.method in ('context','context_adapter','context_transition'):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]
