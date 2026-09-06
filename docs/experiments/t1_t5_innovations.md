@@ -135,9 +135,9 @@ D2/D13 controls are context, not proof of any new direction.
 | X3 latent transition | fresh continuation | yes | original +.011831; decoupled -.045065 | original -.009413; repair cancelled |
 | X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
-| X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203; pass | running `21214128` |
+| X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203 | +.002426 with M00 -.017601; reject |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
-| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | +.007638; pass | eval recovery `21216721` |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | routed +.007239; confirm s1/s2 | routed +.005132; confirm s1/s2 |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -336,6 +336,13 @@ Every scenario improves over fresh continuation; primary delta is `+.005203`,
 block mean `+.002434`, and M00 `+.001937`. It passes the preregistered T1
 screen narrowly and remains eligible pending the unchanged T5 job `21214128`.
 
+T5 X6 completed at M00/M01/M06/M07 `.577951/.375596/.383052/.199280`.
+Raw primary is only `+.002426`; M00 falls `-.017601`, M06 falls `-.006658`,
+and block mean is `-.002060` versus fresh continuation. It therefore fails
+both the T5 signal threshold and clean guardrail. The positive M01 change does
+not justify a corruption-probability search or post-hoc specialist because its
+single-scenario routed primary would be only `+.003800` at T5. X6 is closed.
+
 Composition smoke jobs T1/T5 `21212079/21212081` completed successfully in
 25/49 seconds. They covered a real batch, backward pass and inference; initial
 maximum output deviations were `2.38e-7/4.77e-7`. Full seed-0 composition
@@ -478,3 +485,22 @@ checkpoint, then the old job reached the 64GB host-memory cgroup limit during
 evaluation. This does not invalidate training. Evaluate-only recovery
 `21216721` loads that exact checkpoint, uses batch 16 on a 10GB slice, and
 does not repeat or change any optimizer step.
+
+Recovery completed at M00/M01/M06/M07 `.606770/.373352/.386005/.192072`.
+Against global-D1, raw primary is `+.001871`: M01 improves `+.015397`, while
+M06/M07 change `-.005056/-.004727` and M00 changes `-.002590`. This misses the
+raw T5 screen. However, archived D5 and the T1 result had already identified
+counterfactual-impact weighting as a complete-FireDrop specialist, and the
+FireDrop state is directly observable from the declared reliability mask.
+The single mechanism repair therefore freezes a two-checkpoint route: use X8
+only for M01 and global-D1 for M00/M06/M07. Its effective primary delta is
+`+.007239` at T1 and `+.005132` at T5, with exact zero clean/block changes;
+combined seed-0 mean is `+.006185`. Because this route was formalized after
+reading seed-0 T5, it is explicitly adaptive and cannot be called reliable
+until prospective seeds and held-out years pass unchanged.
+
+Fixed confirmation jobs, all pinned to route implementation commit `ea6c759`,
+are seed 1 T1 global/X8 `21217000/21217001`, T5 global/X8
+`21217002/21217003`; seed 2 equivalents are
+`21217004/21217005/21217006/21217007`. T1 uses 10GB slices and T5 uses 20GB;
+all retain physical batch 64, 3000 steps, and batch-16 evaluation.
