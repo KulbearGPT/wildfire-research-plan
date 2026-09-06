@@ -149,9 +149,9 @@ D2/D13 controls are context, not proof of any new direction.
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | reliable: +.005467/+.001416/+.006792 in 2021/22/23 | reliable: +.016685/+.011528/+.005485 in 2021/22/23 |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
-| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | 3-seed +.007392 vs ERM; block +.002887 vs X14 | +.010416 vs ERM; block +.004456 vs X14; confirming |
+| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | 3-seed +.007392 vs ERM; block +.002887 vs X14 | 3-seed +.017792 vs ERM; block +.001662 vs X14; heldout running |
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
-| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | seed-0 running | seed-0 running |
+| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | +.012193 vs ERM; block +.005090 vs X14 | seed-0 running |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | seed-0 submitted | seed-0 submitted |
@@ -992,6 +992,17 @@ and `+.011088` block. Relative to matched mixed-severity X14, block deltas are
 requiring every seed to be positive, so X17 passes T1 confirmation. Artifact:
 `cross-history-analysis/x17-severity-factorized-t1-confirmation-partial.json`.
 
+All four T5 confirmation jobs completed successfully. Across seeds 0/1/2,
+the fixed-severity route improves fresh ERM primary by a three-seed mean of
+`+.017792` and block mean of `+.026688`. Relative to matched mixed-severity
+X14, the T5 block-mean attribution is `+.001662`. Together with T1, the
+six-run overall primary/block means versus ERM are `+.012592/+.018888`;
+`confirmation_pass=true` and `mechanism_confirmation_pass=true` in
+`cross-history-analysis/x17-severity-factorized-confirmation.json`. Fixed
+2022/2023 evaluation now covers all twelve expert checkpoints in 24 minimum
+10GB evaluate-only jobs `21228523`--`21228546`. No training is repeated and
+the held-out results will not change the recipe.
+
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
 only already completed, seed-matched X8-control and X10-control summaries; it
@@ -1081,6 +1092,14 @@ rule: smoke `21226527/21226528`, dependency-gated seed-0
 Both replacement smoke jobs completed in 23/26 seconds with exit `0:0`, exact
 initial equivalence (`0.0`), successful backward/inference, and peak GPU
 allocation 0.63/1.59GB. The dependency-gated T1/T5 seed-0 screens then started.
+T1 seed 0 completed. Under the spatial route, X19 improves fresh ERM by
+`+.019301/+.017277` on M06/M07, block mean `+.018289`, and primary
+`+.012193`. Against the matched X14 specialist it changes M06/M07 by
+`+.008605/+.001575`, hence block mean `+.005090` (routed primary `+.003393`).
+This passes X19's T1 total-effect and module-attribution checks. T5 remains the
+unchanged cross-history decision; no confirmation jobs are opened early.
+Artifacts: `cross-history-analysis/x19-vs-erm-t1-partial.json` and
+`cross-history-analysis/x19-vs-x14-t1-partial.json`.
 
 X20 is the loss-side follow-up to X8's completion audit. X8 established that
 counterfactual-impact weighting itself transfers across T=1/T=5 relative to
