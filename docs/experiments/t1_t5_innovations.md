@@ -139,7 +139,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | reliable: +.003979/+.004533/+.004699 in 2021/22/23 | reliable: +.005834/+.003820/+.005231 in 2021/22/23 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
-| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; pass | screen `21217350` running |
+| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; confirming | routed +.005883; confirming |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -629,3 +629,19 @@ screen decision is made without M07. Evaluate-only recovery `21219331` loads
 that exact checkpoint, uses the minimum 10GB GPU slice, batch 16, three workers,
 and 128GB host RAM. It changes no training state and resolves the sole blocking
 metric without repeating 3000 optimizer steps.
+
+Recovery completed at M00/M01/M06/M07
+`.599411/.361960/.397225/.206876`. Against fresh T5 control, the spatial-route
+M06/M07 deltas are `+.007515/+.010134`, block mean `+.008824`, and primary
+`+.005883`, with exact routed M00/M01 preservation. The seed-0 cross-history
+artifact `cross-history-analysis/x10-dynamic-inpaint-route-seed0.json` reports
+T1/T5 primary `+.007381/+.005883`, combined mean `+.006632`, and
+`screen_pass=true`.
+
+Prospective confirmation jobs use the identical source `52cf5b8`, batch 64,
+3000 steps, and seed values 1/2. T1 control/X10 are
+`21219734/21219735` and `21219739/21219740`; T5 pairs are
+`21219736/21219737` and `21219741/21219742`. T1 and T5 controls use minimum
+10GB slices. T5 X10 uses 20GB GPU and 128GB host memory, based solely on the
+observed training peak and post-training cgroup failure; no scientific setting
+changes.
