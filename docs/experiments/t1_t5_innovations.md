@@ -149,8 +149,8 @@ D2/D13 controls are context, not proof of any new direction.
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | reliable: +.005467/+.001416/+.006792 in 2021/22/23 | reliable: +.016685/+.011528/+.005485 in 2021/22/23 |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
-| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | +.011338 vs ERM; block +.003808 vs X14 | seed-0 running |
-| X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | seed-0 running |
+| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | +.011338 vs ERM; block +.003808 vs X14 | +.010416 vs ERM; block +.004456 vs X14; confirming |
+| X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -933,6 +933,17 @@ to fresh ERM it improves M06/M07 by `+.019091/+.014924`, block mean by
 attribution `+.003808`. X17 therefore passes its T1 mechanism and adoption
 checks, pending the unchanged T5 pair. Partial artifact:
 `cross-history-analysis/x17-severity-factorized-t1-partial.json`.
+The completed T5 severity route improves fresh ERM M06/M07 by
+`+.011317/+.019933`, block mean by `+.015625`, and primary by `+.010416`.
+It also improves mixed X14 by `+.006403/+.002510`, giving positive block-mean
+module attribution `+.004456`. The two-history artifact
+`cross-history-analysis/x17-severity-factorized-seed0.json` reports mean
+primary `+.010877`, `screen_pass=true`, and `mechanism_screen_pass=true`.
+Prospective confirmation trains both fixed-severity experts for seeds 1/2:
+T1/T5 fixed-25% jobs `21225830/21225831` and fixed-50% jobs
+`21225832/21225833` for seed 1; seed-2 equivalents are
+`21225834/21225835` and `21225836/21225837`. Existing ERM and X14 checkpoints
+remain the two controls, so no redundant control training is submitted.
 
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
@@ -973,3 +984,13 @@ Thus X18 passes both T1 adoption and module-attribution checks; no decision is
 made until the unchanged T5 screen completes. Artifacts:
 `cross-history-analysis/x18-vs-erm-t1.json` and
 `cross-history-analysis/x18-vs-x14-t1.json`.
+T5 completed at M00/M01/M06/M07 `.597367/.077257/.394835/.211189`. Its spatial
+route remains useful relative to ERM, improving M06/M07 by
+`+.005125/+.014447`, block mean by `+.009786`, and primary by `+.006524`.
+The decisive module attribution against X14 is negative, however: M06 changes
+`+.000211`, M07 `-.002976`, block mean `-.001383`, and primary `-.000922`.
+Block-only supervision does not make latent context transport add value beyond
+plain specialization in T=5. X18 is therefore rejected without seeds 1/2;
+its T1 gain remains a history-specific observation. Artifacts:
+`cross-history-analysis/x18-vs-erm-t5.json` and
+`cross-history-analysis/x18-vs-x14-t5.json`.
