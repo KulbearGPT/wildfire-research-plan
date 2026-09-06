@@ -151,11 +151,11 @@ D2/D13 controls are context, not proof of any new direction.
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
 | X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | 3-seed +.007392 vs ERM; block +.002887 vs X14 | 3-seed +.017792 vs ERM; block +.001662 vs X14; heldout running |
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
-| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | +.012193 vs ERM; block +.005090 vs X14 | seed-0 running |
+| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | +.012193 vs ERM; block +.005090 vs X14 | +.010157 vs ERM; block +.004067 vs X14; confirming |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
-| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | seed-0 submitted | seed-0 submitted |
-| X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | implementation ready | implementation ready |
+| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | +.010587; confirming | +.008244; confirming |
+| X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | replacement submitted | replacement submitted |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
@@ -188,6 +188,12 @@ smokes and T1 formal use 10GB. T5 formal uses 20GB because the identical
 paired clean/corrupt path previously exceeded 10GB at physical batch 64.
 The formal jobs retain 3000 steps and the X14 sampling recipe; no computation
 was performed on the login node.
+After roughly four hours with no allocation, the explicit-partition smoke jobs
+and their unresolved dependencies `21228439`--`21228442` were cancelled before
+starting. Same-resource probes without a partition constraint were immediately
+placeable. Replacement T1/T5 smoke jobs are `21237308/21237309`, with formal
+dependencies `21237310/21237311`; scientific settings and pinned source
+`a89c06f` are unchanged.
 
 X24 was considered after the complete-route diagnostic localized the remaining
 magnitude gap to FireDrop. The proposed frozen clean teacher would supervise a
@@ -1019,6 +1025,13 @@ six-run overall primary/block means versus ERM are `+.012592/+.018888`;
 2022/2023 evaluation now covers all twelve expert checkpoints in 24 minimum
 10GB evaluate-only jobs `21228523`--`21228546`. No training is repeated and
 the held-out results will not change the recipe.
+The original explicit-partition requests later developed next-day start
+estimates. Jobs `21228523`--`21228529` had already completed and remain the
+authoritative seven results. Only the 17 unstarted jobs
+`21228530`--`21228546` were cancelled; equivalent partition-unconstrained
+10GB replacements are `21237312`--`21237328`. A same-resource test-only probe
+was immediately placeable. Every replacement points to the same checkpoint,
+seed, block fraction and year, so this is scheduling repair only.
 
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
@@ -1117,6 +1130,15 @@ This passes X19's T1 total-effect and module-attribution checks. T5 remains the
 unchanged cross-history decision; no confirmation jobs are opened early.
 Artifacts: `cross-history-analysis/x19-vs-erm-t1-partial.json` and
 `cross-history-analysis/x19-vs-x14-t1-partial.json`.
+T5 then completed and also passes: relative to fresh ERM, M06/M07 improve
+`+.011853/+.018618`, block mean `+.015235`, and primary `+.010157`; relative
+to X14, block mean improves `+.004067`. Across the two histories, the adapter
+has seed-0 primary `+.011175` versus ERM and block attribution `+.004578`
+versus X14. Prospective seed-1/2 confirmation jobs are T1/T5
+`21237298/21237299` and `21237302/21237303`. They use the same fixed module,
+BlockDrop-only schedule, 3000 steps and minimum 10GB slices. Artifacts:
+`cross-history-analysis/x19-vs-erm-seed0.json` and
+`cross-history-analysis/x19-vs-x14-seed0.json`.
 
 X20 is the loss-side follow-up to X8's completion audit. X8 established that
 counterfactual-impact weighting itself transfers across T=1/T=5 relative to
@@ -1188,6 +1210,14 @@ The T1 10GB formal request subsequently remained pending for more than
 `10:09`, so the unstarted `21227412` was cancelled and replaced within the
 2x rule by `21228612`. The source commit, seed, optimizer, batch, steps, host
 memory, and time limit are unchanged; only its GPU slice is larger.
+Both seed-0 screens completed. Cosine ERM changes T1 M00/M01/M06/M07 by
+`+.008629/+.015710/+.007911/+.008139`, giving primary `+.010587`; T5 changes
+the same metrics by `+.007122/+.012459/+.004672/+.007601`, giving primary
+`+.008244`. The two-history mean primary is `+.009415`, with all four raw
+scenario deltas positive and `screen_pass=true` in
+`cross-history-analysis/x22-cosine-erm-seed0.json`. Prospective seed-1/2 jobs
+are T1/T5 `21237300/21237301` and `21237304/21237305`; no schedule variant or
+longer run is opened.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
