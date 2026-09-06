@@ -139,7 +139,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | routed +.007239; confirm s1/s2 | routed +.005132; confirm s1/s2 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | screen `21217161` | screen `21217162` |
-| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | implementation | implementation |
+| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | smoke `21217300` | smoke `21217301` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -563,3 +563,5 @@ M06/M07 performance in both T settings. Its implementation is intentionally
 small (33,202 T1 / 28,939 T5 parameters); the decisive experiment is the same
 seed-0 spatial-route screen used for X9, followed by unchanged confirmation
 and heldout gates rather than an imputation benchmark or coefficient sweep.
+Implementation commit is `52cf5b8`; T1/T5 real-data one-step smoke jobs are
+`21217300/21217301` on minimum 10GB slices.
