@@ -139,10 +139,10 @@ D2/D13 controls are context, not proof of any new direction.
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | reliable: +.003979/+.004533/+.004699 in 2021/22/23 | reliable: +.005834/+.003820/+.005231 in 2021/22/23 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
-| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | 3-seed mean +.001186; T1 confirmation positive | routed +.005883; confirmation running |
+| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | 3-seed mean +.001186 | 3-seed mean +.009652; heldout running |
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
-| X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | evaluation pending | evaluation pending |
+| X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -724,6 +724,17 @@ confirmation condition but exposes substantial seed variance. The partial
 artifact is `cross-history-analysis/x10-t1-confirmation-partial.json`; no
 cross-history confirmation decision is made until both T5 pairs complete.
 
+Both T5 pairs then completed. Seed-1/2 routed primary deltas are
+`+.002198/+.020875`; with seed 0, the T5 three-seed mean is `+.009652` and
+block mean is `+.014478`. The authoritative six-pair artifact
+`cross-history-analysis/x10-dynamic-inpaint-route-confirmation.json` reports
+overall primary `+.005419`, population standard deviation `.007892`, exact
+routed clean preservation, and `confirmation_pass=true`. The large variance is
+retained as a limitation rather than hidden by the mean. The frozen 2022/2023
+evaluation therefore opened: 24 evaluate-only jobs `21221885`--`21221908`
+cover controls/candidates, both histories, three seeds, and both years using
+minimum 10GB slices and source commit `52cf5b8`.
+
 X13 addresses a concrete limitation of X10 rather than adding another loss:
 X10's two convolutions cannot transport observed values to the centre of a
 25%/50% missing block. X13 uses parameter-free normalized spatial averaging at
@@ -749,3 +760,15 @@ inputs, producing nonzero base-output differences `1.840/1.551`; M00/M01
 bypass is enforced by the zero spatial mask rather than global equivalence on
 the M06 smoke. Zero-training seed-0 evaluations `21221335/21221336` load the
 existing fresh-control checkpoints and use minimum 10GB slices.
+T1 completed at M00/M01/M06/M07 `.585066/.308313/.338536/.147805`; the
+spatial transformation strongly lowers both block metrics relative to control.
+The original T5 evaluation failed before model loading because it incorrectly
+referenced the evaluate-only recovery directory, which contains no checkpoint.
+Recovery `21221884` points to the actual seed-0 T5 training checkpoint; no
+optimizer or scientific setting changes.
+The exact spatial-route deltas are M06 `-.032289`, M07 `-.042107`, block mean
+`-.037198`, and primary `-.024799`. This is a large mechanism failure, not a
+near-threshold result: propagated smooth values are more harmful to the model
+than its trained zero-fill convention. X13 is rejected; recovery `21221884`
+was cancelled before allocation, and the quantitative artifact is
+`cross-history-analysis/x13-normalized-inpaint-t1.json`.
