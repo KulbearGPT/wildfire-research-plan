@@ -149,6 +149,8 @@ D2/D13 controls are context, not proof of any new direction.
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | 3-seed mean +.005467 | routed +.007446; confirming |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
+| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | seed-0 pending | seed-0 pending |
+| X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | seed-0 pending | seed-0 pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
