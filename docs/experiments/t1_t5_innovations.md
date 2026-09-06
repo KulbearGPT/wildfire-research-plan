@@ -691,3 +691,12 @@ the already robust B3 initialization and loss of useful mixed-corruption replay.
 T1/T5 smoke jobs `21220240/21220241` completed successfully with exact initial
 equivalence and peak GPU allocations `0.97/2.70GB`. Fixed seed-0 screens
 `21220300/21220301` use the same 10/20GB resource policy and 3000-step protocol.
+
+The already available seed-0 X8/X10 specialists were also composed against one
+common fresh control using `compose_routes.py`: X8 supplies M01, X10 supplies
+M06/M07, and control supplies M00. T1/T5 primary deltas are
+`+.009936/+.008935`, with cross-history mean `+.009436`. The authoritative
+artifact is `cross-history-analysis/x8-x10-route-seed0.json`. This is a useful
+final-system route but does not meet the `+.02` magnitude target and is not an
+independent contribution; it quantitatively rules out satisfying that target
+by merely adding the two current seed-0 gains.
