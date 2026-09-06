@@ -28,7 +28,8 @@ def main():
         history = int(metadata['history'])
         method = metadata['method']
         seed = int(metadata['seed'])
-        key = history, method, seed
+        block_fraction = metadata.get('block_fraction')
+        key = history, method, seed, block_fraction
         if key in seen:
             raise ValueError(f'duplicate training run: {key}')
         seen.add(key)
@@ -36,9 +37,13 @@ def main():
         if not checkpoint.is_file():
             raise FileNotFoundError(checkpoint)
         for year in (2022, 2023):
+            variant = '' if block_fraction is None else f'-b{int(100*block_fraction)}'
+            extra = [] if block_fraction is None else [
+                '--block-fraction', str(block_fraction),
+            ]
             jobs.append([
                 'sbatch', '--parsable',
-                f'--job-name=H{history}-{method[:10]}-s{seed}-y{year}',
+                f'--job-name=H{history}-{method[:8]}{variant}-s{seed}-y{year}',
                 '--partition=gpubase_bygpu_b1',
                 '--gres=gpu:nvidia_h100_80gb_hbm3_1g.10gb:1',
                 '--cpus-per-task=8', '--mem=64G', '--time=01:30:00',
@@ -46,6 +51,7 @@ def main():
                 'reproductions/cross_history/run_slurm.sh', str(history), method,
                 '--seed', str(seed), '--batch-size', '16', '--workers', '7',
                 '--evaluate-only', str(checkpoint), '--year', str(year),
+                *extra,
             ])
 
     for command in jobs:

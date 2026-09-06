@@ -23,6 +23,7 @@ def main():
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
     p.add_argument('--workers',type=int,default=3)
+    p.add_argument('--block-fraction',type=float,choices=(.25,.5))
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--smoke',action='store_true')
     p.add_argument('--evaluate-only',type=Path)
@@ -34,6 +35,8 @@ def main():
         raise ValueError('physical batch must divide effective batch 64')
     if a.year != 2021 and not a.evaluate_only:
         raise ValueError('training screens are 2021-only')
+    if a.block_fraction is not None and a.method != 'block_specialist':
+        raise ValueError('--block-fraction is only valid for block_specialist')
     torch.set_num_threads(max(1,int(os.environ.get('SLURM_CPUS_PER_TASK','4'))-a.workers))
     setup()
     random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
@@ -53,6 +56,7 @@ def main():
                     physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
                     fire_dropout_probability=fire_probability,
                     block_dropout_probability=block_probability,
+                    block_fraction=a.block_fraction,
                     reconstruction_weight=(RECONSTRUCTION_WEIGHT if a.method == 'dynamic_inpaint_reconstruct' else 0.),
                     initial_checkpoint=initial,job=os.environ['SLURM_JOB_ID'],
                     parameters=sum(x.numel() for x in model.parameters()),
@@ -66,7 +70,8 @@ def main():
         model.load_state_dict(saved['state_dict'],strict=True)
     else:
         dataset = PairedDataset(base_dataset(a.history),a.history,
-            fire_probability=fire_probability,block_probability=block_probability)
+            fire_probability=fire_probability,block_probability=block_probability,
+            block_fraction=a.block_fraction)
         loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,shuffle=True,
             generator=torch.Generator().manual_seed(a.seed),num_workers=a.workers,
             pin_memory=True,persistent_workers=a.workers>0,drop_last=True)
@@ -180,7 +185,7 @@ def main():
         (a.output/f'{scenario}.json').write_text(json.dumps(metrics,indent=2))
         print(json.dumps(dict(scenario=scenario,metrics=metrics)),flush=True)
     (a.output/'summary.json').write_text(json.dumps(dict(history=a.history,method=a.method,
-        seed=a.seed,year=a.year,results=results),indent=2))
+        seed=a.seed,year=a.year,block_fraction=a.block_fraction,results=results),indent=2))
 
 
 if __name__ == '__main__': main()

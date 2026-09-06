@@ -873,3 +873,19 @@ not add value under the specialist schedule, so X16 is rejected and T5
 `21223830` was cancelled at 22:59. Artifacts:
 `cross-history-analysis/x16-vs-control-t1.json` and
 `cross-history-analysis/x16-vs-x14-t1.json`.
+
+X17 tests whether X14's remaining error comes from forcing one specialist to
+fit two visibly different corruption severities. It trains two otherwise
+identical BlockDrop-only continuations: one always receives 25% blocks and the
+other always receives 50% blocks. At evaluation, the observed missing fraction
+selects the 25% expert for M06 and the 50% expert for M07; the fresh control
+still supplies M00/M01. This differs from archived P03, which routes a single
+mixed-severity expert only inside missing pixels, and from D12, which switches
+prompt depth inside one model. Because X17 only factorizes X14's training
+distribution, it may strengthen or supersede X14 but cannot be counted as a
+separate independent contribution. The seed-0 adoption gate is unchanged:
+routed primary gain `>=+.005` against fresh control in both T=1 and T=5. Its
+mechanism gate additionally requires positive block-mean gain over X14 in both
+histories. Only then are seeds 1/2 run. Fixed-severity support and the offline
+composer are implemented before observing any X17 result; no training is run
+on the login node.
