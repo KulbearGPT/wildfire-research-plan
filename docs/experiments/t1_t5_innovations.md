@@ -957,6 +957,11 @@ T1/T5 fixed-25% jobs `21225830/21225831` and fixed-50% jobs
 `21225832/21225833` for seed 1; seed-2 equivalents are
 `21225834/21225835` and `21225836/21225837`. Existing ERM and X14 checkpoints
 remain the two controls, so no redundant control training is submitted.
+After the four T1 10GB requests waited more than 18 minutes with start
+estimates 42--100 minutes away, Slurm test-only probes placed equivalent 20GB
+requests immediately. The unstarted T1 jobs were therefore replaced, within
+the 2x resource rule, by fixed-25/fixed-50 seed-1 `21226523/21226524` and
+seed-2 `21226525/21226526`. The already running T5 jobs are unchanged.
 
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
@@ -1039,6 +1044,11 @@ reused; novelty and effectiveness remain the decisive risks.
 T1/T5 real-data smoke jobs are `21225918/21225919`; dependency-gated seed-0
 screens are `21225920/21225921`. All request the minimum 10GB GPU slice, while
 T5 uses 128GB host memory only on the formal job for post-training evaluation.
+Those 10GB smoke requests subsequently waited more than 15 minutes with
+estimated starts 88--100 minutes away. An equivalent 20GB test-only probe was
+placeable immediately, so all four unstarted jobs were replaced within the 2x
+rule: smoke `21226527/21226528`, dependency-gated seed-0
+`21226529/21226530`. The implementation and recipe remain pinned to `8f4a052`.
 
 X20 is the loss-side follow-up to X8's completion audit. X8 established that
 counterfactual-impact weighting itself transfers across T=1/T=5 relative to
@@ -1063,6 +1073,9 @@ request for the 20GB profile, so the successful submissions leave partition
 selection to Nibi; Slurm resolved them to `gpubase_bygpu_b1,gpubackfill`.
 The 20GB profile is exactly twice the minimum 10GB slice and was selected only
 after the older 10GB smoke jobs showed estimated waits well beyond ten minutes.
+Both smoke jobs completed in 26 seconds with exit `0:0`, exact initial
+equivalence (`0.0`), successful backward/inference, and peak GPU allocation
+of 0.63/1.75GB. Both formal screens then started after about four minutes.
 
 X21 was considered while those jobs waited: a type-separated affine
 calibration of the first convolution driven by local valid-pixel coverage.
