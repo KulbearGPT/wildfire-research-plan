@@ -611,3 +611,11 @@ control for M00/M01 and yields M06/M07 deltas `+.012274/+.009870`, block mean
 `+.011072`, and primary `+.007381`. It passes the T1 seed-0 screen with exact
 routed clean preservation. The unchanged T5 job `21217350` remains the only
 missing screen evidence before X10 can advance.
+
+T5 job `21217350` completed all 3000 steps, saved its 57MB checkpoint, and
+evaluated M00/M01/M06 before the 64GB host cgroup killed it during M07. The
+available AP values are `.599411/.361960/.397225`; training is valid but no
+screen decision is made without M07. Evaluate-only recovery `21219331` loads
+that exact checkpoint, uses the minimum 10GB GPU slice, batch 16, three workers,
+and 128GB host RAM. It changes no training state and resolves the sole blocking
+metric without repeating 3000 optimizer steps.
