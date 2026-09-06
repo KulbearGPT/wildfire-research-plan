@@ -228,11 +228,18 @@ only `+.003463`, below the `+.005` gate. This directional result registers the
 single allowed X4 repair, `risk_strong`: identical code and loss with spatial
 weight increased from 3x to 5x. There is no weight grid; X4 remains one tuning
 contribution and is rejected if this fixed repair misses the gate.
+The fixed T1/T5 5x jobs are `21213326/21213327`, pinned to commit `2385e76`
+and using the minimum 10GB GPU slice supported by observed peak usage.
 
 Queue correction: original T5 distill/transition `21211225/21211226` were
 cancelled pending after >10 minutes. Same-resource replacements
 `21211486/21211487` started immediately alongside T5 control/context
 `21211223/21211224`.
+
+T5 control/distill/transition completed all 3000 updates and saved checkpoints
+but exhausted 64GB host RAM during the old batch-64 evaluation path. Their
+batch-16 evaluate-only recovery jobs are `21213246/21213247/21213248`; no
+training is repeated. T5 context completed its full evaluation directly.
 
 Follow-up seed-0 screens: T1 `distill_block/risk` are
 `21211826/21211827`; T5 equivalents are `21211828/21211829`. They use the
@@ -312,8 +319,9 @@ For scale, the T1 fresh control improves primary AP over frozen B3 by
 `.025688`; the adapter must recover that gap before it can count as a net
 performance contribution, regardless of its parameter efficiency.
 The archived B5 reference fixes the expected T5 values at
-M00/M01/M06/M07 `.557715/.288461/.336086/.158021`; replacement `21212423`
-must reproduce them at full stored precision before its use as a control.
+M00/M01/M06/M07 `.557715/.288461/.336086/.158021`. Replacement `21212423`
+completed all four at a maximum absolute AP difference of `5.50e-7`, accepted
+as GPU numerical equivalence rather than requiring inappropriate bit identity.
 
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
