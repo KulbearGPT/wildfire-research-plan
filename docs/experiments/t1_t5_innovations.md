@@ -313,6 +313,8 @@ clean/fire/block/both mix from 49/21/21/9% to 25/25/25/25%. Model, focal loss,
 3000-step optimizer contract, effective batch, and evaluation remain matched.
 This is the campaign's single corruption-rate tuning contribution; probability
 0.5 is fixed by symmetry and will not be searched.
+Fixed T1/T5 X6 screens are `21214127/21214128`, using 10GB slices and pinned
+to implementation commit `b9c02f2`.
 
 Composition smoke jobs T1/T5 `21212079/21212081` completed successfully in
 25/49 seconds. They covered a real batch, backward pass and inference; initial
