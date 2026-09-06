@@ -31,7 +31,10 @@ Primary metric: mean AP over M01/M06/M07. Also report M06/M07 block mean,
 M00, individual corrupted AP, runtime and parameter count. A candidate counts
 only when primary improvement is positive in both T settings across the
 confirmation seed mean and each fixed test year, with no M00 regression
-greater than 0.01. Seed-0 screening signal: primary >=0.005 in both T and
+greater than 0.01. An incremental module must pass this against its closest
+attribution control, and its routed final system must also pass against fresh
+ERM before it counts as an adopted improvement. Seed-0 screening signal:
+primary >=0.005 in both T and
 M00 guardrail. These are practical thresholds, not significance claims.
 Seek >=0.02 average improvement for at least one direction, preserving the
 user's earlier magnitude requirement. Do not count three hyperparameters of
@@ -137,7 +140,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203 | +.002426 with M00 -.017601; reject |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
-| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | reliable: +.003979/+.004533/+.004699 in 2021/22/23 | reliable: +.005834/+.003820/+.005231 in 2021/22/23 |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency; fresh ERM adoption | incremental FireDrop specialist | incrementally reliable; ERM adoption fails 2022 | incrementally reliable and ERM-positive |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
 | X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | 2022/23 -.001356/-.000347; reject cross-history | 2022/23 +.004783/+.002139; T5-only positive |
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
@@ -549,10 +552,21 @@ is `cross-history-analysis/x8-impact-fire-route-final.json`. Three-seed primary
 deltas for T1 are `+.003979/+.004533/+.004699` in 2021/2022/2023; T5 deltas
 are `+.005834/+.003820/+.005231`. Every history/year cell is positive, routed
 M00 and block deltas are exactly zero, `confirmation_pass=true`,
-`heldout_pass=true`, and `goal_evidence_pass=true`. The 18 matched rows have
-overall mean `+.004683` and population standard deviation `.004062`. X8 is the
-first reliable cross-history direction. It does not meet the separate +.02
-magnitude target and is not represented as doing so.
+`heldout_pass=true`, and `goal_evidence_pass=true` against its frozen D1
+attribution control. The 18 matched rows have overall mean `+.004683` and
+population standard deviation `.004062`. X8 is therefore a reliable
+incremental objective effect. It does not meet the separate +.02 magnitude
+target and is not represented as doing so.
+
+A later completion audit additionally compared the actually routed X8 system
+against fresh ERM, using the already completed X8, global-D1, and ERM summaries
+for all 18 history/seed/year cells. T1 primary deltas are
+`+.003841/-.002114/+.002570` in 2021/2022/2023, while T5 deltas are
+`+.016981/+.015578/+.010831`. The T1 2022 regression makes
+`heldout_pass=false`, despite an overall mean `+.007948`. Thus X8 remains valid
+positive module-attribution evidence but is not by itself an adopted
+cross-history improvement toward the three-direction goal. Artifact:
+`cross-history-analysis/x8-impact-fire-route-vs-erm-final.json`.
 
 X9 spatial-impact FiLM addresses the failure revealed by X5-local: the future
 forecast pixels affected by a missing input block need not lie inside that
