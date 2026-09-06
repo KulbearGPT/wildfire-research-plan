@@ -742,3 +742,10 @@ claim can only be observation-clamped propagation of typed wildfire drivers
 for robust forecasting. The main failure mode is distribution mismatch because
 the retained control was trained with zero-filled blocks rather than propagated
 values; the frozen-checkpoint screen measures that risk directly.
+T1/T5 real-data smoke jobs `21221083/21221084` completed in 22/25 seconds with
+successful backward, checkpoint reload, and inference; peak GPU allocations
+were only `0.62/1.73GB`. The transformation intentionally changes corrupted
+inputs, producing nonzero base-output differences `1.840/1.551`; M00/M01
+bypass is enforced by the zero spatial mask rather than global equivalence on
+the M06 smoke. Zero-training seed-0 evaluations `21221335/21221336` load the
+existing fresh-control checkpoints and use minimum 10GB slices.
