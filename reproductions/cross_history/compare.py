@@ -28,7 +28,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--control',type=Path,action='append',required=True)
     parser.add_argument('--candidate',type=Path,action='append',required=True)
-    parser.add_argument('--routed-spatial',action='store_true')
+    routing = parser.add_mutually_exclusive_group()
+    routing.add_argument('--routed-spatial',action='store_true')
+    routing.add_argument('--routed-fire',action='store_true')
     parser.add_argument('--output',type=Path)
     args = parser.parse_args()
     if len(args.control) != len(args.candidate):
@@ -42,6 +44,9 @@ def main():
         effective = dict(candidate)
         if args.routed_spatial:
             effective['M00']=control['M00']; effective['M01']=control['M01']
+        if args.routed_fire:
+            effective['M00']=control['M00']
+            effective['M06']=control['M06']; effective['M07']=control['M07']
         delta={name:effective[name]-control[name] for name in SCENARIOS}
         rows.append(dict(history=cmeta['history'],seed=cmeta['seed'],year=cmeta['year'],
             control=control,candidate=candidate,effective=effective,delta=delta,
@@ -65,6 +70,7 @@ def main():
                   and all(g['primary_delta'] > 0 and g['clean_delta'] >= -.01 for g in heldout))
     mean_primary=mean(r['primary_delta'] for r in rows)
     result=dict(method=methods.pop(),routed_spatial=args.routed_spatial,
+        routed_fire=args.routed_fire,
         rows=rows,mean_primary_delta=mean_primary,
         std_primary_delta=pstdev(r['primary_delta'] for r in rows),
         mean_block_delta=mean(r['block_delta'] for r in rows),
