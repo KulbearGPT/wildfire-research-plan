@@ -197,6 +197,14 @@ with an estimated 04:17 start. Test-only probes of 10/20/40GB slices and
 75/90/180-minute limits all returned 04:28, so the original 20GB jobs were
 retained; changing resources would not start sooner.
 
+Those two jobs were subsequently cancelled before execution after an
+attribution audit found that they used corrupt-only supervision rather than
+D1's paired clean/corrupt supervised objective. Commit `a22c589` corrects the
+objective and adds the unchanged global-D1 control. Minimal paired-path smoke
+jobs are T1-global `21212258` and T5-local `21212272`; full jobs will use only
+the corrected snapshot after these pass. No result from the cancelled jobs is
+eligible evidence.
+
 The registered `context_adapter` variant freezes the entire initial forecaster
 and trains only the zero-initialized context-transport layers. Because every
 transport residual is multiplied by the observed spatial-hole mask, this
