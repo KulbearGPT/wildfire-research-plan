@@ -18,7 +18,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint'),required=True)
+    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)

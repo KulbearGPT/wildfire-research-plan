@@ -144,6 +144,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | smoke pending | smoke pending |
+| X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | smoke pending | smoke pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -787,3 +788,17 @@ reported if actually reached. Closest missing-modality work already establishes
 dropout training, so no architectural novelty is claimed. Failure modes are
 over-specialization to synthetic block geometry and saturation from the B3/B5
 mixed-corruption initialization.
+
+X15 targets cross-year block instability with an explicit geometry signal. For
+each spatial hole it computes normalized erosion depth (zero at observed cells,
+largest at pixels furthest from observable context) and injects a learned,
+zero-initialized channel token scaled by that depth at every nontrivial encoder
+resolution. It adds 1,024 parameters, activates only for M06/M07, and uses the
+same implementation in T1/T5. Unlike D12 SARP's pooled local coverage and hard
+global severity switch, X15 represents continuous interior depth; unlike X1 it
+does not transport feature content. The matched control, optimizer, corruption
+schedule, 3000 steps, and spatial route remain unchanged. The fixed seed-0 gate
+is primary `>=+.005` in each history. This is an incremental reliability-prompt
+module whose novelty and usefulness both depend on the matched ablation; likely
+failure modes are redundancy with convolutional mask boundaries and insufficient
+information to correct a missing field without its values.

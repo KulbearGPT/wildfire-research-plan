@@ -151,6 +151,30 @@ class NormalizedDiffusionInpainting(nn.Module):
         return result.reshape(batch,time,channels,height,width)
 
 
+class DistanceReliabilityPrompt(nn.Module):
+    """Encode depth inside a missing region as multi-scale channel prompts."""
+    def __init__(self, channels):
+        super().__init__()
+        self.tokens = nn.ParameterList([nn.Parameter(torch.zeros(c)) for c in channels])
+
+    @staticmethod
+    def depth(mask):
+        remaining = mask.clamp(0,1)
+        depth = torch.zeros_like(remaining)
+        for _ in range(32):
+            depth = depth + remaining
+            remaining = -F.max_pool2d(-remaining,3,1,1)
+        return depth/depth.amax(dim=(-2,-1),keepdim=True).clamp_min(1.)
+
+    def forward(self, features, spatial):
+        depth = self.depth(spatial)
+        prompted=[]
+        for feature,token in zip(features,self.tokens):
+            scale = F.interpolate(depth,feature.shape[-2:],mode='bilinear',align_corners=False)
+            prompted.append(feature+scale*token[None,:,None,None])
+        return prompted
+
+
 class Forecaster(nn.Module):
     def __init__(self, base, history, method):
         super().__init__()
@@ -187,6 +211,8 @@ class Forecaster(nn.Module):
             dynamic_source = set(range(12)) | {15} | set(range(33,38))
             dynamic = tuple(i for i,column in enumerate(columns) if column in dynamic_source)
             self.normalized_inpaint = NormalizedDiffusionInpainting(dynamic)
+        if method == 'distance_prompt':
+            self.distance_prompt = DistanceReliabilityPrompt(base.model.encoder.out_channels[1:])
 
     def features(self, x):
         encoder = self.base.model.encoder
@@ -211,6 +237,8 @@ class Forecaster(nn.Module):
         if self.method == 'normalized_inpaint':
             x = self.normalized_inpaint(x,spatial)
         features = self.features(x)
+        if self.method == 'distance_prompt':
+            features = [features[0],*self.distance_prompt(features[1:],spatial)]
         if self.method in ('context','context_adapter','context_transition'):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]
         decoded = self.base.model.decoder(*features)
