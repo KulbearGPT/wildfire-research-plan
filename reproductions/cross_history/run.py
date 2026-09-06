@@ -145,7 +145,8 @@ def main():
     results = {}
     for scenario in ('M00','M01','M06','M07'):
         dataset = evaluation_dataset(a.history,a.year,scenario)
-        loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,num_workers=a.workers,pin_memory=True)
+        loader = torch.utils.data.DataLoader(dataset,batch_size=min(a.batch_size,16),
+            num_workers=a.workers,pin_memory=True)
         metrics = evaluate_batches(model,loader,device=torch.device('cuda'))
         results[scenario] = metrics
         (a.output/f'{scenario}.json').write_text(json.dumps(metrics,indent=2))

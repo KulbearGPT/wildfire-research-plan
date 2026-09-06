@@ -156,6 +156,11 @@ No model or dataset computation has been run on the login node.
 New submissions export `WILDFIRE_SOURCE_COMMIT` so queued jobs archive the
 submission-time revision rather than whatever HEAD exists when allocation
 eventually begins. Every run still records the resolved commit in `commit.txt`.
+After three T5 jobs completed training but exhausted 64GB host RAM during
+batch-64 evaluation, new snapshots cap evaluation batch at 16 while leaving
+training batch 64 unchanged. AP aggregation and samples are identical; only
+evaluation memory and wall time change. Saved checkpoints recover old jobs
+through evaluate-only rather than repeating training.
 
 Both smoke jobs completed with exit `0:0`. All eight real-data combinations
 completed one optimizer step, backward pass, checkpoint reload path, and one
