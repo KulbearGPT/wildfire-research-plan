@@ -16,7 +16,7 @@ from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','context','distill','distill_block','risk','local_consistency','transition'),required=True)
+    p.add_argument('--method',choices=('control','context','distill','distill_block','risk','local_consistency','transition','context_transition'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -77,7 +77,7 @@ def main():
                         actual = model(packed)
                         difference = (expected-actual).abs().max().item()
                     print(f'INITIAL_EQUIVALENCE_MAX={difference}',flush=True)
-                    if difference > (1e-3 if a.method == 'transition' else 1e-5):
+                    if difference > (1e-3 if a.method in ('transition','context_transition') else 1e-5):
                         raise RuntimeError('initial forward mismatch')
                     model.train()
                 logits,features,aux = model(packed,details=True)

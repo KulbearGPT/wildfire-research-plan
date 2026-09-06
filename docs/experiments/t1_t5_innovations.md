@@ -150,6 +150,15 @@ same corrupt supervised loss as the fresh control, and inference has no extra
 parameters or clean view. This tests a distinct spatially targeted objective,
 not another architecture or general-purpose hyperparameter search.
 
+The registered composition `context_transition` combines X1 feature transport
+with X3 transition marginalization without changing either component or its
+loss weight. This is an interaction/scale experiment, not a fourth independent
+contribution: it tests whether spatial context recovery and fire-state dynamics
+are complementary and whether their total gain reaches the requested +.02.
+It will be screened only after the component implementations pass a real-data
+smoke check; a gain smaller than the better component will be treated as
+negative interaction rather than retuned post hoc.
+
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
 computes individual, primary, block, clean-guardrail and multi-run statistics,
