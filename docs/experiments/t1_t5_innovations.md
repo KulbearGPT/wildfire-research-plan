@@ -157,6 +157,10 @@ spatial holes and weights positive neighborhoods only within those holes. A
 separate `risk` candidate upweights segmentation risk 3x inside spatial holes
 while retaining the original loss elsewhere. These are direct responses to
 the diagnosed failure and remain in the same controlled-missingness problem.
+Static inspection of the pinned upstream `BaseModel.compute_loss` confirms
+that `risk` uses the identical torchvision focal per-pixel term, alpha and
+gamma; with no spatial hole its normalized objective is exactly the original
+mean. Its only intervention is the declared 3x spatial-hole weighting.
 
 Queue correction: original T5 distill/transition `21211225/21211226` were
 cancelled pending after >10 minutes. Same-resource replacements
