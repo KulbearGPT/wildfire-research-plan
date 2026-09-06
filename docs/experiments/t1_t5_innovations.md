@@ -224,6 +224,11 @@ jobs are T1-global `21212258` and T5-local `21212272`; full jobs will use only
 the corrected snapshot after these pass. No result from the cancelled jobs is
 eligible evidence.
 
+Both corrected smoke jobs completed with exit `0:0`, exact initial output
+agreement, a real paired clean/corrupt backward step, and inference. Corrected
+seed-0 full jobs, all pinned to commit `92beb6c`, are global T1/T5
+`21212411/21212412` and localized T1/T5 `21212413/21212414`.
+
 The registered `context_adapter` variant freezes the entire initial forecaster
 and trains only the zero-initialized context-transport layers. Because every
 transport residual is multiplied by the observed spatial-hole mask, this
