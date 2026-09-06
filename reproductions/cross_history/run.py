@@ -176,6 +176,7 @@ def main():
             if scheduler is not None: scheduler.step()
             if step == 1 or step % 100 == 0:
                 print(json.dumps(dict(step=step,loss=loss_sum,seconds=time.monotonic()-start,
+                    learning_rate=optimizer.param_groups[0]['lr'],
                     peak_gpu_bytes=torch.cuda.max_memory_allocated())),flush=True)
         metadata['state_dict'] = model.cpu().state_dict()
         metadata['hyper_parameters'] = dict(base.hparams)
