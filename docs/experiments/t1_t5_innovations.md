@@ -146,11 +146,11 @@ D2/D13 controls are context, not proof of any new direction.
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
-| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | 3-seed mean +.005467 | 3-seed mean +.016685; held-out submitted |
+| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | reliable: +.005467/+.001416/+.006792 in 2021/22/23 | reliable: +.016685/+.011528/+.005485 in 2021/22/23 |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
 | X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | +.011338 vs ERM; block +.003808 vs X14 | seed-0 running |
-| X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | seed-0 pending | seed-0 pending |
+| X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | seed-0 running |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -851,6 +851,15 @@ overall primary `+.011076`, block mean `+.016614`, routed clean delta `0`, and
 `21224999`--`21225010` now evaluate only the six X14 checkpoints on 2022/2023;
 the corresponding ERM summaries already exist and no training is repeated.
 Commands are recorded in `cross-history-analysis/x14-heldout-jobs.txt`.
+All twelve jobs completed successfully. The final artifact
+`cross-history-analysis/x14-block-specialist-final.json` has
+`confirmation_pass=true`, `heldout_pass=true`, and `goal_evidence_pass=true`.
+T1 three-seed primary deltas for 2021/2022/2023 are
+`+.005467/+.001416/+.006792`; T5 deltas are
+`+.016685/+.011528/+.005485`. Every history/year cell is positive, routed M00
+and M01 are exactly the ERM control, and the 18-row overall primary/block means
+are `+.007895/+.011843`. X14 is the first adopted contribution from this
+campaign that improves fresh ERM under both histories and both held-out years.
 
 X15 targets cross-year block instability with an explicit geometry signal. For
 each spatial hole it computes normalized erosion depth (zero at observed cells,
@@ -955,3 +964,12 @@ T1/T5 smoke jobs `21224666/21224667` completed in 24/26 seconds with exit
 peak GPU allocation `0.70/1.66GB`. Dependency-gated formal seed-0 screens
 `21224668/21224669` then started automatically, so the smoke gate consumed no
 manual wait and a failed path could not have consumed a training allocation.
+T1 completed at M00/M01/M06/M07 `.581210/.106990/.391443/.208909`. Under the
+observable spatial route, it improves fresh ERM M06/M07 by
+`+.020617/+.018997`, block mean by `+.019807`, and primary by `+.013205`.
+Against matched X14, the module still improves M06/M07 by
+`+.009920/+.003295`, block mean by `+.006608`, and primary by `+.004405`.
+Thus X18 passes both T1 adoption and module-attribution checks; no decision is
+made until the unchanged T5 screen completes. Artifacts:
+`cross-history-analysis/x18-vs-erm-t1.json` and
+`cross-history-analysis/x18-vs-x14-t1.json`.
