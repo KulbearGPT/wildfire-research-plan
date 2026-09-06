@@ -138,7 +138,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203 | +.002426 with M00 -.017601; reject |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | routed +.007239; confirm s1/s2 | routed +.005132; confirm s1/s2 |
-| X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | smoke `21217053` | smoke `21217054` |
+| X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | screen `21217161` | screen `21217162` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -440,6 +440,13 @@ can no longer be reported as a cross-history pass. It separately reports
 requirement for at least one direction, not a gate imposed on all three.
 `run.py --evaluate-only`
 already performs immutable 2022/2023 evaluation from a selected checkpoint.
+`submit_heldout.py` closes the remaining handoff without adding a workflow
+framework: it refuses to act unless a saved comparison reports
+`confirmation_pass=true`, accepts the selected training result directories,
+and emits the fixed 2022/2023 evaluate-only jobs. It is dry-run by default;
+`--submit` is the sole state-changing switch. This keeps heldout data out of
+selection while avoiding manual construction of 24 commands for a six-pair,
+three-seed confirmation set.
 
 X7 used two zero-initialized late residual experts selected by the observed
 corruption masks: one for global FireDrop evidence and one for a spatial data
@@ -518,4 +525,8 @@ Its declared evaluation is therefore the observable spatial route (candidate
 for M06/M07, fresh continuation for M00/M01). This differs from X1's residual
 transport inside encoder holes, D12's local fixed channel prompts, and archived
 D7's forecast-logit residual. Implementation is `a39fc53`; real-data T1/T5
-one-batch smoke jobs are `21217053/21217054` on 10GB slices.
+one-batch smoke jobs `21217053/21217054` completed in 22/26 seconds on 10GB
+slices. Both reported exact initial equivalence, a successful backward update,
+and inference; peak allocation was 0.61/1.58GB. Fixed seed-0 3000-step screens
+are T1/T5 `21217161/21217162`, using the same physical batch 64 and minimum
+10GB slices, pinned to `a39fc53`.
