@@ -143,7 +143,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
-| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | screening | screening |
+| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | routed +.008800; T1 pass | screening |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | screening | screening |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
@@ -806,6 +806,13 @@ initial equivalence and peak GPU allocations `0.58/1.55GB`. Formal seed-0 jobs
 `21222548/21222549` use batch 64 and 3000 steps on 10GB slices; T5 receives
 128GB host memory solely to avoid the already observed post-training evaluator
 cgroup failure.
+T1 completed at M00/M01/M06/M07 `.575114/.117167/.381522/.205614`.
+The raw non-block metrics confirm deliberate over-specialization and are not
+used outside the observable route. Against fresh control, routed M06/M07 gain
+`+.010697/+.015702`, block mean `+.013199`, and primary `+.008800`; M00/M01
+are exactly preserved by control. X14 passes the T1 seed-0 gate pending the
+unchanged T5 result. Artifact:
+`cross-history-analysis/x14-block-specialist-t1.json`.
 
 X15 targets cross-year block instability with an explicit geometry signal. For
 each spatial hole it computes normalized erosion depth (zero at observed cells,
