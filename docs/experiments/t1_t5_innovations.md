@@ -153,13 +153,13 @@ D2/D13 controls are context, not proof of any new direction.
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | reliable: +.005467/+.001416/+.006792 in 2021/22/23 | reliable: +.016685/+.011528/+.005485 in 2021/22/23 |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
-| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | 3-seed +.007392 vs ERM; block +.002887 vs X14 | 3-seed +.017792 vs ERM; block +.001662 vs X14; heldout running |
+| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; secondary only after heldout attribution failure | ERM-positive all years; X14 2023 block -.000649 | ERM-positive all years; X14 2022/23 block -.000898/-.001614 |
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
 | X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | +.012193 vs ERM; block +.005090 vs X14 | +.010157 vs ERM; block +.004067 vs X14; confirming |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | +.010587; confirming | +.008244; confirming |
-| X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | replacement submitted | replacement submitted |
+| X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | smoke pass; seed-0 submitted | smoke pass; seed-0 submitted |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
@@ -168,8 +168,8 @@ D2/D13 controls are context, not proof of any new direction.
 | Result | Statistic | Evidence status | Why it is not currently a main innovation |
 | --- | ---: | --- | --- |
 | X14 BlockDrop robustness | final block mean `+.011843` | 3 seeds, 2021/22/23, both T | auxiliary block metric; primary mean is `+.007895` |
-| X17 severity-factorized experts | confirmation primary `+.012592`; block `+.018888` | 3 seeds, 2021, both T; heldout pending | factorizes and may supersede X14, but is not independent from the X14 family |
-| X8 + X17 complete route | confirmation primary `+.019564` | 3 seeds, 2021, both T; heldout pending | system composition; it does not isolate another mechanism |
+| X17 severity-factorized experts | confirmation primary `+.012592`; final block `+.012376` | 3 seeds, 2021/22/23, both T | final primary `+.008250`; closest-control heldout attribution fails |
+| X8 + X17 complete route | final primary `+.013853` | 3 seeds, 2021/22/23, both T; all cells positive | system composition; it does not isolate another mechanism |
 | X19 latent adapters | seed-0 primary `+.011175`; block `+.016762` | one seed, 2021, both T; confirmation pending | potentially independent, but reliability is not established yet |
 
 This ledger is deliberately separate from the eventual three-main-direction
@@ -222,6 +222,11 @@ a 40GB probe estimated the same day at `15:25`. Under the explicit blocking
 task exception, the unstarted chain was replaced by smoke
 `21241404/21241405` and dependencies `21241406/21241407`; this changes only
 the slice size.
+Both smoke jobs completed in 20/22 seconds with exact initial equivalence,
+successful backward/inference, and peak allocations of 0.97/2.70GB. Their
+formal jobs were still assigned next-day estimates. A full-H100 probe gave a
+same-day estimate; as the screen blocks all X23 confirmation, the final queue
+repair uses `21244245/21244246`. No further slice escalation is planned.
 
 X24 was considered after the complete-route diagnostic localized the remaining
 magnitude gap to FireDrop. The proposed frozen clean teacher would supervise a
@@ -1065,6 +1070,17 @@ placeable while the 10GB jobs had no start time. The 17 still-unstarted first
 replacements were therefore exchanged, within the 2x rule, for
 `21238415`--`21238431`. The seven completed 10GB results remain unchanged.
 
+All 24 held-out evaluations completed. Against fresh ERM, X17 remains positive
+in every history/year cell: T1 primary is
+`+.007392/+.002622/+.006359` and T5 is
+`+.017792/+.010929/+.004409` for 2021/22/23. The 18-row primary/block means
+are `+.008250/+.012376`, with exact routed clean preservation and
+`heldout_pass=true`. However, the required closest-control attribution against
+X14 fails on T1/2023 (`-.000649` block), T5/2022 (`-.000898`) and T5/2023
+(`-.001614`). Therefore `mechanism_heldout_pass=false` and X17 is retained as
+a secondary system/training-factorization result, not an independent adopted
+contribution. Artifact: `cross-history-analysis/x17-severity-factorized-final.json`.
+
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
 only already completed, seed-matched X8-control and X10-control summaries; it
@@ -1180,6 +1196,10 @@ Because they block confirmation and held-out evaluation, the larger-resource
 exception applies: 40GB replacements are seed-1 T1/T5
 `21241396/21241397` and seed-2 `21241400/21241401`, with an estimated
 same-day `15:25` start from the pre-submission probe.
+Those requests later moved to next-day estimates. Because X19 confirmation
+blocks both attribution and held-out testing, the final queue repair uses full
+H100 jobs: seed-1 T1/T5 `21244235/21244236` and seed-2
+`21244241/21244242`. The larger slice changes no model or batch setting.
 
 X20 is the loss-side follow-up to X8's completion audit. X8 established that
 counterfactual-impact weighting itself transfers across T=1/T=5 relative to
@@ -1264,6 +1284,9 @@ seed-1 T1/T5 `21238401/21238402` and seed-2 `21238405/21238406`.
 At the next 30-minute check these too were estimated for the following day.
 Blocking-task 40GB replacements are seed-1 T1/T5 `21241398/21241399` and
 seed-2 `21241402/21241403`; all optimizer and data settings are unchanged.
+When those also moved to next-day estimates, the final blocking-task repair
+used full-H100 jobs: seed-1 T1/T5 `21244237/21244239` and seed-2
+`21244243/21244244`. No further resource escalation is available or planned.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
@@ -1284,3 +1307,11 @@ below the frozen `+.020` magnitude target by `.000436`. The artifact
 attribution-valid on its own, and the complete route still requires the fixed
 X17 2022/2023 evaluations. This audit indicates that the remaining magnitude
 gap is primarily the FireDrop component rather than block robustness.
+
+The completed fixed-year composition is positive in all six history/year
+cells: T1 `+.010261/+.000766/+.008358` and T5
+`+.028866/+.022642/+.012224` for 2021/22/23. Its 18-row mean primary is
+`+.013853`, so `heldout_pass=true` but the `+.020` magnitude target is not met.
+This remains a secondary system result because it composes X8 and X17 rather
+than isolating another mechanism. Artifact:
+`cross-history-analysis/x8-x17-complete-route-final.json`.
