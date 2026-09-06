@@ -889,3 +889,15 @@ mechanism gate additionally requires positive block-mean gain over X14 in both
 histories. Only then are seeds 1/2 run. Fixed-severity support and the offline
 composer are implemented before observing any X17 result; no training is run
 on the login node.
+
+An evidence-reuse audit tested whether the unchanged global clean--corrupt
+consistency control could itself be promoted against ordinary ERM. This uses
+only already completed, seed-matched X8-control and X10-control summaries; it
+adds no training and does not select a new recipe on test years. T=5 is
+consistently positive, with three-seed primary deltas
+`+.011147/+.011758/+.005600` in 2021/2022/2023. T=1 changes are
+`-.000138/-.006647/-.002129`, however, so both confirmation and held-out gates
+fail. The overall 18-row mean is `+.003265`. Global consistency alone is
+therefore a T=5-specific observation, not a second reliable cross-history
+direction. Artifact:
+`cross-history-analysis/global-consistency-vs-erm-final.json`.
