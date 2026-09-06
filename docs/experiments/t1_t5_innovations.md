@@ -146,10 +146,10 @@ D2/D13 controls are context, not proof of any new direction.
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
-| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | 3-seed mean +.005467 | routed +.007446; confirming |
+| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | 3-seed mean +.005467 | 3-seed mean +.016685; held-out submitted |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
-| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | seed-0 pending | seed-0 pending |
+| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | +.011338 vs ERM; block +.003808 vs X14 | seed-0 running |
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | seed-0 pending | seed-0 pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
@@ -842,6 +842,15 @@ The T1 seed-1/2 routed primary deltas are `+.004258/+.003344`; all three seeds
 are positive and their mean is `+.005467` (block mean `+.008200`). X14 passes
 T1 confirmation. Partial artifact:
 `cross-history-analysis/x14-t1-confirmation-partial.json`.
+The T5 seed-1/2 primary deltas are `+.012953/+.029655`; with seed 0, the T5
+three-seed mean is `+.016685` and block mean is `+.025027`. All six individual
+seed/history pairs are positive. The authoritative confirmation artifact
+`cross-history-analysis/x14-block-specialist-confirmation.json` reports
+overall primary `+.011076`, block mean `+.016614`, routed clean delta `0`, and
+`confirmation_pass=true`. Twelve evaluate-only held-out jobs
+`21224999`--`21225010` now evaluate only the six X14 checkpoints on 2022/2023;
+the corresponding ERM summaries already exist and no training is repeated.
+Commands are recorded in `cross-history-analysis/x14-heldout-jobs.txt`.
 
 X15 targets cross-year block instability with an explicit geometry signal. For
 each spatial hole it computes normalized erosion depth (zero at observed cells,
@@ -908,6 +917,13 @@ on the login node. Real-data T1-25%/T5-50% smoke jobs `21224594/21224595`
 completed in 22/29 seconds with exit `0:0`. The four seed-0 screens are T1
 25%/50% `21224659/21224660` and T5 25%/50% `21224661/21224662`, all on the
 minimum 10GB slice; T5 uses 128GB host memory only for the evaluator.
+The completed T1 severity route uses fixed-25% M06 and fixed-50% M07. Relative
+to fresh ERM it improves M06/M07 by `+.019091/+.014924`, block mean by
+`+.017008`, and primary by `+.011338`. Relative to mixed-severity X14 it gains
+`+.008394` on M06 and loses `-.000778` on M07, for positive block-mean module
+attribution `+.003808`. X17 therefore passes its T1 mechanism and adoption
+checks, pending the unchanged T5 pair. Partial artifact:
+`cross-history-analysis/x17-severity-factorized-t1-partial.json`.
 
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
