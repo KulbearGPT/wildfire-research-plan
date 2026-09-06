@@ -137,7 +137,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203 | +.002426 with M00 -.017601; reject |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
-| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | 3-seed routed mean +.003979 | routed +.005132; confirmation running |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | 3-seed routed mean +.003979 | 3-seed routed mean +.005834; heldout running |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
 | X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; pass | screen `21217350` running |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
@@ -523,7 +523,20 @@ The prospective T1 seed-1 global/X8 M01 AP is `.308054/.319033`, and seed 2 is
 of zero. Together with seed 0's `+.007239`, all three seeds are positive and
 their mean is `+.003979`. X8 passes T1 confirmation without changing its
 recipe. Both T5 prospective pairs remain required for the cross-history
-confirmation decision.
+confirmation decision at this intermediate checkpoint.
+
+The completed T5 prospective pairs preserve the positive effect: the
+three-seed routed primary mean is `+.005834`. The authoritative six-pair
+comparison is
+`cross-history-analysis/x8-impact-fire-route-confirmation.json`; across all
+six runs its mean is `+.004906` (population standard deviation `.002429`),
+worst routed clean delta is exactly zero, and `confirmation_pass=true`.
+Consequently, the fixed 2022/2023 evaluation opened without changing any
+checkpoint or route. Twenty-four minimum-10GB evaluate-only jobs cover both
+methods, histories, three seeds, and two years: contiguous job range
+`21218965`--`21218988`. Their exact commands are recorded in
+`cross-history-analysis/x8-heldout-jobs.txt`. Heldout results remain unread
+until completion and are not used to alter this recipe.
 
 X9 spatial-impact FiLM addresses the failure revealed by X5-local: the future
 forecast pixels affected by a missing input block need not lie inside that
