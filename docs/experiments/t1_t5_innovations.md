@@ -161,6 +161,11 @@ Static inspection of the pinned upstream `BaseModel.compute_loss` confirms
 that `risk` uses the identical torchvision focal per-pixel term, alpha and
 gamma; with no spatial hole its normalized objective is exactly the original
 mean. Its only intervention is the declared 3x spatial-hole weighting.
+The `distill_block` audit likewise confirms that its auxiliary weight is
+identically zero whenever the true spatial-hole mask is empty; FireDrop-only
+and clean samples retain the control objective. The frozen teacher consumes
+the exactly paired clean tensor, while only the three deepest normalized
+features inside the same spatial mask contribute to the auxiliary term.
 
 Queue correction: original T5 distill/transition `21211225/21211226` were
 cancelled pending after >10 minutes. Same-resource replacements
