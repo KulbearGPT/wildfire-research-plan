@@ -144,7 +144,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | screening | screening |
-| X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | smoke pending | smoke pending |
+| X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | screening | screening |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -820,5 +820,7 @@ is primary `>=+.005` in each history. This is an incremental reliability-prompt
 module whose novelty and usefulness both depend on the matched ablation; likely
 failure modes are redundancy with convolutional mask boundaries and insufficient
 information to correct a missing field without its values.
-T1/T5 smoke jobs are `21222667/21222668`, using minimum 10GB slices and a
-15-minute limit. Formal screens are not submitted until both pass.
+T1/T5 smoke jobs `21222667/21222668` completed successfully with exact initial
+equivalence, backward/checkpoint/inference coverage, and peak GPU allocations
+`0.59/1.55GB`. Formal seed-0 screens `21222911/21222912` use batch 64, 3000
+steps, minimum 10GB slices, and 64/128GB host memory for T1/T5 respectively.
