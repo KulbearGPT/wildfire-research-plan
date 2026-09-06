@@ -76,6 +76,15 @@ latent latest-fire state inside the forecasting head and clamps observations
 where valid. Neither produces or supervises a standalone reconstructed fire
 map, and both are evaluated under T=1 and T=5.
 
+A targeted search of directly adjacent next-day methods found raster
+single-/multi-day forecasting
+([Lahrichi et al.](https://arxiv.org/abs/2502.12003)), query-based ignition-set
+prediction ([WISP](https://arxiv.org/abs/2605.10298)), and the two-stage
+reconstruction framework above, but did not identify an observed-state-clamped
+survival/new-activity marginalization matching X3. This is a scoped positioning
+observation, not an absolute priority claim; novelty language remains
+conditional on broader review and positive matched evidence.
+
 Missing-modality remote-sensing methods already perform learned compensation
 and distillation, including
 [DIS2](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html),
