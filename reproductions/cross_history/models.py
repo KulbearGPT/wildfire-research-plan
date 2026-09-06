@@ -73,6 +73,28 @@ class MissingnessExperts(nn.Module):
         return spatial_active*self.spatial(features) + fire_active*self.fire(features)
 
 
+class SpatialImpactFiLM(nn.Module):
+    """Use observed context to modulate forecast impact beyond a spatial hole."""
+    def __init__(self, channels):
+        super().__init__()
+        self.condition = nn.Sequential(
+            nn.Conv2d(channels+1,channels,1), nn.SiLU(),
+            nn.Conv2d(channels,channels*2,1),
+        )
+        nn.init.zeros_(self.condition[-1].weight)
+        nn.init.zeros_(self.condition[-1].bias)
+
+    def forward(self, decoded, spatial):
+        mask = F.interpolate(spatial,decoded.shape[-2:],mode='nearest')
+        valid = 1-mask
+        context = (decoded*valid).sum(dim=(-2,-1),keepdim=True)
+        context = context/valid.sum(dim=(-2,-1),keepdim=True).clamp_min(1.)
+        fraction = mask.mean(dim=(-2,-1),keepdim=True)
+        scale,bias = self.condition(torch.cat((context,fraction),dim=1)).chunk(2,dim=1)
+        active = mask.amax(dim=(-2,-1),keepdim=True)
+        return decoded + active*(decoded*torch.tanh(scale)+bias)
+
+
 class Forecaster(nn.Module):
     def __init__(self, base, history, method):
         super().__init__()
@@ -92,6 +114,9 @@ class Forecaster(nn.Module):
         if method == 'missingness_experts':
             decoder_channels = base.model.segmentation_head[0].in_channels
             self.missingness_experts = MissingnessExperts(decoder_channels)
+        if method == 'spatial_impact_film':
+            decoder_channels = base.model.segmentation_head[0].in_channels
+            self.spatial_impact_film = SpatialImpactFiLM(decoder_channels)
 
     def features(self, x):
         encoder = self.base.model.encoder
@@ -112,6 +137,8 @@ class Forecaster(nn.Module):
         if self.method in ('context','context_adapter','context_transition'):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]
         decoded = self.base.model.decoder(*features)
+        if self.method == 'spatial_impact_film':
+            decoded = self.spatial_impact_film(decoded,spatial)
         logits = self.base.model.segmentation_head(decoded)
         if self.method == 'missingness_experts':
             logits = logits + self.missingness_experts(decoded,spatial,fire_invalid)
