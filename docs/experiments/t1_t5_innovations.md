@@ -137,7 +137,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203; pass | running `21214128` |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
-| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | +.007638; pass | running `21214686` |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | +.007638; pass | eval recovery `21216721` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -366,7 +366,11 @@ and block mean `-.005062`. Localizing KL to the input hole therefore shifts
 performance in exactly the wrong spatial scenarios, supporting the hypothesis
 that future forecast impact need not coincide with the missing input support.
 X5 is rejected. T5-local `21212414` was cancelled at 50:31 while training;
-T5-global remains active because it is also X8's required attribution control.
+T5-global was retained because it is also X8's required attribution control.
+
+T5 global-D1 control `21212412` completed at M00/M01/M06/M07
+`.609360/.357955/.391061/.196798`. This is the frozen attribution reference
+for X8 at T5; its own change versus fresh ERM is not an X8 contribution.
 
 The registered `context_adapter` variant freezes the entire initial forecaster
 and trains only the zero-initialized context-transport layers. Because every
@@ -468,3 +472,9 @@ Against global-D1, all four deltas are nonnegative:
 `+.000599`. The gain is concentrated in complete FireDrop, matching archived
 D5's diagnosis, while clean and block performance are preserved. X8 passes
 the T1 screen and remains eligible pending unchanged T5 job `21214686`.
+
+T5 X8 `21214686` completed all 3000 optimizer steps and wrote its 57MB final
+checkpoint, then the old job reached the 64GB host-memory cgroup limit during
+evaluation. This does not invalidate training. Evaluate-only recovery
+`21216721` loads that exact checkpoint, uses batch 16 on a 10GB slice, and
+does not repeat or change any optimizer step.
