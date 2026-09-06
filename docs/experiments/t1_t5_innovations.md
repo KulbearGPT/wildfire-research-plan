@@ -934,6 +934,8 @@ seed-0 primary gate against fresh ERM in both. A failure against X14 ends the
 module with no coefficient or architecture sweep. This remains the same
 forecast, corruption scenarios, initialization, optimizer, and 3000-step
 budget; it does not add a reconstruction task or consume held-out years.
-T1/T5 smoke jobs are `21224666/21224667`; dependency-gated formal seed-0
-screens are `21224668/21224669`, so a failed smoke cannot consume a training
-allocation.
+T1/T5 smoke jobs `21224666/21224667` completed in 24/26 seconds with exit
+`0:0`, exact initial equivalence (`0.0`), successful backward/inference, and
+peak GPU allocation `0.70/1.66GB`. Dependency-gated formal seed-0 screens
+`21224668/21224669` then started automatically, so the smoke gate consumed no
+manual wait and a failed path could not have consumed a training allocation.
