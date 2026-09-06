@@ -105,9 +105,10 @@ class Forecaster(nn.Module):
         return self.base.compute_loss(logits, target)
 
 
-def feature_loss(student, teacher, mask, target):
+def feature_loss(student, teacher, mask, target, *, spatial_only=False):
     # Normalize across feature channels, emphasize missing regions and fire.
-    weight = mask + F.max_pool2d(target[:,None].float(),9,1,4)
+    fire_focus = F.max_pool2d(target[:,None].float(),9,1,4)
+    weight = mask*(1+fire_focus) if spatial_only else mask+fire_focus
     losses = []
     for sf,tf in zip(student,teacher):
         w = F.adaptive_avg_pool2d(weight, sf.shape[-2:])

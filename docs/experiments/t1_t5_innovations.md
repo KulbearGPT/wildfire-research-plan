@@ -109,3 +109,31 @@ transition `21211219/21211220/21211221/21211222`; T5 equivalents
 `21211223/21211224/21211225/21211226`. All were initially pending without a
 start estimate. Recheck after ten minutes and change slice only when queue
 evidence supports a faster start under the resource rule.
+
+### First T1 screen
+
+| Method | M00 | M01 | M06 | M07 | primary | primary delta | block delta |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| fresh control | .585066 | .308313 | .370825 | .189912 | .289683 | — | — |
+| context | .593755 | .304883 | .385249 | .193349 | .294494 | +.004811 | +.008930 |
+| distill | .584336 | .286450 | .372542 | .194401 | .284464 | -.005219 | +.003103 |
+| transition | .584545 | .330915 | .377251 | .196377 | .301514 | +.011831 | +.006445 |
+
+Transition passes the T1 gate. Context misses the all-corruption threshold by
+.000189 because M01, which has no spatial hole, regresses .003430. Its declared
+observable route uses the control for M00/M01 and context for M06/M07; routed
+primary delta is +.005954 and clean is identical to control. This is the same
+specialist-routing evidence convention already used by B2/B3.
+
+Original distillation fails because its mask included complete FireDrop and
+the target focus also applied to non-spatial examples: M01 drops .021863. The
+registered `distill_block` revision applies feature matching only inside true
+spatial holes and weights positive neighborhoods only within those holes. A
+separate `risk` candidate upweights segmentation risk 3x inside spatial holes
+while retaining the original loss elsewhere. These are direct responses to
+the diagnosed failure and remain in the same controlled-missingness problem.
+
+Queue correction: original T5 distill/transition `21211225/21211226` were
+cancelled pending after >10 minutes. Same-resource replacements
+`21211486/21211487` started immediately alongside T5 control/context
+`21211223/21211224`.

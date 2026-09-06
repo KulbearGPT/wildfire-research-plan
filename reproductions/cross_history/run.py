@@ -16,7 +16,7 @@ from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','context','distill','transition'),required=True)
+    p.add_argument('--method',choices=('control','context','distill','distill_block','risk','transition'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -55,7 +55,7 @@ def main():
         loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,shuffle=True,
             generator=torch.Generator().manual_seed(a.seed),num_workers=a.workers,
             pin_memory=True,persistent_workers=a.workers>0,drop_last=True)
-        teacher = copy.deepcopy(model).eval().requires_grad_(False) if a.method == 'distill' else None
+        teacher = copy.deepcopy(model).eval().requires_grad_(False) if a.method.startswith('distill') else None
         # Equal data and model RNG across methods; module construction must not
         # shift augmentation or temporal dropout relative to the control.
         random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
@@ -81,11 +81,21 @@ def main():
                         raise RuntimeError('initial forward mismatch')
                     model.train()
                 logits,features,aux = model(packed,details=True)
-                loss = model.compute_loss(logits.squeeze(1),target)
+                if a.method == 'risk':
+                    from torchvision.ops import sigmoid_focal_loss
+                    raw_loss = sigmoid_focal_loss(logits.squeeze(1),target.float(),
+                        alpha=1-float(base.hparams.pos_class_weight),gamma=2,reduction='none')
+                    spatial = packed[:,-1,-2]
+                    risk_weight = 1 + 2*spatial
+                    loss = (raw_loss*risk_weight).sum()/risk_weight.sum()
+                else:
+                    loss = model.compute_loss(logits.squeeze(1),target)
                 if teacher is not None:
                     with torch.no_grad():
                         tf = teacher.features(clean)[-3:]
-                    loss = loss + .05*feature_loss(features,tf,packed[:,-1,-1:],target)
+                    missing = packed[:,-1,-2:-1] if a.method == 'distill_block' else packed[:,-1,-1:]
+                    loss = loss + .05*feature_loss(features,tf,missing,target,
+                        spatial_only=a.method == 'distill_block')
                 if aux is not None:
                     loss = loss + transition_loss(aux,clean,target)
                 if not torch.isfinite(loss): raise RuntimeError('nonfinite training loss')
