@@ -149,3 +149,9 @@ and weights it by clean-view teacher confidence. The student still uses the
 same corrupt supervised loss as the fresh control, and inference has no extra
 parameters or clean view. This tests a distinct spatially targeted objective,
 not another architecture or general-purpose hyperparameter search.
+
+While GPU jobs run, `reproductions/cross_history/compare.py` provides the
+minimal downstream result path. It pairs summaries by history/seed/year,
+computes individual, primary, block, clean-guardrail and multi-run statistics,
+and can apply the declared spatial-specialist route. `run.py --evaluate-only`
+already performs immutable 2022/2023 evaluation from a selected checkpoint.
