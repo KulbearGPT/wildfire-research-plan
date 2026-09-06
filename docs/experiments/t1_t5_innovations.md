@@ -244,6 +244,13 @@ exact initial output agreement. Peak allocation was only 0.51/0.86GB at batch
 16, so full seed-0 screens `21212420/21212421` use the minimum 10GB H100 slice
 at batch 64 and are pinned to commit `e906291`.
 
+Frozen attribution reference T1 `21212205` completed with M00/M01/M06/M07 AP
+`.558318/.276890/.343010/.172086`. T5 reference `21212206` failed before a
+complete result because a DataLoader worker exceeded the requested 32GB host
+RAM; the traceback was a Slurm cgroup OOM, not a GPU or model error. Replacement
+`21212423` keeps the minimum 10GB GPU and increases only host RAM to the
+already-used 64GB, with zero training steps and a pinned source revision.
+
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
 computes individual, primary, block, clean-guardrail and multi-run statistics,
