@@ -41,6 +41,10 @@ user's earlier magnitude requirement. Do not count three hyperparameters of
 one method as three directions. Keep all negative results. No selection using
 2022/2023; if test evidence fails, mark failure and disclose adaptive reuse
 before any later campaign rather than pretending a fresh unseen test.
+Cross-T aggregate gains above `+.010` are also retained in a secondary-results
+ledger, but magnitude alone does not make them a main innovation: main status
+still requires independent mechanism attribution, three-seed confirmation,
+and fixed-year evidence in both T settings.
 
 ## First candidates and falsifiable mechanisms
 
@@ -158,6 +162,22 @@ D2/D13 controls are context, not proof of any new direction.
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | replacement submitted | replacement submitted |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
+
+### Secondary quantitative findings (`> +.010` cross-T aggregate)
+
+| Result | Statistic | Evidence status | Why it is not currently a main innovation |
+| --- | ---: | --- | --- |
+| X14 BlockDrop robustness | final block mean `+.011843` | 3 seeds, 2021/22/23, both T | auxiliary block metric; primary mean is `+.007895` |
+| X17 severity-factorized experts | confirmation primary `+.012592`; block `+.018888` | 3 seeds, 2021, both T; heldout pending | factorizes and may supersede X14, but is not independent from the X14 family |
+| X8 + X17 complete route | confirmation primary `+.019564` | 3 seeds, 2021, both T; heldout pending | system composition; it does not isolate another mechanism |
+| X19 latent adapters | seed-0 primary `+.011175`; block `+.016762` | one seed, 2021, both T; confirmation pending | potentially independent, but reliability is not established yet |
+
+This ledger is deliberately separate from the eventual three-main-direction
+count. Rows may be promoted only when their own attribution and reliability
+requirements pass; otherwise they remain useful secondary or system-level
+findings. Single-history `>+.010` signals that fail cross-T transfer, such as
+X3 and X18, remain in the frozen candidate register as negative evidence and
+are not presented as cross-T improvements.
 
 X7 was preregistered and implemented while the already submitted screens were
 running, before seeing their outcomes. The subsequent archive audit below
