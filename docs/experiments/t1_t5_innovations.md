@@ -136,7 +136,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | pending | pending |
-| X7 missingness-conditioned residual experts | fresh continuation | yes; late regime-specific correction module | smoke `21214411` | smoke `21214412` |
+| X7 missingness-conditioned residual experts | fresh continuation | yes; late regime-specific correction module | screen `21214506` | screen `21214507` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -410,6 +410,8 @@ was removed. Neither expert activates on a clean sample, and the untrained
 model is exactly the base forecast. This is distinct from X1 encoder transport,
 X3 fire-state marginalization, and loss/data-distribution candidates X5/X6.
 The same small module is used unchanged for both histories. Implementation is
-`76cd083`; real-data one-batch T1/T5 smoke jobs are `21214411/21214412` on
-10GB H100 slices. Formal screens are submitted only after both smoke paths
-pass, using the unchanged fresh-continuation control.
+`76cd083`; real-data one-batch T1/T5 smoke jobs `21214411/21214412` completed
+in 29/24 seconds with exact initial equivalence, successful backward and
+inference, and peak GPU allocation of 0.64/1.61GB. Formal 3000-step T1/T5
+screens `21214506/21214507` therefore use minimum 10GB H100 slices and the
+unchanged fresh-continuation control.
