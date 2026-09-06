@@ -197,7 +197,7 @@ class Forecaster(nn.Module):
         if method == 'spatial_impact_film':
             decoder_channels = base.model.segmentation_head[0].in_channels
             self.spatial_impact_film = SpatialImpactFiLM(decoder_channels)
-        if method in ('dynamic_inpaint','dynamic_inpaint_reconstruct'):
+        if method in ('dynamic_inpaint','dynamic_inpaint_reconstruct','block_specialist_dynamic'):
             columns = tuple(range(40)) if history == 1 else (
                 0,1,2,3,4,5,6,7,8,9,11,12,13,14,16,17,18,19,20,21,
                 22,23,24,25,26,27,28,29,30,31,32,38,39)
@@ -230,7 +230,7 @@ class Forecaster(nn.Module):
         spatial = packed[:,-1,self.channels:self.channels+1]
         fire_invalid = packed[:,-1,self.channels+1:self.channels+2]
         reconstruction = None
-        if self.method in ('dynamic_inpaint','dynamic_inpaint_reconstruct'):
+        if self.method in ('dynamic_inpaint','dynamic_inpaint_reconstruct','block_specialist_dynamic'):
             x = self.dynamic_inpaint(x,spatial)
             if self.method == 'dynamic_inpaint_reconstruct':
                 reconstruction = x[:,:,self.dynamic_inpaint.dynamic]

@@ -145,6 +145,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | routed +.008800; T1 pass | screening |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
+| X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | yes if restoration beats X14; joint recipe otherwise | smoke pending | smoke pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -837,3 +838,15 @@ Against fresh control, the spatial-route M06/M07 deltas are
 hole depth does not supply enough missing content and degrades the matched
 forecast, so X15 is rejected. T5 `21222912` was cancelled at 20:51; artifact:
 `cross-history-analysis/x15-distance-prompt-t1.json`.
+
+X16 is the mechanism-driven interaction between the two strongest block
+hypotheses, not a new unrelated branch. It trains X10's forecast-aware dynamic
+restoration under X14's block-only schedule (`fire=0`, `block=1`) for the same
+3000 steps. X10's mixed schedule produced positive 2021 confirmation but lost
+small amounts on T1 2022/2023; the falsifiable hypothesis is that every update
+must expose a spatial hole for the restoration module to learn stable typed
+corrections. X14 is the matched attribution control for the module; fresh
+control measures total adoption value. X16 can count as an independent module
+contribution only if it improves over X14 as well as fresh control in both
+histories. Otherwise it is merely a joint recipe or another rejection. The
+spatial route and all existing gates remain frozen.
