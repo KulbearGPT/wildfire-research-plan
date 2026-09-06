@@ -131,11 +131,11 @@ D2/D13 controls are context, not proof of any new direction.
 | --- | --- | --- | --- | --- |
 | X1 context transport | fresh continuation; observable spatial route | yes | routed +.005954 | routed +.000874; cross-T reject |
 | X1 frozen adapter | frozen initial B3/B5 plus fresh continuation | alternative X1 implementation | +.012151 vs frozen, -.013537 vs fresh; reject | cancelled after T1 adoption failure |
-| X2 feature distillation | fresh continuation | yes | original and block-local rejected | running |
-| X3 latent transition | fresh continuation | yes | +.011831 | -.009413; decoupled repair pending |
+| X2 feature distillation | fresh continuation | yes | original and block-local rejected | original rejected; block-local stopped |
+| X3 latent transition | fresh continuation | yes | original +.011831; decoupled -.045065 | original -.009413; repair cancelled |
 | X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
-| X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | pending | pending |
+| X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203; pass | running `21214128` |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | screen `21214685` | screen `21214686` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
@@ -272,6 +272,15 @@ came from auxiliary distortion of the shared temporal representation.
 Fixed T1/T5 decoupled jobs are `21213902/21213903`, pinned to commit
 `7277cb8`; this is X3's only repair and uses the post-OOM evaluation cap.
 
+The decoupled T1 repair completed at M00/M01/M06/M07
+`.472336/.248200/.311505/.174151`, changing primary by `-.045065`, block
+mean by `-.037541`, and M00 by `-.112730` versus fresh control. Although the
+initial mixture was equivalent, removing auxiliary gradients from the decoder
+left the 51-parameter transition head to move under the forecast mixture and
+produced severe degradation rather than the intended T5 stabilization. This
+falsifies the registered repair. T5 job `21213903` was cancelled at 37:33;
+X3 is closed without a weight search.
+
 Original T5 distillation AP is `.586798/.355377/.380389/.191319`, for primary
 delta `-.007855` and block delta `-.007372`. Together with both failed T1
 forms, this closes X2 as negative evidence.
@@ -321,6 +330,11 @@ This is the campaign's single corruption-rate tuning contribution; probability
 0.5 is fixed by symmetry and will not be searched.
 Fixed T1/T5 X6 screens are `21214127/21214128`, using 10GB slices and pinned
 to implementation commit `b9c02f2`.
+
+T1 X6 completed at M00/M01/M06/M07 `.587003/.319053/.373156/.192450`.
+Every scenario improves over fresh continuation; primary delta is `+.005203`,
+block mean `+.002434`, and M00 `+.001937`. It passes the preregistered T1
+screen narrowly and remains eligible pending the unchanged T5 job `21214128`.
 
 Composition smoke jobs T1/T5 `21212079/21212081` completed successfully in
 25/49 seconds. They covered a real batch, backward pass and inference; initial
