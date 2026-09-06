@@ -85,14 +85,20 @@ evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
 Physical batch 16, accumulation 4 applies to every new control/candidate.
 Existing full-batch D2/D13 numbers are context, not the matched comparison.
 
-GPU smoke jobs: T1 `21210705`, T5 `21210706`, each checks control/context/
+GPU smoke jobs: T1 `21210705`, T5 `21210706`, each checked control/context/
 distill/transition in sequence on a 20GB H100 slice, 4 CPUs, 32GB host memory.
 Earlier 10GB requests `21210683/21210684` were cancelled while pending because
 no start estimate was available; 20GB had an approximately 11-minute estimate.
 No model or dataset computation has been run on the login node.
 
-Next action: inspect those exact job IDs and their `slurm-X-smoke-T*-JOB.out`
-logs under the persistent runs root. Fix failures before seed-0 training.
-After successful smoke, submit eight 3000-step jobs (four methods x two T)
-with the same batch/worker settings; allow longer T5 walltime based on smoke
-timing and choose available GPU slices under the resource policy.
+Both smoke jobs completed with exit `0:0`. All eight real-data combinations
+completed one optimizer step, backward pass, checkpoint reload path, and one
+M06 2021 inference. Initial maximum absolute output difference from the base
+was exactly zero for control/context/distill and `2.38e-7` (T1) / `4.77e-7`
+(T5) for the transition mixture. Peak GPU allocation at physical batch 16 was
+0.70GB (T1) and 1.97GB (T5); formal screens therefore use physical/effective
+batch 64 on 20GB slices to reduce wall time, identically for all variants.
+
+Next action: run eight 3000-step jobs (four methods x two T), compare the three
+candidates with their fresh same-history controls, and stop failed directions
+before confirmation.
