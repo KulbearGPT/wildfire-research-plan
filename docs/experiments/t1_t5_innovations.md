@@ -139,11 +139,11 @@ D2/D13 controls are context, not proof of any new direction.
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | reliable: +.003979/+.004533/+.004699 in 2021/22/23 | reliable: +.005834/+.003820/+.005231 in 2021/22/23 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
-| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | 3-seed mean +.001186 | 3-seed mean +.009652; heldout running |
+| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | 2022/23 -.001356/-.000347; reject cross-history | 2022/23 +.004783/+.002139; T5-only positive |
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
-| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | smoke pending | smoke pending |
+| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | screening | screening |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | smoke pending | smoke pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
@@ -736,6 +736,19 @@ retained as a limitation rather than hidden by the mean. The frozen 2022/2023
 evaluation therefore opened: 24 evaluate-only jobs `21221885`--`21221908`
 cover controls/candidates, both histories, three seeds, and both years using
 minimum 10GB slices and source commit `52cf5b8`.
+All 24 jobs completed successfully. The final artifact
+`cross-history-analysis/x10-dynamic-inpaint-route-final.json` reports T1
+2022/2023 three-seed primary deltas `-.001356/-.000347`, so
+`heldout_pass=false` and X10 is not a reliable cross-history direction. T5
+remains positive at `+.004783/+.002139` on those years. Across all 18 rows the
+mean is `+.002676` with population standard deviation `.007657`; this supports
+a T5-specific observation but not the required T1/T5 generalization claim.
+
+The full X8(M01)+X10(M06/M07) route was also recomputed against one common
+fresh control in `cross-history-analysis/x8-x10-route-final.json`. Its T1
+2022 primary is `-.003212`, so the composition also has
+`heldout_pass=false`; overall mean `+.008279` does not meet `+.02`. This route
+is rejected as a final cross-history system and remains non-independent.
 
 X13 addresses a concrete limitation of X10 rather than adding another loss:
 X10's two convolutions cannot transport observed values to the centre of a
@@ -788,6 +801,11 @@ reported if actually reached. Closest missing-modality work already establishes
 dropout training, so no architectural novelty is claimed. Failure modes are
 over-specialization to synthetic block geometry and saturation from the B3/B5
 mixed-corruption initialization.
+T1/T5 smoke replacements `21222278/21222279` completed successfully with exact
+initial equivalence and peak GPU allocations `0.58/1.55GB`. Formal seed-0 jobs
+`21222548/21222549` use batch 64 and 3000 steps on 10GB slices; T5 receives
+128GB host memory solely to avoid the already observed post-training evaluator
+cgroup failure.
 
 X15 targets cross-year block instability with an explicit geometry signal. For
 each spatial hole it computes normalized erosion depth (zero at observed cells,
@@ -802,3 +820,5 @@ is primary `>=+.005` in each history. This is an incremental reliability-prompt
 module whose novelty and usefulness both depend on the matched ablation; likely
 failure modes are redundancy with convolutional mask boundaries and insufficient
 information to correct a missing field without its values.
+T1/T5 smoke jobs are `21222667/21222668`, using minimum 10GB slices and a
+15-minute limit. Formal screens are not submitted until both pass.
