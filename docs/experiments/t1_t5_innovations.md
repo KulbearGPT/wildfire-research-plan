@@ -143,9 +143,9 @@ D2/D13 controls are context, not proof of any new direction.
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
-| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | routed +.008800; confirming | routed +.007446; confirming |
+| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | 3-seed mean +.005467 | routed +.007446; confirming |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
-| X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | yes if restoration beats X14; joint recipe otherwise | screening | screening |
+| X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -822,6 +822,10 @@ Under the spatial route, M06/M07 improve `+.004914/+.017423`, block mean
 `21223825/21223827` and T5 `21223826/21223828`; they reuse already complete
 fresh controls with identical seeds rather than spend four redundant training
 allocations.
+The T1 seed-1/2 routed primary deltas are `+.004258/+.003344`; all three seeds
+are positive and their mean is `+.005467` (block mean `+.008200`). X14 passes
+T1 confirmation. Partial artifact:
+`cross-history-analysis/x14-t1-confirmation-partial.json`.
 
 X15 targets cross-year block instability with an explicit geometry signal. For
 each spatial hole it computes normalized erosion depth (zero at observed cells,
@@ -861,3 +865,11 @@ spatial route and all existing gates remain frozen.
 T1/T5 smoke jobs `21223439/21223440` completed successfully with exact initial
 equivalence and peak GPU allocations `0.84/2.79GB`. Formal seed-0 screens
 `21223829/21223830` use 10/20GB slices, batch 64, and 3000 steps.
+T1 completed at M00/M01/M06/M07 `.583476/.062043/.383286/.202494`.
+Against fresh control its spatial-route primary is `+.008348`, but the decisive
+module attribution against matched X14 is `-.000452` (block mean `-.000678`):
+M06 gains `+.001764` while M07 loses `-.003120`. The restoration module does
+not add value under the specialist schedule, so X16 is rejected and T5
+`21223830` was cancelled at 22:59. Artifacts:
+`cross-history-analysis/x16-vs-control-t1.json` and
+`cross-history-analysis/x16-vs-x14-t1.json`.
