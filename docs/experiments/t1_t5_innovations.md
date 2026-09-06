@@ -140,8 +140,8 @@ D2/D13 controls are context, not proof of any new direction.
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | reliable: +.003979/+.004533/+.004699 in 2021/22/23 | reliable: +.005834/+.003820/+.005231 in 2021/22/23 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
 | X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; confirming | routed +.005883; confirming |
-| X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | smoke pending | smoke pending |
-| X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | smoke pending | smoke pending |
+| X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | screening | screening |
+| X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | screening | screening |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -661,6 +661,10 @@ loss observed in X10 rather than start a tuning sweep. Attribution is X11
 versus matched X10; usefulness for the final system additionally requires a
 positive routed delta versus fresh control in both T settings. One T1 and one
 T5 one-step smoke will precede the seed-0 screens, with no broad test suite.
+T1/T5 smoke jobs `21220222/21220223` completed successfully with exact initial
+equivalence, backward update, checkpoint reload, and real-data inference. Their
+peak GPU allocations were `0.93/3.11GB`. Fixed seed-0 screens
+`21220298/21220299` use 10/20GB slices respectively, batch 64, and 3000 steps.
 
 X12 targets the separate magnitude requirement through the dominant complete
 active-fire-history failure. It continues the same initial model for the same
@@ -684,3 +688,6 @@ sequential modality dropout also combines dropout with optional reconstruction
 as a cheap, falsifiable magnitude probe for this wildfire failure regime, not a
 general missing-modality method claim. Failure modes are saturation of M01 from
 the already robust B3 initialization and loss of useful mixed-corruption replay.
+T1/T5 smoke jobs `21220240/21220241` completed successfully with exact initial
+equivalence and peak GPU allocations `0.97/2.70GB`. Fixed seed-0 screens
+`21220300/21220301` use the same 10/20GB resource policy and 3000-step protocol.
