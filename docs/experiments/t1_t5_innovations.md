@@ -256,6 +256,9 @@ complete result because a DataLoader worker exceeded the requested 32GB host
 RAM; the traceback was a Slurm cgroup OOM, not a GPU or model error. Replacement
 `21212423` keeps the minimum 10GB GPU and increases only host RAM to the
 already-used 64GB, with zero training steps and a pinned source revision.
+The four T1 values match the source B3 `results-2021/summary.json` exactly at
+full stored precision, independently confirming that the new wrapper and AP
+path introduce no evaluation drift before adapter attribution.
 
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
