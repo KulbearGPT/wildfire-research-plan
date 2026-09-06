@@ -1044,3 +1044,10 @@ with M00 no worse than `-.010`; otherwise the loss direction stops. If it
 passes, seeds 1/2 and fixed 2022/2023 evaluation use the same recipe. X20 and
 X8 are one impact-consistency contribution family and cannot be counted as
 two independent innovations.
+The implementation is frozen at `74b3dbd`. T1/T5 real-data smoke jobs are
+`21226332/21226333`; dependency-gated seed-0 screens are
+`21226334/21226335`. The scheduler rejected an explicitly combined partition
+request for the 20GB profile, so the successful submissions leave partition
+selection to Nibi; Slurm resolved them to `gpubase_bygpu_b1,gpubackfill`.
+The 20GB profile is exactly twice the minimum 10GB slice and was selected only
+after the older 10GB smoke jobs showed estimated waits well beyond ten minutes.
