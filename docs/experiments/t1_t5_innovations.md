@@ -99,16 +99,17 @@ failed T1 and remains negative evidence.
 
 ## Minimal implementation plan
 
-- [ ] Add a separate `reproductions/cross_history/` package for the campaign.
+- [x] Add a separate `reproductions/cross_history/` package for the campaign.
   Reuse corrected resolver, normalization, raw evaluation corruptions, exact
   AP code and archived B5 checkpoint (explicit relocated path).
-- [ ] Implement shared T1/T5 encoder-decoder access and the three methods.
+- [x] Implement shared T1/T5 encoder-decoder access and the three methods.
   Keep clean training targets only in the training loss, absent at inference.
-- [ ] Add one Slurm runner with train/eval modes, job-specific output path,
+- [x] Add one Slurm runner with train/eval modes, job-specific output path,
   committed source snapshot, fixed seed metadata, checkpoint and results.
-- [ ] Run a GPU one-batch check inside Slurm for each method/history, including
-  original-vs-control output agreement and backward pass. No global tests.
-- [ ] Submit eight seed-0 experiments (control + three methods, both T).
+- [x] Run targeted GPU one-batch checks inside Slurm for the initial methods
+  and every subsequently added execution path, including original-vs-control
+  output agreement and backward pass. No global tests.
+- [x] Submit eight seed-0 experiments (control + three methods, both T).
   Inspect resource availability; prefer 10/20GB slices, at most 2x overflow
   unless a blocking prerequisite requires more. Revisit jobs pending >10min.
 - [ ] Compare against fresh controls, diagnose failures, register any changed
