@@ -888,7 +888,10 @@ routed primary gain `>=+.005` against fresh control in both T=1 and T=5. Its
 mechanism gate additionally requires positive block-mean gain over X14 in both
 histories. Only then are seeds 1/2 run. Fixed-severity support and the offline
 composer are implemented before observing any X17 result; no training is run
-on the login node.
+on the login node. Real-data T1-25%/T5-50% smoke jobs `21224594/21224595`
+completed in 22/29 seconds with exit `0:0`. The four seed-0 screens are T1
+25%/50% `21224659/21224660` and T5 25%/50% `21224661/21224662`, all on the
+minimum 10GB slice; T5 uses 128GB host memory only for the evaluator.
 
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
@@ -915,3 +918,6 @@ seed-0 primary gate against fresh ERM in both. A failure against X14 ends the
 module with no coefficient or architecture sweep. This remains the same
 forecast, corruption scenarios, initialization, optimizer, and 3000-step
 budget; it does not add a reconstruction task or consume held-out years.
+T1/T5 smoke jobs are `21224666/21224667`; dependency-gated formal seed-0
+screens are `21224668/21224669`, so a failed smoke cannot consume a training
+allocation.
