@@ -132,7 +132,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X1 context transport | fresh continuation; observable spatial route | yes | routed +.005954 | routed +.000874; cross-T reject |
 | X1 frozen adapter | frozen initial B3/B5 | alternative X1 implementation | pending | pending |
 | X2 feature distillation | fresh continuation | yes | original and block-local rejected | running |
-| X3 latent transition | fresh continuation | yes | pass, +.011831 | running |
+| X3 latent transition | fresh continuation | yes | +.011831 | -.009413; decoupled repair pending |
 | X4 spatial risk weighting | fresh continuation | one training-objective contribution | 3x fails gate; fixed 5x repair pending | running |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | pending | pending |
@@ -249,6 +249,19 @@ Recovered T5 fresh-control M00/M01/M06/M07 AP is
 and block mean by `+.001312`; its declared spatial route changes primary by
 only `+.000874`. Thus X1 full-model context fails the T5 `+.005` screen and is
 not advanced. Across T1/T5, its routed mean primary delta is `+.003414`.
+
+Recovered T5 transition AP is `.597599/.348957/.383617/.189836`: primary
+delta `-.009413`, block delta `-.006500`, despite the T1 `+.011831`. X3
+therefore does not advance in its original form. The single registered repair,
+`transition_decoupled`, keeps the identical inference head and marginalization
+but computes auxiliary state/conditional supervision from detached decoder
+features. Auxiliary gradients update only the 51-parameter head, while the
+main forecast loss remains end-to-end; this directly tests whether T5 failure
+came from auxiliary distortion of the shared temporal representation.
+
+Original T5 distillation AP is `.586798/.355377/.380389/.191319`, for primary
+delta `-.007855` and block delta `-.007372`. Together with both failed T1
+forms, this closes X2 as negative evidence.
 
 Follow-up seed-0 screens: T1 `distill_block/risk` are
 `21211826/21211827`; T5 equivalents are `21211828/21211829`. They use the

@@ -57,7 +57,7 @@ class Forecaster(nn.Module):
         self.channels = 40 if history == 1 else 33
         if method in ('context','context_adapter','context_transition'):
             self.transport = nn.ModuleList([ContextTransport(c) for c in base.model.encoder.out_channels[1:]])
-        if method in ('transition','context_transition'):
+        if method in ('transition','transition_decoupled','context_transition'):
             decoder_channels = base.model.segmentation_head[0].in_channels
             self.transition = nn.Conv2d(decoder_channels,3,1)
             nn.init.zeros_(self.transition.weight)
@@ -86,7 +86,8 @@ class Forecaster(nn.Module):
         decoded = self.base.model.decoder(*features)
         logits = self.base.model.segmentation_head(decoded)
         aux = None
-        if self.method in ('transition','context_transition'):
+        if self.method in ('transition','transition_decoupled','context_transition'):
+            base_logits = logits
             state, survival_delta, new_delta = self.transition(decoded).split(1,dim=1)
             survival, new = logits + survival_delta, logits + new_delta
             observed = x[:,-1,-1:].clamp(0,1)
@@ -97,6 +98,9 @@ class Forecaster(nn.Module):
             log_negative = torch.logaddexp(log_occupied+F.logsigmoid(-survival), log_empty+F.logsigmoid(-new))
             logits = log_positive-log_negative
             aux = (state,survival,new)
+            if self.method == 'transition_decoupled':
+                aux_state, aux_survival_delta, aux_new_delta = self.transition(decoded.detach()).split(1,dim=1)
+                aux = (aux_state,base_logits.detach()+aux_survival_delta,base_logits.detach()+aux_new_delta)
         if details:
             return logits, features[-3:], aux
         return logits
