@@ -116,6 +116,10 @@ Earlier 10GB requests `21210683/21210684` were cancelled while pending because
 no start estimate was available; 20GB had an approximately 11-minute estimate.
 No model or dataset computation has been run on the login node.
 
+New submissions export `WILDFIRE_SOURCE_COMMIT` so queued jobs archive the
+submission-time revision rather than whatever HEAD exists when allocation
+eventually begins. Every run still records the resolved commit in `commit.txt`.
+
 Both smoke jobs completed with exit `0:0`. All eight real-data combinations
 completed one optimizer step, backward pass, checkpoint reload path, and one
 M06 2021 inference. Initial maximum absolute output difference from the base

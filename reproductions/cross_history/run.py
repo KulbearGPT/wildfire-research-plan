@@ -89,6 +89,7 @@ def main():
                     if difference > (1e-3 if a.method in ('transition','context_transition') else 1e-5):
                         raise RuntimeError('initial forward mismatch')
                     model.train()
+                    if a.method == 'context_adapter': model.base.eval()
                 logits,features,aux = model(packed,details=True)
                 if a.method == 'risk':
                     from torchvision.ops import sigmoid_focal_loss
