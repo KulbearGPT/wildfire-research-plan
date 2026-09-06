@@ -16,7 +16,7 @@ from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','context','distill','distill_block','risk','transition'),required=True)
+    p.add_argument('--method',choices=('control','context','distill','distill_block','risk','local_consistency','transition'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -90,6 +90,18 @@ def main():
                     loss = (raw_loss*risk_weight).sum()/risk_weight.sum()
                 else:
                     loss = model.compute_loss(logits.squeeze(1),target)
+                if a.method == 'local_consistency':
+                    zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
+                    clean_logits = model(torch.cat((clean,zeros),dim=2)).squeeze(1)
+                    teacher = clean_logits.detach()
+                    probability = teacher.sigmoid()
+                    per_pixel_kl = probability*(torch.nn.functional.logsigmoid(teacher)-torch.nn.functional.logsigmoid(logits.squeeze(1)))
+                    per_pixel_kl += (1-probability)*(torch.nn.functional.logsigmoid(-teacher)-torch.nn.functional.logsigmoid(-logits.squeeze(1)))
+                    invalid = packed[:,-1,-2:].amax(dim=1)
+                    confidence = (2*probability-1).abs()
+                    weight = invalid*(.5+.5*confidence)
+                    localized = (per_pixel_kl*weight).sum()/weight.sum().clamp_min(1.)
+                    loss = loss + .1*localized
                 if teacher is not None:
                     with torch.no_grad():
                         tf = teacher.features(clean)[-3:]

@@ -142,3 +142,10 @@ Follow-up seed-0 screens: T1 `distill_block/risk` are
 `21211826/21211827`; T5 equivalents are `21211828/21211829`. They use the
 same 20GB slice and matched train/evaluation contract and were initially
 pending behind the active first wave.
+
+The registered fallback `local_consistency` transfers the mainline D1 idea
+but localizes Bernoulli KL to the union of observed FireDrop/BlockDrop pixels
+and weights it by clean-view teacher confidence. The student still uses the
+same corrupt supervised loss as the fresh control, and inference has no extra
+parameters or clean view. This tests a distinct spatially targeted objective,
+not another architecture or general-purpose hyperparameter search.
