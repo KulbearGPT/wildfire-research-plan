@@ -572,6 +572,16 @@ positive module-attribution evidence but is not by itself an adopted
 cross-history improvement toward the three-direction goal. Artifact:
 `cross-history-analysis/x8-impact-fire-route-vs-erm-final.json`.
 
+A stricter no-training deployment audit also removed global consistency from
+the non-FireDrop scenarios: X8 supplies only M01, while fresh ERM supplies
+M00/M06/M07. The three-seed primary deltas are T1
+`+.002870/-.001856/+.001999` and T5
+`+.011074/+.011713/+.007816` for 2021/2022/2023. Thus T1/2022 still regresses;
+the failure is intrinsic to the old X8 FireDrop checkpoint rather than merely
+its global-consistency fallback. This closes recomposition of old checkpoints
+and leaves X20's ERM-anchored training repair as the only active member of the
+impact-consistency family.
+
 X9 spatial-impact FiLM addresses the failure revealed by X5-local: the future
 forecast pixels affected by a missing input block need not lie inside that
 block. At the final decoder resolution, it pools feature context only over
