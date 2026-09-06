@@ -182,7 +182,7 @@ class Forecaster(nn.Module):
         self.history = history
         self.method = method
         self.channels = 40 if history == 1 else 33
-        if method in ('context','context_adapter','context_transition'):
+        if method in ('context','context_adapter','context_transition','block_specialist_context'):
             self.transport = nn.ModuleList([ContextTransport(c) for c in base.model.encoder.out_channels[1:]])
         if method in ('transition','transition_decoupled','context_transition'):
             decoder_channels = base.model.segmentation_head[0].in_channels
@@ -239,7 +239,7 @@ class Forecaster(nn.Module):
         features = self.features(x)
         if self.method == 'distance_prompt':
             features = [features[0],*self.distance_prompt(features[1:],spatial)]
-        if self.method in ('context','context_adapter','context_transition'):
+        if self.method in ('context','context_adapter','context_transition','block_specialist_context'):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]
         decoded = self.base.model.decoder(*features)
         if self.method == 'spatial_impact_film':

@@ -901,3 +901,17 @@ fail. The overall 18-row mean is `+.003265`. Global consistency alone is
 therefore a T=5-specific observation, not a second reliable cross-history
 direction. Artifact:
 `cross-history-analysis/global-consistency-vs-erm-final.json`.
+
+X18 is the architectural follow-up to X1 and the attribution follow-up to X14.
+It trains X1's zero-initialized multi-scale latent context transport under the
+otherwise unchanged X14 BlockDrop-only schedule. X1's mixed-corruption screen
+had a routed `+.005954` T=1 primary gain but only `+.000874` at T=5, while X14
+shows that persistent block supervision transfers across both histories. The
+falsifiable hypothesis is therefore that the transport module lacked enough
+block-active updates, rather than that latent context is intrinsically useless
+for T=5. X18 is an independent module only if its routed block mean is positive
+against X14 in both histories; adoption also requires the ordinary `+.005`
+seed-0 primary gate against fresh ERM in both. A failure against X14 ends the
+module with no coefficient or architecture sweep. This remains the same
+forecast, corruption scenarios, initialization, optimizer, and 3000-step
+budget; it does not add a reconstruction task or consume held-out years.
