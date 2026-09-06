@@ -239,6 +239,10 @@ contribution. Its fixed recipe uses the same 3000 steps and optimizer settings.
 Its attribution control is the same frozen initial checkpoint evaluated by the
 cross-history runner with zero update steps; comparison to the fresh full-model
 continuation will be reported only as a secondary total-system comparison.
+Adapter smoke jobs T1/T5 `21212176/21212177` completed with exit `0:0` and
+exact initial output agreement. Peak allocation was only 0.51/0.86GB at batch
+16, so full seed-0 screens `21212420/21212421` use the minimum 10GB H100 slice
+at batch 64 and are pinned to commit `e906291`.
 
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
