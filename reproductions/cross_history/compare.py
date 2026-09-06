@@ -63,11 +63,13 @@ def main():
     heldout_pass=(len(heldout) == 4 and {(g['history'],g['year']) for g in heldout}
                   == {(1,2022),(1,2023),(5,2022),(5,2023)}
                   and all(g['primary_delta'] > 0 and g['clean_delta'] >= -.01 for g in heldout))
+    mean_primary=mean(r['primary_delta'] for r in rows)
     result=dict(method=methods.pop(),routed_spatial=args.routed_spatial,
-        rows=rows,mean_primary_delta=mean(r['primary_delta'] for r in rows),
+        rows=rows,mean_primary_delta=mean_primary,
         std_primary_delta=pstdev(r['primary_delta'] for r in rows),
         mean_block_delta=mean(r['block_delta'] for r in rows),
         worst_clean_delta=min(r['delta']['M00'] for r in rows),
+        magnitude_target_met=mean_primary >= .02,
         grouped=grouped,screen_pass=screen_pass,
         confirmation_pass=confirmation_pass,heldout_pass=heldout_pass,
         goal_evidence_pass=confirmation_pass and heldout_pass)
