@@ -102,3 +102,10 @@ batch 64 on 20GB slices to reduce wall time, identically for all variants.
 Next action: run eight 3000-step jobs (four methods x two T), compare the three
 candidates with their fresh same-history controls, and stop failed directions
 before confirmation.
+
+Seed-0 screen jobs (all physical/effective batch 64, seed 0, 3000 steps,
+20GB H100 slice, 8 CPU, 64GB host memory): T1 control/context/distill/
+transition `21211219/21211220/21211221/21211222`; T5 equivalents
+`21211223/21211224/21211225/21211226`. All were initially pending without a
+start estimate. Recheck after ten minutes and change slice only when queue
+evidence supports a faster start under the resource rule.
