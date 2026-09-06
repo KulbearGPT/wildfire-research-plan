@@ -48,6 +48,31 @@ class ContextTransport(nn.Module):
         return x + m*self.residual(torch.cat([x,*contexts],dim=1))
 
 
+class MissingnessExperts(nn.Module):
+    """Late residual experts selected by the observed corruption regime."""
+    def __init__(self, channels):
+        super().__init__()
+        self.trunk = nn.Sequential(
+            nn.Conv2d(channels+2,16,3,padding=1), nn.SiLU(),
+        )
+        self.fire = nn.Conv2d(16,1,1)
+        self.spatial = nn.Conv2d(16,1,1)
+        for head in (self.fire,self.spatial):
+            nn.init.zeros_(head.weight)
+            nn.init.zeros_(head.bias)
+
+    def forward(self, decoded, spatial, fire_invalid):
+        shape = decoded.shape[-2:]
+        spatial = F.interpolate(spatial,shape,mode='nearest')
+        fire_only = F.interpolate((fire_invalid-spatial).clamp(0,1),shape,mode='nearest')
+        features = self.trunk(torch.cat((decoded,spatial,fire_only),dim=1))
+        # The experts can correct the whole forecast, while the local mask tells
+        # them where evidence was removed. Clean samples activate neither head.
+        spatial_active = spatial.amax(dim=(-2,-1),keepdim=True)
+        fire_active = fire_only.amax(dim=(-2,-1),keepdim=True)
+        return spatial_active*self.spatial(features) + fire_active*self.fire(features)
+
+
 class Forecaster(nn.Module):
     def __init__(self, base, history, method):
         super().__init__()
@@ -64,6 +89,9 @@ class Forecaster(nn.Module):
             nn.init.zeros_(self.transition.bias)
             with torch.no_grad():
                 self.transition.bias[0] = -3.
+        if method == 'missingness_experts':
+            decoder_channels = base.model.segmentation_head[0].in_channels
+            self.missingness_experts = MissingnessExperts(decoder_channels)
 
     def features(self, x):
         encoder = self.base.model.encoder
@@ -85,6 +113,8 @@ class Forecaster(nn.Module):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]
         decoded = self.base.model.decoder(*features)
         logits = self.base.model.segmentation_head(decoded)
+        if self.method == 'missingness_experts':
+            logits = logits + self.missingness_experts(decoded,spatial,fire_invalid)
         aux = None
         if self.method in ('transition','transition_decoupled','context_transition'):
             base_logits = logits
