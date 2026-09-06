@@ -549,8 +549,9 @@ branch.
 
 The bounded claim is forecast-aware restoration of missing environmental
 drivers, not novelty of masked reconstruction itself. Yang et al.'s
-[wildfire reconstruction pipeline](https://arxiv.org/abs/2603.09042)
-reconstructs fire maps before a separate forecaster and assumes environmental
+[wildfire reconstruction pipeline](https://arxiv.org/abs/2603.09042) and its
+[official implementation](https://github.com/LS-Wireless/Robust-Wildfire-Forecasting)
+reconstruct fire maps before a separate forecaster and assume environmental
 fields remain observed. General masked spatiotemporal pretraining is covered by
 [STD-MAE](https://arxiv.org/abs/2312.00516), while
 [DIS2](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html)
