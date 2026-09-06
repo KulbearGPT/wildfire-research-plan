@@ -16,7 +16,7 @@ from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','transition','transition_decoupled','context_transition','missingness_experts'),required=True)
+    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','transition','transition_decoupled','context_transition','missingness_experts'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -80,7 +80,7 @@ def main():
                     iterator = iter(loader); packed,target,clean = next(iterator)
                 packed,target,clean = packed.cuda(),target.cuda().long(),clean.cuda()
                 clean_logits = None
-                if a.method in ('global_consistency','local_consistency'):
+                if a.method in ('global_consistency','local_consistency','impact_consistency'):
                     zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
                     clean_logits = model(torch.cat((clean,zeros),dim=2)).squeeze(1)
                 if a.smoke and micro == 0:
@@ -112,11 +112,19 @@ def main():
                     per_pixel_kl += (1-probability)*(torch.nn.functional.logsigmoid(-teacher_logits)-torch.nn.functional.logsigmoid(-logits.squeeze(1)))
                     if a.method == 'global_consistency':
                         consistency = per_pixel_kl.mean()
-                    else:
+                    elif a.method == 'local_consistency':
                         invalid = packed[:,-1,-2:].amax(dim=1)
                         confidence = (2*probability-1).abs()
                         weight = invalid*(.5+.5*confidence)
                         consistency = (per_pixel_kl*weight).sum()/weight.sum().clamp_min(1.)
+                    else:
+                        # Counterfactual impact can extend outside the missing
+                        # input support; normalize it independently per sample.
+                        impact = (probability-logits.squeeze(1).sigmoid().detach()).abs()
+                        mean_impact = impact.mean(dim=(-2,-1),keepdim=True)
+                        weight = torch.where(mean_impact > 0,
+                            impact/mean_impact.clamp_min(1e-6),torch.zeros_like(impact))
+                        consistency = (per_pixel_kl*weight).mean()
                     loss = loss + .1*consistency
                 if distill_teacher is not None:
                     with torch.no_grad():
