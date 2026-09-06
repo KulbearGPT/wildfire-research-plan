@@ -155,6 +155,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | seed-0 submitted | seed-0 submitted |
+| X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | implementation ready | implementation ready |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -168,6 +169,17 @@ register is otherwise closed until these results resolve. A failed row may
 receive one mechanism-driven repair, but no unrelated direction is added merely
 to accumulate positive experiments. Only rows with positive matched evidence
 in both history settings can advance to seed confirmation.
+
+X23 was registered while X17/X19/X22 were still unresolved. It is the smallest
+evidence-driven reuse of X8: train only on spatial BlockDrop examples exactly
+as X14 does, pair each corrupt view with a no-gradient clean view, and add the
+same fixed `0.1` counterfactual-impact-weighted Bernoulli KL. Unlike X8's
+FireDrop specialist, the missing support now matches X14's successful spatial
+regime. The predictor and inference route are unchanged, so attribution is
+strictly X23 versus X14; adoption additionally requires the routed result to
+beat fresh ERM in both histories. There is no consistency-weight sweep. The
+seed-0 gate remains primary `>= +.005` versus X14 in both T settings with the
+M00 guardrail; failure in either history closes X23 before confirmation.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.

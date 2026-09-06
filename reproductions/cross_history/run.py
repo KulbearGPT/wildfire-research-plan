@@ -18,7 +18,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','cosine_erm','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
+    p.add_argument('--method',choices=('control','cosine_erm','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -50,7 +50,7 @@ def main():
     corruption_probability = .5 if a.method == 'balanced_corruption' else .3
     fire_specialist = a.method in ('fire_specialist','fire_specialist_impact')
     block_specialist = a.method in (
-        'block_specialist','block_specialist_dynamic','block_specialist_context',
+        'block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context',
         'block_specialist_severity_adapter')
     fire_probability = 1. if fire_specialist else (0. if block_specialist else corruption_probability)
     block_probability = 1. if block_specialist else (0. if fire_specialist else corruption_probability)
@@ -98,7 +98,7 @@ def main():
                     iterator = iter(loader); packed,target,clean = next(iterator)
                 packed,target,clean = packed.cuda(),target.cuda().long(),clean.cuda()
                 clean_logits = None
-                if a.method in ('global_consistency','local_consistency','impact_consistency','fire_specialist_impact','erm_impact_consistency'):
+                if a.method in ('global_consistency','local_consistency','impact_consistency','fire_specialist_impact','block_specialist_impact','erm_impact_consistency'):
                     zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
                     clean_input = torch.cat((clean,zeros),dim=2)
                     if a.method == 'erm_impact_consistency':
