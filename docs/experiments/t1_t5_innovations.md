@@ -156,6 +156,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | seed-0 submitted | seed-0 submitted |
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | implementation ready | implementation ready |
+| X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -187,6 +188,22 @@ smokes and T1 formal use 10GB. T5 formal uses 20GB because the identical
 paired clean/corrupt path previously exceeded 10GB at physical batch 64.
 The formal jobs retain 3000 steps and the X14 sampling recipe; no computation
 was performed on the login node.
+
+X24 was considered after the complete-route diagnostic localized the remaining
+magnitude gap to FireDrop. The proposed frozen clean teacher would supervise a
+FireDrop-only student with output KL. The pre-implementation fatal-flaw audit
+rejects it as an independent direction: M3L already distills a full-modality
+teacher into a masked-modality student
+([Maheshwari et al., 2024](https://openaccess.thecvf.com/content/WACV2024/html/Maheshwari_Missing_Modality_Robustness_in_Semi-Supervised_Multi-Modal_Semantic_Segmentation_WACV_2024_paper.html));
+MDA-KD anchors a missing-frame student to a complete-input teacher
+([Dai et al., 2024](https://openaccess.thecvf.com/content/CVPR2024/html/Dai_A_Study_of_Dropout-Induced_Modality_Bias_on_Robustness_to_Missing_CVPR_2024_paper.html));
+and DIS2 includes stop-gradient full-input feature and logit distillation for
+missing remote-sensing modalities
+([Kieu et al., 2026](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html)).
+Its only narrower change would be X8's already-tested impact weighting, while
+the repository's frozen feature-distillation X2 has negative T1 evidence.
+Therefore X24 adds neither a defensible mechanism axis nor enough new evidence
+to justify another job; it is not implemented or submitted.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
