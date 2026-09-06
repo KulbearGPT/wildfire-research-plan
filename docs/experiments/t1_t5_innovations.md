@@ -135,6 +135,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X3 latent transition | fresh continuation | yes | +.011831 | -.009413; decoupled repair pending |
 | X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
+| X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | pending | pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 This register is now closed until these results are resolved. A failed row may
@@ -304,6 +305,14 @@ smaller than X3 alone (`+.011831`), the registered interaction criterion fails.
 T5 composition `21212156` was cancelled at 37 minutes to free its slice; a
 second-history result cannot rescue a composition already non-complementary in
 T1, and the composition is not counted as an independent direction.
+
+After X1/X2/X4 and the composition closed, X6 registers one data-coverage
+direction without changing the research problem. Independent FireDrop and
+BlockDrop probabilities increase from 0.3 to 0.5, changing the expected
+clean/fire/block/both mix from 49/21/21/9% to 25/25/25/25%. Model, focal loss,
+3000-step optimizer contract, effective batch, and evaluation remain matched.
+This is the campaign's single corruption-rate tuning contribution; probability
+0.5 is fixed by symmetry and will not be searched.
 
 Composition smoke jobs T1/T5 `21212079/21212081` completed successfully in
 25/49 seconds. They covered a real batch, backward pass and inference; initial

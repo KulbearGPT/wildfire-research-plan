@@ -39,13 +39,15 @@ def base_dataset(history, *, year=None):
 
 
 class PairedDataset:
-    def __init__(self, base, history):
+    def __init__(self, base, history, *, fire_probability=.3, block_probability=.3):
         self.base = base
         self.columns = tuple(range(40)) if history == 1 else MULTI_FEATURES
         self.dynamic = tuple(i for i, c in enumerate(self.columns) if c in PROCESSED_DYNAMIC_NON_FIRE)
         self.fire_value = self.columns.index(38)
         self.fire_binary = self.columns.index(39)
         self.missing_value = float(-base.means[0,22,0,0] / base.stds[0,22,0,0])
+        self.fire_probability = fire_probability
+        self.block_probability = block_probability
 
     def __len__(self):
         return len(self.base)
@@ -53,8 +55,8 @@ class PairedDataset:
     def __getitem__(self, index):
         clean, target = self.base[index]
         x = clean.clone()
-        fire_drop = bool(np.random.random() < 0.3)
-        block_drop = bool(np.random.random() < 0.3)
+        fire_drop = bool(np.random.random() < self.fire_probability)
+        block_drop = bool(np.random.random() < self.block_probability)
         fraction = 0.25 if np.random.random() < 0.5 else 0.5
         digest = np.random.bytes(32).hex()
         invalid = torch.zeros(clean.shape[-2:], dtype=torch.bool)

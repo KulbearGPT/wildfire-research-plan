@@ -16,7 +16,7 @@ from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','transition','transition_decoupled','context_transition'),required=True)
+    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','transition','transition_decoupled','context_transition'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -42,8 +42,11 @@ def main():
     model = Forecaster(base,a.history,a.method).cuda()
     if a.method == 'context_adapter':
         model.base.requires_grad_(False)
+    corruption_probability = .5 if a.method == 'balanced_corruption' else .3
     metadata = dict(history=a.history,method=a.method,seed=a.seed,steps=a.steps,
                     physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
+                    fire_dropout_probability=corruption_probability,
+                    block_dropout_probability=corruption_probability,
                     initial_checkpoint=initial,job=os.environ['SLURM_JOB_ID'],
                     parameters=sum(x.numel() for x in model.parameters()),
                     trainable_parameters=sum(x.numel() for x in model.parameters() if x.requires_grad))
@@ -54,7 +57,8 @@ def main():
             raise ValueError('checkpoint method/history mismatch')
         model.load_state_dict(saved['state_dict'],strict=True)
     else:
-        dataset = PairedDataset(base_dataset(a.history),a.history)
+        dataset = PairedDataset(base_dataset(a.history),a.history,
+            fire_probability=corruption_probability,block_probability=corruption_probability)
         loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,shuffle=True,
             generator=torch.Generator().manual_seed(a.seed),num_workers=a.workers,
             pin_memory=True,persistent_workers=a.workers>0,drop_last=True)
