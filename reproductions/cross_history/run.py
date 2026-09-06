@@ -1,0 +1,123 @@
+"""Small matched experiment driver; execute only inside a Slurm allocation."""
+import argparse
+import copy
+import json
+import os
+import random
+import time
+from pathlib import Path
+import numpy as np
+import torch
+from .data import setup, base_dataset, PairedDataset, evaluation_dataset
+from .models import initial_payload, make_base, Forecaster, feature_loss, transition_loss
+from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument('--history',type=int,choices=(1,5),required=True)
+    p.add_argument('--method',choices=('control','context','distill','transition'),required=True)
+    p.add_argument('--seed',type=int,default=0)
+    p.add_argument('--steps',type=int,default=3000)
+    p.add_argument('--batch-size',type=int,default=16)
+    p.add_argument('--workers',type=int,default=3)
+    p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--smoke',action='store_true')
+    p.add_argument('--evaluate-only',type=Path)
+    p.add_argument('--year',type=int,choices=(2021,2022,2023),default=2021)
+    a = p.parse_args()
+    if not os.environ.get('SLURM_JOB_ID') or not torch.cuda.is_available():
+        raise RuntimeError('GPU Slurm allocation required')
+    if 64 % a.batch_size:
+        raise ValueError('physical batch must divide effective batch 64')
+    if a.year != 2021 and not a.evaluate_only:
+        raise ValueError('training screens are 2021-only')
+    torch.set_num_threads(max(1,int(os.environ.get('SLURM_CPUS_PER_TASK','4'))-a.workers))
+    setup()
+    random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
+    a.output.mkdir(parents=True,exist_ok=False)
+    payload, initial = initial_payload(a.history)
+    base = make_base(a.history,payload['hyper_parameters'])
+    base.load_state_dict(payload['state_dict'],strict=True)
+    model = Forecaster(base,a.history,a.method).cuda()
+    metadata = dict(history=a.history,method=a.method,seed=a.seed,steps=a.steps,
+                    physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
+                    initial_checkpoint=initial,job=os.environ['SLURM_JOB_ID'],
+                    parameters=sum(x.numel() for x in model.parameters()))
+    (a.output/'started.json').write_text(json.dumps(metadata,indent=2))
+    if a.evaluate_only:
+        saved = torch.load(a.evaluate_only,map_location='cpu',weights_only=False)
+        if saved['history'] != a.history or saved['method'] != a.method:
+            raise ValueError('checkpoint method/history mismatch')
+        model.load_state_dict(saved['state_dict'],strict=True)
+    else:
+        dataset = PairedDataset(base_dataset(a.history),a.history)
+        loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,shuffle=True,
+            generator=torch.Generator().manual_seed(a.seed),num_workers=a.workers,
+            pin_memory=True,persistent_workers=a.workers>0,drop_last=True)
+        teacher = copy.deepcopy(model).eval().requires_grad_(False) if a.method == 'distill' else None
+        # Equal data and model RNG across methods; module construction must not
+        # shift augmentation or temporal dropout relative to the control.
+        random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
+        iterator = iter(loader)
+        optimizer = torch.optim.AdamW(model.parameters(),lr=.001)
+        start = time.monotonic()
+        for step in range(1,(1 if a.smoke else a.steps)+1):
+            model.train(); optimizer.zero_grad(set_to_none=True)
+            loss_sum = 0.
+            for micro in range(64//a.batch_size):
+                try: packed,target,clean = next(iterator)
+                except StopIteration:
+                    iterator = iter(loader); packed,target,clean = next(iterator)
+                packed,target,clean = packed.cuda(),target.cuda().long(),clean.cuda()
+                if a.smoke and micro == 0:
+                    model.eval()
+                    with torch.no_grad():
+                        expected = base(packed[:,:,:model.channels])
+                        actual = model(packed)
+                        difference = (expected-actual).abs().max().item()
+                    print(f'INITIAL_EQUIVALENCE_MAX={difference}',flush=True)
+                    if difference > (1e-3 if a.method == 'transition' else 1e-5):
+                        raise RuntimeError('initial forward mismatch')
+                    model.train()
+                logits,features,aux = model(packed,details=True)
+                loss = model.compute_loss(logits.squeeze(1),target)
+                if teacher is not None:
+                    with torch.no_grad():
+                        tf = teacher.features(clean)[-3:]
+                    loss = loss + .05*feature_loss(features,tf,packed[:,-1,-1:],target)
+                if aux is not None:
+                    loss = loss + transition_loss(aux,clean,target)
+                if not torch.isfinite(loss): raise RuntimeError('nonfinite training loss')
+                (loss/(64//a.batch_size)).backward()
+                loss_sum += loss.detach().item()/(64//a.batch_size)
+            optimizer.step()
+            if step == 1 or step % 100 == 0:
+                print(json.dumps(dict(step=step,loss=loss_sum,seconds=time.monotonic()-start,
+                    peak_gpu_bytes=torch.cuda.max_memory_allocated())),flush=True)
+        metadata['state_dict'] = model.cpu().state_dict()
+        metadata['hyper_parameters'] = dict(base.hparams)
+        torch.save(metadata,a.output/'checkpoint.pt')
+        model.cuda()
+        if a.smoke:
+            sample_x,sample_y = evaluation_dataset(a.history,2021,'M06')[0]
+            model.eval()
+            with torch.no_grad(): result = model(sample_x[None].cuda())
+            assert result.shape[-2:] == sample_y.shape[-2:]
+            (a.output/'smoke.json').write_text(json.dumps(dict(status='pass',history=a.history,method=a.method)))
+            return
+        del loader,iterator,optimizer,metadata['state_dict']
+        if teacher is not None: del teacher
+    results = {}
+    for scenario in ('M00','M01','M06','M07'):
+        dataset = evaluation_dataset(a.history,a.year,scenario)
+        loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,num_workers=a.workers,pin_memory=True)
+        metrics = evaluate_batches(model,loader,device=torch.device('cuda'))
+        results[scenario] = metrics
+        (a.output/f'{scenario}.json').write_text(json.dumps(metrics,indent=2))
+        print(json.dumps(dict(scenario=scenario,metrics=metrics)),flush=True)
+    (a.output/'summary.json').write_text(json.dumps(dict(history=a.history,method=a.method,
+        seed=a.seed,year=a.year,results=results),indent=2))
+
+
+if __name__ == '__main__': main()
