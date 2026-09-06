@@ -18,7 +18,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
+    p.add_argument('--method',choices=('control','cosine_erm','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -56,6 +56,7 @@ def main():
     block_probability = 1. if block_specialist else (0. if fire_specialist else corruption_probability)
     metadata = dict(history=a.history,method=a.method,seed=a.seed,steps=a.steps,
                     physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
+                    learning_rate_schedule=('cosine-to-zero' if a.method == 'cosine_erm' else 'constant'),
                     fire_dropout_probability=fire_probability,
                     block_dropout_probability=block_probability,
                     block_fraction=a.block_fraction,
@@ -83,6 +84,8 @@ def main():
         random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
         iterator = iter(loader)
         optimizer = torch.optim.AdamW((x for x in model.parameters() if x.requires_grad),lr=.001)
+        scheduler = (torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,T_max=a.steps)
+                     if a.method == 'cosine_erm' else None)
         start = time.monotonic()
         for step in range(1,(1 if a.smoke else a.steps)+1):
             model.train()
@@ -170,6 +173,7 @@ def main():
                 (loss/(64//a.batch_size)).backward()
                 loss_sum += loss.detach().item()/(64//a.batch_size)
             optimizer.step()
+            if scheduler is not None: scheduler.step()
             if step == 1 or step % 100 == 0:
                 print(json.dumps(dict(step=step,loss=loss_sum,seconds=time.monotonic()-start,
                     peak_gpu_bytes=torch.cuda.max_memory_allocated())),flush=True)
@@ -185,6 +189,7 @@ def main():
             (a.output/'smoke.json').write_text(json.dumps(dict(status='pass',history=a.history,method=a.method)))
             return
         del loader,iterator,optimizer,metadata['state_dict']
+        if scheduler is not None: del scheduler
         if distill_teacher is not None: del distill_teacher
     results = {}
     for scenario in ('M00','M01','M06','M07'):

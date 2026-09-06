@@ -154,6 +154,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | seed-0 pending | seed-0 pending |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | seed-0 pending | seed-0 pending |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
+| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | frozen, not submitted | frozen, not submitted |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -1091,3 +1092,15 @@ D4/D12 already test local reliability tokens. Separating FireDrop from
 BlockDrop changes the application granularity but not the core mechanism, so
 the novelty defect is critical for an independent contribution. No code or
 Slurm job was created.
+
+X22 is the campaign's sole optimizer/tuning contribution. A post-hoc read of
+the logged 100-step snapshots does not support blindly extending training:
+mean sampled T1 loss over steps 2100--3000 is `.005259`, but T5 is `.006373`
+versus `.005755` over steps 1100--2000. X22 therefore retains AdamW, initial
+learning rate `.001`, batch 64, corruption distribution, initialization, and
+3000 updates, while applying one standard cosine decay to zero. It adds no
+model parameter and is explicitly a training-recipe result, not a novel
+method. The fixed gate is primary AP `>=+.005` versus constant-LR ERM in each
+history with M00 `>=-.010`; one seed-0 pair decides whether it advances, with
+no alternative schedule, endpoint, warmup, or longer-budget sweep. The code is
+frozen while higher-priority confirmation jobs occupy the queue.
