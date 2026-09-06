@@ -130,15 +130,18 @@ D2/D13 controls are context, not proof of any new direction.
 | Direction | Matched attribution control | Independent contribution? | T1 seed-0 | T5 seed-0 |
 | --- | --- | --- | --- | --- |
 | X1 context transport | fresh continuation; observable spatial route | yes | routed +.005954 | routed +.000874; cross-T reject |
-| X1 frozen adapter | frozen initial B3/B5 | alternative X1 implementation | pending | pending |
+| X1 frozen adapter | frozen initial B3/B5 plus fresh continuation | alternative X1 implementation | +.012151 vs frozen, -.013537 vs fresh; reject | cancelled after T1 adoption failure |
 | X2 feature distillation | fresh continuation | yes | original and block-local rejected | running |
 | X3 latent transition | fresh continuation | yes | +.011831 | -.009413; decoupled repair pending |
 | X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | pending | pending |
+| X7 missingness-conditioned residual experts | fresh continuation | yes; late regime-specific correction module | smoke `21214411` | smoke `21214412` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
-This register is now closed until these results are resolved. A failed row may
+X7 was preregistered and implemented while the already submitted screens were
+running, before seeing their outcomes. It is the only added fallback: the
+register is otherwise closed until these results resolve. A failed row may
 receive one mechanism-driven repair, but no unrelated direction is added merely
 to accumulate positive experiments. Only rows with positive matched evidence
 in both history settings can advance to seed confirmation.
@@ -360,6 +363,16 @@ After T5 adapter remained pending for over ten minutes with a 02:41 estimate,
 test-only 10/20GB and 2/3-hour probes all returned 02:59. The existing 10GB
 job was retained because it starts earlier and uses fewer resources.
 
+T1 adapter `21212420` completed at M00/M01/M06/M07
+`.558318/.276890/.362162/.189388`. It improves primary AP by `+.012151`
+and block AP by `+.018227` over the frozen B3 attribution control, with exact
+unchanged M00/M01 as designed. However, it is `-.013537` primary and
+`-.004593` block below the fresh 3000-step continuation; M00 is also
+`-.026747` lower. It therefore demonstrates that X1 itself learns useful
+spatial corrections, but fails the preregistered total-system adoption rule.
+T5 adapter `21212421` was cancelled at 19:14 to release its slice because no
+T5 result could rescue a method already ineligible on T1. X1 is closed.
+
 Frozen attribution reference T1 `21212205` completed with M00/M01/M06/M07 AP
 `.558318/.276890/.343010/.172086`. T5 reference `21212206` failed before a
 complete result because a DataLoader worker exceeded the requested 32GB host
@@ -388,3 +401,15 @@ can no longer be reported as a cross-history pass. It separately reports
 requirement for at least one direction, not a gate imposed on all three.
 `run.py --evaluate-only`
 already performs immutable 2022/2023 evaluation from a selected checkpoint.
+
+X7 uses two zero-initialized late residual experts selected by the observed
+corruption masks: one for global FireDrop evidence and one for a spatial data
+hole. A shared 3x3 decoder bottleneck receives decoder features plus both local
+masks, so each expert can adjust the full forecast while knowing where evidence
+was removed. Neither expert activates on a clean sample, and the untrained
+model is exactly the base forecast. This is distinct from X1 encoder transport,
+X3 fire-state marginalization, and loss/data-distribution candidates X5/X6.
+The same small module is used unchanged for both histories. Implementation is
+`76cd083`; real-data one-batch T1/T5 smoke jobs are `21214411/21214412` on
+10GB H100 slices. Formal screens are submitted only after both smoke paths
+pass, using the unchanged fresh-continuation control.
