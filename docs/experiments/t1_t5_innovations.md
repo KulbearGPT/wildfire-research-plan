@@ -1166,6 +1166,11 @@ probes had the same immediate start estimate, so the minimum 10GB profile was
 selected. T1/T5 smoke jobs are `21227409/21227410`; dependency-gated seed-0
 screens are `21227412/21227413`. T5 alone requests 128GB host memory for the
 known evaluation footprint.
+The T1 10GB formal request subsequently remained pending for more than
+30 minutes with a `10:51` start estimate. A same-command 20GB probe estimated
+`10:09`, so the unstarted `21227412` was cancelled and replaced within the
+2x rule by `21228612`. The source commit, seed, optimizer, batch, steps, host
+memory, and time limit are unchanged; only its GPU slice is larger.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
