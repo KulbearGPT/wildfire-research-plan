@@ -262,7 +262,10 @@ mechanism. It is an alternative implementation of X1, not an additional
 contribution. Its fixed recipe uses the same 3000 steps and optimizer settings.
 Its attribution control is the same frozen initial checkpoint evaluated by the
 cross-history runner with zero update steps; comparison to the fresh full-model
-continuation will be reported only as a secondary total-system comparison.
+continuation is a required total-system adoption check. The adapter can be
+attributed against frozen B3/B5, but it counts toward the goal only if it also
+has positive primary delta against the fresh 3000-step control in both T
+settings; a cheaper but weaker model does not satisfy the performance goal.
 Adapter smoke jobs T1/T5 `21212176/21212177` completed with exit `0:0` and
 exact initial output agreement. Peak allocation was only 0.51/0.86GB at batch
 16, so full seed-0 screens `21212420/21212421` use the minimum 10GB H100 slice
@@ -277,6 +280,9 @@ already-used 64GB, with zero training steps and a pinned source revision.
 The four T1 values match the source B3 `results-2021/summary.json` exactly at
 full stored precision, independently confirming that the new wrapper and AP
 path introduce no evaluation drift before adapter attribution.
+For scale, the T1 fresh control improves primary AP over frozen B3 by
+`.025688`; the adapter must recover that gap before it can count as a net
+performance contribution, regardless of its parameter efficiency.
 The archived B5 reference fixes the expected T5 values at
 M00/M01/M06/M07 `.557715/.288461/.336086/.158021`; replacement `21212423`
 must reproduce them at full stored precision before its use as a control.
