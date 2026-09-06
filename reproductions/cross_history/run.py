@@ -18,7 +18,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct'),required=True)
+    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','fire_specialist_impact','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -45,10 +45,12 @@ def main():
     if a.method == 'context_adapter':
         model.base.requires_grad_(False)
     corruption_probability = .5 if a.method == 'balanced_corruption' else .3
+    fire_probability = 1. if a.method == 'fire_specialist_impact' else corruption_probability
+    block_probability = 0. if a.method == 'fire_specialist_impact' else corruption_probability
     metadata = dict(history=a.history,method=a.method,seed=a.seed,steps=a.steps,
                     physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
-                    fire_dropout_probability=corruption_probability,
-                    block_dropout_probability=corruption_probability,
+                    fire_dropout_probability=fire_probability,
+                    block_dropout_probability=block_probability,
                     reconstruction_weight=(RECONSTRUCTION_WEIGHT if a.method == 'dynamic_inpaint_reconstruct' else 0.),
                     initial_checkpoint=initial,job=os.environ['SLURM_JOB_ID'],
                     parameters=sum(x.numel() for x in model.parameters()),
@@ -61,7 +63,7 @@ def main():
         model.load_state_dict(saved['state_dict'],strict=True)
     else:
         dataset = PairedDataset(base_dataset(a.history),a.history,
-            fire_probability=corruption_probability,block_probability=corruption_probability)
+            fire_probability=fire_probability,block_probability=block_probability)
         loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,shuffle=True,
             generator=torch.Generator().manual_seed(a.seed),num_workers=a.workers,
             pin_memory=True,persistent_workers=a.workers>0,drop_last=True)
@@ -83,7 +85,7 @@ def main():
                     iterator = iter(loader); packed,target,clean = next(iterator)
                 packed,target,clean = packed.cuda(),target.cuda().long(),clean.cuda()
                 clean_logits = None
-                if a.method in ('global_consistency','local_consistency','impact_consistency'):
+                if a.method in ('global_consistency','local_consistency','impact_consistency','fire_specialist_impact'):
                     zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
                     clean_logits = model(torch.cat((clean,zeros),dim=2)).squeeze(1)
                 if a.smoke and micro == 0:

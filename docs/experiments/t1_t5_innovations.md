@@ -141,6 +141,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
 | X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; confirming | routed +.005883; confirming |
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | smoke pending | smoke pending |
+| X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | smoke pending | smoke pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -660,3 +661,26 @@ loss observed in X10 rather than start a tuning sweep. Attribution is X11
 versus matched X10; usefulness for the final system additionally requires a
 positive routed delta versus fresh control in both T settings. One T1 and one
 T5 one-step smoke will precede the seed-0 screens, with no broad test suite.
+
+X12 targets the separate magnitude requirement through the dominant complete
+active-fire-history failure. It continues the same initial model for the same
+3000 steps using FireDrop on every corrupt branch, no BlockDrop, and X8's fixed
+counterfactual-impact consistency objective; evaluation routes the candidate
+only to observable M01. The recipe and `0.1` consistency coefficient are fixed
+before results. If and only if it passes both seed-0 history screens, a plain
+FireDrop-specialist continuation will isolate the consistency term from the
+specialization schedule before confirmation. This can count as at most one
+training-strategy contribution, not as architectural novelty.
+
+A pre-run idea audit rates this `Accept with Revisions, pending the validation
+experiment`: effectiveness and missingness robustness have high mechanism-based
+potential because retained R1 improved routed M01 substantially and X8 is
+positive across histories, while novelty is deliberately bounded. Modality
+dropout is established in missing-input learning, including
+[Lau et al.](https://arxiv.org/abs/1908.06683) and
+[Woo et al.](https://ojs.aaai.org/index.php/AAAI/article/view/25378); recent
+sequential modality dropout also combines dropout with optional reconstruction
+([Yang and Zhang](https://arxiv.org/abs/2608.10240)). Therefore X12 is justified
+as a cheap, falsifiable magnitude probe for this wildfire failure regime, not a
+general missing-modality method claim. Failure modes are saturation of M01 from
+the already robust B3 initialization and loss of useful mixed-corruption replay.
