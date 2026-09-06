@@ -140,6 +140,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | reliable: +.003979/+.004533/+.004699 in 2021/22/23 | reliable: +.005834/+.003820/+.005231 in 2021/22/23 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
 | X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; confirming | routed +.005883; confirming |
+| X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | smoke pending | smoke pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -645,3 +646,17 @@ Prospective confirmation jobs use the identical source `52cf5b8`, batch 64,
 10GB slices. T5 X10 uses 20GB GPU and 128GB host memory, based solely on the
 observed training peak and post-training cgroup failure; no scientific setting
 changes.
+
+X11 is preregistered while the X10 confirmation jobs wait for allocation. It
+tests whether X10's missing-driver correction becomes more reliable when the
+latent correction is identifiable from the paired clean training input. X11
+uses exactly the X10 architecture and forecast loss, and adds a `0.002`-weight
+Smooth-L1 objective only on dynamic non-fire values inside the synthetically
+removed spatial block. Observed pixels, static fields, active-fire fields, and
+the inference graph are unchanged; M00/M01 still bypass the restoration by
+construction. The coefficient is fixed before any X11 result and is intended
+to keep reconstruction auxiliary to the roughly `0.003`--`0.007` forecast
+loss observed in X10 rather than start a tuning sweep. Attribution is X11
+versus matched X10; usefulness for the final system additionally requires a
+positive routed delta versus fresh control in both T settings. One T1 and one
+T5 one-step smoke will precede the seed-0 screens, with no broad test suite.

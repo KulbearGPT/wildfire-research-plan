@@ -12,11 +12,13 @@ from .data import setup, base_dataset, PairedDataset, evaluation_dataset
 from .models import initial_payload, make_base, Forecaster, feature_loss, transition_loss
 from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 
+RECONSTRUCTION_WEIGHT = .002
+
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint'),required=True)
+    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -47,6 +49,7 @@ def main():
                     physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
                     fire_dropout_probability=corruption_probability,
                     block_dropout_probability=corruption_probability,
+                    reconstruction_weight=(RECONSTRUCTION_WEIGHT if a.method == 'dynamic_inpaint_reconstruct' else 0.),
                     initial_checkpoint=initial,job=os.environ['SLURM_JOB_ID'],
                     parameters=sum(x.numel() for x in model.parameters()),
                     trainable_parameters=sum(x.numel() for x in model.parameters() if x.requires_grad))
@@ -94,7 +97,7 @@ def main():
                         raise RuntimeError('initial forward mismatch')
                     model.train()
                     if a.method == 'context_adapter': model.base.eval()
-                logits,features,aux = model(packed,details=True)
+                logits,features,aux,reconstruction = model(packed,details=True)
                 if a.method in ('risk','risk_strong'):
                     from torchvision.ops import sigmoid_focal_loss
                     raw_loss = sigmoid_focal_loss(logits.squeeze(1),target.float(),
@@ -134,6 +137,14 @@ def main():
                         spatial_only=a.method == 'distill_block')
                 if aux is not None:
                     loss = loss + transition_loss(aux,clean,target)
+                if reconstruction is not None:
+                    dynamic = model.dynamic_inpaint.dynamic
+                    spatial = packed[:,-1,model.channels:model.channels+1]
+                    weight = spatial[:,None].expand(-1,model.history,len(dynamic),-1,-1)
+                    error = torch.nn.functional.smooth_l1_loss(
+                        reconstruction,clean[:,:,dynamic],reduction='none')
+                    reconstruction_loss = (error*weight).sum()/weight.sum().clamp_min(1.)
+                    loss = loss + RECONSTRUCTION_WEIGHT*reconstruction_loss
                 if not torch.isfinite(loss): raise RuntimeError('nonfinite training loss')
                 (loss/(64//a.batch_size)).backward()
                 loss_sum += loss.detach().item()/(64//a.batch_size)
