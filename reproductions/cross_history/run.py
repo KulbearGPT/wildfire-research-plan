@@ -18,7 +18,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
+    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -95,9 +95,17 @@ def main():
                     iterator = iter(loader); packed,target,clean = next(iterator)
                 packed,target,clean = packed.cuda(),target.cuda().long(),clean.cuda()
                 clean_logits = None
-                if a.method in ('global_consistency','local_consistency','impact_consistency','fire_specialist_impact'):
+                if a.method in ('global_consistency','local_consistency','impact_consistency','fire_specialist_impact','erm_impact_consistency'):
                     zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
-                    clean_logits = model(torch.cat((clean,zeros),dim=2)).squeeze(1)
+                    clean_input = torch.cat((clean,zeros),dim=2)
+                    if a.method == 'erm_impact_consistency':
+                        # Preserve ERM's supervised branch and BatchNorm updates:
+                        # the clean view is only an online, inference-mode teacher.
+                        model.eval()
+                        with torch.no_grad(): clean_logits = model(clean_input).squeeze(1)
+                        model.train()
+                    else:
+                        clean_logits = model(clean_input).squeeze(1)
                 if a.smoke and micro == 0:
                     model.eval()
                     with torch.no_grad():
@@ -120,7 +128,8 @@ def main():
                 else:
                     loss = model.compute_loss(logits.squeeze(1),target)
                 if clean_logits is not None:
-                    loss = .5*(model.compute_loss(clean_logits,target)+loss)
+                    if a.method != 'erm_impact_consistency':
+                        loss = .5*(model.compute_loss(clean_logits,target)+loss)
                     teacher_logits = clean_logits.detach()
                     probability = teacher_logits.sigmoid()
                     per_pixel_kl = probability*(torch.nn.functional.logsigmoid(teacher_logits)-torch.nn.functional.logsigmoid(logits.squeeze(1)))

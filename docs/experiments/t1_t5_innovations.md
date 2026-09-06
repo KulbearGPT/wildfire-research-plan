@@ -1027,3 +1027,20 @@ reused; novelty and effectiveness remain the decisive risks.
 T1/T5 real-data smoke jobs are `21225918/21225919`; dependency-gated seed-0
 screens are `21225920/21225921`. All request the minimum 10GB GPU slice, while
 T5 uses 128GB host memory only on the formal job for post-training evaluation.
+
+X20 is the loss-side follow-up to X8's completion audit. X8 established that
+counterfactual-impact weighting itself transfers across T=1/T=5 relative to
+the unchanged global-consistency control, but its paired clean/corrupt
+supervised objective made the final routed system regress against fresh ERM
+on T=1/2022. X20 therefore leaves ERM's corrupt-sample supervised loss and
+sampling distribution unchanged. A clean inference-mode view supplies only a
+detached online teacher; the same fixed 0.1 impact-weighted Bernoulli KL is
+added on the corrupt prediction. Running-stat updates also remain confined to
+the ERM branch. The method has no inference-time parameters or routing.
+
+This is one bounded repair, not a hyperparameter search. Seed 0 advances only
+if primary AP improves by at least `+.005` over fresh ERM in both histories,
+with M00 no worse than `-.010`; otherwise the loss direction stops. If it
+passes, seeds 1/2 and fixed 2022/2023 evaluation use the same recipe. X20 and
+X8 are one impact-consistency contribution family and cannot be counted as
+two independent innovations.
