@@ -1003,9 +1003,13 @@ and downsampled spatial-invalidity mask; observed missing fraction selects a
 separate zero-initialized mild (`<=.375`) or severe (`>.375`) residual head.
 The correction is applied only inside an observed hole, so M00/M01 bypass it.
 Training otherwise exactly matches X14's BlockDrop-only schedule and 3000-step
-contract. The closest-work audit found dynamic modality experts in SimMLM,
-dynamic adapters in Synergistic Prompting, and multi-resolution compensation
-in DIS2. Therefore X19 does not claim any of those general mechanisms as new;
+contract. The closest-work audit found dynamic modality experts in
+[SimMLM](https://openaccess.thecvf.com/content/ICCV2025/html/Li_SimMLM_A_Simple_Framework_for_Multi-modal_Learning_with_Missing_Modality_ICCV_2025_paper.html),
+dynamic adapters in
+[Synergistic Prompting](https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_Synergistic_Prompting_for_Robust_Visual_Recognition_with_Missing_Modalities_ICCV_2025_paper.html),
+and multi-resolution compensation in
+[DIS2](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html).
+Therefore X19 does not claim any of those general mechanisms as new;
 its bounded candidate contribution is within-modality spatial-severity routing
 of content-dependent latent corrections for wildfire forecasting.
 
