@@ -19,6 +19,9 @@ The paired target-date contract is exact. The upstream dataset sets
 `target_index = in_fire_index + skip_initial_samples + T`, which equals
 `in_fire_index + 6` for both T=1 and T=5. Thus both settings evaluate the same
 event-relative target dates; only their available history and model differ.
+The authoritative B3 and archived B5 2021 summaries both contain exactly
+3,181 samples and 52,117,504 evaluated pixels per scenario, ruling out a
+history-dependent sample-count difference in the paired comparison.
 
 Fresh matched controls and candidates start from corrected B3 (T1) or B5
 (T5), run 3000 AdamW steps, lr=0.001, effective batch 64, identical seed,
