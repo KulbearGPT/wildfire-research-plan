@@ -55,7 +55,7 @@ class Forecaster(nn.Module):
         self.history = history
         self.method = method
         self.channels = 40 if history == 1 else 33
-        if method in ('context','context_transition'):
+        if method in ('context','context_adapter','context_transition'):
             self.transport = nn.ModuleList([ContextTransport(c) for c in base.model.encoder.out_channels[1:]])
         if method in ('transition','context_transition'):
             decoder_channels = base.model.segmentation_head[0].in_channels
@@ -81,7 +81,7 @@ class Forecaster(nn.Module):
         spatial = packed[:,-1,self.channels:self.channels+1]
         fire_invalid = packed[:,-1,self.channels+1:self.channels+2]
         features = self.features(x)
-        if self.method in ('context','context_transition'):
+        if self.method in ('context','context_adapter','context_transition'):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]
         decoded = self.base.model.decoder(*features)
         logits = self.base.model.segmentation_head(decoded)

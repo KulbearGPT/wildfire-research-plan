@@ -16,7 +16,7 @@ from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','context','distill','distill_block','risk','local_consistency','transition','context_transition'),required=True)
+    p.add_argument('--method',choices=('control','context','context_adapter','distill','distill_block','risk','local_consistency','transition','context_transition'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -40,10 +40,13 @@ def main():
     base = make_base(a.history,payload['hyper_parameters'])
     base.load_state_dict(payload['state_dict'],strict=True)
     model = Forecaster(base,a.history,a.method).cuda()
+    if a.method == 'context_adapter':
+        model.base.requires_grad_(False)
     metadata = dict(history=a.history,method=a.method,seed=a.seed,steps=a.steps,
                     physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
                     initial_checkpoint=initial,job=os.environ['SLURM_JOB_ID'],
-                    parameters=sum(x.numel() for x in model.parameters()))
+                    parameters=sum(x.numel() for x in model.parameters()),
+                    trainable_parameters=sum(x.numel() for x in model.parameters() if x.requires_grad))
     (a.output/'started.json').write_text(json.dumps(metadata,indent=2))
     if a.evaluate_only:
         saved = torch.load(a.evaluate_only,map_location='cpu',weights_only=False)
@@ -60,10 +63,12 @@ def main():
         # shift augmentation or temporal dropout relative to the control.
         random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
         iterator = iter(loader)
-        optimizer = torch.optim.AdamW(model.parameters(),lr=.001)
+        optimizer = torch.optim.AdamW((x for x in model.parameters() if x.requires_grad),lr=.001)
         start = time.monotonic()
         for step in range(1,(1 if a.smoke else a.steps)+1):
-            model.train(); optimizer.zero_grad(set_to_none=True)
+            model.train()
+            if a.method == 'context_adapter': model.base.eval()
+            optimizer.zero_grad(set_to_none=True)
             loss_sum = 0.
             for micro in range(64//a.batch_size):
                 try: packed,target,clean = next(iterator)

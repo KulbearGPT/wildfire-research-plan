@@ -159,6 +159,24 @@ It will be screened only after the component implementations pass a real-data
 smoke check; a gain smaller than the better component will be treated as
 negative interaction rather than retuned post hoc.
 
+Composition smoke jobs T1/T5 `21212079/21212081` completed successfully in
+25/49 seconds. They covered a real batch, backward pass and inference; initial
+maximum output deviations were `2.38e-7/4.77e-7`. Full seed-0 composition
+screens are `21212155/21212156` with the same 3000-step contract.
+
+Local-consistency jobs `21211876/21211877` remained pending for ten minutes
+with an estimated 04:17 start. Test-only probes of 10/20/40GB slices and
+75/90/180-minute limits all returned 04:28, so the original 20GB jobs were
+retained; changing resources would not start sooner.
+
+The registered `context_adapter` variant freezes the entire initial forecaster
+and trains only the zero-initialized context-transport layers. Because every
+transport residual is multiplied by the observed spatial-hole mask, this
+single checkpoint is exactly the original control whenever no spatial hole is
+present; it removes the two-checkpoint routing caveat and isolates the X1
+mechanism. It is an alternative implementation of X1, not an additional
+contribution. Its fixed recipe uses the same 3000 steps and optimizer settings.
+
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
 computes individual, primary, block, clean-guardrail and multi-run statistics,
