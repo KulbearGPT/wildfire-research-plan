@@ -129,7 +129,7 @@ D2/D13 controls are context, not proof of any new direction.
 
 | Direction | Matched attribution control | Independent contribution? | T1 seed-0 | T5 seed-0 |
 | --- | --- | --- | --- | --- |
-| X1 context transport | fresh continuation; observable spatial route | yes | routed pass, +.005954 | running |
+| X1 context transport | fresh continuation; observable spatial route | yes | routed pass, +.005954 | complete; awaiting recovered control |
 | X1 frozen adapter | frozen initial B3/B5 | alternative X1 implementation | pending | pending |
 | X2 feature distillation | fresh continuation | yes | original and block-local rejected | running |
 | X3 latent transition | fresh continuation | yes | pass, +.011831 | running |
@@ -240,6 +240,9 @@ T5 control/distill/transition completed all 3000 updates and saved checkpoints
 but exhausted 64GB host RAM during the old batch-64 evaluation path. Their
 batch-16 evaluate-only recovery jobs are `21213246/21213247/21213248`; no
 training is repeated. T5 context completed its full evaluation directly.
+Its absolute M00/M01/M06/M07 AP is
+`.597931/.340972/.388529/.200548`; no matched delta is claimed until the fresh
+control recovery finishes.
 
 Follow-up seed-0 screens: T1 `distill_block/risk` are
 `21211826/21211827`; T5 equivalents are `21211828/21211829`. They use the
