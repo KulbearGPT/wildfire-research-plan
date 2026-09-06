@@ -14,6 +14,12 @@ using history adjustment six and M00/M01/M06/M07. T changes architecture and
 feature selection too: this demonstrates transfer across existing settings,
 not a pure history-length causal effect.
 
+The paired target-date contract is exact. The upstream dataset sets
+`skip_initial_samples = 6 - T`; the controlled wrapper then uses
+`target_index = in_fire_index + skip_initial_samples + T`, which equals
+`in_fire_index + 6` for both T=1 and T=5. Thus both settings evaluate the same
+event-relative target dates; only their available history and model differ.
+
 Fresh matched controls and candidates start from corrected B3 (T1) or B5
 (T5), run 3000 AdamW steps, lr=0.001, effective batch 64, identical seed,
 augmentation, normalization, sampling, and loss. Final-step checkpoint only.
