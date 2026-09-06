@@ -258,6 +258,8 @@ but computes auxiliary state/conditional supervision from detached decoder
 features. Auxiliary gradients update only the 51-parameter head, while the
 main forecast loss remains end-to-end; this directly tests whether T5 failure
 came from auxiliary distortion of the shared temporal representation.
+Fixed T1/T5 decoupled jobs are `21213902/21213903`, pinned to commit
+`7277cb8`; this is X3's only repair and uses the post-OOM evaluation cap.
 
 Original T5 distillation AP is `.586798/.355377/.380389/.191319`, for primary
 delta `-.007855` and block delta `-.007372`. Together with both failed T1
