@@ -171,9 +171,12 @@ pending behind the active first wave.
 The registered fallback `local_consistency` transfers the mainline D1 idea
 but localizes Bernoulli KL to the union of observed FireDrop/BlockDrop pixels
 and weights it by clean-view teacher confidence. The student still uses the
-same corrupt supervised loss as the fresh control, and inference has no extra
-parameters or clean view. This tests a distinct spatially targeted objective,
-not another architecture or general-purpose hyperparameter search.
+exact D1 paired supervised loss, `0.5 * (clean + corrupt)`, and inference has
+no extra parameters or clean view. A same-runner `global_consistency` control
+ports D1 unchanged to both history settings; local consistency counts only if
+it improves over that control, not merely over ERM. This tests an incremental
+spatially targeted objective, not another architecture or general-purpose
+hyperparameter search.
 
 The registered composition `context_transition` combines X1 feature transport
 with X3 transition marginalization without changing either component or its

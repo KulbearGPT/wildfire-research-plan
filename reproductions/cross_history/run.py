@@ -16,7 +16,7 @@ from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','context','context_adapter','distill','distill_block','risk','local_consistency','transition','context_transition'),required=True)
+    p.add_argument('--method',choices=('control','context','context_adapter','distill','distill_block','risk','global_consistency','local_consistency','transition','context_transition'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -58,7 +58,7 @@ def main():
         loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,shuffle=True,
             generator=torch.Generator().manual_seed(a.seed),num_workers=a.workers,
             pin_memory=True,persistent_workers=a.workers>0,drop_last=True)
-        teacher = copy.deepcopy(model).eval().requires_grad_(False) if a.method.startswith('distill') else None
+        distill_teacher = copy.deepcopy(model).eval().requires_grad_(False) if a.method.startswith('distill') else None
         # Equal data and model RNG across methods; module construction must not
         # shift augmentation or temporal dropout relative to the control.
         random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
@@ -75,6 +75,10 @@ def main():
                 except StopIteration:
                     iterator = iter(loader); packed,target,clean = next(iterator)
                 packed,target,clean = packed.cuda(),target.cuda().long(),clean.cuda()
+                clean_logits = None
+                if a.method in ('global_consistency','local_consistency'):
+                    zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
+                    clean_logits = model(torch.cat((clean,zeros),dim=2)).squeeze(1)
                 if a.smoke and micro == 0:
                     model.eval()
                     with torch.no_grad():
@@ -95,21 +99,23 @@ def main():
                     loss = (raw_loss*risk_weight).sum()/risk_weight.sum()
                 else:
                     loss = model.compute_loss(logits.squeeze(1),target)
-                if a.method == 'local_consistency':
-                    zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
-                    clean_logits = model(torch.cat((clean,zeros),dim=2)).squeeze(1)
-                    teacher = clean_logits.detach()
-                    probability = teacher.sigmoid()
-                    per_pixel_kl = probability*(torch.nn.functional.logsigmoid(teacher)-torch.nn.functional.logsigmoid(logits.squeeze(1)))
-                    per_pixel_kl += (1-probability)*(torch.nn.functional.logsigmoid(-teacher)-torch.nn.functional.logsigmoid(-logits.squeeze(1)))
-                    invalid = packed[:,-1,-2:].amax(dim=1)
-                    confidence = (2*probability-1).abs()
-                    weight = invalid*(.5+.5*confidence)
-                    localized = (per_pixel_kl*weight).sum()/weight.sum().clamp_min(1.)
-                    loss = loss + .1*localized
-                if teacher is not None:
+                if clean_logits is not None:
+                    loss = .5*(model.compute_loss(clean_logits,target)+loss)
+                    teacher_logits = clean_logits.detach()
+                    probability = teacher_logits.sigmoid()
+                    per_pixel_kl = probability*(torch.nn.functional.logsigmoid(teacher_logits)-torch.nn.functional.logsigmoid(logits.squeeze(1)))
+                    per_pixel_kl += (1-probability)*(torch.nn.functional.logsigmoid(-teacher_logits)-torch.nn.functional.logsigmoid(-logits.squeeze(1)))
+                    if a.method == 'global_consistency':
+                        consistency = per_pixel_kl.mean()
+                    else:
+                        invalid = packed[:,-1,-2:].amax(dim=1)
+                        confidence = (2*probability-1).abs()
+                        weight = invalid*(.5+.5*confidence)
+                        consistency = (per_pixel_kl*weight).sum()/weight.sum().clamp_min(1.)
+                    loss = loss + .1*consistency
+                if distill_teacher is not None:
                     with torch.no_grad():
-                        tf = teacher.features(clean)[-3:]
+                        tf = distill_teacher.features(clean)[-3:]
                     missing = packed[:,-1,-2:-1] if a.method == 'distill_block' else packed[:,-1,-1:]
                     loss = loss + .05*feature_loss(features,tf,missing,target,
                         spatial_only=a.method == 'distill_block')
@@ -134,7 +140,7 @@ def main():
             (a.output/'smoke.json').write_text(json.dumps(dict(status='pass',history=a.history,method=a.method)))
             return
         del loader,iterator,optimizer,metadata['state_dict']
-        if teacher is not None: del teacher
+        if distill_teacher is not None: del distill_teacher
     results = {}
     for scenario in ('M00','M01','M06','M07'):
         dataset = evaluation_dataset(a.history,a.year,scenario)
