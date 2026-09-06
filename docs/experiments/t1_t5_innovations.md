@@ -214,6 +214,9 @@ starting. Same-resource probes without a partition constraint were immediately
 placeable. Replacement T1/T5 smoke jobs are `21237308/21237309`, with formal
 dependencies `21237310/21237311`; scientific settings and pinned source
 `a89c06f` are unchanged.
+When this second 10GB chain also remained pending, the <=2x probe favored a
+20GB slice. The still-unstarted chain was replaced by smoke
+`21238407/21238408` and formal dependencies `21238409/21238410`.
 
 X24 was considered after the complete-route diagnostic localized the remaining
 magnitude gap to FireDrop. The proposed frozen clean teacher would supervise a
@@ -1052,6 +1055,10 @@ authoritative seven results. Only the 17 unstarted jobs
 10GB replacements are `21237312`--`21237328`. A same-resource test-only probe
 was immediately placeable. Every replacement points to the same checkpoint,
 seed, block fraction and year, so this is scheduling repair only.
+After a further >20-minute wait, 20GB/15-minute probes became immediately
+placeable while the 10GB jobs had no start time. The 17 still-unstarted first
+replacements were therefore exchanged, within the 2x rule, for
+`21238415`--`21238431`. The seven completed 10GB results remain unchanged.
 
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
@@ -1159,6 +1166,10 @@ versus X14. Prospective seed-1/2 confirmation jobs are T1/T5
 BlockDrop-only schedule, 3000 steps and minimum 10GB slices. Artifacts:
 `cross-history-analysis/x19-vs-erm-seed0.json` and
 `cross-history-analysis/x19-vs-x14-seed0.json`.
+Those 10GB confirmations remained pending beyond ten minutes; matched 20GB
+probes were immediately placeable. The unstarted jobs were replaced by
+seed-1 T1/T5 `21238399/21238400` and seed-2 `21238403/21238404`, changing no
+scientific setting.
 
 X20 is the loss-side follow-up to X8's completion audit. X8 established that
 counterfactual-impact weighting itself transfers across T=1/T=5 relative to
@@ -1238,6 +1249,8 @@ scenario deltas positive and `screen_pass=true` in
 `cross-history-analysis/x22-cosine-erm-seed0.json`. Prospective seed-1/2 jobs
 are T1/T5 `21237300/21237301` and `21237304/21237305`; no schedule variant or
 longer run is opened.
+After the same >10-minute queue diagnosis, their 20GB replacements are
+seed-1 T1/T5 `21238401/21238402` and seed-2 `21238405/21238406`.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
