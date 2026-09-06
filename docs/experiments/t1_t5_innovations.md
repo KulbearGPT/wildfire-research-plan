@@ -1181,3 +1181,13 @@ comparators. This system-level artifact cannot establish component novelty or
 attribution; each component must first pass its own frozen closest-control
 gate. In particular, X20 is eligible for this composition only if its raw
 two-history gate passes, so scenario routing cannot rescue a failed X20.
+
+A diagnostic confirmation composition uses X8 for M01 and X17 for M06/M07,
+with fresh ERM for M00. It improves primary AP by `+.010261` at T=1 and
+`+.028866` at T=5 over three seeds; the six-row mean is `+.019564`, narrowly
+below the frozen `+.020` magnitude target by `.000436`. The artifact
+`cross-history-analysis/x8-x17-complete-route-confirmation.json` has
+`confirmation_pass=true` but is not final evidence: X8 remains only
+attribution-valid on its own, and the complete route still requires the fixed
+X17 2022/2023 evaluations. This audit indicates that the remaining magnitude
+gap is primarily the FireDrop component rather than block robustness.
