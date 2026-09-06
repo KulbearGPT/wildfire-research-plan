@@ -134,6 +134,12 @@ was exactly zero for control/context/distill and `2.38e-7` (T1) / `4.77e-7`
 0.70GB (T1) and 1.97GB (T5); formal screens therefore use physical/effective
 batch 64 on 20GB slices to reduce wall time, identically for all variants.
 
+Capacity is not the source of a large-model advantage. The base models contain
+14,444,241 (T1) and 14,704,785 (T5) parameters. X1 adds 66,640 parameters in
+either setting (about 0.46%/0.45%); its adapter variant trains only those
+66,640. X3 adds only 51 parameters. Their composition adds 66,691. Risk,
+distillation, and both consistency objectives add no inference parameters.
+
 Next action: run eight 3000-step jobs (four methods x two T), compare the three
 candidates with their fresh same-history controls, and stop failed directions
 before confirmation.
