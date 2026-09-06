@@ -131,9 +131,9 @@ D2/D13 controls are context, not proof of any new direction.
 | --- | --- | --- | --- | --- |
 | X1 context transport | fresh continuation; observable spatial route | yes | routed pass, +.005954 | running |
 | X1 frozen adapter | frozen initial B3/B5 | alternative X1 implementation | pending | pending |
-| X2 feature distillation | fresh continuation | yes | original rejected; block-local revision running | running |
+| X2 feature distillation | fresh continuation | yes | original and block-local rejected | running |
 | X3 latent transition | fresh continuation | yes | pass, +.011831 | running |
-| X4 spatial risk weighting | fresh continuation | one training-objective contribution | running | running |
+| X4 spatial risk weighting | fresh continuation | one training-objective contribution | 3x fails gate; fixed 5x repair pending | running |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | pending | pending |
 
@@ -189,6 +189,8 @@ evidence supports a faster start under the resource rule.
 | fresh control | .585066 | .308313 | .370825 | .189912 | .289683 | — | — |
 | context | .593755 | .304883 | .385249 | .193349 | .294494 | +.004811 | +.008930 |
 | distill | .584336 | .286450 | .372542 | .194401 | .284464 | -.005219 | +.003103 |
+| distill_block | .578880 | .271517 | .365712 | .191154 | .276127 | -.013556 | -.001936 |
+| risk 3x | .583485 | .276321 | .377532 | .193596 | .282483 | -.007201 | +.005195 |
 | transition | .584545 | .330915 | .377251 | .196377 | .301514 | +.011831 | +.006445 |
 
 Transition passes the T1 gate. Context misses the all-corruption threshold by
@@ -213,6 +215,14 @@ identically zero whenever the true spatial-hole mask is empty; FireDrop-only
 and clean samples retain the control objective. The frozen teacher consumes
 the exactly paired clean tensor, while only the three deepest normalized
 features inside the same spatial mask contribute to the auxiliary term.
+
+The T1 block-local distillation revision nevertheless fails: primary delta
+`-.013556` and block delta `-.001936`; X2 is rejected without another repair.
+Risk 3x has block delta `+.005195`, but its observable routed primary delta is
+only `+.003463`, below the `+.005` gate. This directional result registers the
+single allowed X4 repair, `risk_strong`: identical code and loss with spatial
+weight increased from 3x to 5x. There is no weight grid; X4 remains one tuning
+contribution and is rejected if this fixed repair misses the gate.
 
 Queue correction: original T5 distill/transition `21211225/21211226` were
 cancelled pending after >10 minutes. Same-resource replacements

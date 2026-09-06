@@ -16,7 +16,7 @@ from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','context','context_adapter','distill','distill_block','risk','global_consistency','local_consistency','transition','context_transition'),required=True)
+    p.add_argument('--method',choices=('control','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','transition','context_transition'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -91,12 +91,12 @@ def main():
                     model.train()
                     if a.method == 'context_adapter': model.base.eval()
                 logits,features,aux = model(packed,details=True)
-                if a.method == 'risk':
+                if a.method in ('risk','risk_strong'):
                     from torchvision.ops import sigmoid_focal_loss
                     raw_loss = sigmoid_focal_loss(logits.squeeze(1),target.float(),
                         alpha=1-float(base.hparams.pos_class_weight),gamma=2,reduction='none')
                     spatial = packed[:,-1,-2]
-                    risk_weight = 1 + 2*spatial
+                    risk_weight = 1 + (4 if a.method == 'risk_strong' else 2)*spatial
                     loss = (raw_loss*risk_weight).sum()/risk_weight.sum()
                 else:
                     loss = model.compute_loss(logits.squeeze(1),target)
