@@ -149,10 +149,10 @@ D2/D13 controls are context, not proof of any new direction.
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | reliable: +.005467/+.001416/+.006792 in 2021/22/23 | reliable: +.016685/+.011528/+.005485 in 2021/22/23 |
 | X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
-| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | +.011338 vs ERM; block +.003808 vs X14 | +.010416 vs ERM; block +.004456 vs X14; confirming |
+| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | 3-seed +.007392 vs ERM; block +.002887 vs X14 | +.010416 vs ERM; block +.004456 vs X14; confirming |
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
-| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | seed-0 pending | seed-0 pending |
-| X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | seed-0 pending | seed-0 pending |
+| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | seed-0 running | seed-0 running |
+| X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | frozen, not submitted | frozen, not submitted |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
@@ -963,6 +963,15 @@ estimates 42--100 minutes away, Slurm test-only probes placed equivalent 20GB
 requests immediately. The unstarted T1 jobs were therefore replaced, within
 the 2x resource rule, by fixed-25/fixed-50 seed-1 `21226523/21226524` and
 seed-2 `21226525/21226526`. The already running T5 jobs are unchanged.
+All four replacements completed successfully. Across seeds 0/1/2, the T1
+severity route improves fresh ERM primary by
+`+.011338/+.007649/+.003189` and block mean by
+`+.017008/+.011473/+.004783`. The three-seed means are `+.007392` primary
+and `+.011088` block. Relative to matched mixed-severity X14, block deltas are
+`+.003808/+.005086/-.000232`, for a positive three-seed mechanism mean
+`+.002887`. The frozen rule aggregates the predetermined seeds rather than
+requiring every seed to be positive, so X17 passes T1 confirmation. Artifact:
+`cross-history-analysis/x17-severity-factorized-t1-confirmation-partial.json`.
 
 An evidence-reuse audit tested whether the unchanged global clean--corrupt
 consistency control could itself be promoted against ordinary ERM. This uses
@@ -1050,6 +1059,9 @@ estimated starts 88--100 minutes away. An equivalent 20GB test-only probe was
 placeable immediately, so all four unstarted jobs were replaced within the 2x
 rule: smoke `21226527/21226528`, dependency-gated seed-0
 `21226529/21226530`. The implementation and recipe remain pinned to `8f4a052`.
+Both replacement smoke jobs completed in 23/26 seconds with exit `0:0`, exact
+initial equivalence (`0.0`), successful backward/inference, and peak GPU
+allocation 0.63/1.59GB. The dependency-gated T1/T5 seed-0 screens then started.
 
 X20 is the loss-side follow-up to X8's completion audit. X8 established that
 counterfactual-impact weighting itself transfers across T=1/T=5 relative to
@@ -1077,6 +1089,14 @@ after the older 10GB smoke jobs showed estimated waits well beyond ten minutes.
 Both smoke jobs completed in 26 seconds with exit `0:0`, exact initial
 equivalence (`0.0`), successful backward/inference, and peak GPU allocation
 of 0.63/1.75GB. Both formal screens then started after about four minutes.
+T1 completed with deltas versus fresh ERM of M00/M01/M06/M07
+`-.006519/+.009667/-.009673/-.011027`: primary `-.003678` and block mean
+`-.010350`. This fails the raw two-history gate. Although FireDrop improves,
+the preregistered rule forbids scenario routing from rescuing a failed X20,
+and the old X8 family already showed held-out FireDrop instability. T5 job
+`21226335` was cancelled at 33:48 to release its slice; there is no coefficient
+or teacher variant sweep. Artifact:
+`cross-history-analysis/x20-erm-impact-t1-partial.json`.
 
 X21 was considered while those jobs waited: a type-separated affine
 calibration of the first convolution driven by local valid-pixel coverage.
