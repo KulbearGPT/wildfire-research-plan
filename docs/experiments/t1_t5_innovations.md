@@ -137,9 +137,9 @@ D2/D13 controls are context, not proof of any new direction.
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203 | +.002426 with M00 -.017601; reject |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
-| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | routed +.007239; confirm s1/s2 | routed +.005132; confirm s1/s2 |
-| X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | screen `21217161` | screen `21217162` |
-| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | screen `21217349` after smoke | screen `21217350` after smoke |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | 3-seed routed mean +.003979 | routed +.005132; confirmation running |
+| X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
+| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; pass | screen `21217350` running |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -517,12 +517,13 @@ are seed 1 T1 global/X8 `21217000/21217001`, T5 global/X8
 `21217004/21217005/21217006/21217007`. T1 uses 10GB slices and T5 uses 20GB;
 all retain physical batch 64, 3000 steps, and batch-16 evaluation.
 
-The prospective T1 seed-1 pair completed. Global/X8 M01 AP is
-`.308054/.319033`, so the frozen FireDrop route improves primary AP by
-`+.003660` with exact routed M00/M06/M07 deltas of zero. This is smaller than
-seed 0's `+.007239` but has the required positive sign; it is partial
-confirmation evidence only and does not change the recipe or gate. Seed 2 and
-both T5 pairs remain required before a confirmation decision.
+The prospective T1 seed-1 global/X8 M01 AP is `.308054/.319033`, and seed 2 is
+`.316577/.319691`. The fixed FireDrop route therefore improves primary AP by
+`+.003660` and `+.001038`, respectively, with exact routed M00/M06/M07 deltas
+of zero. Together with seed 0's `+.007239`, all three seeds are positive and
+their mean is `+.003979`. X8 passes T1 confirmation without changing its
+recipe. Both T5 prospective pairs remain required for the cross-history
+confirmation decision.
 
 X9 spatial-impact FiLM addresses the failure revealed by X5-local: the future
 forecast pixels affected by a missing input block need not lie inside that
@@ -581,3 +582,19 @@ Both smokes completed in 21/26 seconds with exact initial equivalence,
 successful backward/inference, and peak allocations of 0.84/2.79GB. Their
 dependencies released both formal screens, which started without queue delay;
 the T5 training path currently peaks at 10.49GB, validating the 20GB request.
+
+X9 T1 completed at M00/M01/M06/M07
+`.589071/.312300/.371126/.187955`. Under its declared spatial route, only
+M06/M07 count and change by `+.000300/-.001957`; block mean is `-.000828` and
+primary is `-.000552` versus fresh control. The modulation mechanism is thus
+beaten by its matched baseline rather than merely missing a threshold. X9 is
+rejected, and its still-running T5 screen `21217162` was cancelled at 28:17
+because no second-history result could restore a direction that must improve
+both histories.
+
+X10 T1 completed at M00/M01/M06/M07
+`.593509/.309703/.383099/.199782`. The fixed spatial route uses the fresh
+control for M00/M01 and yields M06/M07 deltas `+.012274/+.009870`, block mean
+`+.011072`, and primary `+.007381`. It passes the T1 seed-0 screen with exact
+routed clean preservation. The unchanged T5 job `21217350` remains the only
+missing screen evidence before X10 can advance.
