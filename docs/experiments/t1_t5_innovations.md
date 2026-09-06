@@ -153,6 +153,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
 | X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | seed-0 pending | seed-0 pending |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | seed-0 pending | seed-0 pending |
+| X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -1062,3 +1063,18 @@ request for the 20GB profile, so the successful submissions leave partition
 selection to Nibi; Slurm resolved them to `gpubase_bygpu_b1,gpubackfill`.
 The 20GB profile is exactly twice the minimum 10GB slice and was selected only
 after the older 10GB smoke jobs showed estimated waits well beyond ten minutes.
+
+X21 was considered while those jobs waited: a type-separated affine
+calibration of the first convolution driven by local valid-pixel coverage.
+The fatal-flaw audit rejected it before implementation. Partial-convolution
+padding already reweights convolution outputs by valid coverage
+([Liu et al., 2018](https://arxiv.org/abs/1811.11718)); gated convolution makes
+the spatial/channel selection learnable
+([Yu et al., 2019](https://arxiv.org/abs/1806.03589)); and MADF generates
+location-specific filters from the mask and pairs them with point-wise affine
+normalization
+([Zhu et al., 2021](https://arxiv.org/abs/2104.13743)). Within this repository,
+D4/D12 already test local reliability tokens. Separating FireDrop from
+BlockDrop changes the application granularity but not the core mechanism, so
+the novelty defect is critical for an independent contribution. No code or
+Slurm job was created.
