@@ -143,6 +143,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
+| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | smoke pending | smoke pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -772,3 +773,17 @@ near-threshold result: propagated smooth values are more harmful to the model
 than its trained zero-fill convention. X13 is rejected; recovery `21221884`
 was cancelled before allocation, and the quantitative artifact is
 `cross-history-analysis/x13-normalized-inpaint-t1.json`.
+
+X14 is the fixed magnitude-target probe after complete FireDrop specialization
+saturated. It continues the same B3/B5 initialization for 3000 steps with
+FireDrop probability `0`, BlockDrop probability `1`, the unchanged optimizer,
+batch, model, and forecast loss. The candidate is routed only to observable
+M06/M07; control supplies M00/M01. This is distinct from X6, which changed both
+corruption probabilities together from `.3` to `.5`, and from X10, which adds
+a restoration module under the original mixed sampling. It can count as at
+most one training-strategy contribution. The seed-0 gate remains routed
+primary `>=+.005` in both histories, while the separate `+.02` target is only
+reported if actually reached. Closest missing-modality work already establishes
+dropout training, so no architectural novelty is claimed. Failure modes are
+over-specialization to synthetic block geometry and saturation from the B3/B5
+mixed-corruption initialization.
