@@ -1020,3 +1020,6 @@ baseline that a compact model must beat. A failure ends the adapter without a
 width, depth, or threshold sweep. Compute/data/engineering risk is low because
 the existing paired tensors, reliability masks, runner, and Nibi slices are
 reused; novelty and effectiveness remain the decisive risks.
+T1/T5 real-data smoke jobs are `21225918/21225919`; dependency-gated seed-0
+screens are `21225920/21225921`. All request the minimum 10GB GPU slice, while
+T5 uses 128GB host memory only on the formal job for post-training evaluation.
