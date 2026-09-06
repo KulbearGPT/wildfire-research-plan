@@ -133,9 +133,9 @@ D2/D13 controls are context, not proof of any new direction.
 | X1 frozen adapter | frozen initial B3/B5 | alternative X1 implementation | pending | pending |
 | X2 feature distillation | fresh continuation | yes | original and block-local rejected | running |
 | X3 latent transition | fresh continuation | yes | +.011831 | -.009413; decoupled repair pending |
-| X4 spatial risk weighting | fresh continuation | one training-objective contribution | 3x fails gate; fixed 5x repair pending | running |
+| X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
-| X1+X3 composition | fresh continuation / component ablations | no; interaction only | pending | pending |
+| X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 This register is now closed until these results are resolved. A failed row may
 receive one mechanism-driven repair, but no unrelated direction is added merely
@@ -230,6 +230,10 @@ weight increased from 3x to 5x. There is no weight grid; X4 remains one tuning
 contribution and is rejected if this fixed repair misses the gate.
 The fixed T1/T5 5x jobs are `21213326/21213327`, pinned to commit `2385e76`
 and using the minimum 10GB GPU slice supported by observed peak usage.
+Before meaningful computation, the completed T5 3x result showed routed
+primary `-.001659` and block mean `-.002489`, contradicting the stronger-weight
+repair mechanism. Both 5x jobs were cancelled after 11 seconds and X4 closed;
+no 5x result is claimed.
 
 Queue correction: original T5 distill/transition `21211225/21211226` were
 cancelled pending after >10 minutes. Same-resource replacements
@@ -269,6 +273,11 @@ Follow-up seed-0 screens: T1 `distill_block/risk` are
 `21211826/21211827`; T5 equivalents are `21211828/21211829`. They use the
 same 20GB slice and matched train/evaluation contract and were initially
 pending behind the active first wave.
+T5 risk completed at M00/M01/M06/M07
+`.590760/.338343/.385910/.195566`, yielding raw primary `-.010277` and block
+mean `-.002489`. T5 distill_block completed training but its old batch-64
+evaluation exhausted host RAM; no recovery was submitted because T1 had
+already rejected X2 on both primary and block metrics.
 
 The registered fallback `local_consistency` transfers the mainline D1 idea
 but localizes Bernoulli KL to the union of observed FireDrop/BlockDrop pixels
@@ -288,6 +297,13 @@ are complementary and whether their total gain reaches the requested +.02.
 It will be screened only after the component implementations pass a real-data
 smoke check; a gain smaller than the better component will be treated as
 negative interaction rather than retuned post hoc.
+
+T1 composition AP is `.592994/.319796/.380838/.193017`, giving primary
+`+.008200` and block mean `+.006559` versus fresh control. Because this is
+smaller than X3 alone (`+.011831`), the registered interaction criterion fails.
+T5 composition `21212156` was cancelled at 37 minutes to free its slice; a
+second-history result cannot rescue a composition already non-complementary in
+T1, and the composition is not counted as an independent direction.
 
 Composition smoke jobs T1/T5 `21212079/21212081` completed successfully in
 25/49 seconds. They covered a real batch, backward pass and inference; initial
