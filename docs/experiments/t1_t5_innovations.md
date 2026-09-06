@@ -129,7 +129,7 @@ D2/D13 controls are context, not proof of any new direction.
 
 | Direction | Matched attribution control | Independent contribution? | T1 seed-0 | T5 seed-0 |
 | --- | --- | --- | --- | --- |
-| X1 context transport | fresh continuation; observable spatial route | yes | routed pass, +.005954 | complete; awaiting recovered control |
+| X1 context transport | fresh continuation; observable spatial route | yes | routed +.005954 | routed +.000874; cross-T reject |
 | X1 frozen adapter | frozen initial B3/B5 | alternative X1 implementation | pending | pending |
 | X2 feature distillation | fresh continuation | yes | original and block-local rejected | running |
 | X3 latent transition | fresh continuation | yes | pass, +.011831 | running |
@@ -243,6 +243,12 @@ training is repeated. T5 context completed its full evaluation directly.
 Its absolute M00/M01/M06/M07 AP is
 `.597931/.340972/.388529/.200548`; no matched delta is claimed until the fresh
 control recovery finishes.
+
+Recovered T5 fresh-control M00/M01/M06/M07 AP is
+`.595552/.364196/.389710/.196743`. Context changes raw primary by `-.006867`
+and block mean by `+.001312`; its declared spatial route changes primary by
+only `+.000874`. Thus X1 full-model context fails the T5 `+.005` screen and is
+not advanced. Across T1/T5, its routed mean primary delta is `+.003414`.
 
 Follow-up seed-0 screens: T1 `distill_block/risk` are
 `21211826/21211827`; T5 equivalents are `21211828/21211829`. They use the
