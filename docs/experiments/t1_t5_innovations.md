@@ -138,13 +138,15 @@ D2/D13 controls are context, not proof of any new direction.
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203 | +.002426 with M00 -.017601; reject |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | routed +.007239; confirm s1/s2 | routed +.005132; confirm s1/s2 |
+| X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | smoke `21217053` | smoke `21217054` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
 running, before seeing their outcomes. The subsequent archive audit below
 invalidated its independence before a screen ran. X8 is a justified reopening
-of quantitatively promising D5 under the new cross-history objective; the
-register is otherwise closed until these results resolve. A failed row may
+of quantitatively promising D5 under the new cross-history objective. X9 was
+registered only after X6 closed and targets the remaining block-specific gap;
+the register is otherwise closed until these results resolve. A failed row may
 receive one mechanism-driven repair, but no unrelated direction is added merely
 to accumulate positive experiments. Only rows with positive matched evidence
 in both history settings can advance to seed confirmation.
@@ -504,3 +506,16 @@ are seed 1 T1 global/X8 `21217000/21217001`, T5 global/X8
 `21217002/21217003`; seed 2 equivalents are
 `21217004/21217005/21217006/21217007`. T1 uses 10GB slices and T5 uses 20GB;
 all retain physical batch 64, 3000 steps, and batch-16 evaluation.
+
+X9 spatial-impact FiLM addresses the failure revealed by X5-local: the future
+forecast pixels affected by a missing input block need not lie inside that
+block. At the final decoder resolution, it pools feature context only over
+observed locations and combines it with the observed missing fraction. A
+zero-initialized 832-parameter MLP produces per-channel scale and bias that
+modulate the full decoder map only when a spatial hole exists. The initial
+function is exactly the base model; M00 and complete FireDrop bypass the module.
+Its declared evaluation is therefore the observable spatial route (candidate
+for M06/M07, fresh continuation for M00/M01). This differs from X1's residual
+transport inside encoder holes, D12's local fixed channel prompts, and archived
+D7's forecast-logit residual. Implementation is `a39fc53`; real-data T1/T5
+one-batch smoke jobs are `21217053/21217054` on 10GB slices.
