@@ -137,3 +137,8 @@ Queue correction: original T5 distill/transition `21211225/21211226` were
 cancelled pending after >10 minutes. Same-resource replacements
 `21211486/21211487` started immediately alongside T5 control/context
 `21211223/21211224`.
+
+Follow-up seed-0 screens: T1 `distill_block/risk` are
+`21211826/21211827`; T5 equivalents are `21211828/21211829`. They use the
+same 20GB slice and matched train/evaluation contract and were initially
+pending behind the active first wave.
