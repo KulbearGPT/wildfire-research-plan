@@ -144,7 +144,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
 | X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | routed +.008800; T1 pass | screening |
-| X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | screening | screening |
+| X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -831,3 +831,9 @@ T1/T5 smoke jobs `21222667/21222668` completed successfully with exact initial
 equivalence, backward/checkpoint/inference coverage, and peak GPU allocations
 `0.59/1.55GB`. Formal seed-0 screens `21222911/21222912` use batch 64, 3000
 steps, minimum 10GB slices, and 64/128GB host memory for T1/T5 respectively.
+T1 completed at M00/M01/M06/M07 `.580461/.294675/.365261/.189261`.
+Against fresh control, the spatial-route M06/M07 deltas are
+`-.005565/-.000651`, block mean `-.003108`, and primary `-.002072`. Continuous
+hole depth does not supply enough missing content and degrades the matched
+forecast, so X15 is rejected. T5 `21222912` was cancelled at 20:51; artifact:
+`cross-history-analysis/x15-distance-prompt-t1.json`.
