@@ -176,6 +176,9 @@ single checkpoint is exactly the original control whenever no spatial hole is
 present; it removes the two-checkpoint routing caveat and isolates the X1
 mechanism. It is an alternative implementation of X1, not an additional
 contribution. Its fixed recipe uses the same 3000 steps and optimizer settings.
+Its attribution control is the same frozen initial checkpoint evaluated by the
+cross-history runner with zero update steps; comparison to the fresh full-model
+continuation will be reported only as a secondary total-system comparison.
 
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
