@@ -57,6 +57,31 @@ Prior art: [partial convolutions](https://arxiv.org/abs/1804.07723),
 These establish related mechanisms, not novelty or quantitative support for
 our implementations. A publication claim needs precise comparison to them.
 
+## Closest-work and claim boundary
+
+The closest task-specific work is Yang et al.'s 2026
+[reconstruction-to-prediction framework](https://arxiv.org/abs/2603.09042),
+which explicitly reconstructs a clean fire-history sequence before a separate
+T=5 forecaster. Consequently, neither partial-observability wildfire
+forecasting nor missing-fire reconstruction is a novelty claim here. X1 and
+X3 instead test end-to-end, forecast-conditioned alternatives: X1 transports
+valid latent context directly into spatial holes, while X3 marginalizes a
+latent latest-fire state inside the forecasting head and clamps observations
+where valid. Neither produces or supervises a standalone reconstructed fire
+map, and both are evaluated under T=1 and T=5.
+
+Missing-modality remote-sensing methods already perform learned compensation
+and distillation, including
+[DIS2](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html),
+and recent teacher-student segmentation work already targets robustness with
+little full-modality degradation
+([RobustSeg](https://openaccess.thecvf.com/content/CVPR2026/html/Tan_Towards_Robust_Multi-Modal_Semantic_Segmentation_with_Teacher-Student_Framework_and_Hybrid_CVPR_2026_paper.html)).
+Thus feature distillation and consistency alone are not novelty claims. The
+`local_consistency` experiment is explicitly an incremental, spatially
+localized extension of retained D1; it can count only with a positive matched
+ablation in both history settings. Original feature distillation has already
+failed T1 and remains negative evidence.
+
 ## Minimal implementation plan
 
 - [ ] Add a separate `reproductions/cross_history/` package for the campaign.
