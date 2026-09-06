@@ -517,6 +517,13 @@ are seed 1 T1 global/X8 `21217000/21217001`, T5 global/X8
 `21217004/21217005/21217006/21217007`. T1 uses 10GB slices and T5 uses 20GB;
 all retain physical batch 64, 3000 steps, and batch-16 evaluation.
 
+The prospective T1 seed-1 pair completed. Global/X8 M01 AP is
+`.308054/.319033`, so the frozen FireDrop route improves primary AP by
+`+.003660` with exact routed M00/M06/M07 deltas of zero. This is smaller than
+seed 0's `+.007239` but has the required positive sign; it is partial
+confirmation evidence only and does not change the recipe or gate. Seed 2 and
+both T5 pairs remain required before a confirmation decision.
+
 X9 spatial-impact FiLM addresses the failure revealed by X5-local: the future
 forecast pixels affected by a missing input block need not lie inside that
 block. At the final decoder resolution, it pools feature context only over
@@ -570,3 +577,7 @@ Implementation commit is `52cf5b8`; T1/T5 real-data one-step smoke jobs are
 broken path cannot consume a training allocation. T1 requests 10GB; T5 uses a
 20GB slice because applying the input correction across five frames increases
 activation memory, while retaining the frozen physical batch 64.
+Both smokes completed in 21/26 seconds with exact initial equivalence,
+successful backward/inference, and peak allocations of 0.84/2.79GB. Their
+dependencies released both formal screens, which started without queue delay;
+the T5 training path currently peaks at 10.49GB, validating the 20GB request.
