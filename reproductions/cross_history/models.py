@@ -91,8 +91,11 @@ class Forecaster(nn.Module):
             survival, new = logits + survival_delta, logits + new_delta
             observed = x[:,-1,-1:].clamp(0,1)
             occupancy = observed*(1-fire_invalid) + state.sigmoid()*fire_invalid
-            probability = occupancy*survival.sigmoid() + (1-occupancy)*new.sigmoid()
-            logits = torch.logit(probability.clamp(1e-6,1-1e-6))
+            log_occupied = occupancy.clamp_min(1e-30).log()
+            log_empty = (1-occupancy).clamp_min(1e-30).log()
+            log_positive = torch.logaddexp(log_occupied+F.logsigmoid(survival), log_empty+F.logsigmoid(new))
+            log_negative = torch.logaddexp(log_occupied+F.logsigmoid(-survival), log_empty+F.logsigmoid(-new))
+            logits = log_positive-log_negative
             aux = (state,survival,new)
         if details:
             return logits, features[-3:], aux
