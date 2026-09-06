@@ -151,6 +151,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
 | X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; may strengthen/supersede X14 | +.011338 vs ERM; block +.003808 vs X14 | +.010416 vs ERM; block +.004456 vs X14; confirming |
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
+| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | seed-0 pending | seed-0 pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -994,3 +995,28 @@ plain specialization in T=5. X18 is therefore rejected without seeds 1/2;
 its T1 gain remains a history-specific observation. Artifacts:
 `cross-history-analysis/x18-vs-erm-t5.json` and
 `cross-history-analysis/x18-vs-x14-t5.json`.
+
+X19 tests whether X17's measured benefit from severity factorization can be
+captured inside one shared predictor rather than two full checkpoints. At each
+nontrivial encoder scale, a small shared bottleneck reads the current feature
+and downsampled spatial-invalidity mask; observed missing fraction selects a
+separate zero-initialized mild (`<=.375`) or severe (`>.375`) residual head.
+The correction is applied only inside an observed hole, so M00/M01 bypass it.
+Training otherwise exactly matches X14's BlockDrop-only schedule and 3000-step
+contract. The closest-work audit found dynamic modality experts in SimMLM,
+dynamic adapters in Synergistic Prompting, and multi-resolution compensation
+in DIS2. Therefore X19 does not claim any of those general mechanisms as new;
+its bounded candidate contribution is within-modality spatial-severity routing
+of content-dependent latent corrections for wildfire forecasting.
+
+The pre-run idea verdict is `Accept with Revisions, pending the validation
+experiment`. X17 supplies quantitative mechanism support: splitting full
+experts improves X14 block mean by `+.003808/+.004456` in T1/T5 seed 0.
+The main fatal-flaw risk is crowded prior art, defended only by the narrow
+object/granularity claim and direct controls. X19 advances only if it improves
+X14 block mean in both histories and retains routed primary `>=+.005` versus
+fresh ERM; X17 is reported as the two-model upper bound, not an attribution
+baseline that a compact model must beat. A failure ends the adapter without a
+width, depth, or threshold sweep. Compute/data/engineering risk is low because
+the existing paired tensors, reliability masks, runner, and Nibi slices are
+reused; novelty and effectiveness remain the decisive risks.

@@ -175,6 +175,30 @@ class DistanceReliabilityPrompt(nn.Module):
         return prompted
 
 
+class SeverityResidualAdapter(nn.Module):
+    """Content-dependent latent correction selected by observed block severity."""
+    def __init__(self, channels):
+        super().__init__()
+        hidden = min(32, max(8, channels // 4))
+        self.trunk = nn.Sequential(
+            nn.Conv2d(channels + 1, hidden, 1), nn.SiLU(),
+        )
+        self.mild = nn.Conv2d(hidden, channels, 1)
+        self.severe = nn.Conv2d(hidden, channels, 1)
+        for head in (self.mild, self.severe):
+            nn.init.zeros_(head.weight)
+            nn.init.zeros_(head.bias)
+
+    def forward(self, feature, spatial):
+        mask = F.interpolate(spatial, feature.shape[-2:], mode='nearest')
+        severity = spatial.mean(dim=(-2, -1), keepdim=True)
+        severe = (severity > .375).to(feature.dtype)
+        hidden = self.trunk(torch.cat((feature, mask), dim=1))
+        residual = (1 - severe) * self.mild(hidden) + severe * self.severe(hidden)
+        active = (severity > 0).to(feature.dtype)
+        return feature + active * mask * residual
+
+
 class Forecaster(nn.Module):
     def __init__(self, base, history, method):
         super().__init__()
@@ -213,6 +237,10 @@ class Forecaster(nn.Module):
             self.normalized_inpaint = NormalizedDiffusionInpainting(dynamic)
         if method == 'distance_prompt':
             self.distance_prompt = DistanceReliabilityPrompt(base.model.encoder.out_channels[1:])
+        if method == 'block_specialist_severity_adapter':
+            self.severity_adapters = nn.ModuleList([
+                SeverityResidualAdapter(c) for c in base.model.encoder.out_channels[1:]
+            ])
 
     def features(self, x):
         encoder = self.base.model.encoder
@@ -239,6 +267,11 @@ class Forecaster(nn.Module):
         features = self.features(x)
         if self.method == 'distance_prompt':
             features = [features[0],*self.distance_prompt(features[1:],spatial)]
+        if self.method == 'block_specialist_severity_adapter':
+            features = [features[0], *[
+                layer(feature, spatial)
+                for layer, feature in zip(self.severity_adapters, features[1:])
+            ]]
         if self.method in ('context','context_adapter','context_transition','block_specialist_context'):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]
         decoded = self.base.model.decoder(*features)
