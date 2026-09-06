@@ -305,6 +305,9 @@ Adapter smoke jobs T1/T5 `21212176/21212177` completed with exit `0:0` and
 exact initial output agreement. Peak allocation was only 0.51/0.86GB at batch
 16, so full seed-0 screens `21212420/21212421` use the minimum 10GB H100 slice
 at batch 64 and are pinned to commit `e906291`.
+After T5 adapter remained pending for over ten minutes with a 02:41 estimate,
+test-only 10/20GB and 2/3-hour probes all returned 02:59. The existing 10GB
+job was retained because it starts earlier and uses fewer resources.
 
 Frozen attribution reference T1 `21212205` completed with M00/M01/M06/M07 AP
 `.558318/.276890/.343010/.172086`. T5 reference `21212206` failed before a
