@@ -134,10 +134,10 @@ D2/D13 controls are context, not proof of any new direction.
 | X2 feature distillation | fresh continuation | yes | original and block-local rejected | running |
 | X3 latent transition | fresh continuation | yes | +.011831 | -.009413; decoupled repair pending |
 | X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
-| X5 localized consistency | unchanged global D1 consistency | incremental method contribution | pending | pending |
+| X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | pending | pending |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
-| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | smoke `21214598` | smoke `21214599` |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | screen `21214685` | screen `21214686` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -345,6 +345,15 @@ agreement, a real paired clean/corrupt backward step, and inference. Corrected
 seed-0 full jobs, all pinned to commit `92beb6c`, are global T1/T5
 `21212411/21212412` and localized T1/T5 `21212413/21212414`.
 
+T1 local consistency completed at M00/M01/M06/M07
+`.595788/.297506/.373543/.188356`. Against its unchanged global-D1 control,
+the deltas are `+.004449/+.003244/-.004912/-.005212`: primary `-.002294`
+and block mean `-.005062`. Localizing KL to the input hole therefore shifts
+performance in exactly the wrong spatial scenarios, supporting the hypothesis
+that future forecast impact need not coincide with the missing input support.
+X5 is rejected. T5-local `21212414` was cancelled at 50:31 while training;
+T5-global remains active because it is also X8's required attribution control.
+
 The registered `context_adapter` variant freezes the entire initial forecaster
 and trains only the zero-initialized context-transport layers. Because every
 transport residual is multiplied by the observed spatial-hole mask, this
@@ -433,3 +442,8 @@ normalizes impact per sample. It adds no inference parameters. X8 must improve
 over the unchanged global-D1 consistency control, not merely ERM, in both
 histories to count as a new incremental objective. The exact fixed 0.1 recipe
 is ported in `35695ec`; T1/T5 real-batch smoke jobs are `21214598/21214599`.
+Both completed in 22/24 seconds with exact initial equivalence, one successful
+paired backward step and inference. Formal T1/T5 screens are
+`21214685/21214686`. T1 uses a 10GB slice; T5 uses 20GB because the same
+batch-64 paired path measured just over 10GB, preserving the matched physical
+batch rather than changing BatchNorm behavior to fit the smaller slice.
