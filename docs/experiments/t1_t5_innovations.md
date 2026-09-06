@@ -137,7 +137,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203; pass | running `21214128` |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
-| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | screen `21214685` | screen `21214686` |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental objective contribution | +.007638; pass | running `21214686` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -461,3 +461,10 @@ paired backward step and inference. Formal T1/T5 screens are
 `21214685/21214686`. T1 uses a 10GB slice; T5 uses 20GB because the same
 batch-64 paired path measured just over 10GB, preserving the matched physical
 batch rather than changing BatchNorm behavior to fit the smaller slice.
+
+T1 X8 completed at M00/M01/M06/M07 `.591929/.315978/.379551/.193669`.
+Against global-D1, all four deltas are nonnegative:
+`+.000590/+.021716/+.001096/+.000101`; primary is `+.007638` and block mean
+`+.000599`. The gain is concentrated in complete FireDrop, matching archived
+D5's diagnosis, while clean and block performance are preserved. X8 passes
+the T1 screen and remains eligible pending unchanged T5 job `21214686`.
