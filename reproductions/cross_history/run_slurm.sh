@@ -6,7 +6,8 @@ method=$2
 shift 2
 repo=$(git -C "${SLURM_SUBMIT_DIR}" rev-parse --show-toplevel)
 source_commit=${WILDFIRE_SOURCE_COMMIT:-HEAD}
-root=/project/6085198/kulbear/wildfire/runs/cross-history-${history}-${method}-${SLURM_JOB_ID}
+run_tag=${WILDFIRE_RUN_TAG:+-${WILDFIRE_RUN_TAG}}
+root=/project/6085198/kulbear/wildfire/runs/cross-history-${history}-${method}-${SLURM_JOB_ID}${run_tag}
 module purge
 module load StdEnv/2023 gcc/12.3 python/3.10.13 cuda/12.2
 source /project/6085198/kulbear/wildfire/envs/wsts-res18-t1-nibi-smoke/bin/activate
