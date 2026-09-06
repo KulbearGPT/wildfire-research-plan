@@ -1104,3 +1104,13 @@ method. The fixed gate is primary AP `>=+.005` versus constant-LR ERM in each
 history with M00 `>=-.010`; one seed-0 pair decides whether it advances, with
 no alternative schedule, endpoint, warmup, or longer-budget sweep. The code is
 frozen while higher-priority confirmation jobs occupy the queue.
+
+`compose_complete_routes.py` prepares the final system audit without opening
+another model direction. For each matched history/seed/year row it takes M00
+from fresh ERM, M01 from a separately validated FireDrop component, M06 from
+the fixed-25% X17 expert, and M07 from the fixed-50% X17 expert. It reports the
+same confirmation, held-out, and mean-primary `+.020` checks as the other
+comparators. This system-level artifact cannot establish component novelty or
+attribution; each component must first pass its own frozen closest-control
+gate. In particular, X20 is eligible for this composition only if its raw
+two-history gate passes, so scenario routing cannot rescue a failed X20.
