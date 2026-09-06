@@ -154,7 +154,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | seed-0 running | seed-0 running |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
-| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | frozen, not submitted | frozen, not submitted |
+| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | seed-0 submitted | seed-0 submitted |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -1123,7 +1123,11 @@ model parameter and is explicitly a training-recipe result, not a novel
 method. The fixed gate is primary AP `>=+.005` versus constant-LR ERM in each
 history with M00 `>=-.010`; one seed-0 pair decides whether it advances, with
 no alternative schedule, endpoint, warmup, or longer-budget sweep. The code is
-frozen while higher-priority confirmation jobs occupy the queue.
+frozen at `735700e`. At the scheduled queue check, 10GB and 20GB test-only
+probes had the same immediate start estimate, so the minimum 10GB profile was
+selected. T1/T5 smoke jobs are `21227409/21227410`; dependency-gated seed-0
+screens are `21227412/21227413`. T5 alone requests 128GB host memory for the
+known evaluation footprint.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
