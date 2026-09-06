@@ -16,6 +16,14 @@ def load(path: Path):
     return payload, values
 
 
+def aggregate(rows, history, year):
+    selected = [r for r in rows if r['history'] == history and r['year'] == year]
+    return dict(history=history,year=year,seeds=sorted(r['seed'] for r in selected),
+        primary_delta=mean(r['primary_delta'] for r in selected),
+        block_delta=mean(r['block_delta'] for r in selected),
+        clean_delta=mean(r['delta']['M00'] for r in selected))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--control',type=Path,action='append',required=True)
@@ -39,12 +47,30 @@ def main():
             control=control,candidate=candidate,effective=effective,delta=delta,
             primary_delta=mean(delta[x] for x in PRIMARY),
             block_delta=mean(delta[x] for x in BLOCK)))
-    result=dict(method=load(args.candidate[0])[0]['method'],routed_spatial=args.routed_spatial,
+    methods={load(path)[0]['method'] for path in args.candidate}
+    if len(methods) != 1:
+        raise ValueError('candidate methods differ')
+    grouped=[aggregate(rows,history,year) for history in sorted({r['history'] for r in rows})
+             for year in sorted({r['year'] for r in rows})
+             if any(r['history'] == history and r['year'] == year for r in rows)]
+    screen=[r for r in rows if r['year'] == 2021 and r['seed'] == 0]
+    screen_pass=(len(screen) == 2 and {r['history'] for r in screen} == {1,5}
+                 and all(r['primary_delta'] >= .005 and r['delta']['M00'] >= -.01 for r in screen))
+    confirmation=[g for g in grouped if g['year'] == 2021 and {0,1,2}.issubset(g['seeds'])]
+    confirmation_pass=(len(confirmation) == 2 and {g['history'] for g in confirmation} == {1,5}
+                       and all(g['primary_delta'] > 0 and g['clean_delta'] >= -.01 for g in confirmation))
+    heldout=[g for g in grouped if g['year'] in (2022,2023)]
+    heldout_pass=(len(heldout) == 4 and {(g['history'],g['year']) for g in heldout}
+                  == {(1,2022),(1,2023),(5,2022),(5,2023)}
+                  and all(g['primary_delta'] > 0 and g['clean_delta'] >= -.01 for g in heldout))
+    result=dict(method=methods.pop(),routed_spatial=args.routed_spatial,
         rows=rows,mean_primary_delta=mean(r['primary_delta'] for r in rows),
         std_primary_delta=pstdev(r['primary_delta'] for r in rows),
         mean_block_delta=mean(r['block_delta'] for r in rows),
         worst_clean_delta=min(r['delta']['M00'] for r in rows),
-        screen_pass=all(r['primary_delta'] >= .005 and r['delta']['M00'] >= -.01 for r in rows))
+        grouped=grouped,screen_pass=screen_pass,
+        confirmation_pass=confirmation_pass,heldout_pass=heldout_pass,
+        goal_evidence_pass=confirmation_pass and heldout_pass)
     rendered=json.dumps(result,indent=2,sort_keys=True)
     print(rendered)
     if args.output:

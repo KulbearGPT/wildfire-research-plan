@@ -183,5 +183,8 @@ continuation will be reported only as a secondary total-system comparison.
 While GPU jobs run, `reproductions/cross_history/compare.py` provides the
 minimal downstream result path. It pairs summaries by history/seed/year,
 computes individual, primary, block, clean-guardrail and multi-run statistics,
-and can apply the declared spatial-specialist route. `run.py --evaluate-only`
+and can apply the declared spatial-specialist route. Its gates require explicit
+T1+T5 coverage: seed-0 2021 screening, seeds 0/1/2 2021 confirmation, and all
+four history/year cells on the fixed 2022/2023 tests. A single-history input
+can no longer be reported as a cross-history pass. `run.py --evaluate-only`
 already performs immutable 2022/2023 evaluation from a selected checkpoint.
