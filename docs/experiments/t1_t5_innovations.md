@@ -217,6 +217,11 @@ dependencies `21237310/21237311`; scientific settings and pinned source
 When this second 10GB chain also remained pending, the <=2x probe favored a
 20GB slice. The still-unstarted chain was replaced by smoke
 `21238407/21238408` and formal dependencies `21238409/21238410`.
+At the next 30-minute check those blocking jobs still had no start time, while
+a 40GB probe estimated the same day at `15:25`. Under the explicit blocking
+task exception, the unstarted chain was replaced by smoke
+`21241404/21241405` and dependencies `21241406/21241407`; this changes only
+the slice size.
 
 X24 was considered after the complete-route diagnostic localized the remaining
 magnitude gap to FireDrop. The proposed frozen clean teacher would supervise a
@@ -1170,6 +1175,11 @@ Those 10GB confirmations remained pending beyond ten minutes; matched 20GB
 probes were immediately placeable. The unstarted jobs were replaced by
 seed-1 T1/T5 `21238399/21238400` and seed-2 `21238403/21238404`, changing no
 scientific setting.
+The next scheduled check assigned those 20GB jobs next-day start estimates.
+Because they block confirmation and held-out evaluation, the larger-resource
+exception applies: 40GB replacements are seed-1 T1/T5
+`21241396/21241397` and seed-2 `21241400/21241401`, with an estimated
+same-day `15:25` start from the pre-submission probe.
 
 X20 is the loss-side follow-up to X8's completion audit. X8 established that
 counterfactual-impact weighting itself transfers across T=1/T=5 relative to
@@ -1251,6 +1261,9 @@ are T1/T5 `21237300/21237301` and `21237304/21237305`; no schedule variant or
 longer run is opened.
 After the same >10-minute queue diagnosis, their 20GB replacements are
 seed-1 T1/T5 `21238401/21238402` and seed-2 `21238405/21238406`.
+At the next 30-minute check these too were estimated for the following day.
+Blocking-task 40GB replacements are seed-1 T1/T5 `21241398/21241399` and
+seed-2 `21241402/21241403`; all optimizer and data settings are unchanged.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
