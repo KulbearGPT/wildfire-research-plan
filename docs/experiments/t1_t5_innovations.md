@@ -139,9 +139,9 @@ D2/D13 controls are context, not proof of any new direction.
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
 | X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | reliable: +.003979/+.004533/+.004699 in 2021/22/23 | reliable: +.005834/+.003820/+.005231 in 2021/22/23 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
-| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; confirming | routed +.005883; confirming |
-| X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | screening | screening |
-| X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | screening | screening |
+| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | 3-seed mean +.001186; T1 confirmation positive | routed +.005883; confirmation running |
+| X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
+| X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -665,6 +665,13 @@ T1/T5 smoke jobs `21220222/21220223` completed successfully with exact initial
 equivalence, backward update, checkpoint reload, and real-data inference. Their
 peak GPU allocations were `0.93/3.11GB`. Fixed seed-0 screens
 `21220298/21220299` use 10/20GB slices respectively, batch 64, and 3000 steps.
+T1 completed at M00/M01/M06/M07 `.589165/.295700/.374371/.193925`.
+Against matched X10, the spatial-route M06/M07 deltas are
+`-.008728/-.005857`, block mean `-.007293`, and primary `-.004862`.
+The auxiliary reconstruction constraint therefore harms the exact forecast
+metric it was intended to improve; X11 is rejected and T5 job `21220299` was
+cancelled at 25:46. The comparison artifact is
+`cross-history-analysis/x11-reconstruction-vs-x10-t1.json`.
 
 X12 targets the separate magnitude requirement through the dominant complete
 active-fire-history failure. It continues the same initial model for the same
@@ -691,6 +698,14 @@ the already robust B3 initialization and loss of useful mixed-corruption replay.
 T1/T5 smoke jobs `21220240/21220241` completed successfully with exact initial
 equivalence and peak GPU allocations `0.97/2.70GB`. Fixed seed-0 screens
 `21220300/21220301` use the same 10/20GB resource policy and 3000-step protocol.
+T1 completed at M00/M01/M06/M07 `.588671/.313079/.324425/.134607`.
+Under the declared FireDrop route only M01 counts: it improves `+.004767`, so
+primary improves just `+.001589`, far below both the `+.005` screen and the
+campaign `+.02` magnitude target. The already robust initialization is
+saturated rather than rescued by full specialization. X12 is rejected without
+the conditional plain-specialist ablation, and T5 job `21220301` was cancelled
+at 25:46. The comparison artifact is
+`cross-history-analysis/x12-fire-specialist-t1.json`.
 
 The already available seed-0 X8/X10 specialists were also composed against one
 common fresh control using `compose_routes.py`: X8 supplies M01, X10 supplies
@@ -700,3 +715,10 @@ artifact is `cross-history-analysis/x8-x10-route-seed0.json`. This is a useful
 final-system route but does not meet the `+.02` magnitude target and is not an
 independent contribution; it quantitatively rules out satisfying that target
 by merely adding the two current seed-0 gains.
+
+X10's prospective T1 seed-1 spatial-route primary delta is `+.000630`; seed 2
+is `-.004452`. Together with seed 0, the three-seed mean remains positive at
+`+.001186` (block mean `+.001780`). This satisfies the frozen mean-positive T1
+confirmation condition but exposes substantial seed variance. The partial
+artifact is `cross-history-analysis/x10-t1-confirmation-partial.json`; no
+cross-history confirmation decision is made until both T5 pairs complete.
