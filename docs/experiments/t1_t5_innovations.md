@@ -137,7 +137,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
 | X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203 | +.002426 with M00 -.017601; reject |
 | X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
-| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | 3-seed routed mean +.003979 | 3-seed routed mean +.005834; heldout running |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency | incremental FireDrop specialist | reliable: +.003979/+.004533/+.004699 in 2021/22/23 | reliable: +.005834/+.003820/+.005231 in 2021/22/23 |
 | X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
 | X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | routed +.007381; pass | screen `21217350` running |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
@@ -537,6 +537,16 @@ methods, histories, three seeds, and two years: contiguous job range
 `21218965`--`21218988`. Their exact commands are recorded in
 `cross-history-analysis/x8-heldout-jobs.txt`. Heldout results remain unread
 until completion and are not used to alter this recipe.
+
+All 24 heldout jobs completed successfully. The final authoritative artifact
+is `cross-history-analysis/x8-impact-fire-route-final.json`. Three-seed primary
+deltas for T1 are `+.003979/+.004533/+.004699` in 2021/2022/2023; T5 deltas
+are `+.005834/+.003820/+.005231`. Every history/year cell is positive, routed
+M00 and block deltas are exactly zero, `confirmation_pass=true`,
+`heldout_pass=true`, and `goal_evidence_pass=true`. The 18 matched rows have
+overall mean `+.004683` and population standard deviation `.004062`. X8 is the
+first reliable cross-history direction. It does not meet the separate +.02
+magnitude target and is not represented as doing so.
 
 X9 spatial-impact FiLM addresses the failure revealed by X5-local: the future
 forecast pixels affected by a missing input block need not lie inside that
