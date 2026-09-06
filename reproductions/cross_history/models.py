@@ -122,6 +122,35 @@ class ForecastAwareDynamicInpainting(nn.Module):
         return filled.reshape(batch,time,channels,height,width)
 
 
+class NormalizedDiffusionInpainting(nn.Module):
+    """Propagate observed dynamic fields into a hole over increasing scales."""
+    def __init__(self, dynamic):
+        super().__init__()
+        self.dynamic = tuple(dynamic)
+
+    def forward(self, x, spatial):
+        batch,time,channels,height,width = x.shape
+        flat = x.reshape(batch*time,channels,height,width)
+        mask = spatial[:,None].expand(batch,time,1,height,width).reshape(
+            batch*time,1,height,width)
+        values = flat[:,self.dynamic]
+        filled = values
+        known = 1-mask
+        # Successive normalized averages propagate boundary observations into
+        # large holes; the accumulated radius covers the 50% test block.
+        for radius in (1,2,4,8,16,32):
+            kernel = 2*radius+1
+            denominator = F.avg_pool2d(known,kernel,1,radius)
+            proposal = F.avg_pool2d(filled*known,kernel,1,radius)
+            proposal = proposal/denominator.clamp_min(1e-6)
+            take = (1-known)*(denominator > 0).to(known.dtype)
+            filled = filled*(1-take)+proposal*take
+            known = torch.maximum(known,take)
+        result = flat.clone()
+        result[:,self.dynamic] = values*(1-mask)+filled*mask
+        return result.reshape(batch,time,channels,height,width)
+
+
 class Forecaster(nn.Module):
     def __init__(self, base, history, method):
         super().__init__()
@@ -151,6 +180,13 @@ class Forecaster(nn.Module):
             dynamic_source = set(range(12)) | {15} | set(range(33,38))
             dynamic = tuple(i for i,column in enumerate(columns) if column in dynamic_source)
             self.dynamic_inpaint = ForecastAwareDynamicInpainting(self.channels,dynamic)
+        if method == 'normalized_inpaint':
+            columns = tuple(range(40)) if history == 1 else (
+                0,1,2,3,4,5,6,7,8,9,11,12,13,14,16,17,18,19,20,21,
+                22,23,24,25,26,27,28,29,30,31,32,38,39)
+            dynamic_source = set(range(12)) | {15} | set(range(33,38))
+            dynamic = tuple(i for i,column in enumerate(columns) if column in dynamic_source)
+            self.normalized_inpaint = NormalizedDiffusionInpainting(dynamic)
 
     def features(self, x):
         encoder = self.base.model.encoder
@@ -172,6 +208,8 @@ class Forecaster(nn.Module):
             x = self.dynamic_inpaint(x,spatial)
             if self.method == 'dynamic_inpaint_reconstruct':
                 reconstruction = x[:,:,self.dynamic_inpaint.dynamic]
+        if self.method == 'normalized_inpaint':
+            x = self.normalized_inpaint(x,spatial)
         features = self.features(x)
         if self.method in ('context','context_adapter','context_transition'):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]

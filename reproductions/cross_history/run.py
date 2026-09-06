@@ -18,7 +18,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','fire_specialist','fire_specialist_impact','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct'),required=True)
+    p.add_argument('--method',choices=('control','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','fire_specialist','fire_specialist_impact','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -59,7 +59,8 @@ def main():
     (a.output/'started.json').write_text(json.dumps(metadata,indent=2))
     if a.evaluate_only:
         saved = torch.load(a.evaluate_only,map_location='cpu',weights_only=False)
-        if saved['history'] != a.history or saved['method'] != a.method:
+        compatible_transform = (a.method == 'normalized_inpaint' and saved['method'] == 'control')
+        if saved['history'] != a.history or (saved['method'] != a.method and not compatible_transform):
             raise ValueError('checkpoint method/history mismatch')
         model.load_state_dict(saved['state_dict'],strict=True)
     else:
@@ -96,7 +97,7 @@ def main():
                         actual = model(packed)
                         difference = (expected-actual).abs().max().item()
                     print(f'INITIAL_EQUIVALENCE_MAX={difference}',flush=True)
-                    if difference > (1e-3 if a.method in ('transition','transition_decoupled','context_transition') else 1e-5):
+                    if a.method != 'normalized_inpaint' and difference > (1e-3 if a.method in ('transition','transition_decoupled','context_transition') else 1e-5):
                         raise RuntimeError('initial forward mismatch')
                     model.train()
                     if a.method == 'context_adapter': model.base.eval()

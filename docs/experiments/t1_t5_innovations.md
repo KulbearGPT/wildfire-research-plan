@@ -142,6 +142,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | 3-seed mean +.001186; T1 confirmation positive | routed +.005883; confirmation running |
 | X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
 | X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
+| X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | evaluation pending | evaluation pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 X7 was preregistered and implemented while the already submitted screens were
@@ -722,3 +723,22 @@ is `-.004452`. Together with seed 0, the three-seed mean remains positive at
 confirmation condition but exposes substantial seed variance. The partial
 artifact is `cross-history-analysis/x10-t1-confirmation-partial.json`; no
 cross-history confirmation decision is made until both T5 pairs complete.
+
+X13 addresses a concrete limitation of X10 rather than adding another loss:
+X10's two convolutions cannot transport observed values to the centre of a
+25%/50% missing block. X13 uses parameter-free normalized spatial averaging at
+successively larger radii to propagate only observed dynamic non-fire fields
+into the hole, while clamping every observed value and leaving static and fire
+channels unchanged. M00/M01 bypass it exactly. The first decisive experiment
+loads the existing seed-0 fresh-control checkpoints without training and routes
+X13 only to M06/M07. It advances only if primary gain is at least `+.005` in
+both histories; otherwise it is rejected before any continuation.
+
+The pre-run idea verdict is `Accept with Revisions, pending the validation
+experiment`. Its strengths are a direct large-hole mechanism, no trainable
+parameters, and identical T1/T5 behavior. Its novelty boundary is narrow:
+normalized/partial convolution and image inpainting are established, so the
+claim can only be observation-clamped propagation of typed wildfire drivers
+for robust forecasting. The main failure mode is distribution mismatch because
+the retained control was trained with zero-filled blocks rather than propagated
+values; the frozen-checkpoint screen measures that risk directly.
