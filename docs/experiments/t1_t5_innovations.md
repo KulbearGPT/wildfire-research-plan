@@ -165,7 +165,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | no; frozen closest-control screen fails | +.001555 vs global, +.004877 vs X22; reject | +.003225 vs global, +.002167 vs X22; reject |
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
 | X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | -.036784 vs rectangle, -.029450 vs X22; reject |
-| X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | pending; attention repair of X1 context family | smoke `21272773`, formal `21274628` | smoke `21272774`, formal `21274629` |
+| X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; T5 attention interference | +.000661 vs specialist, +.007878 vs X22; reject | -.007990 vs specialist, -.000656 vs X22; reject |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -603,6 +603,16 @@ replacement submission and was inadvertently cancelled at 05:01:36 after
 `sacct`. Future replacements use Slurm's controller-side
 `scancel --state=PENDING` filter so a job that starts after inspection is not
 cancelled; both existing bundle scripts receive the same one-line safeguard.
+The authoritative T5 replacement completed successfully as `21275163`.
+Memory attention changes routed primary by only `+.000661` at T1 and
+`-.007990` at T5 versus the cosine rectangular specialist. Relative to X22,
+the same values are `+.007878/-.000656`. The cross-T attribution mean is
+`-.003665`; X29 fails both the magnitude gate and transfer requirement. This
+supports a concrete diagnosis: retrieving spatial context after UTAE temporal
+aggregation interferes with the already strong T5 representation rather than
+adding missing evidence. The family closes without grid, width, depth, or
+head sweeps. Artifacts: `cross-history-analysis/x29-vs-block-specialist-seed0.json`
+and `cross-history-analysis/x29-vs-x22-seed0.json`.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
