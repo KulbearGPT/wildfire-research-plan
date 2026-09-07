@@ -92,6 +92,21 @@ class ChangeAuxiliaryHead(nn.Module):
         return state, main_logits + survival_delta, main_logits + new_delta
 
 
+class DeepForecastSupervision(nn.Module):
+    """Training-only next-day prediction heads on deep encoder features."""
+    def __init__(self, channels):
+        super().__init__()
+        self.heads = nn.ModuleList([nn.Conv2d(c, 1, 1) for c in channels])
+        for head in self.heads:
+            nn.init.zeros_(head.weight)
+            nn.init.zeros_(head.bias)
+
+    def forward(self, features, output_size):
+        return tuple(F.interpolate(head(feature), output_size, mode='bilinear',
+                                   align_corners=False)
+                     for head, feature in zip(self.heads, features))
+
+
 class MissingnessExperts(nn.Module):
     """Late residual experts selected by the observed corruption regime."""
     def __init__(self, channels):
@@ -281,6 +296,9 @@ class Forecaster(nn.Module):
         if method == 'cosine_change_aux':
             decoder_channels = base.model.segmentation_head[0].in_channels
             self.change_auxiliary = ChangeAuxiliaryHead(decoder_channels)
+        if method == 'cosine_deep_supervision':
+            self.deep_supervision = DeepForecastSupervision(
+                base.model.encoder.out_channels[-3:])
         if method in ('transition','transition_decoupled','context_transition'):
             decoder_channels = base.model.segmentation_head[0].in_channels
             self.transition = nn.Conv2d(decoder_channels,3,1)
@@ -385,6 +403,8 @@ class Forecaster(nn.Module):
             logits = logits + self.missingness_experts(decoded,spatial,fire_invalid)
         aux = (self.change_auxiliary(decoded, logits)
                if self.method == 'cosine_change_aux' and details else None)
+        if self.method == 'cosine_deep_supervision' and details:
+            aux = self.deep_supervision(features[-3:], logits.shape[-2:])
         if self.method in ('transition','transition_decoupled','context_transition'):
             base_logits = logits
             state, survival_delta, new_delta = self.transition(decoded).split(1,dim=1)

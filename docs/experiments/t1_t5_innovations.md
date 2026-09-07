@@ -167,6 +167,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | -.036784 vs rectangle, -.029450 vs X22; reject |
 | X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; T5 attention interference | +.000661 vs specialist, +.007878 vs X22; reject | -.007990 vs specialist, -.000656 vs X22; reject |
 | X30 training-only fire-change auxiliary heads | X22 cosine ERM | no; T1 main-task interference | -.010378 vs X22; reject | running record only: `21312986` |
+| X31 multi-scale forecast deep supervision | X22 cosine ERM | pending; inference-free representation contribution | not submitted | not submitted |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -676,6 +677,51 @@ can be retained as training-only state supervision under the stronger cosine
 anchor. The already-running T5 job is kept only for the cross-architecture
 record; no loss-weight, class-weight, route, or head repair is allowed.
 Partial artifact: `cross-history-analysis/x30-vs-x22-t1.json`.
+
+X31 addresses X30's heterogeneous-target interference without reopening its
+weights. The three deepest encoder features each receive a zero-initialized
+1x1 training head, upsampled to predict the same next-day target with the same
+focal objective as the main head. Their mean contributes a fixed `.05` loss.
+The auxiliary heads are skipped when `details=False`, so evaluation and
+deployment execute exactly the X22 predictor. Coarse features receive direct
+regional-spread supervision while the shallower of the three retains finer
+fire-front structure; T5 applies the identical heads after temporal
+aggregation, and T1 applies them to spatial features.
+
+#### X31 pre-run idea evaluation
+
+- **First impression:** an incremental Novel Method/technique. The paper-safe
+  story is multi-scale next-day supervision for partial-observation wildfire
+  forecasting, with one unchanged inference model across spatial and temporal
+  backbones.
+- **Fatal flaw:** F1/prior-art crowding is `MAJOR`. Deep supervision is
+  established by Deeply-Supervised Nets
+  ([Lee et al., 2015](https://proceedings.mlr.press/v38/lee15a.html)) and
+  multi-scale side-output supervision by HED
+  ([Xie and Tu, 2015](https://openaccess.thecvf.com/content_iccv_2015/html/Xie_Holistically-Nested_Edge_Detection_ICCV_2015_paper.html)).
+  X31 cannot claim either technique as new. The defensible contribution is a
+  quantitatively attributed application to robust next-day wildfire spread,
+  shared across the two established history/backbone settings.
+- **Lifecycle/capability:** bounded application-research prototype. Existing
+  deep features, target loss, Nibi runner, and checkpoints are reused; no new
+  data, inference route, or decoder interface is introduced.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 7 | mechanism-based, unconfirmed: direct same-target gradients avoid X30's observed heterogeneous-task conflict |
+| Faster | 7 | three shallow heads train only; evaluation/inference is exactly unchanged |
+| Stronger | 7 | supervision reaches temporally aggregated and spatial encoder features under all four scenarios |
+| Cheaper | 8 | no new data, labels, deployment parameters used, or external model |
+| Broader | 7 | one implementation spans Res18-U-Net and Res18-UTAE but remains one dataset |
+
+The paradigm probe is incremental, with no field-changing claim: it challenges
+only the assumption that final-resolution loss is sufficient under missing
+inputs. Compute, data, engineering, and timeline risk are low; novelty is
+crowded and effectiveness is unknown. Verdict: **Accept with Revisions, worth
+pursuing pending validation**. The frozen seed-0 gate is raw primary
+`>=+.005` versus X22 in both histories with M00 `>=-.010`. Failure in either
+history closes X31 without head-depth, scale, interpolation, or weight sweeps.
+Only a passing screen advances to seeds 1/2 and fixed years.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
