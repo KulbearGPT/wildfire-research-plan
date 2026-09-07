@@ -165,6 +165,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | no; frozen closest-control screen fails | +.001555 vs global, +.004877 vs X22; reject | +.003225 vs global, +.002167 vs X22; reject |
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
 | X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | running record only: candidate/control `21272008/21272010` |
+| X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | pending; attention repair of X1 context family | not submitted | not submitted |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -524,6 +525,54 @@ mixing-rate, or morphology repair is opened. The already-running T5 candidate
 and control are retained only to complete the architecture-transfer record.
 Partial artifacts: `cross-history-analysis/x28-vs-rectangle-t1.json` and
 `cross-history-analysis/x28-vs-x22-t1.json`.
+
+X29 broadens the search away from FireDrop and follows the remaining spatial
+information problem. At the three deepest encoder levels, every location
+queries a compact 4x4 memory formed by valid-region features; invalid memory
+cells are excluded, and the retrieved value is injected only inside the
+missing support through a zero-initialized projection. T1 queries spatial
+Res18 features; T5 queries features after UTAE temporal aggregation, so the
+same module can retrieve temporally summarized evidence. It is trained with
+X14's BlockDrop-only sampling and X22's cosine schedule. Unlike X1's fixed
+global/grid pooling, each missing location can select a different valid token.
+
+#### X29 pre-run idea evaluation
+
+- **First impression:** an incremental Novel Method in the existing X1
+  context-transport family. The narrow claim is forecast-directed retrieval
+  of observed context for missing satellite regions, shared across spatial and
+  temporal wildfire forecasters.
+- **Fatal flaw:** F1/crowded attention and inpainting prior art is `MAJOR`.
+  Contextual attention already copies relevant valid patches into holes
+  ([Yu et al., CVPR 2018](https://openaccess.thecvf.com/content_cvpr_2018/html/Yu_Generative_Image_Inpainting_CVPR_2018_paper.html)),
+  and Shift-Net already transfers encoder features from known to missing
+  regions
+  ([Yan et al., ICCV 2017](https://openaccess.thecvf.com/content_ICCV_2017/html/Yan_Shift-Net_Image_Inpainting_ICCV_2017_paper.html)).
+  X29 cannot claim generic memory attention or inpainting novelty. Its
+  defensible boundary is no image reconstruction, forecast-loss-only latent
+  retrieval, explicit reliability support, and cross-history wildfire use.
+- **Lifecycle/capability:** application-research prototype. It reuses current
+  masks/features and adds no data pipeline. Sixteen memory tokens keep compute
+  bounded; inference cost occurs only on the observable spatial-gap route.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 8 | X1 was positive at T1 but weak at T5; content-addressed retrieval directly repairs fixed pooling |
+| Faster | 4 | 16-token attention is bounded but adds routed inference work |
+| Stronger | 8 | mask-excluded retrieval explicitly prevents missing evidence from entering memory |
+| Cheaper | 7 | no external data or labels and only shallow projections at three scales |
+| Broader | 7 | identical module spans spatial U-Net and temporally aggregated UTAE features |
+
+The paradigm probe remains incremental: learned valid-context retrieval is
+established, while applying it directly to partial-observation wildfire
+forecasting avoids the reconstruction assumption. Compute and engineering
+risks are low-to-medium; effectiveness and crowded novelty are the decisive
+risks. Verdict: **Accept with Revisions, worth pursuing pending the validation
+experiment**. The closest control is the same cosine rectangular BlockDrop
+specialist. The frozen seed-0 gate is routed primary `>=+.005` versus that
+control in both histories and positive versus X22 in both. X29 and X1 are one
+context-transport family, not two contributions. Failure in either history
+closes the family without attention width, grid, depth, or loss sweeps.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.

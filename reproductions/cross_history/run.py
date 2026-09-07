@@ -19,7 +19,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','cosine_erm','cosine_fire_global','cosine_fire_impact','cosine_block_specialist','cosine_block_hard','cosine_reliability_block','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
+    p.add_argument('--method',choices=('control','cosine_erm','cosine_fire_global','cosine_fire_impact','cosine_block_specialist','cosine_block_hard','cosine_block_memory','cosine_reliability_block','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -52,7 +52,8 @@ def main():
     fire_specialist = a.method in (
         'fire_specialist','fire_specialist_impact','cosine_fire_global','cosine_fire_impact')
     block_specialist = a.method in (
-        'block_specialist','cosine_block_specialist','cosine_block_hard','cosine_reliability_block',
+        'block_specialist','cosine_block_specialist','cosine_block_hard','cosine_block_memory',
+        'cosine_reliability_block',
         'block_specialist_impact','block_specialist_dynamic','block_specialist_context',
         'block_specialist_severity_adapter','block_specialist_reliability_prompt')
     fire_probability = 1. if fire_specialist else (0. if block_specialist else corruption_probability)

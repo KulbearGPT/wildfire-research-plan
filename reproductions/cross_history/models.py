@@ -48,6 +48,37 @@ class ContextTransport(nn.Module):
         return x + m*self.residual(torch.cat([x,*contexts],dim=1))
 
 
+class ValidContextMemoryAttention(nn.Module):
+    """Retrieve forecast features from a compact bank of valid spatial tokens."""
+    def __init__(self, channels, grid=4):
+        super().__init__()
+        hidden = min(32, max(8, channels // 8))
+        self.grid = grid
+        self.query = nn.Conv2d(channels, hidden, 1, bias=False)
+        self.key = nn.Conv2d(channels, hidden, 1, bias=False)
+        self.value = nn.Conv2d(channels, hidden, 1, bias=False)
+        self.output = nn.Conv2d(hidden, channels, 1, bias=False)
+        nn.init.zeros_(self.output.weight)
+
+    def forward(self, features, spatial):
+        missing = F.interpolate(spatial, features.shape[-2:], mode='nearest')
+        valid = 1 - missing
+        denominator = F.adaptive_avg_pool2d(valid, self.grid)
+        memory = F.adaptive_avg_pool2d(features * valid, self.grid)
+        memory = memory / denominator.clamp_min(1e-6)
+
+        batch, _, height, width = features.shape
+        queries = self.query(features).flatten(2).transpose(1, 2)
+        keys = self.key(memory).flatten(2)
+        scores = torch.bmm(queries, keys) / (queries.shape[-1] ** .5)
+        memory_valid = denominator.flatten(2).squeeze(1) > 0
+        scores = scores.masked_fill(~memory_valid[:, None], -1e4)
+        values = self.value(memory).flatten(2).transpose(1, 2)
+        retrieved = torch.bmm(scores.softmax(dim=-1), values)
+        retrieved = retrieved.transpose(1, 2).reshape(batch, -1, height, width)
+        return features + missing * self.output(retrieved)
+
+
 class MissingnessExperts(nn.Module):
     """Late residual experts selected by the observed corruption regime."""
     def __init__(self, channels):
@@ -230,6 +261,10 @@ class Forecaster(nn.Module):
         self.channels = 40 if history == 1 else 33
         if method in ('context','context_adapter','context_transition','block_specialist_context'):
             self.transport = nn.ModuleList([ContextTransport(c) for c in base.model.encoder.out_channels[1:]])
+        if method == 'cosine_block_memory':
+            self.context_memory = nn.ModuleList([
+                ValidContextMemoryAttention(c) for c in base.model.encoder.out_channels[-3:]
+            ])
         if method in ('transition','transition_decoupled','context_transition'):
             decoder_channels = base.model.segmentation_head[0].in_channels
             self.transition = nn.Conv2d(decoder_channels,3,1)
@@ -318,6 +353,12 @@ class Forecaster(nn.Module):
                 layer(feature, spatial)
                 for layer, feature in zip(self.severity_adapters, features[1:])
             ]]
+        if self.method == 'cosine_block_memory':
+            attended = [
+                layer(feature, spatial)
+                for layer, feature in zip(self.context_memory, features[-3:])
+            ]
+            features = [*features[:-3], *attended]
         if self.method in ('context','context_adapter','context_transition','block_specialist_context'):
             features = [features[0], *[layer(f,spatial) for layer,f in zip(self.transport,features[1:])]]
         decoded = self.base.model.decoder(*features)
