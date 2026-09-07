@@ -163,7 +163,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
 | X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | promotes X8 impact family only; cosine is not counted twice | smoke 21264077; global/impact 21264079/21264080 | smoke 21264078; global/impact 21264081/21264082 |
-| X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | yes, as a scoped forecast-loss-guided corruption-mining method | implemented; smoke/screen not yet submitted | implemented; smoke/screen not yet submitted |
+| X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | yes, as a scoped forecast-loss-guided corruption-mining method | smoke 21268446; random/hard 21268448/21268449 | smoke 21268447; random/hard 21268450/21268451 |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -413,6 +413,16 @@ specialist in both histories, plus positive routed primary versus X22 in both.
 Failure in either history closes X27; there is no candidate-count, block-size,
 loss, or schedule sweep. Only a passing screen may advance to seeds 1/2 and
 fixed 2022/2023 evaluation.
+Implementation is pinned to `ae43208`. Initial queue probes estimated both
+10GB and 20GB slices near 03:00, while a full H100 was about 30 minutes
+earlier. Because the currently running X26 20GB job is expected to release its
+slice well before its reservation limit, both blocking smokes use 20GB rather
+than an 8x-overprovisioned full GPU; T1 remains within the ordinary 2x rule
+and T5 uses its known minimum feasible slice. T1/T5 smokes are
+`21268446/21268447`. Dependency-gated random-control/hard screens are
+`21268448/21268449` and `21268450/21268451`; formal T1 returns to the minimum
+10GB slice, while T5 retains 20GB and 128GB host memory. No experiment runs on
+the login node.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
