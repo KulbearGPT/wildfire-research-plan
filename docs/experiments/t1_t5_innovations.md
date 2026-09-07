@@ -504,6 +504,14 @@ matched cosine rectangular BlockDrop specialist in both histories, plus
 positive routed primary versus X22 in both. Failure in either history closes
 X28; no footprint mixture, morphology, target fraction, or loss sweep is
 allowed. Only a passing screen advances to seeds 1/2 and fixed 2022/2023.
+Implementation is pinned to `84fad2c`. The cached bank contains 24 finite
+binary reliability arrays; the targeted unit check confirms deterministic
+128x128 masks with exactly 4,096/8,192 invalid pixels. T1/T5 smoke jobs are
+`21271995/21271996`. Dependency-gated formal candidates are
+`21272006/21272008`; matched T5 rectangular control is `21272010`, while T1
+reuses completed cosine rectangular control `21268448`. T1 uses the minimum
+10GB slice; T5 uses its previously measured minimum-feasible 20GB slice and
+128GB host memory for formal evaluation. All model work is Slurm-only.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
