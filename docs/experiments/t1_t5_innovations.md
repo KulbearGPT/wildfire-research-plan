@@ -155,10 +155,10 @@ D2/D13 controls are context, not proof of any new direction.
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
 | X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; secondary only after heldout attribution failure | ERM-positive all years; X14 2023 block -.000649 | ERM-positive all years; X14 2022/23 block -.000898/-.001614 |
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
-| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | seeds 0/1 positive; two-seed primary +.009080 vs ERM, block +.003828 vs X14 | +.010157 vs ERM at seed 0; confirming |
+| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | all 3 seeds positive; primary +.007772 vs ERM, block +.003458 vs X14 | +.010157 vs ERM at seed 0; confirming |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
-| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | seeds 0/1 positive; two-seed primary +.008366 | +.008244 at seed 0; confirming |
+| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | 3-seed primary +.006035; positive mean, seed-2 M06 negative | +.008244 at seed 0; confirming |
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | smoke pass; seed-0 submitted | smoke pass; seed-0 submitted |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
@@ -1210,9 +1210,11 @@ They are also covered by blocking full-node bundle `21244500`; the originals
 remain authoritative if already active when the bundle starts.
 Seed-1 T1 `21244235` subsequently completed. It improves routed primary AP
 over fresh ERM by `+.005968` and block AP over X14 by `+.002566`; both direct
-controls remain positive. Across seeds 0/1, T1 primary gain over ERM is
-`+.009080` and block attribution over X14 is `+.003828`. This is encouraging
-but remains explicitly partial until seed 2 and T5 confirmation finish.
+controls remain positive. Seed-2 `21244241` is also positive: primary
+`+.005156` over ERM and block `+.002719` over X14. The complete T1 three-seed
+means are primary `+.007772` over ERM and block attribution `+.003458` over
+X14, with every seed positive for both comparisons. This remains explicitly
+partial until T5 confirmation finishes.
 Artifacts: `cross-history-analysis/x19-vs-erm-t1-confirmation-partial.json`
 and `cross-history-analysis/x19-vs-x14-t1-confirmation-partial.json`.
 
@@ -1306,8 +1308,12 @@ four confirmations after a scheduler probe placed the bundle before most
 individual jobs; each experiment still occupies exactly one H100 lane.
 Seed-1 T1 `21244237` then completed with positive deltas in all four scenarios:
 M00/M01/M06/M07 `+.001561/+.004959/+.007189/+.006288`, primary
-`+.006145`. The seeds 0/1 T1 primary mean is `+.008366`; no confirmation claim
-is made before seed 2 and T5 finish. Artifact:
+`+.006145`. Seed-2 `21244243` has primary `+.001373`; its M06 delta is
+`-.002397`, while M00/M01/M07 remain positive. Across all three T1 seeds,
+primary remains positive at `+.006035`, block at `+.004562`, and clean at
+`+.003650`. The registered confirmation gate is based on the matched seed
+mean, not every individual scenario/seed, but no confirmation claim is made
+before T5 finishes. Artifact:
 `cross-history-analysis/x22-t1-confirmation-partial.json`.
 
 `compose_complete_routes.py` prepares the final system audit without opening
