@@ -162,7 +162,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
-| X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | promotes X8 impact family only; cosine is not counted twice | smoke 21264077; global/impact 21264079/21264080 | smoke 21264078; global/impact 21264081/21264082 |
+| X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | no; frozen closest-control screen fails | +.001555 vs global, +.004877 vs X22; reject | +.003225 vs global, +.002167 vs X22; reject |
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | yes, as a scoped forecast-loss-guided corruption-mining method | smoke 21268446; random/hard 21268448/21268449 | smoke 21268447; random/hard 21268450/21268451 |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
@@ -358,6 +358,12 @@ rescue failed mechanism attribution. No additional X26 seed is submitted; the
 already-running T5 impact job is retained only to complete the negative/secondary
 record. Partial artifacts are `cross-history-analysis/x26-vs-global-t1.json`
 and `cross-history-analysis/x26-vs-x22-t1.json`.
+T5 subsequently completed with primary `+.003225` versus cosine-global and
+`+.002167` versus X22. The two-history means are only `+.002390` attribution
+and `+.003522` adoption, so X26 is neither a main direction nor a `>+.010`
+secondary result. Final seed-0 artifacts are
+`cross-history-analysis/x26-vs-global-seed0.json` and
+`cross-history-analysis/x26-vs-x22-seed0.json`.
 
 X27 is the bounded independent fallback opened after X26 failed. For every
 BlockDrop-only training example, it constructs two legal blocks of the same
@@ -431,6 +437,11 @@ sequential 20-minute full-H100 job `21269349`; dependencies of the four
 unchanged formal jobs were moved to that bundle, then unstarted smokes
 `21268446/21268447` were cancelled. Consolidation avoids reserving two full
 GPUs and changes no data, model, or scientific setting.
+The first consolidated job `21269349` received a full GPU but exited in nine
+seconds with code 126 because `run_slurm.sh` is intentionally non-executable
+and the wrapper invoked it directly. No model or data code ran. Replacement
+`21269658` changes only the wrapper to `bash run_slurm.sh`; all four formal
+dependencies now point to this replacement.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
