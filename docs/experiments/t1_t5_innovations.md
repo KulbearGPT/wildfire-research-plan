@@ -155,10 +155,10 @@ D2/D13 controls are context, not proof of any new direction.
 | X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
 | X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; secondary only after heldout attribution failure | ERM-positive all years; X14 2023 block -.000649 | ERM-positive all years; X14 2022/23 block -.000898/-.001614 |
 | X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
-| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | yes only if positive vs X14 | all 3 seeds positive; primary +.007772 vs ERM, block +.003458 vs X14 | +.010157 vs ERM at seed 0; confirming |
+| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | no; T5 closest-control confirmation fails | primary +.007772 vs ERM; block +.003458 vs X14 | primary +.015795 vs ERM but block -.001335 vs X14; reject |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
-| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | 3-seed primary +.006035; positive mean, seed-2 M06 negative | +.008244 at seed 0; confirming |
+| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | 3-seed primary +.006035 | 3-seed primary +.021346; held-out submitted |
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
@@ -170,7 +170,8 @@ D2/D13 controls are context, not proof of any new direction.
 | X14 BlockDrop robustness | final block mean `+.011843` | 3 seeds, 2021/22/23, both T | auxiliary block metric; primary mean is `+.007895` |
 | X17 severity-factorized experts | confirmation primary `+.012592`; final block `+.012376` | 3 seeds, 2021/22/23, both T | final primary `+.008250`; closest-control heldout attribution fails |
 | X8 + X17 complete route | final primary `+.013853` | 3 seeds, 2021/22/23, both T; all cells positive | system composition; it does not isolate another mechanism |
-| X19 latent adapters | seed-0 primary `+.011175`; block `+.016762` | one seed, 2021, both T; confirmation pending | potentially independent, but reliability is not established yet |
+| X19 latent adapters | confirmation primary `+.011784`; block `+.017675` vs ERM | 3 seeds, 2021, both T | T5 block attribution vs X14 is `-.001335`; useful total effect but not an independent contribution |
+| X22 cosine ERM | confirmation primary `+.013690`; block `+.010513` | 3 seeds, 2021, both T; held-out pending | optimizer/tuning contribution remains provisional until fixed years pass |
 
 This ledger is deliberately separate from the eventual three-main-direction
 count. Rows may be promoted only when their own attribution and reliability
@@ -1228,6 +1229,15 @@ X14, with every seed positive for both comparisons. This remains explicitly
 partial until T5 confirmation finishes.
 Artifacts: `cross-history-analysis/x19-vs-erm-t1-confirmation-partial.json`
 and `cross-history-analysis/x19-vs-x14-t1-confirmation-partial.json`.
+All T5 confirmation runs then completed. Against fresh ERM, X19 remains
+positive at primary `+.015795` for T5 and `+.011784` across all six
+history/seed rows. The closest-control result is decisive: versus X14, T5
+block mean is `-.001335` (primary `-.000890`), despite T1 block
+`+.003458`. X19 therefore fails independent module attribution and stops
+without held-out evaluation. Its cross-T ERM total effect is retained in the
+secondary ledger, not counted as a main contribution. Final confirmation
+artifacts: `cross-history-analysis/x19-vs-erm-confirmation.json` and
+`cross-history-analysis/x19-vs-x14-confirmation.json`.
 
 X20 is the loss-side follow-up to X8's completion audit. X8 established that
 counterfactual-impact weighting itself transfers across T=1/T=5 relative to
@@ -1315,12 +1325,12 @@ seed-2 `21241402/21241403`; all optimizer and data settings are unchanged.
 When those also moved to next-day estimates, the final blocking-task repair
 used full-H100 jobs: seed-1 T1/T5 `21244237/21244239` and seed-2
 `21244243/21244244`. The unstarted full-node bundle was cancelled after X23
-failed its closest-control gate. Four-GPU T5-only bundle `21257460` temporarily covered
-the remaining X19/X22 confirmations after unstarted `21256397` was replaced
-on same-resource queue evidence; each experiment occupies exactly one H100
-lane and no scientific setting changes. It was subsequently cancelled
-unstarted when all four originals began together; `21244236/21244239/`
-`21244242/21244244` are the authoritative runs.
+failed its closest-control gate. Four-GPU T5-only bundle `21257460`
+temporarily covered the remaining X19/X22 confirmations after unstarted
+`21256397` was replaced on same-resource queue evidence; each experiment
+occupies exactly one H100 lane and no scientific setting changes. It was
+subsequently cancelled unstarted when all four originals began together;
+`21244236/21244239/21244242/21244244` are the authoritative runs.
 Seed-1 T1 `21244237` then completed with positive deltas in all four scenarios:
 M00/M01/M06/M07 `+.001561/+.004959/+.007189/+.006288`, primary
 `+.006145`. Seed-2 `21244243` has primary `+.001373`; its M06 delta is
@@ -1330,6 +1340,13 @@ primary remains positive at `+.006035`, block at `+.004562`, and clean at
 mean, not every individual scenario/seed, but no confirmation claim is made
 before T5 finishes. Artifact:
 `cross-history-analysis/x22-t1-confirmation-partial.json`.
+All T5 runs completed successfully. The T5 three-seed primary gain is
+`+.021346`, block `+.016465`, and clean `+.011191`; together with positive T1,
+the full confirmation passes. Across all six rows, primary is `+.013690` and
+block `+.010513`. Fixed 2022/2023 evaluation jobs `21261913`--`21261924` were
+submitted only after this confirmation, using the minimum 10GB slice selected
+by matched queue probes. Artifact:
+`cross-history-analysis/x22-cosine-erm-confirmation.json`.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
