@@ -165,7 +165,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | no; frozen closest-control screen fails | +.001555 vs global, +.004877 vs X22; reject | +.003225 vs global, +.002167 vs X22; reject |
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
 | X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | running record only: candidate/control `21272008/21272010` |
-| X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | pending; attention repair of X1 context family | not submitted | not submitted |
+| X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | pending; attention repair of X1 context family | jobs `21272773/21272775` | jobs `21272774/21272777` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -573,6 +573,12 @@ specialist. The frozen seed-0 gate is routed primary `>=+.005` versus that
 control in both histories and positive versus X22 in both. X29 and X1 are one
 context-transport family, not two contributions. Failure in either history
 closes the family without attention width, grid, depth, or loss sweeps.
+Implementation is pinned to `ec02d5a`; the targeted module check verifies
+exact identity initialization and immutable valid-region features. T1/T5
+smokes are `21272773/21272774`, with dependency-gated formal candidates
+`21272775/21272777`. T1 reuses rectangular control `21268448`; T5 reuses the
+currently running matched control `21272010`. The minimum 10GB T1 and
+minimum-feasible 20GB T5 slices were selected; all model work is Slurm-only.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
