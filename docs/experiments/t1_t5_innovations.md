@@ -159,7 +159,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | 3-seed primary +.006035; positive mean, seed-2 M06 negative | +.008244 at seed 0; confirming |
-| X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | incremental counterfactual-impact objective; inference unchanged | smoke pass; seed-0 submitted | smoke pass; seed-0 submitted |
+| X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
@@ -226,13 +226,14 @@ Both smoke jobs completed in 20/22 seconds with exact initial equivalence,
 successful backward/inference, and peak allocations of 0.97/2.70GB. Their
 formal jobs were still assigned next-day estimates. A full-H100 probe gave a
 same-day estimate; as the screen blocks all X23 confirmation, the final queue
-repair first used `21244245/21244246`. When the ten independent confirmation
-and screen jobs remained pending, an eight-H100 full-node probe was earlier
-than most of their individual estimates. Blocking bundle `21244500` therefore
-runs all ten experiments in eight one-GPU lanes; it skips an old job already
-completed or running and cancels only its still-pending duplicate immediately
-before replacement. Model, data, optimizer, batch, and seed settings are
-unchanged.
+repair first used `21244245/21244246`. T1 `21244245` completed and improves
+the routed primary metric over fresh ERM by `+.011199` (block `+.016799`).
+Against the closest X14 control, however, primary improves only `+.002400`
+(block `+.003599`), below the frozen `+.005` attribution gate. X23 is
+therefore rejected; T5 `21244246` and the still-pending superseding bundle
+`21244500` were cancelled without starting further X23 work. Artifacts:
+`cross-history-analysis/x23-vs-erm-t1.json` and
+`cross-history-analysis/x23-vs-x14-t1.json`.
 
 X24 was considered after the complete-route diagnostic localized the remaining
 magnitude gap to FireDrop. The proposed frozen clean teacher would supervise a
@@ -1206,8 +1207,12 @@ Those requests later moved to next-day estimates. Because X19 confirmation
 blocks both attribution and held-out testing, the final queue repair uses full
 H100 jobs: seed-1 T1/T5 `21244235/21244236` and seed-2
 `21244241/21244242`. The larger slice changes no model or batch setting.
-They are also covered by blocking full-node bundle `21244500`; the originals
-remain authoritative if already active when the bundle starts.
+They were initially covered by blocking full-node bundle `21244500`; after
+X23 failed, that unstarted mixed bundle was cancelled. The four remaining T5
+confirmations are now additionally covered by four-GPU bundle `21256397`,
+which had an earlier pre-submission placement than either a new full-node job
+or the individual estimates. The originals remain authoritative if already
+active when this bundle starts.
 Seed-1 T1 `21244235` subsequently completed. It improves routed primary AP
 over fresh ERM by `+.005968` and block AP over X14 by `+.002566`; both direct
 controls remain positive. Seed-2 `21244241` is also positive: primary
@@ -1303,9 +1308,10 @@ Blocking-task 40GB replacements are seed-1 T1/T5 `21241398/21241399` and
 seed-2 `21241402/21241403`; all optimizer and data settings are unchanged.
 When those also moved to next-day estimates, the final blocking-task repair
 used full-H100 jobs: seed-1 T1/T5 `21244237/21244239` and seed-2
-`21244243/21244244`. Full-node bundle `21244500` additionally covers these
-four confirmations after a scheduler probe placed the bundle before most
-individual jobs; each experiment still occupies exactly one H100 lane.
+`21244243/21244244`. The unstarted full-node bundle was cancelled after X23
+failed its closest-control gate. Four-GPU T5-only bundle `21256397` now covers
+the remaining X19/X22 confirmations; each experiment occupies exactly one
+H100 lane and no scientific setting changes.
 Seed-1 T1 `21244237` then completed with positive deltas in all four scenarios:
 M00/M01/M06/M07 `+.001561/+.004959/+.007189/+.006288`, primary
 `+.006145`. Seed-2 `21244243` has primary `+.001373`; its M06 delta is
