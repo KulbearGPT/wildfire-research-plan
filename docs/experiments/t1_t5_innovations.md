@@ -161,7 +161,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | 3-seed primary +.006035 | 3-seed primary +.021346; held-out submitted |
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
-| X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | yes only as a cross-history/specialist extension with positive X14 attribution | smoke/formal 21263086/21263088 | smoke/formal 21263087/21263089 |
+| X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -302,6 +302,15 @@ smokes and T1 formal because it was earlier than 10GB while staying within 2x;
 T5 formal retains the equally placeable minimum 10GB slice. T1/T5 smoke jobs
 are `21263086/21263087`, with `afterok` formal screens
 `21263088/21263089`. No model work runs on the login node.
+T1 smoke and formal completed with exact initial equivalence. Routed primary
+improves fresh ERM by `+.010081` (block `+.015122`), but the direct X14
+attribution is only `+.001282` primary (`+.001922` block), below the frozen
+`+.005` gate. The T5 smoke reached the exact-equivalence check and then
+exceeded its 32GB host-memory allocation; because T1 already refutes the
+incremental mechanism, no memory retry is justified and dependent T5 formal
+`21263089` was cancelled. X25 is rejected. Artifacts:
+`cross-history-analysis/x25-vs-erm-t1.json` and
+`cross-history-analysis/x25-vs-x14-t1.json`.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
@@ -1398,6 +1407,12 @@ block `+.010513`. Fixed 2022/2023 evaluation jobs `21261913`--`21261924` were
 submitted only after this confirmation, using the minimum 10GB slice selected
 by matched queue probes. Artifact:
 `cross-history-analysis/x22-cosine-erm-confirmation.json`.
+All six T1 fixed-year jobs completed. The three-seed primary gains are
+`+.008133` for 2022 and `+.003442` for 2023, with clean deltas
+`+.006774/+.005687`; both T1 held-out cells pass. The 2023 block-only mean is
+slightly negative at `-.000461`, but the frozen primary criterion remains
+positive. T5 is still required before final adoption. Partial artifact:
+`cross-history-analysis/x22-cosine-erm-t1-heldout.json`.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
