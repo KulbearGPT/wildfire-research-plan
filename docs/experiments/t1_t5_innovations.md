@@ -164,8 +164,8 @@ D2/D13 controls are context, not proof of any new direction.
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
 | X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | no; frozen closest-control screen fails | +.001555 vs global, +.004877 vs X22; reject | +.003225 vs global, +.002167 vs X22; reject |
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
-| X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | running record only: candidate/control `21272008/21272010` |
-| X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | pending; attention repair of X1 context family | jobs `21272773/21272775` | jobs `21272774/21272777` |
+| X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | -.036784 vs rectangle, -.029450 vs X22; reject |
+| X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | pending; attention repair of X1 context family | smoke `21272773`, formal `21274628` | smoke `21272774`, formal `21274629` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -525,6 +525,12 @@ mixing-rate, or morphology repair is opened. The already-running T5 candidate
 and control are retained only to complete the architecture-transfer record.
 Partial artifacts: `cross-history-analysis/x28-vs-rectangle-t1.json` and
 `cross-history-analysis/x28-vs-x22-t1.json`.
+T5 independently confirms the failure: block/primary are
+`-.055175/-.036784` versus the matched rectangular specialist and
+`-.044175/-.029450` versus X22. The two-history seed-0 means are
+`-.035589` attribution and `-.028313` adoption. Final screen artifacts:
+`cross-history-analysis/x28-vs-rectangle-seed0.json` and
+`cross-history-analysis/x28-vs-x22-seed0.json`.
 
 X29 broadens the search away from FireDrop and follows the remaining spatial
 information problem. At the three deepest encoder levels, every location
@@ -579,6 +585,14 @@ smokes are `21272773/21272774`, with dependency-gated formal candidates
 `21272775/21272777`. T1 reuses rectangular control `21268448`; T5 reuses the
 currently running matched control `21272010`. The minimum 10GB T1 and
 minimum-feasible 20GB T5 slices were selected; all model work is Slurm-only.
+Both smokes passed in 32/35 seconds with exit `0:0`. The original formal jobs
+then remained pending over 30 minutes with 12:40/12:30 estimates. Matched
+queue probes placed T1 20GB and full-H100 at the same 05:11 time, so T1 moved
+within the 2x rule to 20GB job `21274628`. For blocking T5, 40GB estimated
+05:46 while full H100 estimated 05:11; the documented blocking exception
+selected full-H100 job `21274629`. Unstarted `21272775/21272777` were
+cancelled. Only allocation size changes; source, seed, data, batch, optimizer,
+and step count are identical.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
