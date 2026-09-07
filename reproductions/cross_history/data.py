@@ -14,6 +14,7 @@ from reproductions.wsts_fast_track.processed_reliability import (
     PROCESSED_DYNAMIC_NON_FIRE,
 )
 from reproductions.wsts_fast_track.missingness import structured_block_mask
+from .reliability_masks import sampled_footprint_mask
 
 ROOT = Path('/project/6085198/kulbear/wildfire')
 UPSTREAM = ROOT / 'cache/WildfireSpreadTS-res18-runtime'
@@ -41,7 +42,7 @@ def base_dataset(history, *, year=None):
 
 class PairedDataset:
     def __init__(self, base, history, *, fire_probability=.3, block_probability=.3,
-                 block_fraction=None, block_candidates=1):
+                 block_fraction=None, block_candidates=1, reliability_footprints=False):
         self.base = base
         self.columns = tuple(range(40)) if history == 1 else MULTI_FEATURES
         self.dynamic = tuple(i for i, c in enumerate(self.columns) if c in PROCESSED_DYNAMIC_NON_FIRE)
@@ -56,6 +57,7 @@ class PairedDataset:
         if block_candidates not in (1, 2):
             raise ValueError('block_candidates must be one or two')
         self.block_candidates = block_candidates
+        self.reliability_footprints = reliability_footprints
 
     def __len__(self):
         return len(self.base)
@@ -78,7 +80,8 @@ class PairedDataset:
                 # ordinary one-block control for every sample and worker.
                 candidate_digest = digest if candidate == 0 else hashlib.sha256(
                     f'{digest}-{candidate}'.encode('ascii')).hexdigest()
-                invalid = torch.from_numpy(structured_block_mask(
+                mask_fn = sampled_footprint_mask if self.reliability_footprints else structured_block_mask
+                invalid = torch.from_numpy(mask_fn(
                     *clean.shape[-2:], fraction, key_digest=candidate_digest))
                 x[:,self.dynamic] = x[:,self.dynamic].masked_fill(invalid[None,None], 0.)
             fire_invalid = invalid | fire_drop

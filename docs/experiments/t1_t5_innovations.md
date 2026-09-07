@@ -454,6 +454,57 @@ T5 jobs `21268450/21268451` were cancelled. Artifacts:
 `cross-history-analysis/x27-vs-random-t1.json` and
 `cross-history-analysis/x27-vs-x22-t1.json`.
 
+X28 is the application-grounded fallback after X27 failed. Rectangular
+BlockDrop is a controlled stress test, but real satellite observations are
+lost in irregular acquisition footprints produced by cloud, smoke, swath,
+and quality filtering. X28 reuses the 24 cached 2021 VIIRS observation-
+reliability footprints already present in the project. A deterministic
+rotation/reflection is resized to the training crop, then signed-distance
+ranking expands or contracts it to exactly 25% or 50% missing area. Thus the
+candidate and rectangular control have identical optimizer, cosine schedule,
+3000 steps, batch 64, BlockDrop-only sampling, missing channels, and missing
+area; only mask geometry changes. These masks are acquisition-reliability
+footprints, not cloud labels and not samples paired to the training events.
+
+#### X28 pre-run idea evaluation
+
+- **First impression:** New Setting/Application with an incremental data-
+  augmentation mechanism. The paper-safe claim is that physically observed
+  satellite-availability geometry is a better training prior for robust
+  next-day wildfire prediction than artificial rectangles at matched area.
+- **Fatal flaw:** prior-art crowding is `MAJOR`, not critical. Real cloud-mask
+  pools have already been sampled as augmentation for asynchronous remote-
+  sensing reconstruction
+  ([Fallah et al., 2026](https://openaccess.thecvf.com/content/CVPR2026W/MORSE/papers/Fallah_Asynchronous_Remote_Sensing_Time-Series_Fusion_for_Cloud_Removal_and_Anytime_CVPRW_2026_paper.pdf)),
+  and incomplete-modality robustness is established in remote sensing
+  ([Kha et al., 2025](https://openaccess.thecvf.com/content/CVPR2025/papers/Kha_RobSense_A_Robust_Multi-modal_Foundation_Model_for_Remote_Sensing_with_CVPR_2025_paper.pdf)).
+  Novelty is therefore restricted to forecast-targeted wildfire robustness,
+  area-matched attribution, and transfer across spatial and temporal
+  forecasters. No generic real-mask augmentation novelty is claimed.
+- **Lifecycle/capability:** application-research prototype. The shape bank,
+  shared trainer, and Nibi allocation are already available; there is no new
+  download, annotation, reconstruction model, or inference component. The
+  small 24-mask bank is the main data limitation and must be disclosed.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 7 | mechanism-based, unconfirmed: targets geometry mismatch while preserving X14's successful specialization |
+| Faster | 6 | one ordinary training forward and unchanged inference; CPU mask generation is small |
+| Stronger | 8 | directly targets realistic observation failure and is screened in both T=1/T=5 |
+| Cheaper | 8 | reuses cached masks, adds no labels, parameters, downloads, or inference cost |
+| Broader | 7 | one footprint mechanism spans two architectures, but evidence remains one wildfire dataset and one 24-mask source |
+
+The paradigm probe is incremental rather than field-changing: it replaces a
+convenient synthetic corruption assumption with an observed acquisition prior.
+Compute and engineering risks are low, data-diversity and effectiveness risks
+are medium, and novelty is viable only under the narrow application claim.
+Verdict: **Accept with Revisions, worth pursuing pending the validation
+experiment**. The frozen seed-0 gate is routed primary `>=+.005` versus the
+matched cosine rectangular BlockDrop specialist in both histories, plus
+positive routed primary versus X22 in both. Failure in either history closes
+X28; no footprint mixture, morphology, target fraction, or loss sweep is
+allowed. Only a passing screen advances to seeds 1/2 and fixed 2022/2023.
+
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
 Physical batch 16, accumulation 4 applies to every new control/candidate.
