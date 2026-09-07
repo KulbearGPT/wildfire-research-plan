@@ -166,7 +166,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
 | X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | -.036784 vs rectangle, -.029450 vs X22; reject |
 | X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; T5 attention interference | +.000661 vs specialist, +.007878 vs X22; reject | -.007990 vs specialist, -.000656 vs X22; reject |
-| X30 training-only fire-change auxiliary heads | X22 cosine ERM | pending; inference-free repair of X3 transition family | jobs `21312955/21312975` | jobs `21312968/21312986` |
+| X30 training-only fire-change auxiliary heads | X22 cosine ERM | no; T1 main-task interference | -.010378 vs X22; reject | running record only: `21312986` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -667,6 +667,14 @@ state logits and exact main-logit initialization of both conditional heads.
 T1/T5 smokes are `21312955/21312968`, with dependency-gated formal screens
 `21312975/21312986`. Requests use the minimum 10GB T1 and minimum-feasible
 20GB T5 slices. No model work runs on the login node.
+Both smokes passed in 36 seconds with exit `0:0`; T1 formal completed in
+17:13. Against X22, M00/M01/M06/M07 change
+`-.010799/-.013745/-.005154/-.012234`, yielding primary `-.010378` and also
+violating the clean guardrail. This rejects the hypothesis that X3's T1 signal
+can be retained as training-only state supervision under the stronger cosine
+anchor. The already-running T5 job is kept only for the cross-architecture
+record; no loss-weight, class-weight, route, or head repair is allowed.
+Partial artifact: `cross-history-analysis/x30-vs-x22-t1.json`.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
