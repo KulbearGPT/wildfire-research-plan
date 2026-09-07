@@ -164,7 +164,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
 | X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | no; frozen closest-control screen fails | +.001555 vs global, +.004877 vs X22; reject | +.003225 vs global, +.002167 vs X22; reject |
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
-| X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | pending; application-grounded geometry contribution | jobs `21271995/21272006` | jobs `21271996/21272008`, control `21272010` |
+| X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | running record only: candidate/control `21272008/21272010` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -513,6 +513,17 @@ binary reliability arrays; the targeted unit check confirms deterministic
 reuses completed cosine rectangular control `21268448`. T1 uses the minimum
 10GB slice; T5 uses its previously measured minimum-feasible 20GB slice and
 128GB host memory for formal evaluation. All model work is Slurm-only.
+Both smokes completed in 30 seconds with exit `0:0`, and the three formal jobs
+started without a queue migration. T1 decisively rejects geometry transfer:
+versus the area-matched rectangular specialist, M06/M07 AP changes by
+`-.046011/-.057171`, giving block `-.051591` and routed primary `-.034394`.
+Versus X22, block/primary are `-.040765/-.027177`. This is not a marginal gate
+failure: irregular acquisition-footprint training is substantially
+misaligned with the declared rectangular M06/M07 evaluation. No geometry,
+mixing-rate, or morphology repair is opened. The already-running T5 candidate
+and control are retained only to complete the architecture-transfer record.
+Partial artifacts: `cross-history-analysis/x28-vs-rectangle-t1.json` and
+`cross-history-analysis/x28-vs-x22-t1.json`.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
