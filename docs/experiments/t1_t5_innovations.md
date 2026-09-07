@@ -163,7 +163,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
 | X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | no; frozen closest-control screen fails | +.001555 vs global, +.004877 vs X22; reject | +.003225 vs global, +.002167 vs X22; reject |
-| X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | yes, as a scoped forecast-loss-guided corruption-mining method | smoke 21268446; random/hard 21268448/21268449 | smoke 21268447; random/hard 21268450/21268451 |
+| X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -442,6 +442,17 @@ seconds with code 126 because `run_slurm.sh` is intentionally non-executable
 and the wrapper invoked it directly. No model or data code ran. Replacement
 `21269658` changes only the wrapper to `bash run_slurm.sh`; all four formal
 dependencies now point to this replacement.
+The replacement bundle completed both real-data forward/backward smokes with
+exit `0:0`, exact initial equivalence, and peak GPU allocation 0.58GB/1.55GB
+for T1/T5. T1 random control `21268448` and hard selector `21268449` then
+completed. Hard selection improves routed block AP only `+.000697` over the
+matched random control, equivalent to primary `+.000465`, far below the
+frozen `+.005` attribution gate. Its routed block/primary gains versus X22
+are `+.011524/+.007683`, showing that BlockDrop specialization—not the new
+selector—causes almost all of the total gain. X27 is rejected and unstarted
+T5 jobs `21268450/21268451` were cancelled. Artifacts:
+`cross-history-analysis/x27-vs-random-t1.json` and
+`cross-history-analysis/x27-vs-x22-t1.json`.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
