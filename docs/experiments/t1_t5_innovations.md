@@ -176,6 +176,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X14 BlockDrop robustness | final block mean `+.011843` | 3 seeds, 2021/22/23, both T | auxiliary block metric; primary mean is `+.007895` |
 | X17 severity-factorized experts | confirmation primary `+.012592`; final block `+.012376` | 3 seeds, 2021/22/23, both T | final primary `+.008250`; closest-control heldout attribution fails |
 | X8 + X17 complete route | final primary `+.013853` | 3 seeds, 2021/22/23, both T; all cells positive | system composition; it does not isolate another mechanism |
+| X22 + X17 complete route | final primary `+.014642`; block `+.012376` | 3 seeds, 2021/22/23, both T; all six cells positive | stronger system composition, but still not an independent mechanism or `+.020` result |
 | X19 latent adapters | confirmation primary `+.011784`; block `+.017675` vs ERM | 3 seeds, 2021, both T | T5 block attribution vs X14 is `-.001335`; useful total effect but not an independent contribution |
 | X22 cosine ERM | final primary `+.012009`; block `+.008427` | 3 seeds, 2021/22/23, both T; all six primary cells positive | adopted as the second reliable direction; it is the sole optimizer/tuning contribution |
 
@@ -1819,3 +1820,11 @@ cells: T1 `+.010261/+.000766/+.008358` and T5
 This remains a secondary system result because it composes X8 and X17 rather
 than isolating another mechanism. Artifact:
 `cross-history-analysis/x8-x17-complete-route-final.json`.
+
+A second completed composition replaces X8's FireDrop checkpoint by X22 and
+retains X17's fixed-severity block experts. Its primary gains are T1
+`+.010386/+.006153/+.010109` and T5
+`+.028162/+.020169/+.012873` for 2021/22/23. All cells pass, and the 18-row
+mean rises to `+.014642` (block `+.012376`), but still misses `+.020` and
+cannot establish an additional mechanism. Artifact:
+`cross-history-analysis/x22-x17-complete-route-final.json`.
