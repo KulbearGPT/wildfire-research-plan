@@ -423,6 +423,14 @@ and T5 uses its known minimum feasible slice. T1/T5 smokes are
 `21268448/21268449` and `21268450/21268451`; formal T1 returns to the minimum
 10GB slice, while T5 retains 20GB and 128GB host memory. No experiment runs on
 the login node.
+After more than ten minutes pending, authoritative `squeue --start` estimates
+for the two smokes deteriorated to 09:30/09:40, while a short full-H100 probe
+estimated 02:37. Because smoke blocks all four screens, the documented
+oversize exception applies. The two checks were consolidated into one
+sequential 20-minute full-H100 job `21269349`; dependencies of the four
+unchanged formal jobs were moved to that bundle, then unstarted smokes
+`21268446/21268447` were cancelled. Consolidation avoids reserving two full
+GPUs and changes no data, model, or scientific setting.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
