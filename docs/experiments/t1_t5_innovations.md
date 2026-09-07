@@ -162,7 +162,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
-| X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | promotes X8 impact family only; cosine is not counted twice | implemented; smoke pending | implemented; smoke pending |
+| X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | promotes X8 impact family only; cosine is not counted twice | smoke 21264077; global/impact 21264079/21264080 | smoke 21264078; global/impact 21264081/21264082 |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -342,6 +342,12 @@ X22 cosine ERM in both. Failure of either comparison closes the family; no KL,
 schedule, or FireDrop-rate sweep is allowed. If it passes, seeds 1/2 and fixed
 years use the same pair, and only impact-versus-global attribution plus final
 impact-versus-X22 adoption may support the contribution.
+Implementation is pinned to `7594bd6`. T1/T5 impact-path smokes are
+`21264077/21264078`; their dependent global/impact screens are respectively
+`21264079/21264080` and `21264081/21264082`. Equal queue estimates select the
+minimum 10GB T1 slice and the already measured minimum-feasible 20GB paired
+T5 slice. T5 smoke requests 64GB host memory after the X25 loader measurement;
+formal T5 retains 128GB. No model computation runs on the login node.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
