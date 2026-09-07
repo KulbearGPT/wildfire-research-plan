@@ -79,6 +79,19 @@ class ValidContextMemoryAttention(nn.Module):
         return features + missing * self.output(retrieved)
 
 
+class ChangeAuxiliaryHead(nn.Module):
+    """Training-only heads for current state, persistence, and new activity."""
+    def __init__(self, channels):
+        super().__init__()
+        self.projection = nn.Conv2d(channels, 3, 1)
+        nn.init.zeros_(self.projection.weight)
+        nn.init.zeros_(self.projection.bias)
+
+    def forward(self, decoded, main_logits):
+        state, survival_delta, new_delta = self.projection(decoded).split(1, dim=1)
+        return state, main_logits + survival_delta, main_logits + new_delta
+
+
 class MissingnessExperts(nn.Module):
     """Late residual experts selected by the observed corruption regime."""
     def __init__(self, channels):
@@ -265,6 +278,9 @@ class Forecaster(nn.Module):
             self.context_memory = nn.ModuleList([
                 ValidContextMemoryAttention(c) for c in base.model.encoder.out_channels[-3:]
             ])
+        if method == 'cosine_change_aux':
+            decoder_channels = base.model.segmentation_head[0].in_channels
+            self.change_auxiliary = ChangeAuxiliaryHead(decoder_channels)
         if method in ('transition','transition_decoupled','context_transition'):
             decoder_channels = base.model.segmentation_head[0].in_channels
             self.transition = nn.Conv2d(decoder_channels,3,1)
@@ -367,7 +383,8 @@ class Forecaster(nn.Module):
         logits = self.base.model.segmentation_head(decoded)
         if self.method == 'missingness_experts':
             logits = logits + self.missingness_experts(decoded,spatial,fire_invalid)
-        aux = None
+        aux = (self.change_auxiliary(decoded, logits)
+               if self.method == 'cosine_change_aux' and details else None)
         if self.method in ('transition','transition_decoupled','context_transition'):
             base_logits = logits
             state, survival_delta, new_delta = self.transition(decoded).split(1,dim=1)

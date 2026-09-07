@@ -19,7 +19,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','cosine_erm','cosine_fire_global','cosine_fire_impact','cosine_block_specialist','cosine_block_hard','cosine_block_memory','cosine_reliability_block','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
+    p.add_argument('--method',choices=('control','cosine_erm','cosine_change_aux','cosine_fire_global','cosine_fire_impact','cosine_block_specialist','cosine_block_hard','cosine_block_memory','cosine_reliability_block','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -65,6 +65,7 @@ def main():
                     block_dropout_probability=block_probability,
                     block_fraction=a.block_fraction,
                     reconstruction_weight=(RECONSTRUCTION_WEIGHT if a.method == 'dynamic_inpaint_reconstruct' else 0.),
+                    change_auxiliary_weights=([.05,.05] if a.method == 'cosine_change_aux' else None),
                     initial_checkpoint=initial,job=os.environ['SLURM_JOB_ID'],
                     parameters=sum(x.numel() for x in model.parameters()),
                     trainable_parameters=sum(x.numel() for x in model.parameters() if x.requires_grad))

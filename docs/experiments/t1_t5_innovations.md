@@ -166,6 +166,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
 | X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | -.036784 vs rectangle, -.029450 vs X22; reject |
 | X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; T5 attention interference | +.000661 vs specialist, +.007878 vs X22; reject | -.007990 vs specialist, -.000656 vs X22; reject |
+| X30 training-only fire-change auxiliary heads | X22 cosine ERM | pending; inference-free repair of X3 transition family | not submitted | not submitted |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -613,6 +614,54 @@ aggregation interferes with the already strong T5 representation rather than
 adding missing evidence. The family closes without grid, width, depth, or
 head sweeps. Artifacts: `cross-history-analysis/x29-vs-block-specialist-seed0.json`
 and `cross-history-analysis/x29-vs-x22-seed0.json`.
+
+X30 moves from missingness-specific modules to temporal target structure. X3
+showed a substantial T1 signal (`+.011831`) but regressed at T5 (`-.009413`)
+when its predicted current state was explicitly marginalized into the final
+forecast. X30 retains one ordinary X22 prediction head. During training only,
+a zero-initialized shallow head predicts (1) the clean latest active-fire
+state, (2) next-day activity conditional on persistence, and (3) next-day new
+activity. These auxiliary losses expose the distinction between persistence
+and growth to the shared decoder, but their outputs are not computed during
+evaluation or deployment. This isolates representation learning from X3's
+brittle inference factorization.
+
+#### X30 pre-run idea evaluation
+
+- **First impression:** an incremental temporal/state Novel Method and a
+  direct mechanism repair, not a FireDrop-only tweak. The application claim is
+  that distinguishing persistent burning from new growth during training can
+  improve partial-observation next-day forecasting without requiring a state
+  reconstruction stage at deployment.
+- **Fatal flaw:** F1/prior-art crowding is `MAJOR`. Joint state reconstruction
+  and forecasting are standard multi-task ideas, and the closest wildfire
+  work already reconstructs fire history before prediction
+  ([Yang et al., 2026](https://arxiv.org/abs/2603.09042)). X30 cannot claim
+  reconstruction or auxiliary learning as new. Its defensible boundary is the
+  single-stage, training-only persistence/new-growth factorization, direct X22
+  ablation, and unchanged inference predictor across T1/T5.
+- **Lifecycle/capability:** application-research prototype. It adds one 1x1
+  training head, reuses labels already in each sample, and requires no data or
+  inference pipeline. The existing X3 code fixes both auxiliary weights at
+  `.05`, avoiding a new search.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 8 | X3's T1 gain is measured; X30 preserves the hypothesized useful auxiliary signal while removing its failed output factorization |
+| Faster | 7 | negligible training head and exactly unchanged evaluation/inference forward |
+| Stronger | 8 | explicitly teaches persistent versus newly growing fire behavior under all declared corruptions |
+| Cheaper | 9 | no new data, labels, inference parameters used, routing, or external model |
+| Broader | 7 | same temporal-change supervision applies to T1 and T5, though still on one dataset |
+
+The paradigm probe is incremental: it does not redefine wildfire forecasting,
+but changes state decomposition from a compulsory prediction-time latent
+variable into privileged training structure. Compute/engineering risks are
+low; effectiveness and incremental novelty are the real risks. Verdict:
+**Accept with Revisions, worth pursuing pending validation**. The frozen
+seed-0 gate is raw primary `>=+.005` versus X22 in both histories with M00
+`>=-.010`. Failure in either history closes X3/X30 without auxiliary-weight,
+head-depth, class-weight, or specialist-routing sweeps. Only a passing screen
+advances to seeds 1/2 and fixed years.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
