@@ -1209,10 +1209,13 @@ H100 jobs: seed-1 T1/T5 `21244235/21244236` and seed-2
 `21244241/21244242`. The larger slice changes no model or batch setting.
 They were initially covered by blocking full-node bundle `21244500`; after
 X23 failed, that unstarted mixed bundle was cancelled. The four remaining T5
-confirmations are now additionally covered by four-GPU bundle `21256397`,
+confirmations were additionally covered by four-GPU bundle `21256397`,
 which had an earlier pre-submission placement than either a new full-node job
 or the individual estimates. The originals remain authoritative if already
-active when this bundle starts.
+active when this bundle starts. After that bundle waited beyond 30 minutes and
+its estimate slipped to `00:50`, an identical same-resource probe was
+immediately placeable. The unstarted bundle was replaced by `21257460`; this
+is queue repair only and changes no experiment setting.
 Seed-1 T1 `21244235` subsequently completed. It improves routed primary AP
 over fresh ERM by `+.005968` and block AP over X14 by `+.002566`; both direct
 controls remain positive. Seed-2 `21244241` is also positive: primary
@@ -1309,9 +1312,10 @@ seed-2 `21241402/21241403`; all optimizer and data settings are unchanged.
 When those also moved to next-day estimates, the final blocking-task repair
 used full-H100 jobs: seed-1 T1/T5 `21244237/21244239` and seed-2
 `21244243/21244244`. The unstarted full-node bundle was cancelled after X23
-failed its closest-control gate. Four-GPU T5-only bundle `21256397` now covers
-the remaining X19/X22 confirmations; each experiment occupies exactly one
-H100 lane and no scientific setting changes.
+failed its closest-control gate. Four-GPU T5-only bundle `21257460` now covers
+the remaining X19/X22 confirmations after unstarted `21256397` was replaced
+on same-resource queue evidence; each experiment occupies exactly one H100
+lane and no scientific setting changes.
 Seed-1 T1 `21244237` then completed with positive deltas in all four scenarios:
 M00/M01/M06/M07 `+.001561/+.004959/+.007189/+.006288`, primary
 `+.006145`. Seed-2 `21244243` has primary `+.001373`; its M06 delta is
