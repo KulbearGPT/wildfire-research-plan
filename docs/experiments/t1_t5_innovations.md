@@ -163,6 +163,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
 | X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | promotes X8 impact family only; cosine is not counted twice | smoke 21264077; global/impact 21264079/21264080 | smoke 21264078; global/impact 21264081/21264082 |
+| X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | yes, as a scoped forecast-loss-guided corruption-mining method | implemented; smoke/screen not yet submitted | implemented; smoke/screen not yet submitted |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -348,6 +349,70 @@ Implementation is pinned to `7594bd6`. T1/T5 impact-path smokes are
 minimum 10GB T1 slice and the already measured minimum-feasible 20GB paired
 T5 slice. T5 smoke requests 64GB host memory after the X25 loader measurement;
 formal T5 retains 128GB. No model computation runs on the login node.
+
+T1 completed before T5 and closes X26 under its frozen attribution gate.
+Impact weighting changes routed M01 AP by `+.004666` versus cosine-global,
+equivalent to primary `+.001555`, below the required `+.005`. It remains
+positive versus X22 (`+.014631` M01, `+.004877` primary), but adoption cannot
+rescue failed mechanism attribution. No additional X26 seed is submitted; the
+already-running T5 impact job is retained only to complete the negative/secondary
+record. Partial artifacts are `cross-history-analysis/x26-vs-global-t1.json`
+and `cross-history-analysis/x26-vs-x22-t1.json`.
+
+X27 is the bounded independent fallback opened after X26 failed. For every
+BlockDrop-only training example, it constructs two legal blocks of the same
+sampled 25% or 50% size, measures each detached focal forecast loss with the
+current model in inference mode, and backpropagates only through the harder
+view. The first candidate is bit-for-bit the random block used by the matched
+control; the second is derived from the same digest without advancing the
+data RNG. Candidate and control both use cosine-to-zero, 3000 AdamW steps,
+batch 64, and BlockDrop on every sample. This isolates online hard-block
+selection from X22's schedule and X14's specialization. At inference X27 adds
+no parameter or computation and is used only for observable spatial cases;
+M00/M01 remain X22 predictions.
+
+#### X27 pre-run idea evaluation
+
+- **First impression:** a scoped Novel Method/Application result. The
+  one-sentence story is that random missing blocks under-train the locations
+  whose removal most damages the next-day forecast, so online forecast-loss
+  selection should improve robustness without learning a reconstruction
+  model.
+- **Fatal flaw:** F1/crowded prior art is `MAJOR`, not critical. Huang et al.
+  already retrain on adversarially selected occlusions for person
+  re-identification ([CVPR 2018](https://openaccess.thecvf.com/content_cvpr_2018/html/Huang_Adversarially_Occluded_Samples_CVPR_2018_paper.html)); ADIOS learns an
+  adversarial mask generator for self-supervised representations
+  ([Shi et al., ICML 2022](https://proceedings.mlr.press/v162/shi22d.html)); and
+  adversarial cloud defense has been studied in remote-sensing salient-object
+  detection ([Sun et al., WACV 2024](https://openaccess.thecvf.com/content/WACV2024/html/Sun_Defense_Against_Adversarial_Cloud_Attack_on_Remote_Sensing_Salient_Object_WACV_2024_paper.html)).
+  The defensible difference is narrower: supervised next-day wildfire
+  forecast loss selects among masks constrained to the declared sensor-gap
+  protocol, with no mask generator and a direct random-block control. No
+  generic adversarial-occlusion novelty claim is allowed.
+- **Lifecycle/capability:** application-research prototype. Existing paired
+  tensors, PyTorch runner, and Nibi H100 access make a two-candidate screen
+  feasible for a single researcher; unknown weekly hours leave the paper
+  lifecycle fit yellow, but the prototype itself is bounded.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 8 | mechanism-based, unconfirmed: X14's random specialization already yields final block `+.011843`; X27 targets its residual placement sensitivity |
+| Faster | 3 | two detached selection forwards add training time; inference is unchanged |
+| Stronger | 8 | mechanism-based, unconfirmed: the identical selector applies to both architectures and explicitly optimizes occlusion robustness |
+| Cheaper | 5 | no new data, labels, parameters, or inference cost, but greater training compute |
+| Broader | 6 | one rule spans spatial U-Net and temporal UTAE, still on one wildfire dataset |
+
+The paradigm probe is incremental: it partially challenges the assumption
+that random synthetic missingness sufficiently covers damaging sensor gaps,
+but it does not ride a technology shift or redefine the field. Compute risk
+is medium (two extra no-gradient forwards), data risk low, engineering risk
+low-to-medium, and timeline risk low for the screen. Verdict: **Accept with
+Revisions, worth pursuing pending the validation experiment**. The frozen
+seed-0 gate is routed primary `>=+.005` versus the matched cosine random-block
+specialist in both histories, plus positive routed primary versus X22 in both.
+Failure in either history closes X27; there is no candidate-count, block-size,
+loss, or schedule sweep. Only a passing screen may advance to seeds 1/2 and
+fixed 2022/2023 evaluation.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.

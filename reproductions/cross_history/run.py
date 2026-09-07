@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 import numpy as np
 import torch
+from torchvision.ops import sigmoid_focal_loss
 from .data import setup, base_dataset, PairedDataset, evaluation_dataset
 from .models import initial_payload, make_base, Forecaster, feature_loss, transition_loss
 from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
@@ -18,7 +19,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','cosine_erm','cosine_fire_global','cosine_fire_impact','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
+    p.add_argument('--method',choices=('control','cosine_erm','cosine_fire_global','cosine_fire_impact','cosine_block_specialist','cosine_block_hard','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -51,7 +52,8 @@ def main():
     fire_specialist = a.method in (
         'fire_specialist','fire_specialist_impact','cosine_fire_global','cosine_fire_impact')
     block_specialist = a.method in (
-        'block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context',
+        'block_specialist','cosine_block_specialist','cosine_block_hard',
+        'block_specialist_impact','block_specialist_dynamic','block_specialist_context',
         'block_specialist_severity_adapter','block_specialist_reliability_prompt')
     fire_probability = 1. if fire_specialist else (0. if block_specialist else corruption_probability)
     block_probability = 1. if block_specialist else (0. if fire_specialist else corruption_probability)
@@ -75,7 +77,8 @@ def main():
     else:
         dataset = PairedDataset(base_dataset(a.history),a.history,
             fire_probability=fire_probability,block_probability=block_probability,
-            block_fraction=a.block_fraction)
+            block_fraction=a.block_fraction,
+            block_candidates=2 if a.method == 'cosine_block_hard' else 1)
         loader = torch.utils.data.DataLoader(dataset,batch_size=a.batch_size,shuffle=True,
             generator=torch.Generator().manual_seed(a.seed),num_workers=a.workers,
             pin_memory=True,persistent_workers=a.workers>0,drop_last=True)
@@ -98,6 +101,23 @@ def main():
                 except StopIteration:
                     iterator = iter(loader); packed,target,clean = next(iterator)
                 packed,target,clean = packed.cuda(),target.cuda().long(),clean.cuda()
+                if a.method == 'cosine_block_hard':
+                    # Select the block placement that currently causes the
+                    # largest supervised forecast loss. Selection is detached
+                    # and uses inference-mode BatchNorm; only the selected
+                    # view participates in the training forward/backward.
+                    model.eval()
+                    candidate_scores = []
+                    with torch.no_grad():
+                        for candidate in range(packed.shape[1]):
+                            candidate_logits = model(packed[:,candidate]).squeeze(1)
+                            raw = sigmoid_focal_loss(candidate_logits,target.float(),
+                                alpha=1-float(base.hparams.pos_class_weight),gamma=2,
+                                reduction='none')
+                            candidate_scores.append(raw.flatten(1).mean(1))
+                    hardest = torch.stack(candidate_scores,dim=1).argmax(dim=1)
+                    packed = packed[torch.arange(packed.shape[0],device=packed.device),hardest]
+                    model.train()
                 clean_logits = None
                 if a.method in ('global_consistency','local_consistency','impact_consistency','fire_specialist_impact','block_specialist_impact','erm_impact_consistency','cosine_fire_global','cosine_fire_impact'):
                     zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
@@ -123,7 +143,6 @@ def main():
                     if a.method == 'context_adapter': model.base.eval()
                 logits,features,aux,reconstruction = model(packed,details=True)
                 if a.method in ('risk','risk_strong'):
-                    from torchvision.ops import sigmoid_focal_loss
                     raw_loss = sigmoid_focal_loss(logits.squeeze(1),target.float(),
                         alpha=1-float(base.hparams.pos_class_weight),gamma=2,reduction='none')
                     spatial = packed[:,-1,-2]

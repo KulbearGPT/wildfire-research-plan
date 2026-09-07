@@ -1,5 +1,6 @@
 """Share targets and corruption semantics across existing T1 and T5 models."""
 from pathlib import Path
+import hashlib
 import importlib
 import numpy as np
 import torch
@@ -40,7 +41,7 @@ def base_dataset(history, *, year=None):
 
 class PairedDataset:
     def __init__(self, base, history, *, fire_probability=.3, block_probability=.3,
-                 block_fraction=None):
+                 block_fraction=None, block_candidates=1):
         self.base = base
         self.columns = tuple(range(40)) if history == 1 else MULTI_FEATURES
         self.dynamic = tuple(i for i, c in enumerate(self.columns) if c in PROCESSED_DYNAMIC_NON_FIRE)
@@ -52,27 +53,44 @@ class PairedDataset:
         if block_fraction not in (None, 0.25, 0.5):
             raise ValueError('block_fraction must be None, 0.25, or 0.5')
         self.block_fraction = block_fraction
+        if block_candidates not in (1, 2):
+            raise ValueError('block_candidates must be one or two')
+        self.block_candidates = block_candidates
 
     def __len__(self):
         return len(self.base)
 
     def __getitem__(self, index):
         clean, target = self.base[index]
-        x = clean.clone()
         fire_drop = bool(np.random.random() < self.fire_probability)
         block_drop = bool(np.random.random() < self.block_probability)
         sampled_fraction = 0.25 if np.random.random() < 0.5 else 0.5
         fraction = self.block_fraction if self.block_fraction is not None else sampled_fraction
         digest = np.random.bytes(32).hex()
-        invalid = torch.zeros(clean.shape[-2:], dtype=torch.bool)
-        if block_drop:
-            invalid = torch.from_numpy(structured_block_mask(*clean.shape[-2:], fraction, key_digest=digest))
-            x[:,self.dynamic] = x[:,self.dynamic].masked_fill(invalid[None,None], 0.)
-        fire_invalid = invalid | fire_drop
-        x[:,self.fire_value] = x[:,self.fire_value].masked_fill(fire_invalid[None], self.missing_value)
-        x[:,self.fire_binary] = x[:,self.fire_binary].masked_fill(fire_invalid[None], 0.)
-        masks = torch.stack((invalid, fire_invalid)).to(x.dtype)[None].expand(x.shape[0],-1,-1,-1)
-        return torch.cat((x,masks),dim=1), target, clean
+
+        packed_candidates = []
+        for candidate in range(self.block_candidates):
+            x = clean.clone()
+            invalid = torch.zeros(clean.shape[-2:], dtype=torch.bool)
+            if block_drop:
+                # Derive extra hard-mining choices without consuming another
+                # RNG draw: candidate zero remains exactly paired to the
+                # ordinary one-block control for every sample and worker.
+                candidate_digest = digest if candidate == 0 else hashlib.sha256(
+                    f'{digest}-{candidate}'.encode('ascii')).hexdigest()
+                invalid = torch.from_numpy(structured_block_mask(
+                    *clean.shape[-2:], fraction, key_digest=candidate_digest))
+                x[:,self.dynamic] = x[:,self.dynamic].masked_fill(invalid[None,None], 0.)
+            fire_invalid = invalid | fire_drop
+            x[:,self.fire_value] = x[:,self.fire_value].masked_fill(
+                fire_invalid[None], self.missing_value)
+            x[:,self.fire_binary] = x[:,self.fire_binary].masked_fill(fire_invalid[None], 0.)
+            masks = torch.stack((invalid, fire_invalid)).to(x.dtype)[None].expand(
+                x.shape[0],-1,-1,-1)
+            packed_candidates.append(torch.cat((x,masks),dim=1))
+        packed = packed_candidates[0] if self.block_candidates == 1 else torch.stack(
+            packed_candidates, dim=0)
+        return packed, target, clean
 
 
 class EvaluationDataset(ControlledMissingnessDataset):
