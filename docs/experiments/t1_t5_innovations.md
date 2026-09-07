@@ -161,7 +161,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | 3-seed primary +.006035 | 3-seed primary +.021346; held-out submitted |
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
-| X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | yes only as a cross-history/specialist extension with positive X14 attribution | implemented; smoke pending | implemented; smoke pending |
+| X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | yes only as a cross-history/specialist extension with positive X14 attribution | smoke/formal 21263086/21263088 | smoke/formal 21263087/21263089 |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -297,6 +297,11 @@ validation experiment**. The decisive actions are (1) exact T1/T5 smoke,
 (2) one frozen seed-0 screen, and (3) stop unless routed primary improves at
 least `+.005` over X14 in both histories with the usual M00 guardrail. Fresh
 ERM is the adoption check; no token size, threshold, or loss sweep is allowed.
+Implementation is pinned to `7cdf988`. Queue probes selected 20GB for both
+smokes and T1 formal because it was earlier than 10GB while staying within 2x;
+T5 formal retains the equally placeable minimum 10GB slice. T1/T5 smoke jobs
+are `21263086/21263087`, with `afterok` formal screens
+`21263088/21263089`. No model work runs on the login node.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
