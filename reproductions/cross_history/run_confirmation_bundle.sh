@@ -27,7 +27,7 @@ run_one() {
       return 0
       ;;
     PENDING*)
-      scancel "${old_job}"
+      scancel --state=PENDING "${old_job}"
       echo "REPLACE ${tag}: cancelled pending ${old_job}"
       ;;
   esac

@@ -593,6 +593,16 @@ within the 2x rule to 20GB job `21274628`. For blocking T5, 40GB estimated
 selected full-H100 job `21274629`. Unstarted `21272775/21272777` were
 cancelled. Only allocation size changes; source, seed, data, batch, optimizer,
 and step count are identical.
+At the next 30-minute check, T1 had started but the T5 full-H100 estimate was
+06:09. New probes placed all profiles around 05:50, so a minimum 20GB
+replacement `21275163` was submitted. A stale queue snapshot caused an
+operational race: old job `21274629` had started at 04:58:19 before the
+replacement submission and was inadvertently cancelled at 05:01:36 after
+3:17 runtime. No result was produced and no scientific setting changed; the
+20GB replacement is authoritative. Root-cause timestamps are recorded by
+`sacct`. Future replacements use Slurm's controller-side
+`scancel --state=PENDING` filter so a job that starts after inspection is not
+cancelled; both existing bundle scripts receive the same one-line safeguard.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
