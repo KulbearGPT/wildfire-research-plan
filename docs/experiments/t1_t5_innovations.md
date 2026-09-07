@@ -161,6 +161,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | 3-seed primary +.006035 | 3-seed primary +.021346; held-out submitted |
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
+| X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | yes only as a cross-history/specialist extension with positive X14 attribution | implemented; smoke pending | implemented; smoke pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -251,6 +252,51 @@ Its only narrower change would be X8's already-tested impact weighting, while
 the repository's frozen feature-distillation X2 has negative T1 evidence.
 Therefore X24 adds neither a defensible mechanism axis nor enough new evidence
 to justify another job; it is not implemented or submitted.
+
+X25 is the bounded fallback opened only after X19 failed closest-control
+confirmation. It ports main's retained D12 reliability-token mechanism into
+the shared T1/T5 forecaster and trains it under X14's BlockDrop-only
+distribution. Observed block severity routes severe holes to a shallow input
+token and mild holes to multi-resolution latent tokens; all tokens initialize
+at zero, so the initial predictor and inference inputs remain unchanged. The
+module adds only 1,088 scalar parameters and consumes no new labels or external
+data. This is explicitly an incremental extension of D12, not a claim that
+learned missing tokens are new: M3L already uses learned missing-modality
+tokens ([Maheshwari et al., 2024](https://openaccess.thecvf.com/content/WACV2024/html/Maheshwari_Missing_Modality_Robustness_in_Semi-Supervised_Multi-Modal_Semantic_Segmentation_WACV_2024_paper.html)),
+and partial convolution already propagates validity through U-Net features
+([Liu et al., 2018](https://openaccess.thecvf.com/content_ECCV_2018/html/Guilin_Liu_Image_Inpainting_for_ECCV_2018_paper.html)).
+
+#### X25 pre-run idea evaluation
+
+- **First impression:** Novel Method, but narrowly incremental. The one-line
+  story is that block severity should determine *where in the hierarchy* an
+  invalid-evidence token enters a wildfire forecaster, and that rule should
+  transfer from Res18-U-Net to Res18-UTAE.
+- **Fatal flaw:** F1/crowded prior art is `MAJOR`, not critical. The defense is
+  a narrow claim, explicit inheritance from D12, and direct attribution to
+  X14 in both histories; no generic missing-token novelty claim is allowed.
+- **Lifecycle/capability:** application-research prototype; the existing
+  PyTorch runner, WSTS+ tensors, and Nibi H100 access make implementation and
+  a two-run screen feasible for this single-person fast-prototyping project.
+  Paper-level novelty remains yellow until matched evidence exists.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 8 | mechanism-based, unconfirmed: D12 previously adds `+.005764` block AP over D2-STD and X14 is cross-history positive; X25 itself has no result yet |
+| Faster | 5 | no speed claim or evidence |
+| Stronger | 8 | mechanism-based, unconfirmed: severity-specific reliability is evaluated under both T=1 and T=5 missingness |
+| Cheaper | 6 | 1,088 parameters, no new data, one routed checkpoint |
+| Broader | 6 | the same rule spans spatial and spatiotemporal architectures, but only one wildfire dataset |
+
+The paradigm probe is incremental-with-seeds: partial First-Principles support
+(prompt depth follows observed severity), yes to the known incomplete-satellite
+observation problem, and no technology-cycle or field-changing claim. Compute,
+data, engineering, and timeline risks are low; novelty and effectiveness are
+the real risks. Verdict: **Accept with Revisions, worth pursuing pending the
+validation experiment**. The decisive actions are (1) exact T1/T5 smoke,
+(2) one frozen seed-0 screen, and (3) stop unless routed primary improves at
+least `+.005` over X14 in both histories with the usual M00 guardrail. Fresh
+ERM is the adoption check; no token size, threshold, or loss sweep is allowed.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.

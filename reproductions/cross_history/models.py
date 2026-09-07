@@ -199,6 +199,28 @@ class SeverityResidualAdapter(nn.Module):
         return feature + active * mask * residual
 
 
+class InputReliabilityTokenConv2d(nn.Module):
+    """Add a learned token in proportion to invalid input coverage."""
+    def __init__(self, conv):
+        super().__init__()
+        self.conv = conv
+        self.feature_channels = conv.in_channels
+        self.invalid_token = nn.Parameter(torch.zeros(conv.out_channels))
+
+    def forward(self, packed):
+        # The original channel count is accepted so the wrapped base remains a
+        # valid clean-view/control model for initial-equivalence checks.
+        if packed.shape[1] == self.feature_channels:
+            return self.conv(packed)
+        if packed.shape[1] != self.feature_channels + 1:
+            raise ValueError('reliability-token input has incompatible channels')
+        features, invalid = packed[:,:-1], packed[:,-1:]
+        base = self.conv(features)
+        coverage = F.avg_pool2d(invalid,kernel_size=self.conv.kernel_size,
+            stride=self.conv.stride,padding=self.conv.padding,count_include_pad=False)
+        return base + coverage*self.invalid_token[None,:,None,None]
+
+
 class Forecaster(nn.Module):
     def __init__(self, base, history, method):
         super().__init__()
@@ -242,16 +264,40 @@ class Forecaster(nn.Module):
                 SeverityResidualAdapter(c) for c in base.model.encoder.out_channels[1:]
             ])
 
-    def features(self, x):
+        if method == 'block_specialist_reliability_prompt':
+            base.model.encoder.conv1 = InputReliabilityTokenConv2d(base.model.encoder.conv1)
+            self.reliability_prompt_tokens = nn.ParameterList([
+                nn.Parameter(torch.zeros(c)) for c in base.model.encoder.out_channels[1:]
+            ])
+
+    def features(self, x, spatial=None):
         encoder = self.base.model.encoder
+        if self.method == 'block_specialist_reliability_prompt':
+            severity = spatial.mean(dim=(-2,-1),keepdim=True)
+            severe = (severity > .375).to(x.dtype)
+            input_invalidity = spatial*severe
+            encode = lambda frame: encoder(torch.cat((frame,input_invalidity),dim=1))
+        else:
+            encode = encoder
         if self.history == 1:
-            return list(encoder(x[:,0]))
-        per_time = [encoder(x[:,t]) for t in range(self.history)]
-        positions = torch.arange(self.history,device=x.device)[None].expand(x.shape[0],-1)
-        last, attention = self.base.ltae(torch.stack([f[-1] for f in per_time],dim=1), batch_positions=positions)
-        skips = [self.base.temporal_aggregator(torch.stack([f[s] for f in per_time],dim=1),attn_mask=attention)
-                 for s in range(1,len(per_time[0])-1)]
-        return [per_time[0][0],*skips,last]
+            features = list(encode(x[:,0]))
+        else:
+            per_time = [encode(x[:,t]) for t in range(self.history)]
+            positions = torch.arange(self.history,device=x.device)[None].expand(x.shape[0],-1)
+            last, attention = self.base.ltae(torch.stack([f[-1] for f in per_time],dim=1), batch_positions=positions)
+            skips = [self.base.temporal_aggregator(torch.stack([f[s] for f in per_time],dim=1),attn_mask=attention)
+                     for s in range(1,len(per_time[0])-1)]
+            features = [per_time[0][0],*skips,last]
+        if self.method == 'block_specialist_reliability_prompt':
+            severity = spatial.mean(dim=(-2,-1),keepdim=True)
+            mild = ((severity > 0) & (severity <= .375)).to(x.dtype)
+            invalidity = spatial*mild
+            features = [features[0], *[
+                feature + F.adaptive_avg_pool2d(invalidity,feature.shape[-2:])
+                * token[None,:,None,None]
+                for feature,token in zip(features[1:],self.reliability_prompt_tokens)
+            ]]
+        return features
 
     def forward(self, packed, details=False):
         x = packed[:,:,:self.channels]
@@ -264,7 +310,7 @@ class Forecaster(nn.Module):
                 reconstruction = x[:,:,self.dynamic_inpaint.dynamic]
         if self.method == 'normalized_inpaint':
             x = self.normalized_inpaint(x,spatial)
-        features = self.features(x)
+        features = self.features(x,spatial)
         if self.method == 'distance_prompt':
             features = [features[0],*self.distance_prompt(features[1:],spatial)]
         if self.method == 'block_specialist_severity_adapter':
