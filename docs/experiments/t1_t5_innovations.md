@@ -158,7 +158,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | no; T5 closest-control confirmation fails | primary +.007772 vs ERM; block +.003458 vs X14 | primary +.015795 vs ERM but block -.001335 vs X14; reject |
 | X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
 | X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
-| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | 3-seed primary +.006035 | 3-seed primary +.021346; held-out submitted |
+| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | reliable: +.006035/+.008133/+.003442 in 2021/22/23 | reliable: +.021346/+.019504/+.013596 in 2021/22/23 |
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
@@ -173,7 +173,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X17 severity-factorized experts | confirmation primary `+.012592`; final block `+.012376` | 3 seeds, 2021/22/23, both T | final primary `+.008250`; closest-control heldout attribution fails |
 | X8 + X17 complete route | final primary `+.013853` | 3 seeds, 2021/22/23, both T; all cells positive | system composition; it does not isolate another mechanism |
 | X19 latent adapters | confirmation primary `+.011784`; block `+.017675` vs ERM | 3 seeds, 2021, both T | T5 block attribution vs X14 is `-.001335`; useful total effect but not an independent contribution |
-| X22 cosine ERM | confirmation primary `+.013690`; block `+.010513` | 3 seeds, 2021, both T; held-out pending | optimizer/tuning contribution remains provisional until fixed years pass |
+| X22 cosine ERM | final primary `+.012009`; block `+.008427` | 3 seeds, 2021/22/23, both T; all six primary cells positive | adopted as the second reliable direction; it is the sole optimizer/tuning contribution |
 
 This ledger is deliberately separate from the eventual three-main-direction
 count. Rows may be promoted only when their own attribution and reliability
@@ -1450,6 +1450,20 @@ All six T1 fixed-year jobs completed. The three-seed primary gains are
 slightly negative at `-.000461`, but the frozen primary criterion remains
 positive. T5 is still required before final adoption. Partial artifact:
 `cross-history-analysis/x22-cosine-erm-t1-heldout.json`.
+
+All six T5 fixed-year jobs also completed. T5 primary gains are `+.019504`
+for 2022 and `+.013596` for 2023, with block gains `+.015396/+.007697` and
+clean gains `+.005676/+.009993`. Combined with the registered 2021 results,
+all six history/year primary cells are positive: T1
+`+.006035/+.008133/+.003442` and T5 `+.021346/+.019504/+.013596` for
+2021/22/23. Across all 18 matched rows, primary is `+.012009` and block is
+`+.008427`; `confirmation_pass=true`, `heldout_pass=true`, and
+`goal_evidence_pass=true`. X22 is therefore the second adopted reliable
+direction, explicitly categorized as the campaign's sole optimizer/tuning
+contribution rather than a new architectural module. The complete artifact is
+`cross-history-analysis/x22-cosine-erm-final.json`. One individual-row clean
+delta is `-.011242`, but every registered history/year three-seed clean mean
+is positive; the frozen gate is defined on those grouped means.
 
 `compose_complete_routes.py` prepares the final system audit without opening
 another model direction. For each matched history/seed/year row it takes M00
