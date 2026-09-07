@@ -162,6 +162,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
 | X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
 | X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
+| X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | promotes X8 impact family only; cosine is not counted twice | implemented; smoke pending | implemented; smoke pending |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -311,6 +312,36 @@ incremental mechanism, no memory retry is justified and dependent T5 formal
 `21263089` was cancelled. X25 is rejected. Artifacts:
 `cross-history-analysis/x25-vs-erm-t1.json` and
 `cross-history-analysis/x25-vs-x14-t1.json`.
+
+X26 is the one bounded repair opened after X25 failed. It does not claim that
+combining cosine decay with consistency is a new method. Instead, it asks
+whether X8's already isolated counterfactual-impact weighting remains additive
+to the stronger X22 optimization anchor and thereby fixes X8's failed ERM
+adoption. Candidate and closest control are both FireDrop-only, use paired
+clean/corrupt supervised loss, cosine-to-zero AdamW, and fixed KL weight 0.1;
+the only difference is impact-weighted versus global Bernoulli KL. At
+inference, both use one unchanged checkpoint and the observable FireDrop route.
+
+The pre-run `idea-evaluator` verdict is **Accept with Revisions, worth
+pursuing pending the validation experiment**. F1 is the only major risk:
+cosine scheduling and consistency are known, so a passing result can promote
+the already scoped X8 impact-weighting family as the third direction, while
+X22 remains the sole optimizer contribution; X26 itself is not counted as a
+fourth idea. The mechanism has unusually direct prior evidence: fixed X8
+impact routing beat global consistency in every T/year cell (final mean
+`+.004683`), including seed-0 primary `+.007239` at T1 and `+.005132` at T5,
+while X22 independently passed both-history confirmation. Higher and Stronger
+are therefore rated 8 from measured parent evidence; Faster stays 5, Cheaper
+6 (no inference parameters/data), and Broader 6 (two history architectures,
+one dataset). This is incremental, not paradigm-shifting, and fits the current
+runner/Nibi resources.
+
+The decisive seed-0 gate is routed primary `>=+.005` versus the matched
+cosine-global control in both histories, plus positive routed primary versus
+X22 cosine ERM in both. Failure of either comparison closes the family; no KL,
+schedule, or FireDrop-rate sweep is allowed. If it passes, seeds 1/2 and fixed
+years use the same pair, and only impact-versus-global attribution plus final
+impact-versus-X22 adoption may support the contribution.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.

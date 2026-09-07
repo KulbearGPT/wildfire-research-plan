@@ -18,7 +18,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
-    p.add_argument('--method',choices=('control','cosine_erm','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
+    p.add_argument('--method',choices=('control','cosine_erm','cosine_fire_global','cosine_fire_impact','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
     p.add_argument('--batch-size',type=int,default=16)
@@ -48,7 +48,8 @@ def main():
     if a.method == 'context_adapter':
         model.base.requires_grad_(False)
     corruption_probability = .5 if a.method == 'balanced_corruption' else .3
-    fire_specialist = a.method in ('fire_specialist','fire_specialist_impact')
+    fire_specialist = a.method in (
+        'fire_specialist','fire_specialist_impact','cosine_fire_global','cosine_fire_impact')
     block_specialist = a.method in (
         'block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context',
         'block_specialist_severity_adapter','block_specialist_reliability_prompt')
@@ -56,7 +57,7 @@ def main():
     block_probability = 1. if block_specialist else (0. if fire_specialist else corruption_probability)
     metadata = dict(history=a.history,method=a.method,seed=a.seed,steps=a.steps,
                     physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
-                    learning_rate_schedule=('cosine-to-zero' if a.method == 'cosine_erm' else 'constant'),
+                    learning_rate_schedule=('cosine-to-zero' if a.method.startswith('cosine_') else 'constant'),
                     fire_dropout_probability=fire_probability,
                     block_dropout_probability=block_probability,
                     block_fraction=a.block_fraction,
@@ -85,7 +86,7 @@ def main():
         iterator = iter(loader)
         optimizer = torch.optim.AdamW((x for x in model.parameters() if x.requires_grad),lr=.001)
         scheduler = (torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,T_max=a.steps)
-                     if a.method == 'cosine_erm' else None)
+                     if a.method.startswith('cosine_') else None)
         start = time.monotonic()
         for step in range(1,(1 if a.smoke else a.steps)+1):
             model.train()
@@ -98,7 +99,7 @@ def main():
                     iterator = iter(loader); packed,target,clean = next(iterator)
                 packed,target,clean = packed.cuda(),target.cuda().long(),clean.cuda()
                 clean_logits = None
-                if a.method in ('global_consistency','local_consistency','impact_consistency','fire_specialist_impact','block_specialist_impact','erm_impact_consistency'):
+                if a.method in ('global_consistency','local_consistency','impact_consistency','fire_specialist_impact','block_specialist_impact','erm_impact_consistency','cosine_fire_global','cosine_fire_impact'):
                     zeros = clean.new_zeros(clean.shape[0],clean.shape[1],2,*clean.shape[-2:])
                     clean_input = torch.cat((clean,zeros),dim=2)
                     if a.method == 'erm_impact_consistency':
@@ -137,7 +138,7 @@ def main():
                     probability = teacher_logits.sigmoid()
                     per_pixel_kl = probability*(torch.nn.functional.logsigmoid(teacher_logits)-torch.nn.functional.logsigmoid(logits.squeeze(1)))
                     per_pixel_kl += (1-probability)*(torch.nn.functional.logsigmoid(-teacher_logits)-torch.nn.functional.logsigmoid(-logits.squeeze(1)))
-                    if a.method == 'global_consistency':
+                    if a.method in ('global_consistency','cosine_fire_global'):
                         consistency = per_pixel_kl.mean()
                     elif a.method == 'local_consistency':
                         invalid = packed[:,-1,-2:].amax(dim=1)
