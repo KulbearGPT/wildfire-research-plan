@@ -167,7 +167,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | -.036784 vs rectangle, -.029450 vs X22; reject |
 | X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; T5 attention interference | +.000661 vs specialist, +.007878 vs X22; reject | -.007990 vs specialist, -.000656 vs X22; reject |
 | X30 training-only fire-change auxiliary heads | X22 cosine ERM | no; T1 main-task interference | -.010378 vs X22; reject | running record only: `21312986` |
-| X31 multi-scale forecast deep supervision | X22 cosine ERM | pending; inference-free representation contribution | not submitted | not submitted |
+| X31 multi-scale forecast deep supervision | X22 cosine ERM | pending; inference-free representation contribution | jobs `21315545/21315558` | jobs `21315547/21315559` |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -722,6 +722,11 @@ pursuing pending validation**. The frozen seed-0 gate is raw primary
 `>=+.005` versus X22 in both histories with M00 `>=-.010`. Failure in either
 history closes X31 without head-depth, scale, interpolation, or weight sweeps.
 Only a passing screen advances to seeds 1/2 and fixed years.
+Implementation is pinned to `d9f3bb0`; the targeted check confirms three
+zero-initialized full-resolution auxiliary predictions with the intended
+feature shapes. T1/T5 smokes are `21315545/21315547`, with dependency-gated
+formal screens `21315558/21315559`. They request the minimum 10GB T1 and
+minimum-feasible 20GB T5 slices. No model work runs on the login node.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
