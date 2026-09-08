@@ -22,6 +22,11 @@ event-relative target dates; only their available history and model differ.
 The authoritative B3 and archived B5 2021 summaries both contain exactly
 3,181 samples and 52,117,504 evaluated pixels per scenario, ruling out a
 history-dependent sample-count difference in the paired comparison.
+For the final reference-baseline audit only, the unchanged frozen B5
+checkpoint is being evaluated on 2022/2023 by jobs `21323907/21323908`, pinned
+to `29067f0`. These tests select no model or hyperparameter; they only complete
+the same reference table already available for B3. Both use minimum 10GB
+H100 slices, and no evaluation runs on the login node.
 
 Fresh matched controls and candidates start from corrected B3 (T1) or B5
 (T5), run 3000 AdamW steps, lr=0.001, effective batch 64, identical seed,
