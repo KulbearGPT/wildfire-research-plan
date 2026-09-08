@@ -13,7 +13,9 @@
 ## Global Constraints
 
 - Run every model forward, smoke, training job, and evaluation job inside Slurm.
-- Start with SwinUnet T=1/T=5; do not open ConvLSTM or SegFormer training before the Swin seed-0 gate resolves.
+- Run SwinUnet T=1/T=5, SegFormer-B2 T=1, and ConvLSTM T=5 seed-0
+  screens in parallel. Keep seeds 1/2 and held-out evaluations gated per
+  architecture.
 - Preserve the corrected 2016-2020/2021/2022-2023 split and paired target dates.
 - Use one focused unit test per code boundary and no repository-wide validation suite.
 - Commit each completed task before submitting dependent jobs.
@@ -159,7 +161,8 @@
 - Consumes: the frozen method and gate from Task 5.
 - Produces: optional ConvLSTM T=5 and SegFormer-B2 T=1 matched ERM/Ours rows.
 
-- [ ] Open this task only if Swin passes the complete test-year gate.
+- [x] Open the smoke/bootstrap/seed-0 portion in parallel; the user explicitly
+  requested early submission while Swin remains queued.
 - [ ] Run one-step Slurm smokes for ConvLSTM T=5 and SegFormer-B2 T=1 using
   their published initialization/loss/initial-LR recipes.
 - [ ] Run seed-0 bootstrap plus matched ERM/Ours only; do not repeat X14/X22

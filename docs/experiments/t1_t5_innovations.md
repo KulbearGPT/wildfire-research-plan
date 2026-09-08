@@ -1936,3 +1936,16 @@ slow, jobs `21338586/21338587` measure physical batch 16/8 on the same minimum
 10GB H100 slice before the formal allocation is selected. This is a throughput
 calibration only; architecture, seed, data, effective batch, initialization,
 optimizer, and scientific budget are unchanged.
+
+At the user's request, the remaining prior-used architectures no longer wait
+for the Swin gate before starting their seed-0 screen. SegFormer-B2 T=1 uses
+the pinned official `nvidia/mit-b2` revision
+`3bb39e8739149c3777d0325349b2a6c32c6413db` from project storage; ConvLSTM
+T=5 uses the published random initialization and learning rate `.01`. The
+minimum 10GB and 20GB probes had the same `05:53` estimate, so the 10GB slice
+was selected. SegFormer smoke/bootstrap/continuations are
+`21339171/21339186/21339187`--`21339191`; ConvLSTM equivalents are
+`21339192/21339193/21339194`--`21339198`. Each continuation chain contains
+constant ERM, cosine ERM, mixed BlockDrop, 25% BlockDrop, and 50% BlockDrop,
+all branching from its architecture's same 10,000-step seed-0 checkpoint.
+Seeds 1/2 and 2022--2023 evaluation remain gated by the matched 2021 result.

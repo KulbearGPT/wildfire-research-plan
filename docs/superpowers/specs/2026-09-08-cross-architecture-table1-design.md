@@ -61,9 +61,10 @@ backbones.
 
 Wave 2 adds seeds 1 and 2 plus frozen 2022/2023 evaluation only for advancing
 methods. Main-table claims require positive three-seed mean primary delta in
-both Swin histories and both test years. ConvLSTM and SegFormer are opened only
-after Swin passes; they compare matched ERM with the already frozen full route
-and do not trigger another search.
+both Swin histories and both test years. ConvLSTM and SegFormer seed-0 screens
+may run concurrently with Swin to reduce wall-clock latency; each architecture
+still gates its own seeds 1/2 and held-out work and does not trigger another
+search.
 
 All model work runs through Slurm. Login-node work is restricted to source,
 tiny metadata inspection, queue inspection, JSON composition, and Git. Pending
