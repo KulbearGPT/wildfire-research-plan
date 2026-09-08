@@ -136,12 +136,12 @@
 - Produces: `table1.json` and Markdown rows containing test-only scenario AP,
   primary mean, seed standard deviation, and delta against ERM.
 
-- [ ] Write a tiny fixture test proving 2021 is excluded, 2022/2023 are both
+- [x] Write a tiny fixture test proving 2021 is excluded, 2022/2023 are both
   required, unmatched seed/backbone rows fail, and deltas use matched ERM.
-- [ ] Run the focused test and confirm it fails because the composer is absent.
-- [ ] Implement only the validated schema and Markdown rendering needed by the
+- [x] Run the focused test and confirm it fails because the composer is absent.
+- [x] Implement only the validated schema and Markdown rendering needed by the
   paper table.
-- [ ] Run the focused test and confirm it passes.
+- [x] Run the focused test and confirm it passes.
 - [ ] If the Swin gate passed, submit seeds 1/2 and frozen 2022/2023 evaluations
   for advancing methods; otherwise emit no held-out jobs and record the failed
   architecture-transfer result.
