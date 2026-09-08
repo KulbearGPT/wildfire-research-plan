@@ -59,19 +59,19 @@
   `--bootstrap`.
 - Produces checkpoint metadata fields `architecture` and `bootstrap`.
 
-- [ ] Extend the focused test with pure argument/checkpoint helpers proving
+- [x] Extend the focused test with pure argument/checkpoint helpers proving
   that old history-only checkpoints infer the canonical architecture, explicit
   mismatches fail, and noncanonical training requires exactly one of bootstrap
   or an initial checkpoint.
-- [ ] Run the focused test and confirm the new assertions fail.
-- [ ] Refactor runner argument validation into importable pure helpers. Keep
+- [x] Run the focused test and confirm the new assertions fail.
+- [x] Refactor runner argument validation into importable pure helpers. Keep
   canonical default behavior byte-compatible. Select `DirectForecaster` only
   for noncanonical `control`, `cosine_erm`, or `block_specialist`; reject every
   other noncanonical method before calling `setup()` or loading data.
-- [ ] Save architecture/bootstrap metadata and enforce architecture, history,
+- [x] Save architecture/bootstrap metadata and enforce architecture, history,
   method, and block-fraction identity during evaluate-only loading.
-- [ ] Run the focused test and confirm it passes.
-- [ ] Commit with `research: add matched backbone bootstrap runs`.
+- [x] Run the focused test and confirm it passes.
+- [x] Commit with `research: add matched backbone bootstrap runs`.
 
 ### Task 3: Swin initialization portability
 

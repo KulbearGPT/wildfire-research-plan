@@ -12,6 +12,8 @@ _HISTORIES = {
     "segformer_b2": frozenset((1, 5)),
     "convlstm": frozenset((5,)),
 }
+ARCHITECTURES = tuple(_HISTORIES)
+DIRECT_METHODS = frozenset(("control", "cosine_erm", "block_specialist"))
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,40 @@ def validate_architecture(architecture, history):
         raise ValueError(f"unknown architecture {architecture!r}")
     if history not in _HISTORIES[architecture]:
         raise ValueError(f"{architecture} does not support T={history}")
+
+
+def resolve_architecture(history, requested):
+    architecture = requested or canonical_architecture(history)
+    validate_architecture(architecture, history)
+    return architecture
+
+
+def checkpoint_architecture(payload, expected=None):
+    architecture = payload.get("architecture") or canonical_architecture(payload["history"])
+    if expected is not None and architecture != expected:
+        raise ValueError(
+            f"checkpoint architecture {architecture!r} does not match {expected!r}")
+    validate_architecture(architecture, payload["history"])
+    return architecture
+
+
+def validate_run_source(architecture, history, method, *, bootstrap,
+                        initial_checkpoint, evaluate_only):
+    validate_architecture(architecture, history)
+    canonical = architecture == canonical_architecture(history)
+    if not canonical and method not in DIRECT_METHODS:
+        raise ValueError(f"method {method!r} does not support architecture {architecture!r}")
+    if evaluate_only is not None:
+        if bootstrap or initial_checkpoint is not None:
+            raise ValueError("evaluate-only supplies its own checkpoint")
+        return
+    if bootstrap and method != "control":
+        raise ValueError("bootstrap requires method 'control'")
+    if canonical and bootstrap:
+        raise ValueError("canonical architecture does not support bootstrap")
+    if not canonical and bool(bootstrap) == bool(initial_checkpoint):
+        raise ValueError(
+            "noncanonical training requires exactly one of bootstrap or initial checkpoint")
 
 
 def architecture_config(architecture, history, hparams=None):

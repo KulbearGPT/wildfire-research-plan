@@ -11,6 +11,16 @@ import torch
 from torchvision.ops import sigmoid_focal_loss
 from .data import setup, base_dataset, PairedDataset, evaluation_dataset
 from .models import initial_payload, make_base, Forecaster, feature_loss, transition_loss
+from .architectures import (
+    ARCHITECTURES,
+    DirectForecaster,
+    architecture_config,
+    canonical_architecture,
+    checkpoint_architecture,
+    make_architecture,
+    resolve_architecture,
+    validate_run_source,
+)
 from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 
 RECONSTRUCTION_WEIGHT = .002
@@ -19,6 +29,7 @@ RECONSTRUCTION_WEIGHT = .002
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--history',type=int,choices=(1,5),required=True)
+    p.add_argument('--architecture',choices=ARCHITECTURES)
     p.add_argument('--method',choices=('control','cosine_erm','cosine_change_aux','cosine_deep_supervision','cosine_fire_global','cosine_fire_impact','cosine_block_specialist','cosine_block_hard','cosine_block_memory','cosine_reliability_block','balanced_corruption','context','context_adapter','distill','distill_block','risk','risk_strong','global_consistency','local_consistency','impact_consistency','erm_impact_consistency','fire_specialist','fire_specialist_impact','block_specialist','block_specialist_impact','block_specialist_dynamic','block_specialist_context','block_specialist_severity_adapter','block_specialist_reliability_prompt','transition','transition_decoupled','context_transition','missingness_experts','spatial_impact_film','dynamic_inpaint','dynamic_inpaint_reconstruct','normalized_inpaint','distance_prompt'),required=True)
     p.add_argument('--seed',type=int,default=0)
     p.add_argument('--steps',type=int,default=3000)
@@ -28,8 +39,14 @@ def main():
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--smoke',action='store_true')
     p.add_argument('--evaluate-only',type=Path)
+    p.add_argument('--initial-checkpoint',type=Path)
+    p.add_argument('--bootstrap',action='store_true')
     p.add_argument('--year',type=int,choices=(2021,2022,2023),default=2021)
     a = p.parse_args()
+    a.architecture = resolve_architecture(a.history,a.architecture)
+    validate_run_source(a.architecture,a.history,a.method,
+        bootstrap=a.bootstrap,initial_checkpoint=a.initial_checkpoint,
+        evaluate_only=a.evaluate_only)
     if not os.environ.get('SLURM_JOB_ID') or not torch.cuda.is_available():
         raise RuntimeError('GPU Slurm allocation required')
     if 64 % a.batch_size:
@@ -42,10 +59,40 @@ def main():
     setup()
     random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
     a.output.mkdir(parents=True,exist_ok=False)
-    payload, initial = initial_payload(a.history)
-    base = make_base(a.history,payload['hyper_parameters'])
-    base.load_state_dict(payload['state_dict'],strict=True)
-    model = Forecaster(base,a.history,a.method).cuda()
+    saved = None
+    if a.evaluate_only is not None:
+        saved = torch.load(a.evaluate_only,map_location='cpu',weights_only=False)
+        checkpoint_architecture(saved,expected=a.architecture)
+        if saved['history'] != a.history:
+            raise ValueError('checkpoint history mismatch')
+        initial = str(a.evaluate_only)
+    elif a.initial_checkpoint is not None:
+        saved = torch.load(a.initial_checkpoint,map_location='cpu',weights_only=False)
+        checkpoint_architecture(saved,expected=a.architecture)
+        if saved['history'] != a.history:
+            raise ValueError('checkpoint history mismatch')
+        initial = str(a.initial_checkpoint)
+    elif a.bootstrap:
+        initial = f'published-{a.architecture}-initialization'
+    else:
+        payload, initial = initial_payload(a.history)
+
+    noncanonical = a.architecture != canonical_architecture(a.history)
+    if noncanonical:
+        base = make_architecture(a.architecture,a.history,
+            None if saved is None else saved.get('hyper_parameters'))
+        model = DirectForecaster(base,a.history,40 if a.history == 1 else 33)
+        if saved is not None:
+            model.load_state_dict(saved['state_dict'],strict=True)
+    elif saved is not None:
+        base = make_base(a.history,saved['hyper_parameters'])
+        model = Forecaster(base,a.history,a.method)
+        model.load_state_dict(saved['state_dict'],strict=True)
+    else:
+        base = make_base(a.history,payload['hyper_parameters'])
+        base.load_state_dict(payload['state_dict'],strict=True)
+        model = Forecaster(base,a.history,a.method)
+    model = model.cuda()
     if a.method == 'context_adapter':
         model.base.requires_grad_(False)
     corruption_probability = .5 if a.method == 'balanced_corruption' else .3
@@ -58,8 +105,11 @@ def main():
         'block_specialist_severity_adapter','block_specialist_reliability_prompt')
     fire_probability = 1. if fire_specialist else (0. if block_specialist else corruption_probability)
     block_probability = 1. if block_specialist else (0. if fire_specialist else corruption_probability)
-    metadata = dict(history=a.history,method=a.method,seed=a.seed,steps=a.steps,
-                    physical_batch=a.batch_size,effective_batch=64,learning_rate=.001,
+    learning_rate = (architecture_config(a.architecture,a.history,
+        dict(base.hparams) if not noncanonical else None).learning_rate)
+    metadata = dict(history=a.history,architecture=a.architecture,method=a.method,
+                    seed=a.seed,steps=a.steps,bootstrap=a.bootstrap,
+                    physical_batch=a.batch_size,effective_batch=64,learning_rate=learning_rate,
                     learning_rate_schedule=('cosine-to-zero' if a.method.startswith('cosine_') else 'constant'),
                     fire_dropout_probability=fire_probability,
                     block_dropout_probability=block_probability,
@@ -72,11 +122,9 @@ def main():
                     trainable_parameters=sum(x.numel() for x in model.parameters() if x.requires_grad))
     (a.output/'started.json').write_text(json.dumps(metadata,indent=2))
     if a.evaluate_only:
-        saved = torch.load(a.evaluate_only,map_location='cpu',weights_only=False)
         compatible_transform = (a.method == 'normalized_inpaint' and saved['method'] == 'control')
         if saved['history'] != a.history or (saved['method'] != a.method and not compatible_transform):
             raise ValueError('checkpoint method/history mismatch')
-        model.load_state_dict(saved['state_dict'],strict=True)
     else:
         dataset = PairedDataset(base_dataset(a.history),a.history,
             fire_probability=fire_probability,block_probability=block_probability,
@@ -91,7 +139,7 @@ def main():
         # shift augmentation or temporal dropout relative to the control.
         random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
         iterator = iter(loader)
-        optimizer = torch.optim.AdamW((x for x in model.parameters() if x.requires_grad),lr=.001)
+        optimizer = torch.optim.AdamW((x for x in model.parameters() if x.requires_grad),lr=learning_rate)
         scheduler = (torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,T_max=a.steps)
                      if a.method.startswith('cosine_') else None)
         start = time.monotonic()
@@ -232,7 +280,8 @@ def main():
         results[scenario] = metrics
         (a.output/f'{scenario}.json').write_text(json.dumps(metrics,indent=2))
         print(json.dumps(dict(scenario=scenario,metrics=metrics)),flush=True)
-    (a.output/'summary.json').write_text(json.dumps(dict(history=a.history,method=a.method,
+    (a.output/'summary.json').write_text(json.dumps(dict(history=a.history,
+        architecture=a.architecture,method=a.method,
         seed=a.seed,year=a.year,block_fraction=a.block_fraction,results=results),indent=2))
 
 

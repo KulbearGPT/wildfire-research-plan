@@ -6,6 +6,9 @@ from reproductions.cross_history.architectures import (
     DirectForecaster,
     architecture_config,
     canonical_architecture,
+    checkpoint_architecture,
+    resolve_architecture,
+    validate_run_source,
     validate_architecture,
 )
 
@@ -58,3 +61,44 @@ def test_published_backbone_configs_preserve_temporal_representation():
     assert convlstm.kwargs["n_channels"] == 33
     assert convlstm.kwargs["flatten_temporal_dimension"] is False
     assert convlstm.learning_rate == 0.01
+
+
+def test_checkpoint_architecture_is_backward_compatible_but_rejects_mismatch():
+    assert checkpoint_architecture({"history": 1}) == "res18_unet"
+    assert checkpoint_architecture({"history": 5}) == "res18_utae"
+    assert checkpoint_architecture({"history": 1, "architecture": "swin_unet"}) == "swin_unet"
+    assert resolve_architecture(5, None) == "res18_utae"
+    with pytest.raises(ValueError, match="checkpoint architecture"):
+        checkpoint_architecture(
+            {"history": 1, "architecture": "convlstm"}, expected="swin_unet")
+
+
+def test_noncanonical_training_requires_one_explicit_initialization_source():
+    validate_run_source("res18_unet", 1, "control",
+                        bootstrap=False, initial_checkpoint=None,
+                        evaluate_only=None)
+    validate_run_source("swin_unet", 1, "control",
+                        bootstrap=True, initial_checkpoint=None,
+                        evaluate_only=None)
+    validate_run_source("swin_unet", 5, "cosine_erm",
+                        bootstrap=False, initial_checkpoint="base.pt",
+                        evaluate_only=None)
+    with pytest.raises(ValueError, match="exactly one"):
+        validate_run_source("swin_unet", 1, "control",
+                            bootstrap=False, initial_checkpoint=None,
+                            evaluate_only=None)
+    with pytest.raises(ValueError, match="exactly one"):
+        validate_run_source("swin_unet", 1, "control",
+                            bootstrap=True, initial_checkpoint="base.pt",
+                            evaluate_only=None)
+    with pytest.raises(ValueError, match="method"):
+        validate_run_source("swin_unet", 1, "context",
+                            bootstrap=True, initial_checkpoint=None,
+                            evaluate_only=None)
+
+
+def test_canonical_backbones_cannot_enter_hparam_free_bootstrap_path():
+    with pytest.raises(ValueError, match="canonical.*bootstrap"):
+        validate_run_source("res18_unet", 1, "control",
+                            bootstrap=True, initial_checkpoint=None,
+                            evaluate_only=None)
