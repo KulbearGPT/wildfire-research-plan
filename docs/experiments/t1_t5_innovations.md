@@ -1953,7 +1953,11 @@ smoke/bootstrap/continuations are
 `21339727/21339728/21339729`--`21339733`. The newly added SegFormer T=5 chain
 is `21339734/21339735/21339736`--`21339740`. ConvLSTM T=5 equivalents remain
 `21339192/21339193/21339194`--`21339198`; its smoke completed successfully and
-the bootstrap is running. Each continuation chain contains
+the bootstrap is running. Both replacement SegFormer smokes completed with
+exit `0:0` and exact initial equivalence. T=1/T=5 losses were
+`.182542/.181851`, one-step times `1.71/1.89` seconds, and peak GPU allocations
+`1.56/.72` GB; both 10,000-step bootstraps are released to the queue. Each
+continuation chain contains
 constant ERM, cosine ERM, mixed BlockDrop, 25% BlockDrop, and 50% BlockDrop,
 all branching from its architecture's same 10,000-step seed-0 checkpoint.
 Seeds 1/2 and 2022--2023 evaluation remain gated by the matched 2021 result.
