@@ -166,8 +166,8 @@ D2/D13 controls are context, not proof of any new direction.
 | X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
 | X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | -.036784 vs rectangle, -.029450 vs X22; reject |
 | X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; T5 attention interference | +.000661 vs specialist, +.007878 vs X22; reject | -.007990 vs specialist, -.000656 vs X22; reject |
-| X30 training-only fire-change auxiliary heads | X22 cosine ERM | no; T1 main-task interference | -.010378 vs X22; reject | running record only: `21312986` |
-| X31 multi-scale forecast deep supervision | X22 cosine ERM | pending; inference-free representation contribution | jobs `21315545/21315558` | jobs `21315547/21315559` |
+| X30 training-only fire-change auxiliary heads | X22 cosine ERM | no; main-task interference in both architectures | -.010378 vs X22; reject | -.010875 vs X22; reject |
+| X31 multi-scale forecast deep supervision | X22 cosine ERM | no; same-target auxiliary interference | -.007688 vs X22; reject | -.015340 vs X22; reject |
 | X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
 
 ### Secondary quantitative findings (`> +.010` cross-T aggregate)
@@ -677,6 +677,10 @@ can be retained as training-only state supervision under the stronger cosine
 anchor. The already-running T5 job is kept only for the cross-architecture
 record; no loss-weight, class-weight, route, or head repair is allowed.
 Partial artifact: `cross-history-analysis/x30-vs-x22-t1.json`.
+T5 independently changes M00/M01/M06/M07 by
+`-.008411/-.011821/-.010166/-.010639`, giving primary `-.010875` and a
+cross-T mean of `-.010626`. X30 is closed. Final screen artifact:
+`cross-history-analysis/x30-vs-x22-seed0.json`.
 
 X31 addresses X30's heterogeneous-target interference without reopening its
 weights. The three deepest encoder features each receive a zero-initialized
@@ -727,6 +731,13 @@ zero-initialized full-resolution auxiliary predictions with the intended
 feature shapes. T1/T5 smokes are `21315545/21315547`, with dependency-gated
 formal screens `21315558/21315559`. They request the minimum 10GB T1 and
 minimum-feasible 20GB T5 slices. No model work runs on the login node.
+Both smokes completed in 31/34 seconds and both formal jobs completed with
+exit `0:0`. X31 changes primary by `-.007688` at T1 and `-.015340` at T5
+versus X22; all three corrupted scenarios regress in both histories. The
+cross-T mean is `-.011514` and block mean `-.007779`. Even same-target deep
+supervision disrupts the stronger final-head solution, so the family closes
+without weight or scale repair. Artifact:
+`cross-history-analysis/x31-vs-x22-seed0.json`.
 
 Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
 evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
