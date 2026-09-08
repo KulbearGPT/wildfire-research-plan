@@ -8,7 +8,10 @@ from reproductions.cross_history.architectures import (
     canonical_architecture,
     checkpoint_architecture,
     resolve_architecture,
+    swin_pretrained_asset,
+    swin_runtime_config,
     validate_run_source,
+    verify_asset,
     validate_architecture,
 )
 
@@ -102,3 +105,28 @@ def test_canonical_backbones_cannot_enter_hparam_free_bootstrap_path():
         validate_run_source("res18_unet", 1, "control",
                             bootstrap=True, initial_checkpoint=None,
                             evaluate_only=None)
+
+
+def test_swin_pretraining_is_project_rooted_and_checksum_guarded(tmp_path):
+    asset = swin_pretrained_asset()
+    assert str(asset.path) == (
+        "/project/6085198/kulbear/wildfire/cache/swin/"
+        "swin_tiny_patch4_window7_224.pth")
+    assert asset.sha256 == "9f71c168d837d1b99dd1dc29e14990a7a9e8bdc5f673d46b04fe36fe15590ad3"
+    assert "/home/" not in str(asset.path)
+
+    fixture = tmp_path / "asset.bin"
+    fixture.write_bytes(b"abc")
+    verify_asset(fixture, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+    with pytest.raises(ValueError, match="checksum"):
+        verify_asset(fixture, "0" * 64)
+
+
+def test_swin_runtime_config_matches_wsts_crop_and_selected_channels():
+    config = swin_runtime_config(165, "/project/cache/swin.pth")
+
+    assert config.DATA.IMG_SIZE == 128
+    assert config.MODEL.SWIN.IN_CHANS == 165
+    assert config.MODEL.PRETRAIN_CKPT == "/project/cache/swin.pth"
+    assert config.MODEL.SWIN.DEPTHS == [2, 2, 2, 2]
+    assert config.MODEL.SWIN.NUM_HEADS == [3, 6, 12, 24]

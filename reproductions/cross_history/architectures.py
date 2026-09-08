@@ -1,6 +1,9 @@
 """Minimal backbone boundary for matched cross-history experiments."""
 from dataclasses import dataclass
+import hashlib
 import importlib
+from pathlib import Path
+from types import SimpleNamespace
 
 from torch import nn
 
@@ -22,6 +25,43 @@ class ArchitectureConfig:
     class_name: str
     kwargs: dict
     learning_rate: float
+
+
+@dataclass(frozen=True)
+class PretrainedAsset:
+    path: Path
+    sha256: str
+
+
+def swin_pretrained_asset():
+    return PretrainedAsset(
+        Path("/project/6085198/kulbear/wildfire/cache/swin/"
+             "swin_tiny_patch4_window7_224.pth"),
+        "9f71c168d837d1b99dd1dc29e14990a7a9e8bdc5f673d46b04fe36fe15590ad3",
+    )
+
+
+def verify_asset(path, expected_sha256):
+    path = Path(path)
+    if not path.is_file():
+        raise ValueError(f"pretrained asset is missing: {path}")
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != expected_sha256:
+        raise ValueError(f"pretrained asset checksum mismatch: {path}")
+
+
+def swin_runtime_config(input_channels, pretrained_path):
+    swin = SimpleNamespace(PATCH_SIZE=4, IN_CHANS=input_channels, EMBED_DIM=96,
+        DEPTHS=[2, 2, 2, 2], NUM_HEADS=[3, 6, 12, 24], WINDOW_SIZE=7,
+        MLP_RATIO=4.0, QKV_BIAS=True, QK_SCALE=None, APE=False, PATCH_NORM=True)
+    model = SimpleNamespace(DROP_RATE=0.0, DROP_PATH_RATE=0.2,
+        LABEL_SMOOTHING=0.1, NAME="swin_tiny_patch4_window7_224",
+        PRETRAIN_CKPT=str(pretrained_path), SWIN=swin)
+    return SimpleNamespace(DATA=SimpleNamespace(IMG_SIZE=128), MODEL=model,
+                           TRAIN=SimpleNamespace(USE_CHECKPOINT=False))
 
 
 def canonical_architecture(history):
