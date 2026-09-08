@@ -33,18 +33,18 @@
 - Produces: `make_architecture(architecture: str, history: int, hparams: dict | None) -> torch.nn.Module`.
 - Produces: `DirectForecaster(base: nn.Module, history: int)` with `forward` and `compute_loss`.
 
-- [ ] Write a focused test that verifies canonical backward compatibility,
+- [x] Write a focused test that verifies canonical backward compatibility,
   rejects `convlstm` with T=1, and confirms that the direct wrapper removes the
   two routing-mask channels before calling a dummy base model.
-- [ ] Run
+- [x] Run
   `pytest -q tests/test_cross_history_architectures.py` and confirm it fails
   because `reproductions.cross_history.architectures` does not exist.
-- [ ] Implement the registry with fixed compatibility sets:
+- [x] Implement the registry with fixed compatibility sets:
   `res18_unet={1}`, `res18_utae={5}`, `swin_unet={1,5}`,
   `segformer_b2={1,5}`, and `convlstm={5}`. Implement the direct wrapper without
   importing heavyweight upstream models at module import time.
-- [ ] Run the focused test and confirm it passes.
-- [ ] Commit with `research: add cross-history architecture boundary`.
+- [x] Run the focused test and confirm it passes.
+- [x] Commit with `research: add cross-history architecture boundary`.
 
 ### Task 2: Runner checkpoint and bootstrap contract
 
