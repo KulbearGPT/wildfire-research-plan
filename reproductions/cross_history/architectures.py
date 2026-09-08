@@ -42,6 +42,17 @@ def swin_pretrained_asset():
     )
 
 
+def segformer_pretrained_assets():
+    root = Path("/project/6085198/kulbear/wildfire/cache/huggingface/"
+                "nvidia-mit-b2-3bb39e87")
+    return (
+        PretrainedAsset(root / "config.json",
+            "d9a879499e7d73e2b33af0638cee320b1070c8f0dadb620eac8907df3d18caa9"),
+        PretrainedAsset(root / "pytorch_model.bin",
+            "4500b5665471b593e6757e15bcca5034f433fe3902fe8ec2b7230774a57f264f"),
+    )
+
+
 def verify_asset(path, expected_sha256):
     path = Path(path)
     if not path.is_file():
@@ -135,10 +146,11 @@ def architecture_config(architecture, history, hparams=None):
         return ArchitectureConfig("models.SwinUnetLightning", "SwinUnetLightning",
                                   kwargs, 0.001)
     if architecture == "segformer_b2":
+        pretrained_root = str(segformer_pretrained_assets()[0].path.parent)
         kwargs = dict(model_name="segformer-b2", n_channels=channels * history,
                       flatten_temporal_dimension=True,
                       pos_class_weight=236, loss_function="Focal",
-                      crop_before_eval=True, encoder_weights="imagenet")
+                      crop_before_eval=True, encoder_weights=pretrained_root)
         return ArchitectureConfig("models.SegFormerLightning", "SegFormerLightning",
                                   kwargs, 0.001)
     kwargs = dict(n_channels=channels, flatten_temporal_dimension=False,
@@ -159,6 +171,9 @@ def make_architecture(architecture, history, hparams=None):
         verify_asset(asset.path, asset.sha256)
         base.model.load_from(swin_runtime_config(config.kwargs["n_channels"], asset.path))
         return base
+    if architecture == "segformer_b2":
+        for asset in segformer_pretrained_assets():
+            verify_asset(asset.path, asset.sha256)
     return cls(**config.kwargs)
 
 

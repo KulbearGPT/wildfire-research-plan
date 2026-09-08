@@ -8,6 +8,7 @@ from reproductions.cross_history.architectures import (
     canonical_architecture,
     checkpoint_architecture,
     resolve_architecture,
+    segformer_pretrained_assets,
     swin_pretrained_asset,
     swin_runtime_config,
     validate_run_source,
@@ -141,3 +142,14 @@ def test_swin_runtime_config_matches_published_padding_and_selected_channels():
     assert config.MODEL.PRETRAIN_CKPT == "/project/cache/swin.pth"
     assert config.MODEL.SWIN.DEPTHS == [2, 2, 2, 2]
     assert config.MODEL.SWIN.NUM_HEADS == [3, 6, 12, 24]
+
+
+def test_segformer_uses_pinned_project_cache_instead_of_network_model_id():
+    assets = segformer_pretrained_assets()
+    root = "/project/6085198/kulbear/wildfire/cache/huggingface/nvidia-mit-b2-3bb39e87"
+
+    assert {str(asset.path) for asset in assets} == {
+        f"{root}/config.json", f"{root}/pytorch_model.bin"}
+    assert all("/home/" not in str(asset.path) for asset in assets)
+    config = architecture_config("segformer_b2", 1)
+    assert config.kwargs["encoder_weights"] == root
