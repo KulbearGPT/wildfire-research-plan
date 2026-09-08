@@ -1915,8 +1915,8 @@ contract.
 
 ### Cross-architecture Table 1 campaign
 
-The first required transfer backbone is the WSTS+ SwinUnet, evaluated at both
-T=1 and T=5 before opening any additional architecture. The runner uses the
+The first transfer backbone implemented was the WSTS+ SwinUnet, evaluated at
+both T=1 and T=5. The runner uses the
 official Swin-T ImageNet initialization cached at
 `/project/6085198/kulbear/wildfire/cache/swin/swin_tiny_patch4_window7_224.pth`
 (SHA-256 `9f71c168d837d1b99dd1dc29e14990a7a9e8bdc5f673d46b04fe36fe15590ad3`).
@@ -1932,10 +1932,11 @@ was then fixed and committed. Authoritative T=1/T=5 one-step smokes
 checks, and peak allocations of `.78/.65` GB at physical batches 2/1. Their
 one-step times were `1.80/4.20` seconds for effective batch 64. Because those
 small physical batches would make the 10,000-step bootstrap unnecessarily
-slow, jobs `21338586/21338587` measure physical batch 16/8 on the same minimum
-10GB H100 slice before the formal allocation is selected. This is a throughput
-calibration only; architecture, seed, data, effective batch, initialization,
-optimizer, and scientific budget are unchanged.
+slow, jobs `21338586/21338587` measured physical batch 16/8 on the same minimum
+10GB H100 slice. Both completed with exact equivalence and peak allocations of
+`4.17/2.58` GB. This is a throughput calibration only; architecture, seed,
+data, effective batch, initialization, optimizer, and scientific budget are
+unchanged.
 
 At the user's request, the remaining prior-used architectures no longer wait
 for the Swin gate before starting their seed-0 screen. SegFormer-B2 T=1 uses
@@ -1943,9 +1944,16 @@ the pinned official `nvidia/mit-b2` revision
 `3bb39e8739149c3777d0325349b2a6c32c6413db` from project storage; ConvLSTM
 T=5 uses the published random initialization and learning rate `.01`. The
 minimum 10GB and 20GB probes had the same `05:53` estimate, so the 10GB slice
-was selected. SegFormer smoke/bootstrap/continuations are
-`21339171/21339186/21339187`--`21339191`; ConvLSTM equivalents are
-`21339192/21339193/21339194`--`21339198`. Each continuation chain contains
+was selected. The initial SegFormer T=1 smoke `21339171` revealed that the
+shared training environment lacked `transformers`; it failed before model or
+data computation, and its never-runnable dependency chain was cancelled. A
+project-local pinned Transformers 4.48.3 runtime fixes the dependency without
+mutating the shared environment. Replacement SegFormer T=1
+smoke/bootstrap/continuations are
+`21339727/21339728/21339729`--`21339733`. The newly added SegFormer T=5 chain
+is `21339734/21339735/21339736`--`21339740`. ConvLSTM T=5 equivalents remain
+`21339192/21339193/21339194`--`21339198`; its smoke completed successfully and
+the bootstrap is running. Each continuation chain contains
 constant ERM, cosine ERM, mixed BlockDrop, 25% BlockDrop, and 50% BlockDrop,
 all branching from its architecture's same 10,000-step seed-0 checkpoint.
 Seeds 1/2 and 2022--2023 evaluation remain gated by the matched 2021 result.
