@@ -81,7 +81,8 @@ def main():
     if noncanonical:
         base = make_architecture(a.architecture,a.history,
             None if saved is None else saved.get('hyper_parameters'))
-        model = DirectForecaster(base,a.history,40 if a.history == 1 else 33)
+        model = DirectForecaster(base,a.history,40 if a.history == 1 else 33,
+            input_size=224 if a.architecture == 'swin_unet' else None)
         if saved is not None:
             model.load_state_dict(saved['state_dict'],strict=True)
     elif saved is not None:
@@ -185,7 +186,8 @@ def main():
                 if a.smoke and micro == 0:
                     model.eval()
                     with torch.no_grad():
-                        expected = base(packed[:,:,:model.channels])
+                        expected = (model.forward_base(packed) if noncanonical else
+                                    base(packed[:,:,:model.channels]))
                         actual = model(packed)
                         difference = (expected-actual).abs().max().item()
                     print(f'INITIAL_EQUIVALENCE_MAX={difference}',flush=True)

@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from torch import nn
+from torch.nn import functional as F
 
 
 _HISTORIES = {
@@ -60,7 +61,7 @@ def swin_runtime_config(input_channels, pretrained_path):
     model = SimpleNamespace(DROP_RATE=0.0, DROP_PATH_RATE=0.2,
         LABEL_SMOOTHING=0.1, NAME="swin_tiny_patch4_window7_224",
         PRETRAIN_CKPT=str(pretrained_path), SWIN=swin)
-    return SimpleNamespace(DATA=SimpleNamespace(IMG_SIZE=128), MODEL=model,
+    return SimpleNamespace(DATA=SimpleNamespace(IMG_SIZE=224), MODEL=model,
                            TRAIN=SimpleNamespace(USE_CHECKPOINT=False))
 
 
@@ -150,19 +151,44 @@ def architecture_config(architecture, history, hparams=None):
 def make_architecture(architecture, history, hparams=None):
     config = architecture_config(architecture, history, hparams)
     cls = getattr(importlib.import_module(config.module), config.class_name)
+    if architecture == "swin_unet":
+        kwargs = dict(config.kwargs)
+        kwargs["encoder_weights"] = None
+        base = cls(**kwargs)
+        asset = swin_pretrained_asset()
+        verify_asset(asset.path, asset.sha256)
+        base.model.load_from(swin_runtime_config(config.kwargs["n_channels"], asset.path))
+        return base
     return cls(**config.kwargs)
 
 
 class DirectForecaster(nn.Module):
     """Expose a common packed-input interface without backbone internals."""
-    def __init__(self, base, history, channels):
+    def __init__(self, base, history, channels, input_size=None):
         super().__init__()
         self.base = base
         self.history = history
         self.channels = channels
+        self.input_size = input_size
+
+    def forward_base(self, packed):
+        inputs = packed[:, :, :self.channels]
+        height, width = inputs.shape[-2:]
+        if self.input_size is not None:
+            if height > self.input_size or width > self.input_size:
+                raise ValueError("input exceeds fixed backbone size")
+            pad_h, pad_w = self.input_size - height, self.input_size - width
+            inputs = F.pad(inputs, (pad_w // 2, pad_w - pad_w // 2,
+                                    pad_h // 2, pad_h - pad_h // 2))
+        logits = self.base(inputs)
+        if logits.shape[-2:] != (height, width):
+            top = (logits.shape[-2] - height) // 2
+            left = (logits.shape[-1] - width) // 2
+            logits = logits[..., top:top + height, left:left + width]
+        return logits
 
     def forward(self, packed, details=False):
-        logits = self.base(packed[:, :, :self.channels])
+        logits = self.forward_base(packed)
         if details:
             return logits, (), None, None
         return logits

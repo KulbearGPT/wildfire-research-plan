@@ -85,16 +85,16 @@
 - Produces: an environment-independent Swin pretrained checkpoint path rooted
   under `/project/6085198/kulbear/wildfire/cache`.
 
-- [ ] Add a test that inspects the resolved Swin constructor arguments and
+- [x] Add a test that inspects the resolved Swin constructor arguments and
   proves no developer home-directory path is used.
-- [ ] Run the focused test and confirm it fails against the pinned upstream
+- [x] Run the focused test and confirm it fails against the pinned upstream
   hard-coded path behavior.
-- [ ] Cache the exact WSTS+ Swin-T ImageNet checkpoint, record its SHA-256 in
+- [x] Cache the exact WSTS+ Swin-T ImageNet checkpoint, record its SHA-256 in
   the architecture registry, and install the expected path only inside each
   Slurm run archive. Fail with a clear checksum error before model creation if
   it is absent or different.
-- [ ] Run the focused test and `bash -n reproductions/cross_history/run_slurm.sh`.
-- [ ] Commit with `cluster: make Swin initialization reproducible`.
+- [x] Run the focused test and `bash -n reproductions/cross_history/run_slurm.sh`.
+- [x] Commit with `cluster: make Swin initialization reproducible`.
 
 ### Task 4: Swin real-data smokes and seed-0 screen
 

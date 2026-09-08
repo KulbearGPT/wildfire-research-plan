@@ -51,6 +51,17 @@ def test_direct_forecaster_removes_routing_masks_before_backbone_forward():
     assert model.compute_loss(logits.squeeze(1), torch.zeros(2, 8, 8)) >= 0
 
 
+def test_direct_forecaster_pads_fixed_size_backbone_and_crops_prediction():
+    base = _ShapeBase()
+    model = DirectForecaster(base, history=1, channels=40, input_size=224)
+    packed = torch.randn(1, 1, 42, 128, 128)
+
+    logits = model(packed)
+
+    assert base.seen_shape == (1, 1, 40, 224, 224)
+    assert logits.shape == (1, 1, 128, 128)
+
+
 def test_published_backbone_configs_preserve_temporal_representation():
     swin_t1 = architecture_config("swin_unet", 1)
     swin_t5 = architecture_config("swin_unet", 5)
@@ -122,10 +133,10 @@ def test_swin_pretraining_is_project_rooted_and_checksum_guarded(tmp_path):
         verify_asset(fixture, "0" * 64)
 
 
-def test_swin_runtime_config_matches_wsts_crop_and_selected_channels():
+def test_swin_runtime_config_matches_published_padding_and_selected_channels():
     config = swin_runtime_config(165, "/project/cache/swin.pth")
 
-    assert config.DATA.IMG_SIZE == 128
+    assert config.DATA.IMG_SIZE == 224
     assert config.MODEL.SWIN.IN_CHANS == 165
     assert config.MODEL.PRETRAIN_CKPT == "/project/cache/swin.pth"
     assert config.MODEL.SWIN.DEPTHS == [2, 2, 2, 2]
