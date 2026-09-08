@@ -107,10 +107,10 @@
 - Produces: T=1/T=5 smoke summaries, bootstrap checkpoints, and 2021 seed-0
   matched summaries for constant ERM, cosine ERM, and BlockDrop specialists.
 
-- [ ] Inspect Nibi GPU availability and test-only start estimates for 10GB and
+- [x] Inspect Nibi GPU availability and test-only start estimates for 10GB and
   20GB H100 slices; request the earliest option within the two-times resource
   bound.
-- [ ] Submit one-step T=1/T=5 Swin smokes with the smallest physical batch that
+- [x] Submit one-step T=1/T=5 Swin smokes with the smallest physical batch that
   preserves effective batch 64. Verify output shape, finite loss, and
   checkpoint metadata from Slurm output.
 - [ ] Submit one 10,000-step bootstrap per history for seed 0, then matched

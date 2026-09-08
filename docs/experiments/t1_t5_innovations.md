@@ -1912,3 +1912,27 @@ fresh matched ERM, the same route remains `+.014642`. The audit uses B3 jobs
 `21212205/21326336/21326337` and B5 jobs
 `21212423/21323907/21323908`; all scenario sample counts match the paired
 contract.
+
+### Cross-architecture Table 1 campaign
+
+The first required transfer backbone is the WSTS+ SwinUnet, evaluated at both
+T=1 and T=5 before opening any additional architecture. The runner uses the
+official Swin-T ImageNet initialization cached at
+`/project/6085198/kulbear/wildfire/cache/swin/swin_tiny_patch4_window7_224.pth`
+(SHA-256 `9f71c168d837d1b99dd1dc29e14990a7a9e8bdc5f673d46b04fe36fe15590ad3`).
+All inputs are padded to the published 224-pixel model size and predictions are
+center-cropped back to the unchanged 128-pixel target. No model work is run on
+the login node.
+
+The first portability smoke `21334123` exposed the pinned upstream code's
+developer-home checkpoint path and failed before training. The portable loader
+was then fixed and committed. Authoritative T=1/T=5 one-step smokes
+`21334329/21334350` both completed with exit `0:0`, exact initial equivalence
+(`0.0`), finite losses `.242794/.245346`, successful backward and output-shape
+checks, and peak allocations of `.78/.65` GB at physical batches 2/1. Their
+one-step times were `1.80/4.20` seconds for effective batch 64. Because those
+small physical batches would make the 10,000-step bootstrap unnecessarily
+slow, jobs `21338586/21338587` measure physical batch 16/8 on the same minimum
+10GB H100 slice before the formal allocation is selected. This is a throughput
+calibration only; architecture, seed, data, effective batch, initialization,
+optimizer, and scientific budget are unchanged.
