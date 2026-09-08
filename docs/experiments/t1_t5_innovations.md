@@ -1949,3 +1949,12 @@ was selected. SegFormer smoke/bootstrap/continuations are
 constant ERM, cosine ERM, mixed BlockDrop, 25% BlockDrop, and 50% BlockDrop,
 all branching from its architecture's same 10,000-step seed-0 checkpoint.
 Seeds 1/2 and 2022--2023 evaluation remain gated by the matched 2021 result.
+
+The Swin formal dependency chains are also fully submitted rather than waiting
+for the throughput calibration to finish. T=1 calibration/bootstrap/branches
+are `21338586/21339338/21339339`--`21339343`; T=5 equivalents are
+`21338587/21339344/21339345`--`21339349`. The calibration is an `afterok`
+guard for the physical batch 16/8 configuration; each bootstrap then guards
+its five matched continuations. Thus all planned architecture implementations
+are now represented in Slurm, while failed smoke/bootstrap jobs cannot release
+invalid downstream training.
