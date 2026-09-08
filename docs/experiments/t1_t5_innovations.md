@@ -1962,6 +1962,19 @@ constant ERM, cosine ERM, mixed BlockDrop, 25% BlockDrop, and 50% BlockDrop,
 all branching from its architecture's same 10,000-step seed-0 checkpoint.
 Seeds 1/2 and 2022--2023 evaluation remain gated by the matched 2021 result.
 
+SegFormer-B2 T=1 completed its bootstrap and all five seed-0 continuations.
+Matched ERM M00/M01/M06/M07 AP is
+`.564030/.341623/.373543/.204295`. Cosine ERM reaches
+`.570958/.354978/.380648/.206941`, improving primary by `+.007702`, block by
+`+.004875`, and M00 by `+.006928`; it passes the T=1 transfer gate pending
+T=5. For mixed/25%/50% BlockDrop specialists, the deployment-correct route
+retains matched ERM on M00/M01 and changes primary by only
+`+.001955/-.001070/-.001525`. All three miss the frozen `+.005` T=1 gate.
+Their already-submitted T=5 runs remain active only because the user requested
+the complete architecture matrix; no BlockDrop seed confirmation or held-out
+work is released from this result. These are seed-0 selection results, not
+Table 1 evidence.
+
 The Swin formal dependency chains are also fully submitted rather than waiting
 for the throughput calibration to finish. T=1 calibration/bootstrap/branches
 are `21338586/21339338/21339339`--`21339343`; T=5 equivalents are
