@@ -17,6 +17,7 @@ git -C "${repo}" rev-parse "${source_commit}^{commit}" > "${root}/commit.txt"
 scontrol show job "${SLURM_JOB_ID}" > "${root}/allocation.txt"
 export WANDB_MODE=disabled WANDB_SILENT=true HDF5_USE_FILE_LOCKING=FALSE
 export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 OMP_NUM_THREADS=1
+export PYTHONPATH="/project/6085198/kulbear/wildfire/deps/transformers-4.48.3${PYTHONPATH:+:${PYTHONPATH}}"
 cd "${root}/project"
 python -m reproductions.cross_history.run --history "${history}" --method "${method}" \
   --output "${root}/result" "$@" 2>&1 | tee "${root}/run.log"
