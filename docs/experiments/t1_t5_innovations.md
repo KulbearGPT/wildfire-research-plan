@@ -23,10 +23,14 @@ The authoritative B3 and archived B5 2021 summaries both contain exactly
 3,181 samples and 52,117,504 evaluated pixels per scenario, ruling out a
 history-dependent sample-count difference in the paired comparison.
 For the final reference-baseline audit only, the unchanged frozen B5
-checkpoint is being evaluated on 2022/2023 by jobs `21323907/21323908`, pinned
-to `29067f0`. These tests select no model or hyperparameter; they only complete
-the same reference table already available for B3. Both use minimum 10GB
-H100 slices, and no evaluation runs on the login node.
+checkpoint was evaluated on 2022/2023 by jobs `21323907/21323908`, and the
+unchanged frozen B3 checkpoint was re-evaluated by jobs `21326336/21326337`.
+All four jobs completed with exit `0:0` on minimum 10GB H100 slices. They
+select no model or hyperparameter and perform no training. The current paired
+contract contains 2,856 samples in 2022 and 2,102 in 2023 for both histories;
+the older T1 ledger's 2,312-sample 2023 population is retained as historical
+evidence rather than mixed into this campaign. No evaluation ran on the login
+node.
 
 Fresh matched controls and candidates start from corrected B3 (T1) or B5
 (T5), run 3000 AdamW steps, lr=0.001, effective batch 64, identical seed,
@@ -182,7 +186,7 @@ D2/D13 controls are context, not proof of any new direction.
 | X14 BlockDrop robustness | final block mean `+.011843` | 3 seeds, 2021/22/23, both T | auxiliary block metric; primary mean is `+.007895` |
 | X17 severity-factorized experts | confirmation primary `+.012592`; final block `+.012376` | 3 seeds, 2021/22/23, both T | final primary `+.008250`; closest-control heldout attribution fails |
 | X8 + X17 complete route | final primary `+.013853` | 3 seeds, 2021/22/23, both T; all cells positive | system composition; it does not isolate another mechanism |
-| X22 + X17 complete route | final primary `+.014642`; block `+.012376` | 3 seeds, 2021/22/23, both T; all six cells positive | stronger system composition, but still not an independent mechanism or `+.020` result |
+| X22 + X17 complete route | `+.014642` vs fresh ERM; `+.034527` vs frozen reproduction | 3 seeds, 2021/22/23, both T; all six cells positive | system-level magnitude exceeds `+.020`, but composition is not an independent mechanism |
 | X19 latent adapters | confirmation primary `+.011784`; block `+.017675` vs ERM | 3 seeds, 2021, both T | T5 block attribution vs X14 is `-.001335`; useful total effect but not an independent contribution |
 | X22 cosine ERM | final primary `+.012009`; block `+.008427` | 3 seeds, 2021/22/23, both T; all six primary cells positive | adopted as the second reliable direction; it is the sole optimizer/tuning contribution |
 
@@ -1895,3 +1899,16 @@ retains X17's fixed-severity block experts. Its primary gains are T1
 mean rises to `+.014642` (block `+.012376`), but still misses `+.020` and
 cannot establish an additional mechanism. Artifact:
 `cross-history-analysis/x22-x17-complete-route-final.json`.
+
+The final frozen-reference audit measures the complete route against the
+original reproduced B3/B5 checkpoints rather than the stronger freshly
+continued ERM controls. The primary AP gains for 2021/2022/2023 are T1
+`+.039081/+.017775/+.026707` and T5
+`+.067748/+.020596/+.035253`. Every history/year cell is positive; the T1,
+T5, and six-cell means are `+.027854`, `+.041199`, and `+.034527`. This meets
+the campaign's requested system-level `+.020` magnitude target. It must not be
+reported as the isolated effect of X22, X17, or a third method: relative to
+fresh matched ERM, the same route remains `+.014642`. The audit uses B3 jobs
+`21212205/21326336/21326337` and B5 jobs
+`21212423/21323907/21323908`; all scenario sample counts match the paired
+contract.
