@@ -1975,6 +1975,45 @@ the complete architecture matrix; no BlockDrop seed confirmation or held-out
 work is released from this result. These are seed-0 selection results, not
 Table 1 evidence.
 
+SegFormer-B2 T=5 also completed all five seed-0 continuations. Matched ERM
+M00/M01/M06/M07 AP is `.590659/.387296/.391378/.209945`. Cosine ERM changes
+primary by `+.003001`, block by `+.001090`, and M00 by `-.000466`; it misses
+the `+.005` T=5 gate, so the positive T=1 result does not establish cross-T
+transfer. Mixed/25%/50% BlockDrop changes routed primary by
+`+.004720/+.005466/-.000420`, respectively. The 25% expert passes T=5 alone,
+but its T=1 routed delta is `-.001070`; all BlockDrop variants therefore fail
+the same cross-T seed-0 gate. No SegFormer seeds 1/2 or held-out jobs are
+released.
+
+ConvLSTM bootstrap `21339193` completed all 10,000 updates, checkpoint saving,
+and four-scenario evaluation, but a transient Nibi/CVMFS restart after Python
+completion changed the batch exit to `127`; the original `afterok` descendants
+became permanently unsatisfiable. The saved checkpoint and summary are intact,
+so the five stale descendants were cancelled rather than repeating training.
+Direct replacement continuations `21362024`--`21362028` use that exact
+checkpoint, the same seed and recipes, and a measured-fit three-hour request.
+Matched 10GB/20GB probes gave the same `16:40` start estimate, so they retain
+the minimum 10GB H100 slice.
+
+Both Swin bootstraps completed successfully. Their original 12-hour 10GB
+descendants remained pending for roughly seven hours; existing start estimates
+were next-day or unavailable. Measured bootstrap throughput shows each
+3000-step continuation fits within three hours, and a 20GB three-hour probe
+estimated `16:33` the same day. Under the <=2x queue rule, the still-unstarted
+jobs were replaced by T=1 `21362106/21362108`--`21362111` and T=5
+`21362112/21362113/21362116/21362117`. T=5 matched control `21339345` had
+already started and remains unchanged. This alters only the slice/time request,
+not checkpoints, methods, batches, seeds, or data.
+
+SwinUnet T=5 matched control and all four advancing branches completed. Control
+M00/M01/M06/M07 AP is `.603112/.384643/.391375/.211063`. Cosine ERM changes
+primary by `+.003831`, block by `+.004405`, and M00 by `-.002057`; it misses
+the `+.005` T=5 gate. Mixed/25%/50% BlockDrop changes deployment-routed primary
+by `+.006723/+.002831/+.003828`. Only the mixed specialist passes the T=5
+screen, driven by a `+.010085` block mean; its cross-history decision remains
+open until the queued Swin T=1 result completes. These are seed-0 selection
+results and do not release test-year evaluation yet.
+
 The Swin formal dependency chains are also fully submitted rather than waiting
 for the throughput calibration to finish. T=1 calibration/bootstrap/branches
 are `21338586/21339338/21339339`--`21339343`; T=5 equivalents are
