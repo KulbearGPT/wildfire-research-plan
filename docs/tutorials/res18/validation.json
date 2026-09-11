@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-11",
+  "final_smoke_job": "21747240",
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "wall_seconds": 36,
+  "peak_cuda_allocated_bytes": 308364288,
+  "max_steps": 1,
+  "batch_size": 4,
+  "validation_batches": 1,
+  "test_enabled": false,
+  "training_years": [
+    2018,
+    2020
+  ],
+  "validation_years": [
+    2019
+  ],
+  "test_years_not_evaluated": [
+    2021
+  ],
+  "cpu_validation_job": "21747243",
+  "cpu_exit_code": "0:0",
+  "cpu_existing_tests_passed": 23,
+  "results_unit_tests_passed": 6,
+  "archive": "/project/6085198/kulbear/wildfire/runs/res18-tutorial-validation-20260911",
+  "archive_manifest_sha256": "18826b4011ceabde51bc98ac37055d2051c2809daac2df11ef1ed28fe3d49144",
+  "full_training_rerun": false,
+  "full_dataset_conversion_rerun": false,
+  "fresh_environment_install_verified": false
+}
