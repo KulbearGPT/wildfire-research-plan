@@ -85,7 +85,7 @@ X22 + 固定严重度块专家的组合保留为系统结果：M00 使用 fresh 
 
 ## 6. 学生接手路线与验收
 
-从零开始的逐步命令见 [Res18-U-Net / B0 Slurm 实操教程](tutorials/res18-baseline-slurm.md)，包含下载、预处理、单 fold、B0 与可选完整复现。
+不依赖本仓库的单 fold 教学见 [从官方 codebase 开始的独立教程](tutorials/res18-baseline-slurm.md)；本项目修正划分与索引的 B0 见 [项目 B0 教程](tutorials/project-b0-slurm.md)。两者不能混用结果口径。
 
 | 顺序 | 学生任务 | 验收标准 |
 | --- | --- | --- |

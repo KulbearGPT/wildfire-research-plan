@@ -1,537 +1,598 @@
-# 从下载数据到跑完 ResNet18-U-Net：Nibi Slurm 手把手教程
+# 在新集群从官方 codebase 跑通 Res18-U-Net：独立 Slurm 教程
 
-面向第一次接触本项目的学生。命令使用 **Bash + Alliance Nibi**，从一个空的个人实验目录开始。整理日期：2026-09-11。
+本版只需要作者的官方仓库、公开数据和公开权重，**不 clone `wildfire-research-plan`，不调用我们的模块，不读取老师的缓存、环境或检查点**。所需的小型脚本全部在本文给出，学生复制后保存在自己的实验目录。
 
-本教程配套脚本位于 [`res18/`](res18/)，脚本已经随仓库保存；无需从老师的个人缓存目录寻找文件。它们调用本项目已有的官方复现入口和 B0 入口，不另写一套模型训练逻辑。
+按你的说明，新集群采用与现有服务器相同的 Alliance/Nibi 软件栈与 Slurm。模块名沿用 `StdEnv/2023 gcc/12.3 python/3.10.13 cuda/12.2`；账户、存储目录和可申请 GPU 必须使用新服务器自己的值。本文不是对任意未知集群免配置兼容的承诺。
 
-## 0. 先选定你要完成哪件事
+## 0. 本教程到底复现哪一个 baseline
 
-模型统一叫 **ResNet18-U-Net / Res18-U-Net**：ResNet18 提取特征，U-Net 解码器逐像素输出下一日活跃火点的概率。`T=1` 表示输入一天的观测；All 表示采用该配置下的全部特征。原始 HDF5 有 23 个波段，类别与方向等特征经过模型数据管线处理后形成 40 个输入通道。
+模型是作者 WSTS+ 工作中的 **ResNet18-U-Net、T=1、All features**。ResNet18 编码器提取特征，U-Net 解码器输出下一天活跃火点的逐像素概率。输入一天观测，原始 23 波段经过官方特征处理后成为 40 通道。ResNet18 用 ImageNet 初始化，不使用我们已经训练好的野火 checkpoint。
 
-但“同一个模型”不意味着“同一个实验”。
+学生只需训练 **Fold 2**：2018/2020 训练、2019 验证、2021 测试，10000 个优化器更新。完整 12-fold 和发布权重评价在文末作为可选步骤。
 
-| 路径 | 数据与划分 | 训练量 | 结果应该与谁对照 |
-| --- | --- | --- | --- |
-| **本项目 B0，最终接入研究主线** | WSTS+ 八年；2016–2020 train，2021 val，2022/2023 test；修正样本索引，训练集统计量 | seed 0、3000 步；一套固定划分，没有 12-fold 循环 | 本项目 B0 台账 |
-| **官方 Fold 2，学习单 fold 论文复现** | 原始 WSTS 2018–2021；2018/2020 train，2019 val，2021 test；保留锁定官方数据管线 | seed 0、10000 步 | 我们已有的 Fold 2 训练与发布权重结果 |
-| **官方完整 12-fold** | 官方 `additional_data=false` 的 12 个年份组合 | 每 fold 10000 步，或仅测试 12 个发布权重 | WSTS+ 工作的官方 Res18-U-Net T=1 All 参照 `0.460 ± 0.084`，但不保证论文表格来源完全相同 |
+**这里的官方 baseline 不等于项目 roadmap 的 corrected B0。** 项目 B0 另有八年时间划分、索引修正、训练统计量及 3000 步预算；官方原样代码不会自动产生那些行为。你的“不依赖我们仓库”要求在本教程中优先落实为官方 baseline 复现。
 
-**只做 B0：按 1–6 → 9–10 执行，第 11 节测试可选。只学一个官方 fold：按 1–7 执行，第 8 节发布权重评价可选。** 第 12 节的完整 12-fold 为扩展练习，不是学生必做项。两条路径共用原始数据和模型环境。
+WSTS+ 是作者工作的名字，但这里固定的十二个官方权重使用原始四年 WSTS 划分，所以下载原始 `WildfireSpreadTS.zip` 即可。不要改成 `additional_data=true`：锁定代码的八年设置只有四个 fold，既不能套用 0–11，也不能直接比较下面的十二 fold 参照。
 
-WSTS+ 是论文/扩展基准的名字，不代表它发布的每组权重都采用八年划分。锁定代码中 `additional_data=true` 只有 **4** 个八年 fold；不能把它设成 true 后提交 0–11。项目 B0 又是单独实现的前向时间划分。本教程用显式参数避免这三个协议混淆。
+官方来源：[作者代码](https://github.com/slahrichi/WildfireSpreadTS)、[原始 WSTS 数据](https://zenodo.org/records/8006177)、[作者发布权重](https://huggingface.co/saadlahrichi/WSTSPlus)。代码固定为 `ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad`，权重固定为 `acf70a37394849f4ec8d108a51d6f4325a554d0a`。
 
-论文参考数来自[作者仓库结果表](https://github.com/slahrichi/WildfireSpreadTS#benchmark-results-ap--standard-deviation)。Fold 与代码口径以项目的 [upstream lock](../../reproductions/wsts_res18_unet_t1/upstream.lock.json)、[发布权重清单](../../reproductions/wsts_res18_unet_t1/official_weights_manifest.json)和 [B0 contract](../../reproductions/wsts_fast_track/contract.py)为准。
+## 1. 登录新集群并配置自己的目录
 
-## 1. 登录并建立自己的目录
-
-### 1.1 教师只做一次：给学生一个包含本教程的仓库版本
-
-本地 commit 不会自动出现在 GitHub。教师可以发布相应分支，也可以提供 Git bundle。下面从**含本教程的 main 分支**创建独立文件，再把 bundle 放到学生可读的项目目录：
+在自己电脑终端执行，替换用户名和新服务器地址：
 
 ```bash
-cd /home/kulbear/scratch/wildfire-research-plan
-git bundle create /tmp/wildfire-res18-course.bundle main
-git bundle verify /tmp/wildfire-res18-course.bundle
+ssh YOUR_USERNAME@YOUR_NEW_CLUSTER
 ```
 
-将这个 bundle 复制到课程共享目录。学生下面填入该文件的绝对路径即可 `git clone`；也可以填入已经发布了本教程的 Git 仓库 URL。不要让学生直接修改老师正在跑实验的 worktree。
-
-### 1.2 学生在自己电脑的终端登录
+后续命令均在该集群的 Bash 终端执行。先检查站点软件和账户：
 
 ```bash
-ssh YOUR_ALLIANCE_USERNAME@nibi.alliancecan.ca
-```
-
-`YOUR_ALLIANCE_USERNAME` 换成你的 Alliance 用户名。以下所有命令都在登录 Nibi 后执行。登录节点只编辑脚本、查看轻量结果、提交和查看作业；下载、解压、遍历数据、训练和模型评价交给 Slurm。
-
-### 1.3 查看可用账户和 GPU 名称
-
-```bash
+module avail python cuda
 sacctmgr -nP show assoc where user="$USER" format=Account,Partition
 sinfo -h -o '%P %G'
 ```
 
-本项目教师账户是 `def-vislearn_cpu` / `def-vislearn_gpu`，学生应以自己实际关联的账户为准。下列输入只做一次，不要把 `replace-me` 一类占位符原样提交。
+从输出或管理员处取得 CPU/GPU account。不要复制教师的 account。实验目录应位于计算节点可见、可写的共享存储，而不是教师目录。为约 48.4GB 的 ZIP、HDF5、环境和 checkpoint 准备充足配额；建议预留约 250GB，并在转换作业申请约 200GB 临时磁盘。这是保守准备量，不是实测峰值。
 
 ```bash
-read -r -p '项目组目录，例如 /project/6085198：' WF_GROUP
-read -r -p '你的 CPU Slurm account：' WF_CPU_ACCOUNT
-read -r -p '你的 GPU Slurm account：' WF_GPU_ACCOUNT
-read -r -p '包含本教程的仓库 URL 或 Git bundle 绝对路径：' WF_SOURCE
-export WF_ROOT="$WF_GROUP/$USER/wildfire-res18-course"
-mkdir -p "$WF_ROOT"/{downloads,hdf5,envs,cache,runs,logs,weights}
-export WF_REPO="$WF_ROOT/repo"
-git clone --branch main "$WF_SOURCE" "$WF_REPO"
-test -f "$WF_REPO/docs/tutorials/res18/official.sh"
-cd "$WF_REPO"
-git rev-parse HEAD
-```
-
-创建自己的配置，路径不会写死在公共脚本中：
-
-```bash
-export WF_TUTORIAL_ENV="$WF_ROOT/tutorial.env"
+read -r -p '你的实验根目录绝对路径：' WF_ROOT
+read -r -p 'CPU account：' WF_CPU_ACCOUNT
+read -r -p 'GPU account：' WF_GPU_ACCOUNT
+read -r -p 'GPU 类型及数量，例如 h100:1：' WF_GPU
+export WF_ROOT WF_CPU_ACCOUNT WF_GPU_ACCOUNT WF_GPU
+mkdir -p "$WF_ROOT"/{scripts,downloads,data,runs,logs,cache,weights}
 {
   printf 'export WF_ROOT=%q\n' "$WF_ROOT"
-  printf 'export WF_REPO=%q\n' "$WF_REPO"
   printf 'export WF_CPU_ACCOUNT=%q\n' "$WF_CPU_ACCOUNT"
   printf 'export WF_GPU_ACCOUNT=%q\n' "$WF_GPU_ACCOUNT"
-} > "$WF_TUTORIAL_ENV"
-export WF_SCRIPTS="$WF_REPO/docs/tutorials/res18"
-export WF_GPU_SMOKE='nvidia_h100_80gb_hbm3_1g.10gb:1'
-export WF_GPU_TRAIN='nvidia_h100_80gb_hbm3_2g.20gb:1'
-{
-  printf 'export WF_SCRIPTS=%q\n' "$WF_SCRIPTS"
-  printf 'export WF_GPU_SMOKE=%q\n' "$WF_GPU_SMOKE"
-  printf 'export WF_GPU_TRAIN=%q\n' "$WF_GPU_TRAIN"
-} >> "$WF_TUTORIAL_ENV"
-```
-
-这里申请一个 H100 的 10GB/20GB MIG 分片，不是 10/20 块 GPU。20GB 用于首次完整训练和精确 AP 测试的保守起点；测得显存占用后可缩小，但不要为塞进小分片随意降低正式 batch size。若 `sinfo` 未列出这些名称，按该集群实际资源名称修改配置；其他集群不能直接照搬 Nibi 的 module 和 GPU 名称。
-
-重新登录后恢复配置：
-
-```bash
-read -r -p '你的 tutorial.env 绝对路径：' WF_TUTORIAL_ENV
-export WF_TUTORIAL_ENV
-source "$WF_TUTORIAL_ENV"
-cd "$WF_REPO"
-```
-
-**空间规划：** 原始 ZIP 约 48.4GB、扩展 ZIP 约 19.9GB；还要保留 HDF5、扩展年验证副本、环境和 checkpoint。建议先确认至少约 400GB 项目可用配额，并为原始解压预留约 200GB 节点临时空间。这是保守准备量，不是测得峰值；并发数据作业会增加需求。
-
-```bash
+  printf 'export WF_GPU=%q\n' "$WF_GPU"
+} > "$WF_ROOT/config.env"
 df -h "$WF_ROOT"
-quota -s
 ```
 
-`df` 是文件系统剩余量，不是个人项目配额；如果站点 `quota` 不报告项目配额，按课程组提供的配额查询方式确认。
+如集群要求显式 partition，请在下面 CPU/GPU 的 `sbatch` 命令中分别加上 `--partition=实际分区`。GPU 可以是整卡或至少约 20GB 的适用分片，名称以 `sinfo` 为准。申请 1 块设备，保持正式 batch 64；先通过 smoke 验证驱动与环境兼容。教师当前服务器的 MIG 名称不是跨服务器通用名称。
 
-## 2. 看懂一次 Slurm 提交
-
-`sbatch` 把任务交给调度器并立刻返回 job ID；返回 ID **不代表训练完成**。`--cpus-per-task` 是 CPU 核数，`--mem` 是主机内存，`--gpus` 是 GPU，`--time` 是最长墙钟时间。脚本成功退出要求 `COMPLETED` 且 `ExitCode=0:0`；科研结果还要检查输出文件。
-
-本教程用 `--parsable` 保存 job ID，用 `afterok` 表示前置作业成功后才运行，防止下载失败仍继续训练。`%j` 在日志文件名中展开成 job ID；数组作业用 `%A_%a` 展开成数组 ID 和 fold ID。
-
-下面定义一个登录终端函数，之后每一步用它检查状态：
+重新登录后恢复：
 
 ```bash
-jobcheck() {
-  squeue -j "$1" -o '%.18i %.24j %.10T %.10M %.25R'
-  sacct -j "$1" --format=JobID,JobName%28,State,ExitCode,Elapsed,MaxRSS
-}
+read -r -p '你的 config.env 绝对路径：' WF_CONFIG
+source "$WF_CONFIG"
 ```
 
-作业结束后 `squeue` 为空是正常的，以 `sacct` 和日志为准。每节提交后，等待 `COMPLETED 0:0` 再执行该节的“成功后”文件检查；作业尚未启动时日志文件不存在是正常的。`afterok` 可用于提前排队，但不能把任务仍在排队理解为数据已准备好。每个科学运行使用独立输出目录；失败后先诊断，不能覆盖原目录伪装成第一次成功运行。重新登录需要重新定义 `jobcheck`，并从记录或 `sacct` 恢复后续依赖用的 job ID。
+**Slurm 使用原则：** `sbatch` 返回 job ID，不等于完成。查看 `squeue -j JOBID` 和 `sacct -j JOBID --format=JobID,State,ExitCode,Elapsed,MaxRSS`，只有 `COMPLETED 0:0` 后再检查结果。每一节都可提前提交带 `afterok` 的后续任务，但不要把还在排队的任务当作成功。重新登录还需要从笔记恢复后续依赖所用的 job ID。
 
-## 3. 创建两个隔离环境
+下载、安装、数据转换和模型运行都通过 Slurm。下面的从零安装与下载任务需要出站网络；若新集群计算节点禁止联网，应先由管理员提供可联网的 CPU/数据传输节点或镜像渠道，不能在普通登录节点偷偷执行批量工作。
 
-训练依赖较旧的 Lightning/SMP，采用本项目已使用过的 Python 3.10 环境输入；数据审计包要求 Python 3.13。把二者分开可以避免一次安装改变另一侧的 NumPy/PyTorch 版本。
+## 2. 创建自包含的脚本文件
+
+下面各个 `cat … EOF` 块应整段复制，包括最后的 `EOF`。它们只是写小文件，不训练、不下载大文件，也不需要 clone 任何额外仓库。
+
+### 2.1 训练环境依赖
+
+保留项目以前使用过的 Python 3.10 / PyTorch 2.6 / Lightning 2.0.2 环境输入。在这个单官方 fold 教程中**不需要 Python 3.13 的项目审计环境**。
 
 ```bash
-WF_SETUP_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
-  --job-name=res18-setup --cpus-per-task=4 --mem=16G --time=01:00:00 \
-  --output="$WF_ROOT/logs/%j-setup.out" "$WF_SCRIPTS/setup.sh")
-WF_SETUP_JOB=${WF_SETUP_JOB%%;*}
-printf '%s\n' "$WF_SETUP_JOB"
-jobcheck "$WF_SETUP_JOB"
-tail -n 40 "$WF_ROOT/logs/$WF_SETUP_JOB-setup.out"
+cat > "$WF_ROOT/scripts/requirements.txt" <<'EOF'
+h5py==3.10.0
+numpy==1.26.4
+pandas==1.5.3
+einops==0.6.1
+torch==2.6.0
+torchmetrics==1.4.0.post0
+torchvision==0.21.0
+tqdm==4.65.0
+wandb==0.15.3
+xarray==2023.4.2
+rasterio==1.3.10
+geopandas==0.12.2
+matplotlib==3.7.2
+imageio==2.27.0
+pytorch-lightning==2.0.2
+scikit-learn==1.2.1
+segmentation-models-pytorch==0.3.3
+jsonargparse[signatures]==4.40.2
+psutil==7.2.2
+setuptools==80.9.0
+EOF
 ```
+安装使用同类型集群的 Alliance wheelhouse（`--no-index`）。如果新站点没有该软件源，应停止并确认安装渠道；不能认为换个服务器仍自动存在相同 wheel。第一次安装的 freeze 和 GPU smoke 才是新环境的实际证据。
 
-脚本完成的工作：创建环境；安装 [`requirements-training.txt`](res18/requirements-training.txt)；锁定上游 commit `ed221d4…`；应用仓库已有的 Res18 导入裁剪补丁和移除未使用的 `T_co` 类型导入；缓存 ResNet18 ImageNet 初始化。补丁不改变网络、损失或训练数据索引，实际差异会随运行保存。模型作业还会用 `git archive HEAD` 保存并执行本项目已提交的源码快照；教程脚本另存一份，所以提交前先 commit 你确实要使用的项目代码，运行中不要编辑上游 checkout。
+### 2.2 官方权重清单（固定版本）
 
-**成功标准：** Slurm `0:0`，且以下文件存在：
+每行依次为 fold、文件名、SHA-256、字节数。下载脚本会核验这些值，不凭文件名认定下载正确。
 
 ```bash
-test -f "$WF_ROOT/envs/READY"
-cat "$WF_ROOT/envs/training-freeze.txt"
-cat "$WF_ROOT/envs/audit-freeze.txt"
+cat > "$WF_ROOT/scripts/weights.tsv" <<'EOF'
+0 fold0_testAP0.528.pth be33d244916d71158dab42b3aa607395a49989f862165529f38cabd735dd69eb 57889221
+1 fold1_testAP0.426.pth 367cdec7a9a0f5729d2c01db1c195345aaf78768976293277b5386e7bcc0e36f 57889221
+2 fold2_testAP0.571.pth e17cd58e29ee7b91f6a8ba85ddcb5783ec69b9541e2de93298ba3241e785a9ec 57889221
+3 fold3_testAP0.307.pth 41e24f55dd0270566351fa5b52d50c77a45d01074805f18a591791b29860ab81 57889221
+4 fold4_testAP0.483.pth aa8e512a63bdcc229dedb358a0e8cf9e40c6559ae3b2504adbd3e30ccc97fd3d 57889221
+5 fold5_testAP0.322.pth 0b31b3749c239123de159171fc0f60390a14ae25bd986b713135b73f5faecda9 57889221
+6 fold6_testAP0.577.pth e83c49de0bf7524c92946a205e3eadd2ffce76d04502e23ffcab9a3593e8afd9 57889221
+7 fold7_testAP0.474.pth 5ed6e8c59a57d6d948522efd4f90c64596f4292f16a18f96610b310faa30d41a 57889221
+8 fold8_testAP0.478.pth 6004ab1060a6cfed1ffa70174dcf0c68717e75ea5b96ebde0e60a63297f45ab4 57889221
+9 fold9_testAP0.471.pth 7237244ce4a5ee5f3084985fc074275e69caca853b9bde2e1ada7000c5f5d3d0 57889221
+10 fold10_testAP0.324.pth 2c9247afccdab53cda6bb3da00b4ba414ce963e6ad0e3e43bcf4623e431d3e96 57889405
+11 fold11_testAP0.474.pth 9ecc0ee9e5908dff4f242a6b6a58060c4bfdd9ceb6857c4a12e13b633fa4c709 57889405
+EOF
 ```
-
-安装使用 Alliance wheelhouse 的 `--no-index`。如果某个固定版本不可用，保留日志并请教师确认兼容版本/已验证环境；不要直接 `pip install -U` 整套依赖。已安装环境拒绝被脚本覆盖。上游仓库与预训练编码器的小型下载也在该 CPU 作业完成。
-
-注意：`encoder_weights=imagenet` 是公开的 ImageNet 初始化。项目记录中的“from scratch”表示不从我们已有的野火模型 checkpoint 续训，不代表 ResNet18 所有参数都随机初始化。
-
-## 4. 下载原始 WSTS 并校验
-
-原始 WSTS 覆盖 2018–2021，用于官方单 fold；它也是组装八年 WSTS+ 的一部分。原始数据发布入口是 [Zenodo 8006177](https://zenodo.org/records/8006177)。脚本锁定文件 `WildfireSpreadTS.zip`，MD5 为 `dc1a04e63ccc70037b277d585b8fe761`。
+### 2.3 下载和验证官方权重
 
 ```bash
-WF_DOWNLOAD_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
-  --job-name=wsts-download --cpus-per-task=1 --mem=4G --time=08:00:00 \
-  --output="$WF_ROOT/logs/%j-download.out" "$WF_SCRIPTS/download.sh" original)
-WF_DOWNLOAD_JOB=${WF_DOWNLOAD_JOB%%;*}
-jobcheck "$WF_DOWNLOAD_JOB"
-tail -n 20 "$WF_ROOT/logs/$WF_DOWNLOAD_JOB-download.out"
+cat > "$WF_ROOT/scripts/weights.py" <<'EOF'
+import hashlib
+from pathlib import Path
+import sys
+import urllib.request
+import shutil
+root, fold = Path(sys.argv[1]), sys.argv[2]
+verify_only = '--verify-only' in sys.argv[3:]
+assert fold in ['all'] + [str(i) for i in range(12)]
+revision = 'acf70a37394849f4ec8d108a51d6f4325a554d0a'
+for line in (root / 'scripts/weights.tsv').read_text().splitlines():
+    index, name, expected_hash, size = line.split()
+    if fold != 'all' and fold != index:
+        continue
+    path = root / 'weights' / name
+    if not path.exists() and not verify_only:
+        url = f'https://huggingface.co/saadlahrichi/WSTSPlus/resolve/{revision}/trained_model_weights/Res18Unet_T1/All/{name}'
+        with urllib.request.urlopen(url, timeout=180) as response, path.with_suffix('.partial').open('wb') as out:
+            shutil.copyfileobj(response, out)
+        candidate = path.with_suffix('.partial')
+    else:
+        candidate = path
+    assert candidate.stat().st_size == int(size), candidate
+    assert hashlib.sha256(candidate.read_bytes()).hexdigest() == expected_hash, candidate
+    if candidate != path:
+        candidate.rename(path)
+    print('VERIFIED', index, name, expected_hash)
+EOF
 ```
+### 2.4 只评价发布权重的入口
 
-脚本中的实际下载与校验逻辑相当于：
+此小脚本使用作者 `train.py` 中的模型类、LightningCLI 和 DataModule，严格加载作者 raw state dict，然后只调用 `Trainer.test`。不重新实现网络、损失或数据集。
 
 ```bash
-# 以下是解释用片段，已由上面的 Slurm 作业执行；不要在登录节点重复下载。
-curl -fL --retry 8 --retry-delay 5 --continue-at - \
-  'https://zenodo.org/api/records/8006177/files/WildfireSpreadTS.zip/content' \
-  -o WildfireSpreadTS.zip.partial
-printf '%s  %s\n' dc1a04e63ccc70037b277d585b8fe761 WildfireSpreadTS.zip.partial | md5sum -c -
+cat > "$WF_ROOT/scripts/evaluate_weight.py" <<'EOF'
+import runpy
+import sys
+from pathlib import Path
+import torch
+code, weight = Path(sys.argv[1]), Path(sys.argv[2])
+sys.path.insert(0, str(code / 'src'))
+sys.argv = [str(code / 'src/train.py'), *sys.argv[3:]]
+ns = runpy.run_path(str(code / 'src/train.py'), run_name='official_weight_evaluation')
+cli = ns['MyLightningCLI'](ns['BaseModel'], ns['FireSpreadDataModule'],
+    subclass_mode_model=True, save_config_kwargs={'overwrite': True},
+    parser_kwargs={'parser_mode': 'yaml'}, run=False)
+state = torch.load(weight, map_location='cpu', weights_only=True)
+assert isinstance(state, dict) and 'state_dict' not in state
+cli.model.load_state_dict(state, strict=True)
+print('OFFICIAL_WEIGHT_STRICT_LOAD=1', flush=True)
+cli.trainer.test(cli.model, cli.datamodule)
+EOF
 ```
+### 2.5 保存结果及检查完整 12-fold
 
-**为什么校验：** 下载退出码为零不一定代表拿到了完整、正确的版本。脚本只有校验通过才把 `.partial` 改成正式 `.zip`。网络中断可保留 partial 后重新提交下载步骤；正式训练的失败不能按同样方式盲目自动重试。
-
-## 5. CPU 作业：GeoTIFF → HDF5
-
-GeoTIFF 每天一个文件，适合地理栅格交换；训练频繁读取时间序列，把同一事件整理为 HDF5 能减少文件打开开销。每个事件组织为 `data[day, channel, height, width]`，并保存日期、年份、事件名及位置元数据。
+每项指标必须存在且为合法有限值；完整汇总要求十二个 fold 恰好各一个，禁止混用自己训练和发布权重评价结果。
 
 ```bash
-WF_ORIGINAL_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
-  --dependency="afterok:$WF_SETUP_JOB:$WF_DOWNLOAD_JOB" \
-  --job-name=wsts-hdf5 --cpus-per-task=4 --mem=32G --tmp=200G --time=08:00:00 \
-  --output="$WF_ROOT/logs/%j-original.out" "$WF_SCRIPTS/prepare-original.sh")
-WF_ORIGINAL_JOB=${WF_ORIGINAL_JOB%%;*}
-jobcheck "$WF_ORIGINAL_JOB"
-tail -n 40 "$WF_ROOT/logs/$WF_ORIGINAL_JOB-original.out"
+cat > "$WF_ROOT/scripts/results.py" <<'EOF'
+import json
+import math
+from pathlib import Path
+import re
+import statistics
+import sys
+if sys.argv[1] == 'record':
+    run, mode, fold = Path(sys.argv[2]), sys.argv[3], int(sys.argv[4])
+    text = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', (run / 'output.log').read_text(errors='replace'))
+    marker = ('`Trainer.fit` stopped: `max_steps=10000` reached.' if mode == 'train' else 'OFFICIAL_WEIGHT_STRICT_LOAD=1')
+    assert marker in text, 'Incomplete training or strict loading'
+    metrics = {}
+    for name in ('AP','f1','iou','precision','recall','loss'):
+        matches = re.findall(r'\btest_' + name + r'\b[ \t│┃|:=]*([^\s│┃|]+)', text)
+        assert matches, name
+        value = float(matches[-1])
+        assert math.isfinite(value) and value >= 0 and (name == 'loss' or value <= 1), name
+        metrics[name] = value
+    result = {'mode':mode, 'fold':fold, 'metrics':metrics, 'run':str(run)}
+    if mode == 'train':
+        checkpoints = list((run / 'work').rglob('*.ckpt'))
+        assert len(checkpoints) == 1, checkpoints
+        result['checkpoint'] = str(checkpoints[0])
+    with (run / 'result.json').open('x') as handle:
+        json.dump(result, handle, indent=2)
+    print(json.dumps(result, indent=2))
+elif sys.argv[1] == 'aggregate':
+    root, array = Path(sys.argv[2]), sys.argv[3]
+    assert array.isdigit()
+    rows = []
+    for meta in (root / 'runs').glob('*/slurm-job.txt'):
+        if re.search(r'\bArrayJobId=' + array + r'\b', meta.read_text()):
+            rows.append(json.loads((meta.parent / 'result.json').read_text()))
+    assert len(rows) == 12 and sorted(r['fold'] for r in rows) == list(range(12)), 'Missing/duplicate folds'
+    assert len({r['mode'] for r in rows}) == 1, 'Do not mix trained and released-weight results'
+    values = [r['metrics']['AP'] for r in rows]
+    assert all(math.isfinite(v) and 0 <= v <= 1 for v in values)
+    result = {'mean_AP':statistics.mean(values), 'population_std_AP':statistics.pstdev(values),
+              'sample_std_AP':statistics.stdev(values), 'rows':sorted(rows,key=lambda r:r['fold'])}
+    with (root / f'summary-{array}.json').open('x') as handle:
+        json.dump(result, handle, indent=2)
+    print(json.dumps(result, indent=2))
+else:
+    raise ValueError('Use record or aggregate')
+EOF
 ```
+### 2.6 统一 Slurm 作业脚本
 
-脚本在 `$SLURM_TMPDIR` 解压，调用锁定上游的 `src/preprocess/CreateHDF5Dataset.py`，把持久输出写到 `$WF_ROOT/hdf5/original/`。该官方转换器只处理 2018–2021，不能拿它直接完成扩展年份。
-
-**成功标准：** 总计 607 个事件，逐年为 176、74、201、156；日志输出 `status: pass`，然后写入 READY：
+这个脚本里的唯一 `git clone` 指向作者仓库。为让锁定版本在该 PyTorch 环境可导入，setup 只裁剪未用架构的包导入，并删除未使用的 `T_co` 类型导入；完整差异保存为 `setup-runtime.patch`。不修正官方样本索引、不替换数据划分、不改损失。
 
 ```bash
-test -f "$WF_ROOT/hdf5/original/READY"
+cat > "$WF_ROOT/scripts/job.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+: "${SLURM_JOB_ID:?Use sbatch to run this script}"
+source "${1:?Pass config.env}"
+action=${2:?Pass setup/download/convert/smoke/train/fetch-weight/test-weight/aggregate}
+fold=${3:-${SLURM_ARRAY_TASK_ID:-2}}
+case "$action" in setup|download|convert|smoke|train|fetch-weight|test-weight|aggregate) ;; *) exit 2;; esac
+if [[ "$action" != aggregate && "$fold" != all ]]; then
+  [[ "$fold" =~ ^([0-9]|1[01])$ ]] || exit 2
+fi
+export TORCH_HOME="$WF_ROOT/cache/torch"
+export WANDB_MODE=disabled WANDB_SILENT=true PYTHONUNBUFFERED=1
+export HDF5_USE_FILE_LOCKING=FALSE OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+# Only our own checkpoints and the checksum-verified official weights are loaded.
+export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
+module purge
+module load StdEnv/2023 gcc/12.3 python/3.10.13 cuda/12.2
+code="$WF_ROOT/official-code"
+env_dir="$WF_ROOT/env"
+if [[ "$action" == setup ]]; then
+  test ! -e "$code"
+  test ! -e "$env_dir"
+  virtualenv --no-download "$env_dir"
+  source "$env_dir/bin/activate"
+  python -m pip install --no-index -r "$WF_ROOT/scripts/requirements.txt"
+  git clone https://github.com/slahrichi/WildfireSpreadTS.git "$code"
+  git -C "$code" checkout --detach ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad
+  python - "$code" <<'PATCH'
+from pathlib import Path
+import sys
+root = Path(sys.argv[1])
+p = root / 'src/models/__init__.py'
+keep = ['from .BaseModel import BaseModel',
+        'from .ConvLSTMLightning import ConvLSTMLightning',
+        'from .LogisticRegression import LogisticRegression',
+        'from .SMPModel import SMPModel']
+assert all(p.read_text().splitlines().count(line) == 1 for line in keep)
+p.write_text('\n'.join(keep) + '\n')
+p = root / 'src/dataloader/FireSpreadDataset.py'
+s = p.read_text()
+assert s.count('from torch.utils.data.dataset import T_co\n') == 1
+p.write_text(s.replace('from torch.utils.data.dataset import T_co\n', ''))
+PATCH
+  git -C "$code" diff > "$WF_ROOT/setup-runtime.patch"
+  python - <<'ENCODER'
+import segmentation_models_pytorch as smp
+smp.encoders.get_encoder('resnet18', in_channels=40, weights='imagenet')
+print('ImageNet encoder cached')
+ENCODER
+  python -m pip freeze > "$WF_ROOT/environment-freeze.txt"
+  touch "$WF_ROOT/SETUP_READY"
+  exit 0
+fi
+if [[ "$action" == download ]]; then
+  cd "$WF_ROOT/downloads"
+  if [[ ! -f WildfireSpreadTS.zip ]]; then
+    curl -fL --retry 8 --retry-delay 5 --continue-at - \
+      https://zenodo.org/api/records/8006177/files/WildfireSpreadTS.zip/content \
+      -o WildfireSpreadTS.zip.partial
+    printf '%s  %s\n' dc1a04e63ccc70037b277d585b8fe761 WildfireSpreadTS.zip.partial | md5sum -c -
+    mv WildfireSpreadTS.zip.partial WildfireSpreadTS.zip
+  fi
+  printf '%s  %s\n' dc1a04e63ccc70037b277d585b8fe761 WildfireSpreadTS.zip | md5sum -c -
+  exit 0
+fi
+test -f "$WF_ROOT/SETUP_READY"
+source "$env_dir/bin/activate"
+export PYTHONPATH="$code/src"
+if [[ "$action" == fetch-weight ]]; then
+  python "$WF_ROOT/scripts/weights.py" "$WF_ROOT" "$fold"
+  exit 0
+fi
+if [[ "$action" == aggregate ]]; then
+  python "$WF_ROOT/scripts/results.py" aggregate "$WF_ROOT" "$fold"
+  exit 0
+fi
+if [[ "$action" == convert ]]; then
+  test ! -e "$WF_ROOT/data/hdf5"
+  stage="${SLURM_TMPDIR:?}/wsts-raw"
+  mkdir "$stage"
+  unzip -q "$WF_ROOT/downloads/WildfireSpreadTS.zip" -d "$stage"
+  mapfile -t found < <(find "$stage" -type d -name 2018 -print)
+  [[ ${#found[@]} -eq 1 ]]
+  raw=$(dirname "${found[0]}")
+  python "$code/src/preprocess/CreateHDF5Dataset.py" \
+    --data_dir "$raw" --target_dir "$WF_ROOT/data/hdf5"
+  python - "$WF_ROOT/data/hdf5" <<'COUNTS'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1])
+expected = {2018:176, 2019:74, 2020:201, 2021:156}
+actual = {y:len(list((p / str(y)).glob('*.hdf5'))) for y in expected}
+assert actual == expected, actual
+print('PASS: 607 events', actual)
+(p / 'READY').touch()
+COUNTS
+  exit 0
+fi
+test -f "$WF_ROOT/data/hdf5/READY"
+[[ "$fold" =~ ^([0-9]|1[01])$ ]] || exit 2
+run="$WF_ROOT/runs/$action-fold$fold-${SLURM_JOB_ID}${SLURM_ARRAY_TASK_ID:+-$SLURM_ARRAY_TASK_ID}"
+mkdir "$run"
+mkdir "$run/work"
+cp "$WF_ROOT/config.env" "$run/config.env"
+cp -r "$WF_ROOT/scripts" "$run/scripts"
+git -C "$code" rev-parse HEAD > "$run/upstream-commit.txt"
+git -C "$code" diff > "$run/runtime.patch"
+python -m pip freeze > "$run/pip-freeze.txt"
+module list > "$run/modules.txt" 2>&1
+nvidia-smi -q > "$run/nvidia-smi.txt"
+scontrol show job "$SLURM_JOB_ID" > "$run/slurm-job.txt"
+export WANDB_DIR="$run/work"
+cd "$run/work"
+batch=64
+steps=10000
+extra=()
+if [[ "$action" == smoke ]]; then
+  batch=4
+  steps=1
+  extra+=(--trainer.num_sanity_val_steps=1 --trainer.limit_val_batches=1 --do_test=false)
+fi
+args=(
+  "--config=$code/cfgs/unet/res18_monotemporal.yaml"
+  "--trainer=$code/cfgs/trainer_single_gpu.yaml"
+  "--data=$code/cfgs/data_monotemporal_full_features.yaml"
+  --seed_everything=0 "--data.data_dir=$WF_ROOT/data/hdf5"
+  --data.additional_data=false "--data.data_fold_id=$fold"
+  --data.n_leading_observations=1 --data.features_to_keep=null
+  --data.remove_duplicate_features=true --data.n_leading_observations_test_adjustment=5
+  "--data.batch_size=$batch" --data.num_workers=8 "--trainer.max_steps=$steps"
+  "--trainer.default_root_dir=$run/work" --trainer.logger.init_args.log_model=false
+  --do_train=true --do_validate=false --do_test=true --do_predict=false "${extra[@]}"
+)
+if [[ "$action" == test-weight ]]; then
+  python "$run/scripts/weights.py" "$WF_ROOT" "$fold" --verify-only
+  weight=$(awk -v f="$fold" '$1==f {print $2}' "$WF_ROOT/scripts/weights.tsv")
+  command=(python "$run/scripts/evaluate_weight.py" "$code" "$WF_ROOT/weights/$weight" "${args[@]}" --do_train=false)
+else
+  command=(python "$code/src/train.py" "${args[@]}")
+fi
+printf '%q ' "${command[@]}" > "$run/command.txt"
+printf '\n' >> "$run/command.txt"
+"${command[@]}" 2>&1 | tee "$run/output.log"
+if [[ "$action" == smoke ]]; then
+  grep -F '`Trainer.fit` stopped: `max_steps=1` reached.' "$run/output.log"
+  touch "$run/SMOKE_PASSED"
+else
+  python "$run/scripts/results.py" record "$run" "$action" "$fold"
+fi
+EOF
 ```
-
-输出目录是 `original/2018/*.hdf5` 等四个年份目录。原始活跃火点波段使用 HHMM 编码，这一步将其变成小时；目标生成时使用是否有活跃火点。扩展年份的编码不同，第 9 节有单独处理，不能重复除以 100。
-
-**到这里数据准备完成。两条路径都先做第 6 节 GPU smoke；通过后，B0 路径跳到第 9 节，官方单 fold 路径继续第 7 节。**
-
-## 6. 官方 Fold 2：先运行一步 smoke
-
-smoke 是工程检查：取训练批次、反向传播，并检查验证批次。它只做 1 步，batch 4，仅一个验证批次，不启用测试；不会产生可以与论文比较的 AP。
+## 3. 创建环境并取得官方代码
 
 ```bash
-WF_SMOKE_JOB=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
-  --dependency="afterok:$WF_ORIGINAL_JOB" --job-name=res18-smoke \
-  --gpus="$WF_GPU_SMOKE" --cpus-per-task=8 --mem=64G --time=00:20:00 \
-  --output="$WF_ROOT/logs/%j-smoke.out" "$WF_SCRIPTS/official.sh" smoke 2)
-WF_SMOKE_JOB=${WF_SMOKE_JOB%%;*}
-jobcheck "$WF_SMOKE_JOB"
-tail -n 60 "$WF_ROOT/logs/$WF_SMOKE_JOB-smoke.out"
+SETUP_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
+  --cpus-per-task=4 --mem=16G --time=01:00:00 \
+  --output="$WF_ROOT/logs/%j-setup.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" setup)
+SETUP_JOB=${SETUP_JOB%%;*}
+printf '%s\n' "$SETUP_JOB"
 ```
 
 成功后：
 
 ```bash
-export WF_SMOKE_RUN="$WF_ROOT/runs/official-smoke-fold2-$WF_SMOKE_JOB"
-test -f "$WF_SMOKE_RUN/SMOKE_PASSED"
-cat "$WF_SMOKE_RUN/command.txt"
+test -f "$WF_ROOT/SETUP_READY"
+cat "$WF_ROOT/environment-freeze.txt"
+cat "$WF_ROOT/setup-runtime.patch"
+git -C "$WF_ROOT/official-code" remote -v
 ```
 
-日志应包含 `max_steps=1` 完成提示和正的 `WSTS_OBSERVER_PEAK_ALLOCATED_BYTES`。只看到 `CUDA available: True` 不算模型跑通。
+最后一条应只显示 `slahrichi/WildfireSpreadTS`。setup 会缓存 ImageNet 编码器，避免训练时临时联网。已存在的环境/代码目录拒绝被覆盖；安装失败先检查日志，不要直接反复覆盖或升级依赖。
 
-## 7. 官方 Fold 2：10000 步训练，自动测试最佳验证 checkpoint
+## 4. 下载原始四年 WSTS
 
 ```bash
-WF_FOLD_JOB=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
-  --dependency="afterok:$WF_SMOKE_JOB" --job-name=res18-fold2 \
-  --gpus="$WF_GPU_TRAIN" --cpus-per-task=8 --mem=96G --time=12:00:00 \
-  --output="$WF_ROOT/logs/%j-fold2.out" "$WF_SCRIPTS/official.sh" full 2)
-WF_FOLD_JOB=${WF_FOLD_JOB%%;*}
-jobcheck "$WF_FOLD_JOB"
-tail -n 50 "$WF_ROOT/logs/$WF_FOLD_JOB-fold2.out"
+DOWNLOAD_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
+  --cpus-per-task=1 --mem=4G --time=08:00:00 \
+  --output="$WF_ROOT/logs/%j-download.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" download)
+DOWNLOAD_JOB=${DOWNLOAD_JOB%%;*}
 ```
 
-`full 2` 中的 `2` 是 fold 编号，不是 seed。这个脚本明确传入：
+实际地址是 `https://zenodo.org/api/records/8006177/files/WildfireSpreadTS.zip/content`。MD5 应为 `dc1a04e63ccc70037b277d585b8fe761`；只在校验通过后把 `.partial` 改为 `.zip`。日志应显示校验 `OK`。网络下载可续传，训练失败不能因此被默认自动重试。
 
-```text
---data.additional_data=false
---data.data_fold_id=2
---seed_everything=0
---data.n_leading_observations=1
---data.features_to_keep=null
---data.remove_duplicate_features=true
---data.n_leading_observations_test_adjustment=5
---data.batch_size=64
---data.num_workers=8
---trainer.max_steps=10000
---do_train=true --do_test=true --do_predict=false
-```
-
-**为什么这样选 checkpoint：** 优化器做满 10000 次更新，validation AP 决定保存哪一个 checkpoint，官方 `train.py` 最后用它测试。最佳 checkpoint 的 `global_step` 可以小于 10000；这并不等于少训练了。测试集不用于选择参数或最好 seed。
-
-损失保持官方 Focal、优化器保持 AdamW、学习率 0.001。YAML 中的 `pos_class_weight: 236` 会被官方训练入口依据训练年份的 fire rate 重算；我们保存的 Fold 2 有效值是 `608.4653828020165`。不要为了接近某个分数手动把它改回 236。
-
-成功后阅读结果：
+## 5. CPU 转换：GeoTIFF → HDF5
 
 ```bash
-export WF_FOLD_RUN="$WF_ROOT/runs/official-full-fold2-$WF_FOLD_JOB"
-cat "$WF_FOLD_RUN/result.json"
-cat "$WF_FOLD_RUN/command.txt"
+DATA_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
+  --dependency="afterok:$SETUP_JOB:$DOWNLOAD_JOB" \
+  --cpus-per-task=4 --mem=32G --tmp=200G --time=08:00:00 \
+  --output="$WF_ROOT/logs/%j-convert.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" convert)
+DATA_JOB=${DATA_JOB%%;*}
 ```
 
-`result.json` 含 AP、F1、IoU、precision、recall、loss、最佳 checkpoint 路径及步数、原始日志 SHA-256。脚本只在训练完成标志、测试指标和 checkpoint 检查通过后写此文件。
+GeoTIFF 是逐日地理栅格，HDF5 将同一事件整理成 `day × channel × height × width`，减少训练时频繁打开小文件的开销。转换直接调用作者 `src/preprocess/CreateHDF5Dataset.py`，原始活跃火点 HHMM 值转为小时；预测目标是次日活跃火点代理，不是完整火场边界。
 
-**已有参照，不是本次重跑结果：** 历史 Windows 完整 Fold 2 训练测试 AP 为 **0.554664**；发布权重 Fold 2 实测 AP 为 **0.570902**。单 fold 分数可以高于论文跨 fold 均值 **0.460**，因为测试年份不同。Nibi 环境与历史 Windows 环境不同，不承诺逐位相等；应保留实际结果，不能用目标数替换。
-
-## 8. 可选：测试官方 Fold 2 发布权重
-
-这一步快速检查数据与评价入口是否和官方发布资产相容。它**不训练**，也不是你刚训练出来的 checkpoint。
+成功标准：2018/2019/2020/2021 分别为 **176/74/201/156** 个 HDF5，共 **607** 个事件。脚本打印数量并写 READY：
 
 ```bash
-WF_WEIGHT_DOWNLOAD_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
-  --job-name=res18-weight-fetch --cpus-per-task=1 --mem=4G --time=00:30:00 \
-  --output="$WF_ROOT/logs/%j-weight-fetch.out" "$WF_SCRIPTS/fetch-weights.sh" 2)
-WF_WEIGHT_DOWNLOAD_JOB=${WF_WEIGHT_DOWNLOAD_JOB%%;*}
-WF_WEIGHT_JOB=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
-  --dependency="afterok:$WF_ORIGINAL_JOB:$WF_WEIGHT_DOWNLOAD_JOB" \
-  --job-name=res18-weight2 --gpus="$WF_GPU_TRAIN" --cpus-per-task=8 \
-  --mem=96G --time=01:00:00 --output="$WF_ROOT/logs/%j-weight2.out" \
-  "$WF_SCRIPTS/official.sh" weight 2)
-WF_WEIGHT_JOB=${WF_WEIGHT_JOB%%;*}
-jobcheck "$WF_WEIGHT_JOB"
-cat "$WF_ROOT/runs/official-weight-fold2-$WF_WEIGHT_JOB/result.json"
+test -f "$WF_ROOT/data/hdf5/READY"
+tail -n 30 "$WF_ROOT/logs/$DATA_JOB-convert.out"
 ```
 
-下载使用固定 Hub revision `acf70a3…`，逐文件检查大小和 SHA-256；评价再次校验后 `strict=True` 加载 raw state dict，只调用 `Trainer.test`。不能把 `.pth` raw state dict 当成 Lightning `.ckpt` 用来 resume。
+不要把新增四年 `WSTSPlus.zip` 直接塞给此转换器：扩展包的日期/编码/缺失地理信息需要另做处理；这不是本次官方十二 fold 的输入。
 
-参考文件是 `fold2_testAP0.571.pth`，历史重算 `0.570902` 与文件名四舍五入结果一致。所有权重来自[作者发布仓库](https://huggingface.co/saadlahrichi/WSTSPlus/tree/acf70a37394849f4ec8d108a51d6f4325a554d0a/trained_model_weights/Res18Unet_T1/All)。
-
-## 9. 接入项目 B0：准备扩展年份并重新计算训练统计量
-
-WSTS+ 的下载包是**新增四年**，不是完整八年包。扩展数据发布于 [Zenodo 17584629](https://zenodo.org/records/17584629)，文件 `WSTSPlus.zip` 约 19.9GB，MD5 `42da7598cc33a170064e78d8027148c9`。
+## 6. 一个验证 batch + 一步 GPU smoke
 
 ```bash
-WF_PLUS_DOWNLOAD_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
-  --job-name=wstsplus-download --cpus-per-task=1 --mem=4G --time=06:00:00 \
-  --output="$WF_ROOT/logs/%j-plus-download.out" "$WF_SCRIPTS/download.sh" plus)
-WF_PLUS_DOWNLOAD_JOB=${WF_PLUS_DOWNLOAD_JOB%%;*}
-WF_PLUS_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
-  --dependency="afterok:$WF_ORIGINAL_JOB:$WF_PLUS_DOWNLOAD_JOB" \
-  --job-name=wstsplus-prepare --cpus-per-task=8 --mem=64G --tmp=100G --time=12:00:00 \
-  --output="$WF_ROOT/logs/%j-plus-prepare.out" "$WF_SCRIPTS/prepare-plus.sh")
-WF_PLUS_JOB=${WF_PLUS_JOB%%;*}
-jobcheck "$WF_PLUS_JOB"
-tail -n 60 "$WF_ROOT/logs/$WF_PLUS_JOB-plus-prepare.out"
+SMOKE_JOB=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
+  --dependency="afterok:$DATA_JOB" --gpus="$WF_GPU" \
+  --cpus-per-task=8 --mem=64G --time=00:20:00 \
+  --output="$WF_ROOT/logs/%j-smoke.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" smoke 2)
+SMOKE_JOB=${SMOKE_JOB%%;*}
 ```
-
-该 CPU 作业按顺序完成：
-
-1. 解压扩展四年，用随教程保存的转换器生成事件 HDF5。保留源数据中已经是小时的活跃火点值；没有 CRS 的事件记录位置缺失，不能捏造经纬度。
-2. 用项目 `repair-active-fire` 在新目录生成规范化标签及证据。转换后已正确的标签仍经过同一验证流程，不需要先故意制造错误。
-3. 用独立 `verify_repair` 检查事件数、目标天数与正像素计数，验证确切的五个空事件排除项。
-4. 把原始四年与验证后的四年硬链接为 `hdf5/combined/`；硬链接要求同一文件系统，因此这些目录统一放在自己的 `WF_ROOT` 下。之后不要就地修改任何硬链接数据。
-5. 执行全数据审计；只用 **2016–2020** 的训练样本计算 normalization statistics。验证年和测试年不参与这一步。
 
 成功后：
 
 ```bash
-test -f "$WF_ROOT/hdf5/combined/READY"
-test -f "$WF_ROOT/hdf5/train-stats.npz"
-cat "$WF_ROOT/runs/prepare-plus-$WF_PLUS_JOB/data-summary.json"
-cat "$WF_ROOT/runs/prepare-plus-$WF_PLUS_JOB/audit/contract_decision.json"
-cat "$WF_ROOT/runs/prepare-plus-$WF_PLUS_JOB/audit/phase0_report.md"
+test -f "$WF_ROOT/runs/smoke-fold2-$SMOKE_JOB/SMOKE_PASSED"
+tail -n 40 "$WF_ROOT/logs/$SMOKE_JOB-smoke.out"
 ```
 
-实际可用事件数如下；不能因为论文写了 1005 就补造不存在的事件：
+smoke 只训练一步，batch 4，验证一个 batch，不测试。没有最佳验证 checkpoint 的提示在该一步检查中可能出现；它不代表完整训练已完成，也不能用来报告论文 AP。正式任务恢复 batch 64 和完整验证集。
 
-| 年份 | 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 合计 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| HDF5 事件 | 92 | 110 | 176 | 74 | 201 | 156 | 122 | 68 | **999** |
-
-训练/验证/测试事件数应为 **653 / 156 / 190**。审计预期为 `continue_controlled`：可以继续受控缺失实验，但数据尚不支持自然缺失和实际业务部署声明。具体原因见 [phase0 数据报告](../experiments/phase0.md)。
-
-**为什么重新计算统计量：** 每个输入波段的量纲不同，均值/标准差用于标准化；如果从测试年计算这些量就让测试信息进入了训练。官方 fold 复现继续用官方统计方式，项目 B0 则使用此处冻结训练年的统计，两者不能互换。
-
-## 10. 训练项目 B0：3000 步 clean baseline
-
-这才是 [roadmap](../research-roadmap.md) 中的 B0。`clean` 表示训练时不人工加入 FireDrop/BlockDrop；原始输入里的缺失仍按现有数据管线处理。此时不添加可靠性提示、一致性损失或专家路由。
+## 7. 正式训练官方 Fold 2
 
 ```bash
-WF_B0_JOB=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
-  --dependency="afterok:$WF_PLUS_JOB:$WF_SMOKE_JOB" --job-name=project-B0 \
-  --gpus="$WF_GPU_TRAIN" --cpus-per-task=8 --mem=96G --time=03:00:00 \
-  --output="$WF_ROOT/logs/%j-B0.out" "$WF_SCRIPTS/b0.sh")
-WF_B0_JOB=${WF_B0_JOB%%;*}
-jobcheck "$WF_B0_JOB"
-tail -n 60 "$WF_ROOT/logs/$WF_B0_JOB-B0.out"
+TRAIN_JOB=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
+  --dependency="afterok:$SMOKE_JOB" --gpus="$WF_GPU" \
+  --cpus-per-task=8 --mem=96G --time=12:00:00 \
+  --output="$WF_ROOT/logs/%j-train.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" train 2)
+TRAIN_JOB=${TRAIN_JOB%%;*}
 ```
 
-脚本的训练核心就是仓库已有模块：
+任务调用的训练程序是**作者的 `official-code/src/train.py`**。关键设置：
 
-```text
-python -m reproductions.wsts_fast_track.train_corrected_baseline
-  --baseline-id B0
-  --upstream-root "$WF_ROOT/upstream"
-  --data-root "$WF_ROOT/hdf5/combined"
-  --run-root "本次作业独立目录/scientific"
-  --stats-path "$WF_ROOT/hdf5/train-stats.npz"
-```
+| 参数 | 值与含义 |
+| --- | --- |
+| fold / seed | Fold 2、seed 0，是两个不同概念 |
+| 数据 | `additional_data=false`；2018/2020 train、2019 val、2021 test |
+| 模型 | Res18-U-Net、T=1、All、ImageNet 编码器初始化 |
+| 更新预算 | 10000 步、batch 64、AdamW、lr 0.001、官方 Focal loss |
+| 选择与评价 | 用 validation AP 选最佳 checkpoint，训练结束后官方入口自动测试它 |
+| 时间对齐 | 保留 `n_leading_observations_test_adjustment=5` |
 
-这段用于解释参数；真正逐行执行的是上面的 `sbatch`。入口固定 seed 0、3000 步、batch 64、AdamW 0.001、2016–2020 train / 2021 val，并修正跨年样本索引。它不是通过改 `fold_id` 来实现划分，因此不能把 B0 的 fold 0 解读为官方 Fold 0。
+有效 positive class weight 由官方入口按训练年份重算，不能因为 YAML 中看到 236 就手动改回 236。历史 Fold 2 有效值为 608.4653828020165。
 
-任务训练完会自动生成完成记录并评价 2021 四个场景。M00 是 clean baseline 主要参照；M01/M06/M07 是不重新训练模型的鲁棒性诊断。
+成功后：
 
 ```bash
-export WF_B0_RUN="$WF_ROOT/runs/B0-$WF_B0_JOB"
-cat "$WF_B0_RUN/scientific/completed.json"
-cat "$WF_B0_RUN/results-2021/summary.json"
+export TRAIN_RUN="$WF_ROOT/runs/train-fold2-$TRAIN_JOB"
+cat "$TRAIN_RUN/result.json"
+cat "$TRAIN_RUN/command.txt"
+sacct -j "$TRAIN_JOB" --format=JobID,State,ExitCode,Elapsed,MaxRSS
 ```
 
-**B0 完成验收：** Slurm `COMPLETED 0:0`；`completed.json` 中 `baseline_id=B0`、`max_steps=3000`、`corrected_index=true`、`test_enabled=false`；最佳 checkpoint 文件存在；`results-2021/summary.json` 有四个场景。
+验收要求：`COMPLETED 0:0`，日志确认 10000 步完成，六项测试指标合法，一个最佳 checkpoint，以及 `result.json`。最佳 checkpoint 的保存步数可以早于 10000：训练做满预算，测试选择验证集表现最好的那个，而不是强行选最后一步。
 
-已有 B0 台账（不同环境重跑不要求逐位相等）：
+**历史参照：** 自己训练的官方 Fold 2 测试 AP **0.554664**；作者发布权重同 fold 实测 **0.570902**。这些是历史记录，不是承诺新服务器逐位复现的数值。记录自己实际测得的 AP，不为了接近它们使用测试集调参。
 
-| 年份 | M00 clean AP | M01 AP | M06 AP | M07 AP |
-| --- | ---: | ---: | ---: | ---: |
-| 2021 验证 | 0.580988 | 0.039387 | 0.323805 | 0.133672 |
-| 2022 固定测试 | 0.278852 | 0.006669 | 0.135278 | 0.071779 |
-| 2023 固定测试 | 0.412674 | 0.010101 | 0.205411 | 0.078691 |
+学生到这里就完成了一个官方 baseline fold。
 
-这些是本项目历史 B0 评价口径，来自[量化台账](../experiments/quantitative_reliability_ledger.md)。不能把 2021 的 0.580988 直接和论文 12-fold 的 0.460 比大小，也不能混入后来跨 T 对齐目标日期的主表。训练器内部验证 AP 与外部受控评价可能使用不同目标日期集合；比较时先确认 loader 和样本数，不只看指标名字。
-
-**学生到这里就已经跑完一个 B0。** 后续固定测试和完整官方 12-fold 都是扩展步骤。
-
-## 11. 可选：对固定 B0 一次性测试 2022/2023
-
-仅在配方已经冻结后执行。下面明确打开已有评价入口的 `--heldout-authorized`，不训练、不选新 checkpoint、不调阈值。学生复现的是已公开给本项目的历史测试结果，不能称作自己的全新未见测试。
+## 8. 可选：仅评价官方 Fold 2 权重
 
 ```bash
-export WF_B0_RECORD="$WF_B0_RUN/scientific/completed.json"
-for year in 2022 2023; do
-  sbatch --account="$WF_GPU_ACCOUNT" --job-name="B0-test-$year" \
-    --gpus="$WF_GPU_TRAIN" --cpus-per-task=8 --mem=96G --time=01:00:00 \
-    --output="$WF_ROOT/logs/%j-B0-test.out" \
-    "$WF_SCRIPTS/evaluate-b0.sh" "$WF_B0_RECORD" "$year"
-done
+FETCH_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
+  --dependency="afterok:$SETUP_JOB" --cpus-per-task=1 --mem=4G --time=01:00:00 \
+  --output="$WF_ROOT/logs/%j-weight-download.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" fetch-weight 2)
+FETCH_JOB=${FETCH_JOB%%;*}
+WEIGHT_JOB=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
+  --dependency="afterok:$DATA_JOB:$FETCH_JOB" --gpus="$WF_GPU" \
+  --cpus-per-task=8 --mem=96G --time=01:00:00 \
+  --output="$WF_ROOT/logs/%j-weight-test.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" test-weight 2)
+WEIGHT_JOB=${WEIGHT_JOB%%;*}
 ```
 
-记录这两个 job ID。输出分别位于 `runs/B0-test-2022-JOBID/results-2022/summary.json` 和 `runs/B0-test-2023-JOBID/results-2023/summary.json`。
+结束后读取 `runs/test-weight-fold2-JOBID/result.json`。发布文件 `fold2_testAP0.571.pth` 的 0.571 是四舍五入标签，不是学生自己训练的成绩。此评价不进行训练；如果只想验证官方权重，可以跳过第 7 节的 10000 步训练。
 
-## 12. 完整复现附录：12-fold，训练和发布权重评价分开汇总
+## 9. 可选：完整 12-fold
 
-### 12.1 从头训练全部 12 个官方 fold
-
-这一步在第 6 节 smoke 通过后执行。每个数组任务训练 10000 步并测试各自验证集选择的最佳 checkpoint；`%2` 限制最多两个 fold 同时运行，不是把 batch 或数据分成两份。
+### 9.1 从头训练十二个 fold
 
 ```bash
-WF_FULL_ARRAY=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
-  --dependency="afterok:$WF_SMOKE_JOB" --array=0-11%2 --job-name=res18-full12 \
-  --gpus="$WF_GPU_TRAIN" --cpus-per-task=8 --mem=96G --time=12:00:00 \
-  --output="$WF_ROOT/logs/%A_%a-full12.out" "$WF_SCRIPTS/official.sh" full)
-WF_FULL_ARRAY=${WF_FULL_ARRAY%%;*}
-jobcheck "$WF_FULL_ARRAY"
+FULL_ARRAY=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
+  --dependency="afterok:$SMOKE_JOB" --array=0-11%2 --gpus="$WF_GPU" \
+  --cpus-per-task=8 --mem=96G --time=12:00:00 \
+  --output="$WF_ROOT/logs/%A_%a-train12.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" train)
+FULL_ARRAY=${FULL_ARRAY%%;*}
 ```
 
-如果之前已经完成 Fold 2，这个独立数组会再次训练 Fold 2，以获得单独、完整的课程 campaign；资源有限时不要同时做“单 fold 完整训练”和“全数组”。已有 Fold 2 也可以复用，但必须由教师核对版本与参数后显式选取文件，不能自动混进数组结果。
+`%2` 限制同时运行两个 fold；每个 fold 都是完整独立训练。这个独立 campaign 会包含 Fold 2；若不想重复训练，选择单 fold 教学或全数组之一，不默认混入旧运行。
 
-每个目录名含 `official-full-foldN-…`。Slurm 对数组的 `SLURM_JOB_ID` 与主数组 ID 不必一致，所以用一个小清单定位本次 campaign 的输出：
+### 9.2 或者只评价十二个发布权重
 
 ```bash
-sacct -nP -j "$WF_FULL_ARRAY" --format=JobIDRaw,State,ExitCode
+FETCH_ALL=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
+  --dependency="afterok:$SETUP_JOB" --cpus-per-task=1 --mem=4G --time=01:00:00 \
+  --output="$WF_ROOT/logs/%j-fetch12.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" fetch-weight all)
+FETCH_ALL=${FETCH_ALL%%;*}
+WEIGHT_ARRAY=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
+  --dependency="afterok:$DATA_JOB:$FETCH_ALL" --array=0-11%2 --gpus="$WF_GPU" \
+  --cpus-per-task=8 --mem=96G --time=01:00:00 \
+  --output="$WF_ROOT/logs/%A_%a-weights12.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" test-weight)
+WEIGHT_ARRAY=${WEIGHT_ARRAY%%;*}
 ```
 
-全部完成后，只选本次 12 个 `result.json`，写进文件，每行一个绝对路径。例如可以在 CPU 小作业中通过数组元数据匹配，下面第 12.3 节给出通用方法。
+### 9.3 汇总实际完成的十二个 fold
 
-### 12.2 只评价全部 12 个发布权重
-
-这通常比训练 12 次省时，适合学习如何核验已发表 baseline 的评价口径。它证明的是发布权重可执行复现，不能替代“自己从头训练了 12 个 fold”。
+选择一种已提交的数组：
 
 ```bash
-WF_ALL_WEIGHTS_JOB=$(sbatch --parsable --account="$WF_CPU_ACCOUNT" \
-  --job-name=weights12-fetch --cpus-per-task=1 --mem=4G --time=01:00:00 \
-  --output="$WF_ROOT/logs/%j-weights12-fetch.out" "$WF_SCRIPTS/fetch-weights.sh" all)
-WF_ALL_WEIGHTS_JOB=${WF_ALL_WEIGHTS_JOB%%;*}
-WF_WEIGHT_ARRAY=$(sbatch --parsable --account="$WF_GPU_ACCOUNT" \
-  --dependency="afterok:$WF_ORIGINAL_JOB:$WF_ALL_WEIGHTS_JOB" \
-  --array=0-11%2 --job-name=res18-weight12 \
-  --gpus="$WF_GPU_TRAIN" --cpus-per-task=8 --mem=96G --time=01:00:00 \
-  --output="$WF_ROOT/logs/%A_%a-weight12.out" "$WF_SCRIPTS/official.sh" weight)
-WF_WEIGHT_ARRAY=${WF_WEIGHT_ARRAY%%;*}
-jobcheck "$WF_WEIGHT_ARRAY"
+# 发布权重评价用此行；如果做的是训练，改成 ARRAY_ID="$FULL_ARRAY"。
+ARRAY_ID="$WEIGHT_ARRAY"
+sbatch --account="$WF_CPU_ACCOUNT" --dependency="afterok:$ARRAY_ID" \
+  --cpus-per-task=1 --mem=2G --time=00:10:00 \
+  --output="$WF_ROOT/logs/%j-summary.out" \
+  "$WF_ROOT/scripts/job.sh" "$WF_ROOT/config.env" aggregate "$ARRAY_ID"
 ```
 
-### 12.3 汇总本次数组，检查 12 个 fold 一个不缺
+汇总文件为 `$WF_ROOT/summary-ARRAY_ID.json`，包含每 fold AP、均值、总体标准差和样本标准差。缺一个 fold、重复 fold 或混合训练与发布权重结果都会报错。
 
-每个运行保存 `slurm-job.txt`，其中包含 `ArrayJobId`。先选择你实际运行的数组类型：
+### 9.4 与论文数字如何比较
 
-```bash
-# 如果汇总发布权重：
-export WF_SUMMARY_ARRAY="$WF_WEIGHT_ARRAY"
-export WF_SUMMARY_MODE=weight
-# 如果汇总完整训练，则改成：
-# export WF_SUMMARY_ARRAY="$WF_FULL_ARRAY"
-# export WF_SUMMARY_MODE=full
-```
-
-提交小型 CPU 汇总作业：
-
-```bash
-sbatch --account="$WF_CPU_ACCOUNT" --dependency="afterok:$WF_SUMMARY_ARRAY" \
-  --job-name=res18-summary --cpus-per-task=1 --mem=2G --time=00:10:00 \
-  --output="$WF_ROOT/logs/%j-summary.out" "$WF_SCRIPTS/summarize-array.sh" \
-  "$WF_SUMMARY_MODE" "$WF_SUMMARY_ARRAY"
-```
-
-最终文件：
-
-```bash
-cat "$WF_ROOT/runs/summary-$WF_SUMMARY_MODE-$WF_SUMMARY_ARRAY.json"
-```
-
-汇总脚本要求 fold 0–11 恰好各一个，且模式相同；缺失、重复、训练与权重混用均会失败。它同时输出 AP 均值、总体标准差 `ddof=0` 和样本标准差 `ddof=1`，报告时说清选择哪一个。不能先平均每年的 AP 再把它当成 12-fold 均值。
-
-### 12.4 怎样理解“接近原论文数字”
-
-下表是已有独立复算记录，不是本教程新执行的 12-fold 结果：
-
-| 比较对象 | AP | 说明 |
+| 参照 | AP | 能说明什么 |
 | --- | ---: | --- |
-| WSTS+ 工作官方表中 Res18-U-Net T=1 All | 0.460 ± 0.084 | 论文/作者仓库参照 |
-| 十二个发布权重历史逐 fold 复算 | **0.452764 ± 0.088217** | 标准差为总体标准差；均值与论文参照相差约 -0.007236 |
-| 十二个权重文件名 AP 标签 | 0.452917 ± 0.088272 | 仅文件名四舍五入值的统计，不是新评价 |
-| 历史自己训练的 Fold 2 | 0.554664 | 单 fold，不能作为十二 fold 均值 |
-| 历史发布权重 Fold 2 | 0.570902 | 单 fold，和文件名 0.571 一致 |
+| 作者 WSTS+ 工作的 Res18-U-Net T=1 All 结果表 | 0.460 ± 0.084 | 论文/作者表格参照 |
+| 我们历史上重算十二个发布权重 | 0.452764 ± 0.088217 | 总体标准差；支持发布权重可执行复现 |
+| 我们历史完整训练 Fold 2 | 0.554664 | 一个测试年份的单 fold 结果 |
 
-完整逐 fold 指标、运行与独立验证记录见[官方复现报告](../experiments/res18_unet_t1_reproduction.md)及[复现 README](../../reproductions/wsts_res18_unet_t1/README.md)。
+作者表格见[官方 README](https://github.com/slahrichi/WildfireSpreadTS#benchmark-results-ap--standard-deviation)。历史十二权重均值与参照相差约 -0.007236，数值接近，但不能据此证明论文表格与发布资产具有完全相同的运行来源。文件名分数统计也不能替代真实评价。单 fold 高于跨 fold 均值很正常。
 
-“接近”是已有结果的描述，不是调参目标或本教程的通过条件。当前记录不能证明发布权重与论文表格采用了完全同一来源、运行与聚合过程；官方 positive-weight 配置的意图也存在历史未解边界。正确交付是报告真实分数与差异，而不是不断改参数直到撞上 0.460。
+新服务器的本次结果应单独报告；不要把以上历史数字直接填成自己的实验结果。
 
-## 13. 常见故障：看哪里，怎么处理
+## 10. 常见问题与交付清单
 
-| 现象 | 先检查 | 正确处理 |
-| --- | --- | --- |
-| `Invalid account` / GPU 类型不存在 | `sacctmgr`、`sinfo` 与配置 | 改为自己的 account / 实际资源名，不照抄教师账号 |
-| `DependencyNeverSatisfied` | 前置 job 的 `sacct` 和日志 | 修复前置失败，保存新 job ID，再重新提交下游；旧依赖不会自动恢复 |
-| 环境安装 `No matching distribution` | `setup` 日志中的具体固定版本 | 请教师确认 wheelhouse 与已有验证环境，不随意升级整套模型依赖 |
-| ZIP 校验失败 | `.partial`、磁盘配额、下载日志 | 不解压坏包；保留证据后重新获取文件 |
-| 扩展年目标几乎全零 | 是否错误使用官方原始四年转换器 | 回到第 9 节，按扩展年的小时编码转换和验证 |
-| `refusing existing target` / `FileExistsError` | 上一次失败的目录和日志 | 先定位完成到哪一步；使用新的课程根目录或由教师确认恢复，别删除仍被其他步骤使用的数据 |
-| CUDA OOM | 实际申请分片、峰值、完整测试阶段 | 申请更大分片重跑并保留失败日志；正式训练不擅改 batch、特征、精度或 crop |
-| CPU `OUT_OF_MEMORY` | `sacct MaxRSS`、worker 数、测试 AP 阶段 | 增加 `--mem`；记录 worker 改动，不能把未完成测试当结果 |
-| checkpoint 提示 `weights_only` / 不可信反序列化 | 是否加载自己的 `.ckpt` 或固定清单的官方权重 | 本教程已为这两种可信来源兼容旧 Lightning；不要把该设置用于陌生 checkpoint |
-| 有 checkpoint 却没有 `result.json` | 完成标志、测试是否结束、日志解析错误 | checkpoint 不等于整个实验成功，先检查日志；不要伪造完成文件 |
-| 排队超过十分钟 | `squeue --start -j JOBID` 与资源试探 | 比较同命令的 `sbatch --test-only` 估计；资源不超过必要量两倍且明显更快时再改请求，避免同时留下两套重复科学任务 |
+| 问题 | 处理 |
+| --- | --- |
+| module、GPU 名称或 account 不存在 | 对照新集群的 `module avail`、`sinfo` 和账户；不能直接复制旧服务器值 |
+| `--no-index` 找不到依赖 | 确认同类型集群的软件源和固定 wheel 可用性；不要盲目升级全部依赖 |
+| 下载/安装连接失败 | 确认计算节点出站网络；申请允许联网的节点/镜像渠道 |
+| `SLURM_TMPDIR` 未定义、临时空间不足 | 转换需要管理员提供节点临时目录；按本集群约定设置，不使用教师目录 |
+| `DependencyNeverSatisfied` | 检查前置任务失败原因；修复后用新的 job ID 重新提交下游 |
+| 目录已存在 | 脚本拒绝覆盖已有环境和科学运行，先保留日志并定位失败阶段 |
+| CUDA/CPU OOM | 根据 `nvidia-smi`、MaxRSS 增加显存/内存；不擅改正式 batch、特征或精度 |
+| 已有 checkpoint 却没有 result.json | 检查训练是否做满、测试是否结束、指标是否完整；不能手写成功文件 |
+| 分数不同 | 先核对数据、fold、参数、软件版本和测试口径，不使用测试 AP 挑配置 |
 
-查看训练进度不会触发新的训练：
+交付：config、官方 commit 和补丁、环境 freeze、下载校验、转换数量、job ID、真实命令、日志、checkpoint 路径和结果 JSON。大数据和模型留在个人实验存储中；同目录内不要并行改动上游代码或安装环境。
 
-```bash
-squeue -u "$USER"
-squeue --start -j "$WF_FOLD_JOB"
-tail -f "$WF_ROOT/logs/$WF_FOLD_JOB-fold2.out"
-```
+## 11. 本版独立性与验证边界
 
-`Ctrl-C` 只结束 `tail`，不会取消作业。确实需要取消时才运行 `scancel JOBID`；不要不加区分地取消自己全部任务。
+本文所有脚本都由第 2 节现场创建。运行时只依赖学生自己的目录、作者仓库、官方数据与权重，以及同类型集群提供的软件环境。全文没有要求取得 `wildfire-research-plan` 代码，也不调用其 Python 包。
 
-## 14. 学生最终提交什么
+上一版依赖本项目的 corrected B0 路线另存为 `project-b0-slurm.md`，不属于本独立教程的执行步骤。
 
-- 使用的课程仓库 commit、上游 commit、`tutorial.env`、两个环境 freeze。
-- 下载校验日志、数据转换/审计结果；B0 还包括训练统计量及数据年份说明。
-- 自己的 job ID、原始训练日志、实际命令、最佳 checkpoint 路径。
-- 单 fold 的 `result.json`，或 B0 的 `scientific/completed.json` 和 `results-2021/summary.json`。
-- 一张自己的结果表；明确标注“单 fold / 十二 fold”“自己训练 / 发布权重评价”“官方协议 / 项目 B0”。
-
-一次完整交付应能回答：输入是什么、标签是什么、哪些年份用于训练、何时选择 checkpoint、测试发生在何时、这个分数究竟与哪个参照可比。
-
-## 15. 本教程的验证范围
-
-配套数据转换器来自项目已有 Nibi 执行脚本；模型调用复用现有官方/B0 入口。新增汇总器检查指标合法性、完整 fold 集合与实验类型。具体静态检查、轻量测试与 Slurm smoke 的结果记录在 [validation.md](res18/validation.md)。
-
-全量 ZIP 下载、999 事件转换、10000 步训练和完整 12-fold 不会因撰写教程自动全部重跑；上述历史数字与本次教程验证分开记录。学生首次在自己的账户与新环境执行，仍须按各节成功标准逐步核验。
+新服务器尚未连接验证。文档中的历史成绩与此前 Nibi smoke 不能冒充此独立版本在新服务器的完整训练结果；本版新增脚本的具体本地检查范围记录在同目录 `official-standalone-validation.md` 中，该记录不是学生执行依赖。
