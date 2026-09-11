@@ -1,3 +1,5 @@
+> **教学接手入口（2026-09-11）：** [完整实验 Roadmap](docs/research-roadmap.md) · [Git 提交核对](docs/project-handoff-git-audit.md)。最新 T=1/T=5 与跨架构实现位于 `research/t1-t5-innovations` 分支；下方 README 正文保留早期 T=1 阶段说明，当前状态以 Roadmap 为准。
+
 # Reliable T=1 Wildfire Spread Forecasting
 
 This repository studies next-calendar-day wildfire active-fire forecasting

@@ -1,60 +1,106 @@
-# T=1 Research Roadmap
+# 野火预测科研方法教学 Roadmap
 
-## Frozen scope
+整理日期：2026-09-11。实验状态依据截至研究分支 `6111d9e`（2026-09-08）的已提交记录；本次没有查询实时 Slurm 状态或重新计算远端指标。
 
-The active project uses Res18-U-Net with `T=1` on the corrected WSTS+ split:
-2016--2020 train, 2021 validation, and 2022--2023 final test. The prediction
-target is the next UTC calendar day's VIIRS active-fire proxy. Claims are
-limited to controlled missingness and do not describe complete fire perimeter
-or operational deployment performance.
+## 1. 学生首先需要理解的问题
 
-The baseline chain is fixed to B0 clean training, B2 FireDrop, B3
-FireDrop+BlockDrop, D1-ERM, and D2-STD. The retained methods are D1-KL
-predictive consistency and D12-SARP severity-adaptive prompting. Their complete
-quantitative record is
-[`experiments/quantitative_reliability_ledger.md`](experiments/quantitative_reliability_ledger.md).
+我们研究：卫星输入发生预设缺失时，如何可靠预测下一 UTC 日历日的 VIIRS 活跃火点代理标签。标签不是完整火场边界，现有证据也不支持真实自然缺失或业务部署性能声明。
 
-## Next experiment
+这是一个从数据可信性、基线复现、公平比较走向方法验证的教学项目。下面只列当前保留的实验链，不要求学生重跑探索失败、明确弃用的模块或历史调度修复。
 
-The next compute should confirm the unchanged T=1 recipe rather than search a
-new architecture against the test years.
+## 2. 从开始到现在，保留下来的过程
 
-1. Run D2-STD and D12-SARP with predetermined additional seeds using the same
-   3,000-step optimizer and corruption policy.
-2. Aggregate seed variability for M00, M01, M06, and M07 on 2021.
-3. If the D12 module delta remains positive and the clean/M01 guardrails hold,
-   perform one fixed 2022--2023 evaluation for the frozen seed ensemble.
-4. If 3,000-step variance is inconclusive, repeat D2-STD/D12 at one fixed
-   longer budget without changing architecture, loss, threshold, or data.
+| 阶段 | 已完成的工作 | 科研方法教学重点 | 可交付证据 |
+| --- | --- | --- | --- |
+| A 问题定义与文献定位 | 建立研究计划、相关工作课件，明确次日活跃火点预测任务 | 先定义输入、目标、适用边界，再讨论创新 | `index.html`、`related-work/` |
+| B 数据契约与质量门禁 | 审计 999 个事件 HDF5，完成必要标签修复与独立验证，冻结时间划分 | 数据修复属于可信实验基础；保留来源、校验和与审计证据 | `docs/experiments/phase0.md`、`src/wildfire_phase0/` |
+| C 最简单的参照 | 固定 no-fire 与 latest-mask persistence 规则基线 | 判断模型是否比简单规则提供有效信息 | phase0 报告中的规则基线结果 |
+| D 官方模型复现 | 完成 Res18-U-Net T=1 官方 Fold-2 完整训练及十二个发布权重的可执行复现记录 | 区分自己训练、发布权重复算、论文聚合值三类证据 | `docs/experiments/res18_unet_t1_reproduction.md`、`baseline-reproduction/` |
+| E 建立受控可靠性基线 | 修正跨年样本索引，固定 B0 → B2 → B3 与缺失干预、AP 评价 | 统一数据与预算，区分整体增益和模块增益 | `docs/experiments/quantitative_reliability_ledger.md` |
+| F T=1 方法验证 | 保留 D1-KL 一致性和 D12-SARP 提示方法及各自匹配控制 | 一个模块必须有最近的归因对照；单设置证据有边界 | 同上；`reproductions/wsts_fast_track/` |
+| G 跨设置验证 | 建立 T=1/T=5 相同目标日期协议，完成 X14、X22 三种子与固定年份验证 | 从单次分数走向跨种子、年份、设置的稳定证据 | 研究分支 `docs/experiments/t1_t5_innovations.md` |
+| H 系统审计与架构扩展 | 完成保留系统组合的冻结基线审计；实现 SwinUnet、SegFormer-B2、ConvLSTM 配对实验流程 | 区分系统效果、机制归因、架构迁移；主表只收符合协议的结果 | 研究分支 `reproductions/cross_history/` 与跨架构实验记录 |
 
-The central comparison is D12 versus D2-STD on mean M06/M07 AP. D1-ERM versus
-D12 remains the total-stack comparison, with the documented 2022 M00 caveat.
-D1-KL remains an independent contribution and should be reported with its
-matched D1-ERM control.
+必要的数据修复与评价协议修正保留在教学链中；这些决定后续分数是否可信，而不是待重跑的试错方向。
 
-## Decision rule
+## 3. 全程固定的实验契约
 
-For additional seeds, report the seed mean and spread before reading the final
-test. Continue to the frozen test only if D12 remains positive over D2-STD on
-the 2021 M06/M07 mean and does not reduce either M00 or M01 by more than 0.010.
-Do not choose a seed, threshold, checkpoint, or budget using 2022--2023.
+- 数据：999 个事件；2016–2020 训练（653）、2021 验证（156）、2022–2023 测试（190）。
+- 场景：M00 完整输入，M01 活跃火点历史缺失，M06/M07 动态输入的 25%/50% 结构化块缺失。受控缺失掩码可供规定的路由使用，不等于现实中已有完整缺失观测信息。
+- 当前跨设置主指标：`(AP_M01 + AP_M06 + AP_M07) / 3`；同时报告 block mean、M00、各场景 AP、运行时间及参数量。AP 增量是绝对差值，不是相对百分比。
+- T=1 为 Res18-U-Net、40 通道；T=5 为 Res18-UTAE、每天 33 个选定通道。历史长度、架构、特征选择同时变化，只能称跨设置验证，不能归因成纯历史长度效应。
+- 当前跨设置协议对齐事件与目标日期：`target_index = in_fire_index + 6`。2021/2022/2023 样本数为 3181/2856/2102，两种设置一致。早期 T=1 的 2023 年 2312 样本结果是另一历史口径，不可直接拼入当前主表。
+- 原有跨设置续训：同一 B3/B5 初始化、同一种子、3000 次 AdamW 更新、初始学习率 0.001、有效 batch 64、最终步 checkpoint；候选与控制匹配其余配置。新架构使用各自公开初始化与配方，不能机械照抄统一学习率。
+- 决策顺序：2021 seed 0 筛选 → 预定 seeds 1/2 确认 → 配方冻结后固定 2022/2023 评估。筛选要求两种设置主指标增益均至少 0.005，M00 不低于控制超过 0.010；确认看预注册的种子均值而非挑最好种子。增量模块还必须通过最近归因控制。
+- 测试年已经用于既有研究评估。学生可以复现这些固定结果；若继续设计新方法，应声明历史测试暴露，并在启动前确定独立确认方案，不能称为全新未见测试。
 
-## Development boundary
+## 4. 保留的实验链与结论
 
-A new direction must target one diagnosed failure, state a distinct mechanism,
-and compare against the closest retained baseline. Parameter tuning may support
-one contribution but should not replace the method contribution. Screen one
-small seed-0 run on 2021; stop immediately when its registered gate fails.
+### 4.1 基础与 T=1 教学模块
 
-Before submitting a Nibi job, inspect the queue and test candidate resource
-slices. If the expected wait exceeds ten minutes, use the faster slice when it
-requests no more than twice the minimum resource. Training and evaluation stay
-inside Slurm; the login node is limited to source work, metadata inspection,
-queue checks, and submission.
+| 实验 | 对照与作用 | 当前证据及使用边界 |
+| --- | --- | --- |
+| B0 | corrected clean baseline | 公共基础，索引与标签口径必须先验证 |
+| B2 FireDrop | 相对 B0；按可观测缺失类型路由 | 历史三年 M01 平均 AP 增益 +0.150109 |
+| B3 FireDrop + BlockDrop | 相对 B2 | 历史三年 block mean 增益 +0.027821 |
+| D1-KL | 对照 D1-ERM 配对监督续训 | 历史三年缺失主指标平均 +0.008970；保留为 T=1 证据 |
+| D12-SARP | D2-STD 用于模块归因；D1-ERM 用于整体比较 | 模块 block mean +0.005764，整体缺失主指标 +0.020699；保留为 T=1 证据，整体比较存在 2022 M00 限制 |
 
-## Closed work
+这些早期结论来自历史台账，不代表跨设置三种子确认。D1、D12 是可选进阶教学模块；主线不以重新筛选它们作为前置条件。
 
-All rejected, superseded, and T=5 experiments are consolidated in
-[`experiments/rejected_experiments.md`](experiments/rejected_experiments.md).
-They are not active implementation branches. Full recovery paths are listed in
-that document and in the artifact manifest.
+### 4.2 当前跨设置主线：两条已支持的改进
+
+下表每格为同一年、同设置的三种子平均缺失主指标 AP 增益，对照是同预算的新鲜 ERM 续训。
+
+| 保留方向 | T1 2021 | T1 2022 | T1 2023 | T5 2021 | T5 2022 | T5 2023 | 18 个配对行总体均值 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| X14 BlockDrop 专家续训 | +0.005467 | +0.001416 | +0.006792 | +0.016685 | +0.011528 | +0.005485 | +0.007895 |
+| X22 cosine ERM | +0.006035 | +0.008133 | +0.003442 | +0.021346 | +0.019504 | +0.013596 | +0.012009 |
+
+X14 只在块缺失场景启用专家，M00/M01 使用匹配 ERM；因此其 clean 保持来自路由设计。X22 是标准 cosine 学习率衰减的训练配方改进，不应包装成新架构。两条方向均有三种子及固定测试年份支持，当前没有三条已确认的独立创新。
+
+### 4.3 保留的系统结果
+
+X22 + 固定严重度块专家的组合保留为系统结果：M00 使用 fresh ERM、M01 使用 X22、M06/M07 分别使用 25%/50% 专家。相对同预算 ERM，18 个配对行缺失主指标平均增益为 **+0.014642**；相对原始冻结 B3/B5 复现检查点，六个设置/年份单元平均为 **+0.034527**。
+
+这两个数回答不同问题：前者衡量超出普通续训的增益，后者衡量完整系统相对原始基线的增益。严重度分解不作为独立贡献，组合也不增加独立方法计数。跨架构设计另规定 M00/M01 使用 X22，属于不同系统定义，必须单独标注，不能与上述既有组合混称同一个配置。
+
+## 5. 当前停在哪里，接下来做什么
+
+跨架构状态是截至 `6111d9e` 的记录快照，不是当前队列查询结果。
+
+| 对象 | 已有证据 | 下一步与停止条件 |
+| --- | --- | --- |
+| Res18-U-Net T1 / Res18-UTAE T5 | X14、X22 的三种子与 2022/2023 固定评估已完成 | 整理可复核的最终主表、种子离散程度与成本，不再为已有结论重复筛选 |
+| SwinUnet T1/T5 | 两种设置 bootstrap 已完成；T5 seed-0 mixed BlockDrop 达到筛选门槛，尚缺记录中的 T1 结果 | 首先核对原任务及产物；只有满足双设置门槛的方向进入额外种子，再进入固定测试 |
+| SegFormer-B2 T1/T5 | seed-0 配对结果已齐，未取得符合双设置门槛的迁移证据 | 本轮筛选已关闭，不进入额外种子或测试；不作为学生重跑路线 |
+| ConvLSTM T5 | bootstrap 检查点与评估已保存，五个续训任务已有记录 | 核对任务及完整 2021 配对结果，按既定协议判定；T5 单设置结果不能支持跨 T 声明 |
+
+后续执行顺序：
+
+1. **证据收口**：核对现有 Swin T1、ConvLSTM 任务与产物，更新台账。先确认哪些结果已经存在，再决定是否需要计算。
+2. **门禁确认**：对通过原协议的架构/方法补齐 seeds 1/2，冻结配方后评估 2022/2023。不因单个场景好看而修改路由或补选种子。
+3. **生成主表**：使用研究分支 `reproductions/cross_history/compose_table1.py` 及对应测试，检查相同目标日期、种子完整性、控制匹配与路由定义。主表报告 2022/2023、逐场景 AP、主指标、相对匹配 ERM 增益及种子标准差；2021 筛选留作附录。
+4. **形成教学成果**：学生提交数据审计报告、基线复现报告、单变量对照表、三种子结果表和声明边界说明。保留代码版本、配置、数据/权重清单、Slurm job ID 与产物路径。
+
+## 6. 学生接手路线与验收
+
+| 顺序 | 学生任务 | 验收标准 |
+| --- | --- | --- |
+| 1 理解问题 | 阅读本页、相关工作课件与 phase0 报告 | 能解释代理标签、受控缺失和时间划分，不混淆火点与火场边界 |
+| 2 理解数据 | 在配置的数据路径重现审计及规则基线 | 对上事件数、划分、标签完整性；解释不同采样协议为什么样本数不同 |
+| 3 复现一个模型 | 按官方复现文档核验一个发布权重，再学习 corrected B0/B3 | 能区分发布权重分数、自己训练分数和论文均值；保存可追溯配置 |
+| 4 做一次公平对照 | 先复现固定的 ERM 与 X22 seed-0 配对，再学习 X14 路由 | 同初始化、预算、数据与评价，只改变待验证因素；报告所有四个场景 |
+| 5 学习可靠结论 | 汇总已存在的三种子与年份结果，按需要复现确认 | 不挑种子；把验证选择、固定测试、模块归因分开呈现 |
+| 6 完成研究报告 | 复核主表与证据链，解释已有跨架构验证范围 | 每个结论能追到配置、提交、运行与结果；不把待完成实验写成成功 |
+
+训练和模型评价通过 Nibi Slurm 执行；登录节点只做代码、轻量元数据检查、结果组合与提交。环境入口见 `environments/README.md`、`docs/cluster-migration.md`；数据、环境、权重、检查点及大型日志留在 Git 外，依靠清单和集群产物路径恢复。学生开始训练前先核实可用环境与已有产物，避免无必要的全量重跑。
+
+## 7. 代码与证据入口
+
+- 主分支 `main`：基础审计、官方复现和早期 T=1 保留路线。本页是整个项目的教学入口，不表示最新研究代码已合并到 main。
+- 最新实验分支 `research/t1-t5-innovations`：跨设置与跨架构代码和完整台账。本机现有 worktree 为 `.worktrees/t1-t5-innovations/`；学生从该分支获取最新实验实现。
+- 早期 T=1 路线原文移至 `docs/experiments/t1-stage-roadmap.md`，仅作为阶段性历史上下文。
+- 全项目提交核对见 `docs/project-handoff-git-audit.md`。探索记录仍保存在 Git 与原台账中，但不进入上述教学步骤，也不要求学生重跑。
+
+建议阅读顺序：本页 → `docs/experiments/phase0.md` → `docs/experiments/res18_unet_t1_reproduction.md` → `docs/experiments/quantitative_reliability_ledger.md` → 研究分支 `docs/experiments/t1_t5_innovations.md` 的保留方向和最新跨架构结果。
