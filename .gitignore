@@ -25,3 +25,4 @@ artifacts/rule-baselines/
 /weights/
 /scratch/
 *.ckpt
+slurm-*.out

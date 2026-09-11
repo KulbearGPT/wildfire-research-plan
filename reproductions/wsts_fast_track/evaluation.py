@@ -88,6 +88,7 @@ class ControlledMissingnessDataset:
         evaluation_year: int = 2021,
         heldout_authorized: bool = False,
         routing_mask_channel: bool = False,
+        allowed_histories: tuple[int, ...] = (1,),
     ) -> None:
         if scenario_id not in CORRUPTIONS:
             raise ValueError(f"unknown controlled-missingness scenario: {scenario_id}")
@@ -111,7 +112,7 @@ class ControlledMissingnessDataset:
         ):
             raise ValueError("controlled evaluation requires history adjustment six")
         history = getattr(base_dataset, "n_leading_observations", None)
-        if history != 1:
+        if history not in allowed_histories:
             raise ValueError("retained controlled evaluation requires T=1")
         if getattr(base_dataset, "skip_initial_samples", None) != EFFECTIVE_HISTORY - history:
             raise ValueError("upstream skip count differs from history adjustment")

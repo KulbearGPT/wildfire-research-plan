@@ -1,0 +1,2024 @@
+# Cross-history innovation campaign — 2026-09-06
+
+Origin: main `8c9c072`. User authorizes autonomous design, implementation,
+cluster submission, repair, and iteration until three supported directions
+are found. This document is the design, execution plan, and live evidence log.
+
+## Frozen problem and evidence rule
+
+WSTS+ next-calendar-day active-fire proxy under controlled missingness.
+Train 2016–2020, select on 2021, report fixed 2022/2023 tests. T=1 uses
+Res18-U-Net (40 channels); T=5 uses the previously reproduced Res18-UTAE
+(33 selected channels per day). Both evaluate identical event/target dates
+using history adjustment six and M00/M01/M06/M07. T changes architecture and
+feature selection too: this demonstrates transfer across existing settings,
+not a pure history-length causal effect.
+
+The paired target-date contract is exact. The upstream dataset sets
+`skip_initial_samples = 6 - T`; the controlled wrapper then uses
+`target_index = in_fire_index + skip_initial_samples + T`, which equals
+`in_fire_index + 6` for both T=1 and T=5. Thus both settings evaluate the same
+event-relative target dates; only their available history and model differ.
+The authoritative B3 and archived B5 2021 summaries both contain exactly
+3,181 samples and 52,117,504 evaluated pixels per scenario, ruling out a
+history-dependent sample-count difference in the paired comparison.
+For the final reference-baseline audit only, the unchanged frozen B5
+checkpoint was evaluated on 2022/2023 by jobs `21323907/21323908`, and the
+unchanged frozen B3 checkpoint was re-evaluated by jobs `21326336/21326337`.
+All four jobs completed with exit `0:0` on minimum 10GB H100 slices. They
+select no model or hyperparameter and perform no training. The current paired
+contract contains 2,856 samples in 2022 and 2,102 in 2023 for both histories;
+the older T1 ledger's 2,312-sample 2023 population is retained as historical
+evidence rather than mixed into this campaign. No evaluation ran on the login
+node.
+
+Fresh matched controls and candidates start from corrected B3 (T1) or B5
+(T5), run 3000 AdamW steps, lr=0.001, effective batch 64, identical seed,
+augmentation, normalization, sampling, and loss. Final-step checkpoint only.
+First screen seed=0; confirmation seeds=1,2 for candidates passing both T.
+Primary metric: mean AP over M01/M06/M07. Also report M06/M07 block mean,
+M00, individual corrupted AP, runtime and parameter count. A candidate counts
+only when primary improvement is positive in both T settings across the
+confirmation seed mean and each fixed test year, with no M00 regression
+greater than 0.01. An incremental module must pass this against its closest
+attribution control, and its routed final system must also pass against fresh
+ERM before it counts as an adopted improvement. Seed-0 screening signal:
+primary >=0.005 in both T and
+M00 guardrail. These are practical thresholds, not significance claims.
+Seek >=0.02 average improvement for at least one direction, preserving the
+user's earlier magnitude requirement. Do not count three hyperparameters of
+one method as three directions. Keep all negative results. No selection using
+2022/2023; if test evidence fails, mark failure and disclose adaptive reuse
+before any later campaign rather than pretending a fresh unseen test.
+Cross-T aggregate gains above `+.010` are also retained in a secondary-results
+ledger, but magnitude alone does not make them a main innovation: main status
+still requires independent mechanism attribution, three-seed confirmation,
+and fixed-year evidence in both T settings.
+
+## First candidates and falsifiable mechanisms
+
+- **X1 context transport:** at encoder skip levels, replace missing-region
+  features by learned residuals from normalized valid-region context pooled
+  at multiple spatial resolutions. Zero-initialized residuals preserve the
+  initial predictor. Spatial mask comes only from the controlled intervention.
+  Distinct from rejected D2-RNC: retain standard convolutions; transport
+  multi-scale feature content across holes, not input convolution rescaling.
+- **X2 fire-weighted feature distillation:** frozen initial model sees clean
+  training inputs; student matches normalized deep features primarily inside
+  missing regions and near next-day positive targets. Auxiliary weight 0.05.
+  Distinct from D1 output KL and failed ranking losses: intermediate spatial
+  representation targets, with no extra inference parameters.
+- **X3 latent transition head:** decoder predicts previous-day occupancy,
+  conditional continuation, and new activity. Forecast marginalizes uncertain
+  occupancy in missing regions, clamps occupancy to observed latest fire where
+  valid, and receives latest-fire auxiliary supervision from clean train
+  inputs. This is joint forecasting, not a separate frozen reconstruction
+  pipeline. Conditional heads initialize to the original forecast.
+
+Prior art: [partial convolutions](https://arxiv.org/abs/1804.07723),
+[privileged multimodal segmentation](https://pubmed.ncbi.nlm.nih.gov/34633927/),
+[DIS2 remote-sensing distillation](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/papers/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.pdf),
+[wildfire reconstruction then prediction](https://arxiv.org/abs/2603.09042).
+These establish related mechanisms, not novelty or quantitative support for
+our implementations. A publication claim needs precise comparison to them.
+
+## Closest-work and claim boundary
+
+The closest task-specific work is Yang et al.'s 2026
+[reconstruction-to-prediction framework](https://arxiv.org/abs/2603.09042),
+which explicitly reconstructs a clean fire-history sequence before a separate
+T=5 forecaster. Consequently, neither partial-observability wildfire
+forecasting nor missing-fire reconstruction is a novelty claim here. X1 and
+X3 instead test end-to-end, forecast-conditioned alternatives: X1 transports
+valid latent context directly into spatial holes, while X3 marginalizes a
+latent latest-fire state inside the forecasting head and clamps observations
+where valid. Neither produces or supervises a standalone reconstructed fire
+map, and both are evaluated under T=1 and T=5.
+
+A targeted search of directly adjacent next-day methods found raster
+single-/multi-day forecasting
+([Lahrichi et al.](https://arxiv.org/abs/2502.12003)), query-based ignition-set
+prediction ([WISP](https://arxiv.org/abs/2605.10298)), and the two-stage
+reconstruction framework above, but did not identify an observed-state-clamped
+survival/new-activity marginalization matching X3. This is a scoped positioning
+observation, not an absolute priority claim; novelty language remains
+conditional on broader review and positive matched evidence.
+
+Missing-modality remote-sensing methods already perform learned compensation
+and distillation, including
+[DIS2](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html),
+and recent teacher-student segmentation work already targets robustness with
+little full-modality degradation
+([RobustSeg](https://openaccess.thecvf.com/content/CVPR2026/html/Tan_Towards_Robust_Multi-Modal_Semantic_Segmentation_with_Teacher-Student_Framework_and_Hybrid_CVPR_2026_paper.html)).
+Thus feature distillation and consistency alone are not novelty claims. The
+`local_consistency` experiment is explicitly an incremental, spatially
+localized extension of retained D1; it can count only with a positive matched
+ablation in both history settings. Original feature distillation has already
+failed T1 and remains negative evidence.
+
+## Minimal implementation plan
+
+- [x] Add a separate `reproductions/cross_history/` package for the campaign.
+  Reuse corrected resolver, normalization, raw evaluation corruptions, exact
+  AP code and archived B5 checkpoint (explicit relocated path).
+- [x] Implement shared T1/T5 encoder-decoder access and the three methods.
+  Keep clean training targets only in the training loss, absent at inference.
+- [x] Add one Slurm runner with train/eval modes, job-specific output path,
+  committed source snapshot, fixed seed metadata, checkpoint and results.
+- [x] Run targeted GPU one-batch checks inside Slurm for the initial methods
+  and every subsequently added execution path, including original-vs-control
+  output agreement and backward pass. No global tests.
+- [x] Submit eight seed-0 experiments (control + three methods, both T).
+  Inspect resource availability; prefer 10/20GB slices, at most 2x overflow
+  unless a blocking prerequisite requires more. Revisit jobs pending >10min.
+- [ ] Compare against fresh controls, diagnose failures, register any changed
+  hypothesis before further experiments; confirm and test only passing recipes.
+- [ ] Commit all progress and report three only when evidence satisfies above.
+
+## Status
+
+T1 seed-0 evidence is available for the first wave; cross-history support is
+not established until the matched T5 screens finish. Historical B3/B5 and
+D2/D13 controls are context, not proof of any new direction.
+
+### Frozen candidate register
+
+| Direction | Matched attribution control | Independent contribution? | T1 seed-0 | T5 seed-0 |
+| --- | --- | --- | --- | --- |
+| X1 context transport | fresh continuation; observable spatial route | yes | routed +.005954 | routed +.000874; cross-T reject |
+| X1 frozen adapter | frozen initial B3/B5 plus fresh continuation | alternative X1 implementation | +.012151 vs frozen, -.013537 vs fresh; reject | cancelled after T1 adoption failure |
+| X2 feature distillation | fresh continuation | yes | original and block-local rejected | original rejected; block-local stopped |
+| X3 latent transition | fresh continuation | yes | original +.011831; decoupled -.045065 | original -.009413; repair cancelled |
+| X4 spatial risk weighting | fresh continuation | one training-objective contribution | routed +.003463 | routed -.001659; reject |
+| X5 localized consistency | unchanged global D1 consistency | incremental method contribution | -.002294; reject | cancelled after T1 failure |
+| X6 balanced corruption coverage | fresh continuation | sole corruption-rate tuning contribution | +.005203 | +.002426 with M00 -.017601; reject |
+| X7 missingness-conditioned residual experts | fresh continuation | no; overlaps archived D7-CRA | cancelled after overlap audit | cancelled after overlap audit |
+| X8 counterfactual-impact consistency | unchanged global D1 consistency; fresh ERM adoption | incremental FireDrop specialist | incrementally reliable; ERM adoption fails 2022 | incrementally reliable and ERM-positive |
+| X9 spatial-impact FiLM | fresh continuation with spatial route | yes; context-conditioned decoder modulation | routed -.000552; reject | cancelled after T1 failure |
+| X10 forecast-aware dynamic inpainting | fresh continuation with spatial route | yes; typed input restoration optimized by forecast loss | 2022/23 -.001356/-.000347; reject cross-history | 2022/23 +.004783/+.002139; T5-only positive |
+| X11 identifiable dynamic restoration | X10 forecast-only inpainting | incremental reconstruction objective | -.004862 vs X10; reject | cancelled after T1 failure |
+| X12 counterfactual FireDrop specialist | fresh continuation; plain specialist ablation if screen passes | one specialist-training contribution | routed +.001589; reject | cancelled after T1 failure |
+| X13 normalized diffusion inpainting | same frozen control checkpoint with spatial route | yes; parameter-free typed spatial propagation | routed -.024799; reject | cancelled after T1 failure |
+| X14 BlockDrop specialist continuation | fresh continuation with spatial route | one block-specialization training contribution | reliable: +.005467/+.001416/+.006792 in 2021/22/23 | reliable: +.016685/+.011528/+.005485 in 2021/22/23 |
+| X15 distance-to-evidence prompting | fresh continuation with spatial route | yes; continuous missing-geometry encoder prompt | routed -.002072; reject | cancelled after T1 failure |
+| X16 block-specialized dynamic restoration | X14 specialist plus fresh-control total check | no; restoration loses to X14 | -.000452 vs X14; reject | cancelled after T1 attribution failure |
+| X17 severity-factorized block specialists | X14 mixed-severity specialist plus fresh ERM | no; secondary only after heldout attribution failure | ERM-positive all years; X14 2023 block -.000649 | ERM-positive all years; X14 2022/23 block -.000898/-.001614 |
+| X18 block-specialized context transport | X14 specialist plus fresh ERM | yes only if positive vs X14 | +.013205 vs ERM; +.004405 vs X14 | +.006524 vs ERM but -.000922 vs X14; reject |
+| X19 severity-conditioned latent adapters | X14 specialist; X17 two-checkpoint upper bound; fresh ERM | no; T5 closest-control confirmation fails | primary +.007772 vs ERM; block +.003458 vs X14 | primary +.015795 vs ERM but block -.001335 vs X14; reject |
+| X20 ERM-anchored impact consistency | fresh ERM; X8 diagnoses the repair | same impact-consistency family as X8 | -.003678; reject | cancelled after T1 failure |
+| X21 first-layer reliability calibration | D4/D12 and fresh ERM | no; pre-run closest-work reject | not run | not run |
+| X22 cosine-decayed ERM | fresh constant-LR ERM | sole optimizer/tuning contribution | reliable: +.006035/+.008133/+.003442 in 2021/22/23 | reliable: +.021346/+.019504/+.013596 in 2021/22/23 |
+| X23 impact-consistent BlockDrop specialist | X14 BlockDrop specialist plus fresh ERM | no; closest-control gate fails | +.011199 vs ERM but only +.002400 vs X14; reject | cancelled after T1 attribution failure |
+| X24 frozen-clean FireDrop distillation | X8 impact consistency and plain FireDrop specialist | no; closest-work reject before implementation | not run | not run |
+| X25 block-specialized severity reliability prompts | X14 specialist plus fresh ERM; inherited D12 mechanism disclosed | no; closest-control gate fails | +.010081 vs ERM but only +.001282 vs X14; reject | smoke host-OOM; formal cancelled after T1 failure |
+| X26 cosine-anchored impact consistency | cosine FireDrop global-consistency control; X22 cosine ERM adoption | no; frozen closest-control screen fails | +.001555 vs global, +.004877 vs X22; reject | +.003225 vs global, +.002167 vs X22; reject |
+| X27 forecast-guided hard BlockDrop | cosine random-BlockDrop specialist; X22 cosine ERM adoption | no; closest-control screen fails | +.000465 vs random, +.007683 vs X22; reject | cancelled before start after T1 attribution failure |
+| X28 VIIRS reliability-footprint augmentation | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; geometry transfer fails decisively | -.034394 vs rectangle, -.027177 vs X22; reject | -.036784 vs rectangle, -.029450 vs X22; reject |
+| X29 valid-context memory attention | cosine rectangular BlockDrop specialist; X22 cosine ERM adoption | no; T5 attention interference | +.000661 vs specialist, +.007878 vs X22; reject | -.007990 vs specialist, -.000656 vs X22; reject |
+| X30 training-only fire-change auxiliary heads | X22 cosine ERM | no; main-task interference in both architectures | -.010378 vs X22; reject | -.010875 vs X22; reject |
+| X31 multi-scale forecast deep supervision | X22 cosine ERM | no; same-target auxiliary interference | -.007688 vs X22; reject | -.015340 vs X22; reject |
+| X1+X3 composition | fresh continuation / component ablations | no; interaction only | +.008200, below X3; reject | cancelled |
+
+### Secondary quantitative findings (`> +.010` cross-T aggregate)
+
+| Result | Statistic | Evidence status | Why it is not currently a main innovation |
+| --- | ---: | --- | --- |
+| X14 BlockDrop robustness | final block mean `+.011843` | 3 seeds, 2021/22/23, both T | auxiliary block metric; primary mean is `+.007895` |
+| X17 severity-factorized experts | confirmation primary `+.012592`; final block `+.012376` | 3 seeds, 2021/22/23, both T | final primary `+.008250`; closest-control heldout attribution fails |
+| X8 + X17 complete route | final primary `+.013853` | 3 seeds, 2021/22/23, both T; all cells positive | system composition; it does not isolate another mechanism |
+| X22 + X17 complete route | `+.014642` vs fresh ERM; `+.034527` vs frozen reproduction | 3 seeds, 2021/22/23, both T; all six cells positive | system-level magnitude exceeds `+.020`, but composition is not an independent mechanism |
+| X19 latent adapters | confirmation primary `+.011784`; block `+.017675` vs ERM | 3 seeds, 2021, both T | T5 block attribution vs X14 is `-.001335`; useful total effect but not an independent contribution |
+| X22 cosine ERM | final primary `+.012009`; block `+.008427` | 3 seeds, 2021/22/23, both T; all six primary cells positive | adopted as the second reliable direction; it is the sole optimizer/tuning contribution |
+
+This ledger is deliberately separate from the eventual three-main-direction
+count. Rows may be promoted only when their own attribution and reliability
+requirements pass; otherwise they remain useful secondary or system-level
+findings. Single-history `>+.010` signals that fail cross-T transfer, such as
+X3 and X18, remain in the frozen candidate register as negative evidence and
+are not presented as cross-T improvements.
+
+X7 was preregistered and implemented while the already submitted screens were
+running, before seeing their outcomes. The subsequent archive audit below
+invalidated its independence before a screen ran. X8 is a justified reopening
+of quantitatively promising D5 under the new cross-history objective. X9 was
+registered only after X6 closed and targets the remaining block-specific gap;
+X10 was registered before either X9 screen started and tests a distinct
+input-space mechanism rather than a revision selected from X9 results. The
+register is otherwise closed until these results resolve. A failed row may
+receive one mechanism-driven repair, but no unrelated direction is added merely
+to accumulate positive experiments. Only rows with positive matched evidence
+in both history settings can advance to seed confirmation.
+
+X23 was registered while X17/X19/X22 were still unresolved. It is the smallest
+evidence-driven reuse of X8: train only on spatial BlockDrop examples exactly
+as X14 does, pair each corrupt view with a no-gradient clean view, and add the
+same fixed `0.1` counterfactual-impact-weighted Bernoulli KL. Unlike X8's
+FireDrop specialist, the missing support now matches X14's successful spatial
+regime. The predictor and inference route are unchanged, so attribution is
+strictly X23 versus X14; adoption additionally requires the routed result to
+beat fresh ERM in both histories. There is no consistency-weight sweep. The
+seed-0 gate remains primary `>= +.005` versus X14 in both T settings with the
+M00 guardrail; failure in either history closes X23 before confirmation.
+The T1/T5 real-data smoke jobs are `21228439/21228440`; dependency-gated
+seed-0 screens are `21228441/21228442`, all pinned to `a89c06f`. Queue probes
+placed the 10GB smoke profile about five minutes earlier than 20GB, so both
+smokes and T1 formal use 10GB. T5 formal uses 20GB because the identical
+paired clean/corrupt path previously exceeded 10GB at physical batch 64.
+The formal jobs retain 3000 steps and the X14 sampling recipe; no computation
+was performed on the login node.
+After roughly four hours with no allocation, the explicit-partition smoke jobs
+and their unresolved dependencies `21228439`--`21228442` were cancelled before
+starting. Same-resource probes without a partition constraint were immediately
+placeable. Replacement T1/T5 smoke jobs are `21237308/21237309`, with formal
+dependencies `21237310/21237311`; scientific settings and pinned source
+`a89c06f` are unchanged.
+When this second 10GB chain also remained pending, the <=2x probe favored a
+20GB slice. The still-unstarted chain was replaced by smoke
+`21238407/21238408` and formal dependencies `21238409/21238410`.
+At the next 30-minute check those blocking jobs still had no start time, while
+a 40GB probe estimated the same day at `15:25`. Under the explicit blocking
+task exception, the unstarted chain was replaced by smoke
+`21241404/21241405` and dependencies `21241406/21241407`; this changes only
+the slice size.
+Both smoke jobs completed in 20/22 seconds with exact initial equivalence,
+successful backward/inference, and peak allocations of 0.97/2.70GB. Their
+formal jobs were still assigned next-day estimates. A full-H100 probe gave a
+same-day estimate; as the screen blocks all X23 confirmation, the final queue
+repair first used `21244245/21244246`. T1 `21244245` completed and improves
+the routed primary metric over fresh ERM by `+.011199` (block `+.016799`).
+Against the closest X14 control, however, primary improves only `+.002400`
+(block `+.003599`), below the frozen `+.005` attribution gate. X23 is
+therefore rejected; T5 `21244246` and the still-pending superseding bundle
+`21244500` were cancelled without starting further X23 work. Artifacts:
+`cross-history-analysis/x23-vs-erm-t1.json` and
+`cross-history-analysis/x23-vs-x14-t1.json`.
+
+X24 was considered after the complete-route diagnostic localized the remaining
+magnitude gap to FireDrop. The proposed frozen clean teacher would supervise a
+FireDrop-only student with output KL. The pre-implementation fatal-flaw audit
+rejects it as an independent direction: M3L already distills a full-modality
+teacher into a masked-modality student
+([Maheshwari et al., 2024](https://openaccess.thecvf.com/content/WACV2024/html/Maheshwari_Missing_Modality_Robustness_in_Semi-Supervised_Multi-Modal_Semantic_Segmentation_WACV_2024_paper.html));
+MDA-KD anchors a missing-frame student to a complete-input teacher
+([Dai et al., 2024](https://openaccess.thecvf.com/content/CVPR2024/html/Dai_A_Study_of_Dropout-Induced_Modality_Bias_on_Robustness_to_Missing_CVPR_2024_paper.html));
+and DIS2 includes stop-gradient full-input feature and logit distillation for
+missing remote-sensing modalities
+([Kieu et al., 2026](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html)).
+Its only narrower change would be X8's already-tested impact weighting, while
+the repository's frozen feature-distillation X2 has negative T1 evidence.
+Therefore X24 adds neither a defensible mechanism axis nor enough new evidence
+to justify another job; it is not implemented or submitted.
+
+X25 is the bounded fallback opened only after X19 failed closest-control
+confirmation. It ports main's retained D12 reliability-token mechanism into
+the shared T1/T5 forecaster and trains it under X14's BlockDrop-only
+distribution. Observed block severity routes severe holes to a shallow input
+token and mild holes to multi-resolution latent tokens; all tokens initialize
+at zero, so the initial predictor and inference inputs remain unchanged. The
+module adds only 1,088 scalar parameters and consumes no new labels or external
+data. This is explicitly an incremental extension of D12, not a claim that
+learned missing tokens are new: M3L already uses learned missing-modality
+tokens ([Maheshwari et al., 2024](https://openaccess.thecvf.com/content/WACV2024/html/Maheshwari_Missing_Modality_Robustness_in_Semi-Supervised_Multi-Modal_Semantic_Segmentation_WACV_2024_paper.html)),
+and partial convolution already propagates validity through U-Net features
+([Liu et al., 2018](https://openaccess.thecvf.com/content_ECCV_2018/html/Guilin_Liu_Image_Inpainting_for_ECCV_2018_paper.html)).
+
+#### X25 pre-run idea evaluation
+
+- **First impression:** Novel Method, but narrowly incremental. The one-line
+  story is that block severity should determine *where in the hierarchy* an
+  invalid-evidence token enters a wildfire forecaster, and that rule should
+  transfer from Res18-U-Net to Res18-UTAE.
+- **Fatal flaw:** F1/crowded prior art is `MAJOR`, not critical. The defense is
+  a narrow claim, explicit inheritance from D12, and direct attribution to
+  X14 in both histories; no generic missing-token novelty claim is allowed.
+- **Lifecycle/capability:** application-research prototype; the existing
+  PyTorch runner, WSTS+ tensors, and Nibi H100 access make implementation and
+  a two-run screen feasible for this single-person fast-prototyping project.
+  Paper-level novelty remains yellow until matched evidence exists.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 8 | mechanism-based, unconfirmed: D12 previously adds `+.005764` block AP over D2-STD and X14 is cross-history positive; X25 itself has no result yet |
+| Faster | 5 | no speed claim or evidence |
+| Stronger | 8 | mechanism-based, unconfirmed: severity-specific reliability is evaluated under both T=1 and T=5 missingness |
+| Cheaper | 6 | 1,088 parameters, no new data, one routed checkpoint |
+| Broader | 6 | the same rule spans spatial and spatiotemporal architectures, but only one wildfire dataset |
+
+The paradigm probe is incremental-with-seeds: partial First-Principles support
+(prompt depth follows observed severity), yes to the known incomplete-satellite
+observation problem, and no technology-cycle or field-changing claim. Compute,
+data, engineering, and timeline risks are low; novelty and effectiveness are
+the real risks. Verdict: **Accept with Revisions, worth pursuing pending the
+validation experiment**. The decisive actions are (1) exact T1/T5 smoke,
+(2) one frozen seed-0 screen, and (3) stop unless routed primary improves at
+least `+.005` over X14 in both histories with the usual M00 guardrail. Fresh
+ERM is the adoption check; no token size, threshold, or loss sweep is allowed.
+Implementation is pinned to `7cdf988`. Queue probes selected 20GB for both
+smokes and T1 formal because it was earlier than 10GB while staying within 2x;
+T5 formal retains the equally placeable minimum 10GB slice. T1/T5 smoke jobs
+are `21263086/21263087`, with `afterok` formal screens
+`21263088/21263089`. No model work runs on the login node.
+T1 smoke and formal completed with exact initial equivalence. Routed primary
+improves fresh ERM by `+.010081` (block `+.015122`), but the direct X14
+attribution is only `+.001282` primary (`+.001922` block), below the frozen
+`+.005` gate. The T5 smoke reached the exact-equivalence check and then
+exceeded its 32GB host-memory allocation; because T1 already refutes the
+incremental mechanism, no memory retry is justified and dependent T5 formal
+`21263089` was cancelled. X25 is rejected. Artifacts:
+`cross-history-analysis/x25-vs-erm-t1.json` and
+`cross-history-analysis/x25-vs-x14-t1.json`.
+
+X26 is the one bounded repair opened after X25 failed. It does not claim that
+combining cosine decay with consistency is a new method. Instead, it asks
+whether X8's already isolated counterfactual-impact weighting remains additive
+to the stronger X22 optimization anchor and thereby fixes X8's failed ERM
+adoption. Candidate and closest control are both FireDrop-only, use paired
+clean/corrupt supervised loss, cosine-to-zero AdamW, and fixed KL weight 0.1;
+the only difference is impact-weighted versus global Bernoulli KL. At
+inference, both use one unchanged checkpoint and the observable FireDrop route.
+
+The pre-run `idea-evaluator` verdict is **Accept with Revisions, worth
+pursuing pending the validation experiment**. F1 is the only major risk:
+cosine scheduling and consistency are known, so a passing result can promote
+the already scoped X8 impact-weighting family as the third direction, while
+X22 remains the sole optimizer contribution; X26 itself is not counted as a
+fourth idea. The mechanism has unusually direct prior evidence: fixed X8
+impact routing beat global consistency in every T/year cell (final mean
+`+.004683`), including seed-0 primary `+.007239` at T1 and `+.005132` at T5,
+while X22 independently passed both-history confirmation. Higher and Stronger
+are therefore rated 8 from measured parent evidence; Faster stays 5, Cheaper
+6 (no inference parameters/data), and Broader 6 (two history architectures,
+one dataset). This is incremental, not paradigm-shifting, and fits the current
+runner/Nibi resources.
+
+The decisive seed-0 gate is routed primary `>=+.005` versus the matched
+cosine-global control in both histories, plus positive routed primary versus
+X22 cosine ERM in both. Failure of either comparison closes the family; no KL,
+schedule, or FireDrop-rate sweep is allowed. If it passes, seeds 1/2 and fixed
+years use the same pair, and only impact-versus-global attribution plus final
+impact-versus-X22 adoption may support the contribution.
+Implementation is pinned to `7594bd6`. T1/T5 impact-path smokes are
+`21264077/21264078`; their dependent global/impact screens are respectively
+`21264079/21264080` and `21264081/21264082`. Equal queue estimates select the
+minimum 10GB T1 slice and the already measured minimum-feasible 20GB paired
+T5 slice. T5 smoke requests 64GB host memory after the X25 loader measurement;
+formal T5 retains 128GB. No model computation runs on the login node.
+
+T1 completed before T5 and closes X26 under its frozen attribution gate.
+Impact weighting changes routed M01 AP by `+.004666` versus cosine-global,
+equivalent to primary `+.001555`, below the required `+.005`. It remains
+positive versus X22 (`+.014631` M01, `+.004877` primary), but adoption cannot
+rescue failed mechanism attribution. No additional X26 seed is submitted; the
+already-running T5 impact job is retained only to complete the negative/secondary
+record. Partial artifacts are `cross-history-analysis/x26-vs-global-t1.json`
+and `cross-history-analysis/x26-vs-x22-t1.json`.
+T5 subsequently completed with primary `+.003225` versus cosine-global and
+`+.002167` versus X22. The two-history means are only `+.002390` attribution
+and `+.003522` adoption, so X26 is neither a main direction nor a `>+.010`
+secondary result. Final seed-0 artifacts are
+`cross-history-analysis/x26-vs-global-seed0.json` and
+`cross-history-analysis/x26-vs-x22-seed0.json`.
+
+X27 is the bounded independent fallback opened after X26 failed. For every
+BlockDrop-only training example, it constructs two legal blocks of the same
+sampled 25% or 50% size, measures each detached focal forecast loss with the
+current model in inference mode, and backpropagates only through the harder
+view. The first candidate is bit-for-bit the random block used by the matched
+control; the second is derived from the same digest without advancing the
+data RNG. Candidate and control both use cosine-to-zero, 3000 AdamW steps,
+batch 64, and BlockDrop on every sample. This isolates online hard-block
+selection from X22's schedule and X14's specialization. At inference X27 adds
+no parameter or computation and is used only for observable spatial cases;
+M00/M01 remain X22 predictions.
+
+#### X27 pre-run idea evaluation
+
+- **First impression:** a scoped Novel Method/Application result. The
+  one-sentence story is that random missing blocks under-train the locations
+  whose removal most damages the next-day forecast, so online forecast-loss
+  selection should improve robustness without learning a reconstruction
+  model.
+- **Fatal flaw:** F1/crowded prior art is `MAJOR`, not critical. Huang et al.
+  already retrain on adversarially selected occlusions for person
+  re-identification ([CVPR 2018](https://openaccess.thecvf.com/content_cvpr_2018/html/Huang_Adversarially_Occluded_Samples_CVPR_2018_paper.html)); ADIOS learns an
+  adversarial mask generator for self-supervised representations
+  ([Shi et al., ICML 2022](https://proceedings.mlr.press/v162/shi22d.html)); and
+  adversarial cloud defense has been studied in remote-sensing salient-object
+  detection ([Sun et al., WACV 2024](https://openaccess.thecvf.com/content/WACV2024/html/Sun_Defense_Against_Adversarial_Cloud_Attack_on_Remote_Sensing_Salient_Object_WACV_2024_paper.html)).
+  The defensible difference is narrower: supervised next-day wildfire
+  forecast loss selects among masks constrained to the declared sensor-gap
+  protocol, with no mask generator and a direct random-block control. No
+  generic adversarial-occlusion novelty claim is allowed.
+- **Lifecycle/capability:** application-research prototype. Existing paired
+  tensors, PyTorch runner, and Nibi H100 access make a two-candidate screen
+  feasible for a single researcher; unknown weekly hours leave the paper
+  lifecycle fit yellow, but the prototype itself is bounded.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 8 | mechanism-based, unconfirmed: X14's random specialization already yields final block `+.011843`; X27 targets its residual placement sensitivity |
+| Faster | 3 | two detached selection forwards add training time; inference is unchanged |
+| Stronger | 8 | mechanism-based, unconfirmed: the identical selector applies to both architectures and explicitly optimizes occlusion robustness |
+| Cheaper | 5 | no new data, labels, parameters, or inference cost, but greater training compute |
+| Broader | 6 | one rule spans spatial U-Net and temporal UTAE, still on one wildfire dataset |
+
+The paradigm probe is incremental: it partially challenges the assumption
+that random synthetic missingness sufficiently covers damaging sensor gaps,
+but it does not ride a technology shift or redefine the field. Compute risk
+is medium (two extra no-gradient forwards), data risk low, engineering risk
+low-to-medium, and timeline risk low for the screen. Verdict: **Accept with
+Revisions, worth pursuing pending the validation experiment**. The frozen
+seed-0 gate is routed primary `>=+.005` versus the matched cosine random-block
+specialist in both histories, plus positive routed primary versus X22 in both.
+Failure in either history closes X27; there is no candidate-count, block-size,
+loss, or schedule sweep. Only a passing screen may advance to seeds 1/2 and
+fixed 2022/2023 evaluation.
+Implementation is pinned to `ae43208`. Initial queue probes estimated both
+10GB and 20GB slices near 03:00, while a full H100 was about 30 minutes
+earlier. Because the currently running X26 20GB job is expected to release its
+slice well before its reservation limit, both blocking smokes use 20GB rather
+than an 8x-overprovisioned full GPU; T1 remains within the ordinary 2x rule
+and T5 uses its known minimum feasible slice. T1/T5 smokes are
+`21268446/21268447`. Dependency-gated random-control/hard screens are
+`21268448/21268449` and `21268450/21268451`; formal T1 returns to the minimum
+10GB slice, while T5 retains 20GB and 128GB host memory. No experiment runs on
+the login node.
+After more than ten minutes pending, authoritative `squeue --start` estimates
+for the two smokes deteriorated to 09:30/09:40, while a short full-H100 probe
+estimated 02:37. Because smoke blocks all four screens, the documented
+oversize exception applies. The two checks were consolidated into one
+sequential 20-minute full-H100 job `21269349`; dependencies of the four
+unchanged formal jobs were moved to that bundle, then unstarted smokes
+`21268446/21268447` were cancelled. Consolidation avoids reserving two full
+GPUs and changes no data, model, or scientific setting.
+The first consolidated job `21269349` received a full GPU but exited in nine
+seconds with code 126 because `run_slurm.sh` is intentionally non-executable
+and the wrapper invoked it directly. No model or data code ran. Replacement
+`21269658` changes only the wrapper to `bash run_slurm.sh`; all four formal
+dependencies now point to this replacement.
+The replacement bundle completed both real-data forward/backward smokes with
+exit `0:0`, exact initial equivalence, and peak GPU allocation 0.58GB/1.55GB
+for T1/T5. T1 random control `21268448` and hard selector `21268449` then
+completed. Hard selection improves routed block AP only `+.000697` over the
+matched random control, equivalent to primary `+.000465`, far below the
+frozen `+.005` attribution gate. Its routed block/primary gains versus X22
+are `+.011524/+.007683`, showing that BlockDrop specialization—not the new
+selector—causes almost all of the total gain. X27 is rejected and unstarted
+T5 jobs `21268450/21268451` were cancelled. Artifacts:
+`cross-history-analysis/x27-vs-random-t1.json` and
+`cross-history-analysis/x27-vs-x22-t1.json`.
+
+X28 is the application-grounded fallback after X27 failed. Rectangular
+BlockDrop is a controlled stress test, but real satellite observations are
+lost in irregular acquisition footprints produced by cloud, smoke, swath,
+and quality filtering. X28 reuses the 24 cached 2021 VIIRS observation-
+reliability footprints already present in the project. A deterministic
+rotation/reflection is resized to the training crop, then signed-distance
+ranking expands or contracts it to exactly 25% or 50% missing area. Thus the
+candidate and rectangular control have identical optimizer, cosine schedule,
+3000 steps, batch 64, BlockDrop-only sampling, missing channels, and missing
+area; only mask geometry changes. These masks are acquisition-reliability
+footprints, not cloud labels and not samples paired to the training events.
+
+#### X28 pre-run idea evaluation
+
+- **First impression:** New Setting/Application with an incremental data-
+  augmentation mechanism. The paper-safe claim is that physically observed
+  satellite-availability geometry is a better training prior for robust
+  next-day wildfire prediction than artificial rectangles at matched area.
+- **Fatal flaw:** prior-art crowding is `MAJOR`, not critical. Real cloud-mask
+  pools have already been sampled as augmentation for asynchronous remote-
+  sensing reconstruction
+  ([Fallah et al., 2026](https://openaccess.thecvf.com/content/CVPR2026W/MORSE/papers/Fallah_Asynchronous_Remote_Sensing_Time-Series_Fusion_for_Cloud_Removal_and_Anytime_CVPRW_2026_paper.pdf)),
+  and incomplete-modality robustness is established in remote sensing
+  ([Kha et al., 2025](https://openaccess.thecvf.com/content/CVPR2025/papers/Kha_RobSense_A_Robust_Multi-modal_Foundation_Model_for_Remote_Sensing_with_CVPR_2025_paper.pdf)).
+  Novelty is therefore restricted to forecast-targeted wildfire robustness,
+  area-matched attribution, and transfer across spatial and temporal
+  forecasters. No generic real-mask augmentation novelty is claimed.
+- **Lifecycle/capability:** application-research prototype. The shape bank,
+  shared trainer, and Nibi allocation are already available; there is no new
+  download, annotation, reconstruction model, or inference component. The
+  small 24-mask bank is the main data limitation and must be disclosed.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 7 | mechanism-based, unconfirmed: targets geometry mismatch while preserving X14's successful specialization |
+| Faster | 6 | one ordinary training forward and unchanged inference; CPU mask generation is small |
+| Stronger | 8 | directly targets realistic observation failure and is screened in both T=1/T=5 |
+| Cheaper | 8 | reuses cached masks, adds no labels, parameters, downloads, or inference cost |
+| Broader | 7 | one footprint mechanism spans two architectures, but evidence remains one wildfire dataset and one 24-mask source |
+
+The paradigm probe is incremental rather than field-changing: it replaces a
+convenient synthetic corruption assumption with an observed acquisition prior.
+Compute and engineering risks are low, data-diversity and effectiveness risks
+are medium, and novelty is viable only under the narrow application claim.
+Verdict: **Accept with Revisions, worth pursuing pending the validation
+experiment**. The frozen seed-0 gate is routed primary `>=+.005` versus the
+matched cosine rectangular BlockDrop specialist in both histories, plus
+positive routed primary versus X22 in both. Failure in either history closes
+X28; no footprint mixture, morphology, target fraction, or loss sweep is
+allowed. Only a passing screen advances to seeds 1/2 and fixed 2022/2023.
+Implementation is pinned to `84fad2c`. The cached bank contains 24 finite
+binary reliability arrays; the targeted unit check confirms deterministic
+128x128 masks with exactly 4,096/8,192 invalid pixels. T1/T5 smoke jobs are
+`21271995/21271996`. Dependency-gated formal candidates are
+`21272006/21272008`; matched T5 rectangular control is `21272010`, while T1
+reuses completed cosine rectangular control `21268448`. T1 uses the minimum
+10GB slice; T5 uses its previously measured minimum-feasible 20GB slice and
+128GB host memory for formal evaluation. All model work is Slurm-only.
+Both smokes completed in 30 seconds with exit `0:0`, and the three formal jobs
+started without a queue migration. T1 decisively rejects geometry transfer:
+versus the area-matched rectangular specialist, M06/M07 AP changes by
+`-.046011/-.057171`, giving block `-.051591` and routed primary `-.034394`.
+Versus X22, block/primary are `-.040765/-.027177`. This is not a marginal gate
+failure: irregular acquisition-footprint training is substantially
+misaligned with the declared rectangular M06/M07 evaluation. No geometry,
+mixing-rate, or morphology repair is opened. The already-running T5 candidate
+and control are retained only to complete the architecture-transfer record.
+Partial artifacts: `cross-history-analysis/x28-vs-rectangle-t1.json` and
+`cross-history-analysis/x28-vs-x22-t1.json`.
+T5 independently confirms the failure: block/primary are
+`-.055175/-.036784` versus the matched rectangular specialist and
+`-.044175/-.029450` versus X22. The two-history seed-0 means are
+`-.035589` attribution and `-.028313` adoption. Final screen artifacts:
+`cross-history-analysis/x28-vs-rectangle-seed0.json` and
+`cross-history-analysis/x28-vs-x22-seed0.json`.
+
+X29 broadens the search away from FireDrop and follows the remaining spatial
+information problem. At the three deepest encoder levels, every location
+queries a compact 4x4 memory formed by valid-region features; invalid memory
+cells are excluded, and the retrieved value is injected only inside the
+missing support through a zero-initialized projection. T1 queries spatial
+Res18 features; T5 queries features after UTAE temporal aggregation, so the
+same module can retrieve temporally summarized evidence. It is trained with
+X14's BlockDrop-only sampling and X22's cosine schedule. Unlike X1's fixed
+global/grid pooling, each missing location can select a different valid token.
+
+#### X29 pre-run idea evaluation
+
+- **First impression:** an incremental Novel Method in the existing X1
+  context-transport family. The narrow claim is forecast-directed retrieval
+  of observed context for missing satellite regions, shared across spatial and
+  temporal wildfire forecasters.
+- **Fatal flaw:** F1/crowded attention and inpainting prior art is `MAJOR`.
+  Contextual attention already copies relevant valid patches into holes
+  ([Yu et al., CVPR 2018](https://openaccess.thecvf.com/content_cvpr_2018/html/Yu_Generative_Image_Inpainting_CVPR_2018_paper.html)),
+  and Shift-Net already transfers encoder features from known to missing
+  regions
+  ([Yan et al., ICCV 2017](https://openaccess.thecvf.com/content_ICCV_2017/html/Yan_Shift-Net_Image_Inpainting_ICCV_2017_paper.html)).
+  X29 cannot claim generic memory attention or inpainting novelty. Its
+  defensible boundary is no image reconstruction, forecast-loss-only latent
+  retrieval, explicit reliability support, and cross-history wildfire use.
+- **Lifecycle/capability:** application-research prototype. It reuses current
+  masks/features and adds no data pipeline. Sixteen memory tokens keep compute
+  bounded; inference cost occurs only on the observable spatial-gap route.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 8 | X1 was positive at T1 but weak at T5; content-addressed retrieval directly repairs fixed pooling |
+| Faster | 4 | 16-token attention is bounded but adds routed inference work |
+| Stronger | 8 | mask-excluded retrieval explicitly prevents missing evidence from entering memory |
+| Cheaper | 7 | no external data or labels and only shallow projections at three scales |
+| Broader | 7 | identical module spans spatial U-Net and temporally aggregated UTAE features |
+
+The paradigm probe remains incremental: learned valid-context retrieval is
+established, while applying it directly to partial-observation wildfire
+forecasting avoids the reconstruction assumption. Compute and engineering
+risks are low-to-medium; effectiveness and crowded novelty are the decisive
+risks. Verdict: **Accept with Revisions, worth pursuing pending the validation
+experiment**. The closest control is the same cosine rectangular BlockDrop
+specialist. The frozen seed-0 gate is routed primary `>=+.005` versus that
+control in both histories and positive versus X22 in both. X29 and X1 are one
+context-transport family, not two contributions. Failure in either history
+closes the family without attention width, grid, depth, or loss sweeps.
+Implementation is pinned to `ec02d5a`; the targeted module check verifies
+exact identity initialization and immutable valid-region features. T1/T5
+smokes are `21272773/21272774`, with dependency-gated formal candidates
+`21272775/21272777`. T1 reuses rectangular control `21268448`; T5 reuses the
+currently running matched control `21272010`. The minimum 10GB T1 and
+minimum-feasible 20GB T5 slices were selected; all model work is Slurm-only.
+Both smokes passed in 32/35 seconds with exit `0:0`. The original formal jobs
+then remained pending over 30 minutes with 12:40/12:30 estimates. Matched
+queue probes placed T1 20GB and full-H100 at the same 05:11 time, so T1 moved
+within the 2x rule to 20GB job `21274628`. For blocking T5, 40GB estimated
+05:46 while full H100 estimated 05:11; the documented blocking exception
+selected full-H100 job `21274629`. Unstarted `21272775/21272777` were
+cancelled. Only allocation size changes; source, seed, data, batch, optimizer,
+and step count are identical.
+At the next 30-minute check, T1 had started but the T5 full-H100 estimate was
+06:09. New probes placed all profiles around 05:50, so a minimum 20GB
+replacement `21275163` was submitted. A stale queue snapshot caused an
+operational race: old job `21274629` had started at 04:58:19 before the
+replacement submission and was inadvertently cancelled at 05:01:36 after
+3:17 runtime. No result was produced and no scientific setting changed; the
+20GB replacement is authoritative. Root-cause timestamps are recorded by
+`sacct`. Future replacements use Slurm's controller-side
+`scancel --state=PENDING` filter so a job that starts after inspection is not
+cancelled; both existing bundle scripts receive the same one-line safeguard.
+The authoritative T5 replacement completed successfully as `21275163`.
+Memory attention changes routed primary by only `+.000661` at T1 and
+`-.007990` at T5 versus the cosine rectangular specialist. Relative to X22,
+the same values are `+.007878/-.000656`. The cross-T attribution mean is
+`-.003665`; X29 fails both the magnitude gate and transfer requirement. This
+supports a concrete diagnosis: retrieving spatial context after UTAE temporal
+aggregation interferes with the already strong T5 representation rather than
+adding missing evidence. The family closes without grid, width, depth, or
+head sweeps. Artifacts: `cross-history-analysis/x29-vs-block-specialist-seed0.json`
+and `cross-history-analysis/x29-vs-x22-seed0.json`.
+
+X30 moves from missingness-specific modules to temporal target structure. X3
+showed a substantial T1 signal (`+.011831`) but regressed at T5 (`-.009413`)
+when its predicted current state was explicitly marginalized into the final
+forecast. X30 retains one ordinary X22 prediction head. During training only,
+a zero-initialized shallow head predicts (1) the clean latest active-fire
+state, (2) next-day activity conditional on persistence, and (3) next-day new
+activity. These auxiliary losses expose the distinction between persistence
+and growth to the shared decoder, but their outputs are not computed during
+evaluation or deployment. This isolates representation learning from X3's
+brittle inference factorization.
+
+#### X30 pre-run idea evaluation
+
+- **First impression:** an incremental temporal/state Novel Method and a
+  direct mechanism repair, not a FireDrop-only tweak. The application claim is
+  that distinguishing persistent burning from new growth during training can
+  improve partial-observation next-day forecasting without requiring a state
+  reconstruction stage at deployment.
+- **Fatal flaw:** F1/prior-art crowding is `MAJOR`. Joint state reconstruction
+  and forecasting are standard multi-task ideas, and the closest wildfire
+  work already reconstructs fire history before prediction
+  ([Yang et al., 2026](https://arxiv.org/abs/2603.09042)). X30 cannot claim
+  reconstruction or auxiliary learning as new. Its defensible boundary is the
+  single-stage, training-only persistence/new-growth factorization, direct X22
+  ablation, and unchanged inference predictor across T1/T5.
+- **Lifecycle/capability:** application-research prototype. It adds one 1x1
+  training head, reuses labels already in each sample, and requires no data or
+  inference pipeline. The existing X3 code fixes both auxiliary weights at
+  `.05`, avoiding a new search.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 8 | X3's T1 gain is measured; X30 preserves the hypothesized useful auxiliary signal while removing its failed output factorization |
+| Faster | 7 | negligible training head and exactly unchanged evaluation/inference forward |
+| Stronger | 8 | explicitly teaches persistent versus newly growing fire behavior under all declared corruptions |
+| Cheaper | 9 | no new data, labels, inference parameters used, routing, or external model |
+| Broader | 7 | same temporal-change supervision applies to T1 and T5, though still on one dataset |
+
+The paradigm probe is incremental: it does not redefine wildfire forecasting,
+but changes state decomposition from a compulsory prediction-time latent
+variable into privileged training structure. Compute/engineering risks are
+low; effectiveness and incremental novelty are the real risks. Verdict:
+**Accept with Revisions, worth pursuing pending validation**. The frozen
+seed-0 gate is raw primary `>=+.005` versus X22 in both histories with M00
+`>=-.010`. Failure in either history closes X3/X30 without auxiliary-weight,
+head-depth, class-weight, or specialist-routing sweeps. Only a passing screen
+advances to seeds 1/2 and fixed years.
+Implementation is pinned to `31e2f7b`; the targeted test confirms zero initial
+state logits and exact main-logit initialization of both conditional heads.
+T1/T5 smokes are `21312955/21312968`, with dependency-gated formal screens
+`21312975/21312986`. Requests use the minimum 10GB T1 and minimum-feasible
+20GB T5 slices. No model work runs on the login node.
+Both smokes passed in 36 seconds with exit `0:0`; T1 formal completed in
+17:13. Against X22, M00/M01/M06/M07 change
+`-.010799/-.013745/-.005154/-.012234`, yielding primary `-.010378` and also
+violating the clean guardrail. This rejects the hypothesis that X3's T1 signal
+can be retained as training-only state supervision under the stronger cosine
+anchor. The already-running T5 job is kept only for the cross-architecture
+record; no loss-weight, class-weight, route, or head repair is allowed.
+Partial artifact: `cross-history-analysis/x30-vs-x22-t1.json`.
+T5 independently changes M00/M01/M06/M07 by
+`-.008411/-.011821/-.010166/-.010639`, giving primary `-.010875` and a
+cross-T mean of `-.010626`. X30 is closed. Final screen artifact:
+`cross-history-analysis/x30-vs-x22-seed0.json`.
+
+X31 addresses X30's heterogeneous-target interference without reopening its
+weights. The three deepest encoder features each receive a zero-initialized
+1x1 training head, upsampled to predict the same next-day target with the same
+focal objective as the main head. Their mean contributes a fixed `.05` loss.
+The auxiliary heads are skipped when `details=False`, so evaluation and
+deployment execute exactly the X22 predictor. Coarse features receive direct
+regional-spread supervision while the shallower of the three retains finer
+fire-front structure; T5 applies the identical heads after temporal
+aggregation, and T1 applies them to spatial features.
+
+#### X31 pre-run idea evaluation
+
+- **First impression:** an incremental Novel Method/technique. The paper-safe
+  story is multi-scale next-day supervision for partial-observation wildfire
+  forecasting, with one unchanged inference model across spatial and temporal
+  backbones.
+- **Fatal flaw:** F1/prior-art crowding is `MAJOR`. Deep supervision is
+  established by Deeply-Supervised Nets
+  ([Lee et al., 2015](https://proceedings.mlr.press/v38/lee15a.html)) and
+  multi-scale side-output supervision by HED
+  ([Xie and Tu, 2015](https://openaccess.thecvf.com/content_iccv_2015/html/Xie_Holistically-Nested_Edge_Detection_ICCV_2015_paper.html)).
+  X31 cannot claim either technique as new. The defensible contribution is a
+  quantitatively attributed application to robust next-day wildfire spread,
+  shared across the two established history/backbone settings.
+- **Lifecycle/capability:** bounded application-research prototype. Existing
+  deep features, target loss, Nibi runner, and checkpoints are reused; no new
+  data, inference route, or decoder interface is introduced.
+
+| Dimension | Score | Evidence and boundary |
+| --- | ---: | --- |
+| Higher | 7 | mechanism-based, unconfirmed: direct same-target gradients avoid X30's observed heterogeneous-task conflict |
+| Faster | 7 | three shallow heads train only; evaluation/inference is exactly unchanged |
+| Stronger | 7 | supervision reaches temporally aggregated and spatial encoder features under all four scenarios |
+| Cheaper | 8 | no new data, labels, deployment parameters used, or external model |
+| Broader | 7 | one implementation spans Res18-U-Net and Res18-UTAE but remains one dataset |
+
+The paradigm probe is incremental, with no field-changing claim: it challenges
+only the assumption that final-resolution loss is sufficient under missing
+inputs. Compute, data, engineering, and timeline risk are low; novelty is
+crowded and effectiveness is unknown. Verdict: **Accept with Revisions, worth
+pursuing pending validation**. The frozen seed-0 gate is raw primary
+`>=+.005` versus X22 in both histories with M00 `>=-.010`. Failure in either
+history closes X31 without head-depth, scale, interpolation, or weight sweeps.
+Only a passing screen advances to seeds 1/2 and fixed years.
+Implementation is pinned to `d9f3bb0`; the targeted check confirms three
+zero-initialized full-resolution auxiliary predictions with the intended
+feature shapes. T1/T5 smokes are `21315545/21315547`, with dependency-gated
+formal screens `21315558/21315559`. They request the minimum 10GB T1 and
+minimum-feasible 20GB T5 slices. No model work runs on the login node.
+Both smokes completed in 31/34 seconds and both formal jobs completed with
+exit `0:0`. X31 changes primary by `-.007688` at T1 and `-.015340` at T5
+versus X22; all three corrupted scenarios regress in both histories. The
+cross-T mean is `-.011514` and block mean `-.007779`. Even same-target deep
+supervision disrupts the stronger final-head solution, so the family closes
+without weight or scale repair. Artifact:
+`cross-history-analysis/x31-vs-x22-seed0.json`.
+
+Implementation: `357e475`, numerical mixture fix `8c654e2`. Shared raw
+evaluation permits T5 only by an explicit opt-in; mainline T1 default stays.
+Physical batch 16, accumulation 4 applies to every new control/candidate.
+Existing full-batch D2/D13 numbers are context, not the matched comparison.
+
+GPU smoke jobs: T1 `21210705`, T5 `21210706`, each checked control/context/
+distill/transition in sequence on a 20GB H100 slice, 4 CPUs, 32GB host memory.
+Earlier 10GB requests `21210683/21210684` were cancelled while pending because
+no start estimate was available; 20GB had an approximately 11-minute estimate.
+No model or dataset computation has been run on the login node.
+
+New submissions export `WILDFIRE_SOURCE_COMMIT` so queued jobs archive the
+submission-time revision rather than whatever HEAD exists when allocation
+eventually begins. Every run still records the resolved commit in `commit.txt`.
+After three T5 jobs completed training but exhausted 64GB host RAM during
+batch-64 evaluation, new snapshots cap evaluation batch at 16 while leaving
+training batch 64 unchanged. AP aggregation and samples are identical; only
+evaluation memory and wall time change. Saved checkpoints recover old jobs
+through evaluate-only rather than repeating training.
+
+Both smoke jobs completed with exit `0:0`. All eight real-data combinations
+completed one optimizer step, backward pass, checkpoint reload path, and one
+M06 2021 inference. Initial maximum absolute output difference from the base
+was exactly zero for control/context/distill and `2.38e-7` (T1) / `4.77e-7`
+(T5) for the transition mixture. Peak GPU allocation at physical batch 16 was
+0.70GB (T1) and 1.97GB (T5); formal screens therefore use physical/effective
+batch 64 on 20GB slices to reduce wall time, identically for all variants.
+
+Capacity is not the source of a large-model advantage. The base models contain
+14,444,241 (T1) and 14,704,785 (T5) parameters. X1 adds 66,640 parameters in
+either setting (about 0.46%/0.45%); its adapter variant trains only those
+66,640. X3 adds only 51 parameters. Their composition adds 66,691. Risk,
+distillation, and both consistency objectives add no inference parameters.
+
+Next action: run eight 3000-step jobs (four methods x two T), compare the three
+candidates with their fresh same-history controls, and stop failed directions
+before confirmation.
+
+Seed-0 screen jobs (all physical/effective batch 64, seed 0, 3000 steps,
+20GB H100 slice, 8 CPU, 64GB host memory): T1 control/context/distill/
+transition `21211219/21211220/21211221/21211222`; T5 equivalents
+`21211223/21211224/21211225/21211226`. All were initially pending without a
+start estimate. Recheck after ten minutes and change slice only when queue
+evidence supports a faster start under the resource rule.
+
+### First T1 screen
+
+| Method | M00 | M01 | M06 | M07 | primary | primary delta | block delta |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| fresh control | .585066 | .308313 | .370825 | .189912 | .289683 | — | — |
+| context | .593755 | .304883 | .385249 | .193349 | .294494 | +.004811 | +.008930 |
+| distill | .584336 | .286450 | .372542 | .194401 | .284464 | -.005219 | +.003103 |
+| distill_block | .578880 | .271517 | .365712 | .191154 | .276127 | -.013556 | -.001936 |
+| risk 3x | .583485 | .276321 | .377532 | .193596 | .282483 | -.007201 | +.005195 |
+| transition | .584545 | .330915 | .377251 | .196377 | .301514 | +.011831 | +.006445 |
+
+Transition passes the T1 gate. Context misses the all-corruption threshold by
+.000189 because M01, which has no spatial hole, regresses .003430. Its declared
+observable route uses the control for M00/M01 and context for M06/M07; routed
+primary delta is +.005954 and clean is identical to control. This is the same
+specialist-routing evidence convention already used by B2/B3.
+
+Original distillation fails because its mask included complete FireDrop and
+the target focus also applied to non-spatial examples: M01 drops .021863. The
+registered `distill_block` revision applies feature matching only inside true
+spatial holes and weights positive neighborhoods only within those holes. A
+separate `risk` candidate upweights segmentation risk 3x inside spatial holes
+while retaining the original loss elsewhere. These are direct responses to
+the diagnosed failure and remain in the same controlled-missingness problem.
+Static inspection of the pinned upstream `BaseModel.compute_loss` confirms
+that `risk` uses the identical torchvision focal per-pixel term, alpha and
+gamma; with no spatial hole its normalized objective is exactly the original
+mean. Its only intervention is the declared 3x spatial-hole weighting.
+The `distill_block` audit likewise confirms that its auxiliary weight is
+identically zero whenever the true spatial-hole mask is empty; FireDrop-only
+and clean samples retain the control objective. The frozen teacher consumes
+the exactly paired clean tensor, while only the three deepest normalized
+features inside the same spatial mask contribute to the auxiliary term.
+
+The T1 block-local distillation revision nevertheless fails: primary delta
+`-.013556` and block delta `-.001936`; X2 is rejected without another repair.
+Risk 3x has block delta `+.005195`, but its observable routed primary delta is
+only `+.003463`, below the `+.005` gate. This directional result registers the
+single allowed X4 repair, `risk_strong`: identical code and loss with spatial
+weight increased from 3x to 5x. There is no weight grid; X4 remains one tuning
+contribution and is rejected if this fixed repair misses the gate.
+The fixed T1/T5 5x jobs are `21213326/21213327`, pinned to commit `2385e76`
+and using the minimum 10GB GPU slice supported by observed peak usage.
+Before meaningful computation, the completed T5 3x result showed routed
+primary `-.001659` and block mean `-.002489`, contradicting the stronger-weight
+repair mechanism. Both 5x jobs were cancelled after 11 seconds and X4 closed;
+no 5x result is claimed.
+
+Queue correction: original T5 distill/transition `21211225/21211226` were
+cancelled pending after >10 minutes. Same-resource replacements
+`21211486/21211487` started immediately alongside T5 control/context
+`21211223/21211224`.
+
+T5 control/distill/transition completed all 3000 updates and saved checkpoints
+but exhausted 64GB host RAM during the old batch-64 evaluation path. Their
+batch-16 evaluate-only recovery jobs are `21213246/21213247/21213248`; no
+training is repeated. T5 context completed its full evaluation directly.
+Its absolute M00/M01/M06/M07 AP is
+`.597931/.340972/.388529/.200548`; no matched delta is claimed until the fresh
+control recovery finishes.
+
+Recovered T5 fresh-control M00/M01/M06/M07 AP is
+`.595552/.364196/.389710/.196743`. Context changes raw primary by `-.006867`
+and block mean by `+.001312`; its declared spatial route changes primary by
+only `+.000874`. Thus X1 full-model context fails the T5 `+.005` screen and is
+not advanced. Across T1/T5, its routed mean primary delta is `+.003414`.
+
+Recovered T5 transition AP is `.597599/.348957/.383617/.189836`: primary
+delta `-.009413`, block delta `-.006500`, despite the T1 `+.011831`. X3
+therefore does not advance in its original form. The single registered repair,
+`transition_decoupled`, keeps the identical inference head and marginalization
+but computes auxiliary state/conditional supervision from detached decoder
+features. Auxiliary gradients update only the 51-parameter head, while the
+main forecast loss remains end-to-end; this directly tests whether T5 failure
+came from auxiliary distortion of the shared temporal representation.
+Fixed T1/T5 decoupled jobs are `21213902/21213903`, pinned to commit
+`7277cb8`; this is X3's only repair and uses the post-OOM evaluation cap.
+
+The decoupled T1 repair completed at M00/M01/M06/M07
+`.472336/.248200/.311505/.174151`, changing primary by `-.045065`, block
+mean by `-.037541`, and M00 by `-.112730` versus fresh control. Although the
+initial mixture was equivalent, removing auxiliary gradients from the decoder
+left the 51-parameter transition head to move under the forecast mixture and
+produced severe degradation rather than the intended T5 stabilization. This
+falsifies the registered repair. T5 job `21213903` was cancelled at 37:33;
+X3 is closed without a weight search.
+
+Original T5 distillation AP is `.586798/.355377/.380389/.191319`, for primary
+delta `-.007855` and block delta `-.007372`. Together with both failed T1
+forms, this closes X2 as negative evidence.
+
+Follow-up seed-0 screens: T1 `distill_block/risk` are
+`21211826/21211827`; T5 equivalents are `21211828/21211829`. They use the
+same 20GB slice and matched train/evaluation contract and were initially
+pending behind the active first wave.
+T5 risk completed at M00/M01/M06/M07
+`.590760/.338343/.385910/.195566`, yielding raw primary `-.010277` and block
+mean `-.002489`. T5 distill_block completed training but its old batch-64
+evaluation exhausted host RAM; no recovery was submitted because T1 had
+already rejected X2 on both primary and block metrics.
+
+The registered fallback `local_consistency` transfers the mainline D1 idea
+but localizes Bernoulli KL to the union of observed FireDrop/BlockDrop pixels
+and weights it by clean-view teacher confidence. The student still uses the
+exact D1 paired supervised loss, `0.5 * (clean + corrupt)`, and inference has
+no extra parameters or clean view. A same-runner `global_consistency` control
+ports D1 unchanged to both history settings; local consistency counts only if
+it improves over that control, not merely over ERM. This tests an incremental
+spatially targeted objective, not another architecture or general-purpose
+hyperparameter search.
+
+The registered composition `context_transition` combines X1 feature transport
+with X3 transition marginalization without changing either component or its
+loss weight. This is an interaction/scale experiment, not a fourth independent
+contribution: it tests whether spatial context recovery and fire-state dynamics
+are complementary and whether their total gain reaches the requested +.02.
+It will be screened only after the component implementations pass a real-data
+smoke check; a gain smaller than the better component will be treated as
+negative interaction rather than retuned post hoc.
+
+T1 composition AP is `.592994/.319796/.380838/.193017`, giving primary
+`+.008200` and block mean `+.006559` versus fresh control. Because this is
+smaller than X3 alone (`+.011831`), the registered interaction criterion fails.
+T5 composition `21212156` was cancelled at 37 minutes to free its slice; a
+second-history result cannot rescue a composition already non-complementary in
+T1, and the composition is not counted as an independent direction.
+
+After X1/X2/X4 and the composition closed, X6 registers one data-coverage
+direction without changing the research problem. Independent FireDrop and
+BlockDrop probabilities increase from 0.3 to 0.5, changing the expected
+clean/fire/block/both mix from 49/21/21/9% to 25/25/25/25%. Model, focal loss,
+3000-step optimizer contract, effective batch, and evaluation remain matched.
+This is the campaign's single corruption-rate tuning contribution; probability
+0.5 is fixed by symmetry and will not be searched.
+Fixed T1/T5 X6 screens are `21214127/21214128`, using 10GB slices and pinned
+to implementation commit `b9c02f2`.
+
+T1 X6 completed at M00/M01/M06/M07 `.587003/.319053/.373156/.192450`.
+Every scenario improves over fresh continuation; primary delta is `+.005203`,
+block mean `+.002434`, and M00 `+.001937`. It passes the preregistered T1
+screen narrowly and remains eligible pending the unchanged T5 job `21214128`.
+
+T5 X6 completed at M00/M01/M06/M07 `.577951/.375596/.383052/.199280`.
+Raw primary is only `+.002426`; M00 falls `-.017601`, M06 falls `-.006658`,
+and block mean is `-.002060` versus fresh continuation. It therefore fails
+both the T5 signal threshold and clean guardrail. The positive M01 change does
+not justify a corruption-probability search or post-hoc specialist because its
+single-scenario routed primary would be only `+.003800` at T5. X6 is closed.
+
+Composition smoke jobs T1/T5 `21212079/21212081` completed successfully in
+25/49 seconds. They covered a real batch, backward pass and inference; initial
+maximum output deviations were `2.38e-7/4.77e-7`. Full seed-0 composition
+screens are `21212155/21212156` with the same 3000-step contract.
+
+Local-consistency jobs `21211876/21211877` remained pending for ten minutes
+with an estimated 04:17 start. Test-only probes of 10/20/40GB slices and
+75/90/180-minute limits all returned 04:28, so the original 20GB jobs were
+retained; changing resources would not start sooner.
+
+Those two jobs were subsequently cancelled before execution after an
+attribution audit found that they used corrupt-only supervision rather than
+D1's paired clean/corrupt supervised objective. Commit `a22c589` corrects the
+objective and adds the unchanged global-D1 control. Minimal paired-path smoke
+jobs are T1-global `21212258` and T5-local `21212272`; full jobs will use only
+the corrected snapshot after these pass. No result from the cancelled jobs is
+eligible evidence.
+
+Both corrected smoke jobs completed with exit `0:0`, exact initial output
+agreement, a real paired clean/corrupt backward step, and inference. Corrected
+seed-0 full jobs, all pinned to commit `92beb6c`, are global T1/T5
+`21212411/21212412` and localized T1/T5 `21212413/21212414`.
+
+T1 local consistency completed at M00/M01/M06/M07
+`.595788/.297506/.373543/.188356`. Against its unchanged global-D1 control,
+the deltas are `+.004449/+.003244/-.004912/-.005212`: primary `-.002294`
+and block mean `-.005062`. Localizing KL to the input hole therefore shifts
+performance in exactly the wrong spatial scenarios, supporting the hypothesis
+that future forecast impact need not coincide with the missing input support.
+X5 is rejected. T5-local `21212414` was cancelled at 50:31 while training;
+T5-global was retained because it is also X8's required attribution control.
+
+T5 global-D1 control `21212412` completed at M00/M01/M06/M07
+`.609360/.357955/.391061/.196798`. This is the frozen attribution reference
+for X8 at T5; its own change versus fresh ERM is not an X8 contribution.
+
+The registered `context_adapter` variant freezes the entire initial forecaster
+and trains only the zero-initialized context-transport layers. Because every
+transport residual is multiplied by the observed spatial-hole mask, this
+single checkpoint is exactly the original control whenever no spatial hole is
+present; it removes the two-checkpoint routing caveat and isolates the X1
+mechanism. It is an alternative implementation of X1, not an additional
+contribution. Its fixed recipe uses the same 3000 steps and optimizer settings.
+Its attribution control is the same frozen initial checkpoint evaluated by the
+cross-history runner with zero update steps; comparison to the fresh full-model
+continuation is a required total-system adoption check. The adapter can be
+attributed against frozen B3/B5, but it counts toward the goal only if it also
+has positive primary delta against the fresh 3000-step control in both T
+settings; a cheaper but weaker model does not satisfy the performance goal.
+Adapter smoke jobs T1/T5 `21212176/21212177` completed with exit `0:0` and
+exact initial output agreement. Peak allocation was only 0.51/0.86GB at batch
+16, so full seed-0 screens `21212420/21212421` use the minimum 10GB H100 slice
+at batch 64 and are pinned to commit `e906291`.
+After T5 adapter remained pending for over ten minutes with a 02:41 estimate,
+test-only 10/20GB and 2/3-hour probes all returned 02:59. The existing 10GB
+job was retained because it starts earlier and uses fewer resources.
+
+T1 adapter `21212420` completed at M00/M01/M06/M07
+`.558318/.276890/.362162/.189388`. It improves primary AP by `+.012151`
+and block AP by `+.018227` over the frozen B3 attribution control, with exact
+unchanged M00/M01 as designed. However, it is `-.013537` primary and
+`-.004593` block below the fresh 3000-step continuation; M00 is also
+`-.026747` lower. It therefore demonstrates that X1 itself learns useful
+spatial corrections, but fails the preregistered total-system adoption rule.
+T5 adapter `21212421` was cancelled at 19:14 to release its slice because no
+T5 result could rescue a method already ineligible on T1. X1 is closed.
+
+Frozen attribution reference T1 `21212205` completed with M00/M01/M06/M07 AP
+`.558318/.276890/.343010/.172086`. T5 reference `21212206` failed before a
+complete result because a DataLoader worker exceeded the requested 32GB host
+RAM; the traceback was a Slurm cgroup OOM, not a GPU or model error. Replacement
+`21212423` keeps the minimum 10GB GPU and increases only host RAM to the
+already-used 64GB, with zero training steps and a pinned source revision.
+The four T1 values match the source B3 `results-2021/summary.json` exactly at
+full stored precision, independently confirming that the new wrapper and AP
+path introduce no evaluation drift before adapter attribution.
+For scale, the T1 fresh control improves primary AP over frozen B3 by
+`.025688`; the adapter must recover that gap before it can count as a net
+performance contribution, regardless of its parameter efficiency.
+The archived B5 reference fixes the expected T5 values at
+M00/M01/M06/M07 `.557715/.288461/.336086/.158021`. Replacement `21212423`
+completed all four at a maximum absolute AP difference of `5.50e-7`, accepted
+as GPU numerical equivalence rather than requiring inappropriate bit identity.
+
+While GPU jobs run, `reproductions/cross_history/compare.py` provides the
+minimal downstream result path. It pairs summaries by history/seed/year,
+computes individual, primary, block, clean-guardrail and multi-run statistics,
+and can apply the declared spatial-specialist route. Its gates require explicit
+T1+T5 coverage: seed-0 2021 screening, seeds 0/1/2 2021 confirmation, and all
+four history/year cells on the fixed 2022/2023 tests. A single-history input
+can no longer be reported as a cross-history pass. It separately reports
+`magnitude_target_met` at mean primary delta >=.02; this is a campaign-level
+requirement for at least one direction, not a gate imposed on all three.
+`run.py --evaluate-only`
+already performs immutable 2022/2023 evaluation from a selected checkpoint.
+`submit_heldout.py` closes the remaining handoff without adding a workflow
+framework: it refuses to act unless a saved comparison reports
+`confirmation_pass=true`, accepts the selected training result directories,
+and emits the fixed 2022/2023 evaluate-only jobs. It is dry-run by default;
+`--submit` is the sole state-changing switch. This keeps heldout data out of
+selection while avoiding manual construction of 24 commands for a six-pair,
+three-seed confirmation set.
+
+X7 used two zero-initialized late residual experts selected by the observed
+corruption masks: one for global FireDrop evidence and one for a spatial data
+hole. A shared 3x3 decoder bottleneck receives decoder features plus both local
+masks, so each expert can adjust the full forecast while knowing where evidence
+was removed. Neither expert activates on a clean sample, and the untrained
+model is exactly the base forecast. This is distinct from X1 encoder transport,
+X3 fire-state marginalization, and loss/data-distribution candidates X5/X6.
+The same small module was implemented unchanged for both histories at
+`76cd083`; real-data one-batch T1/T5 smoke jobs `21214411/21214412` completed
+in 29/24 seconds with exact initial equivalence, successful backward and
+inference, and peak GPU allocation of 0.64/1.61GB. Before the formal screens
+produced evidence, an archive audit found that its 3x3 late residual, explicit
+reliability maps, whole-forecast correction and jointly trained base materially
+repeat archived D7-CRA; two heads instead of one and removal of CIWC are not an
+independent contribution. Formal T1/T5 jobs `21214506/21214507` were therefore
+cancelled at 21/0 seconds. X7 is retained only as an overlap-audit record.
+
+X8 revisits archived D5 counterfactual-impact weighted consistency because the
+current goal changes its relevant decision boundary. D5 had corrected T1
+primary delta `+.015468` over D1-ERM, driven by M01 `+.043494`, and stopped
+only because the old campaign required every candidate to reach `+.020`; it
+was never tested at T5. Unlike X5-local, which assumes forecast impact lies on
+the input invalidity support, X8 weights clean-to-corrupt Bernoulli KL by the
+detached absolute change in predicted probability at each future pixel and
+normalizes impact per sample. It adds no inference parameters. X8 must improve
+over the unchanged global-D1 consistency control, not merely ERM, in both
+histories to count as a new incremental objective. The exact fixed 0.1 recipe
+is ported in `35695ec`; T1/T5 real-batch smoke jobs are `21214598/21214599`.
+Both completed in 22/24 seconds with exact initial equivalence, one successful
+paired backward step and inference. Formal T1/T5 screens are
+`21214685/21214686`. T1 uses a 10GB slice; T5 uses 20GB because the same
+batch-64 paired path measured just over 10GB, preserving the matched physical
+batch rather than changing BatchNorm behavior to fit the smaller slice.
+
+T1 X8 completed at M00/M01/M06/M07 `.591929/.315978/.379551/.193669`.
+Against global-D1, all four deltas are nonnegative:
+`+.000590/+.021716/+.001096/+.000101`; primary is `+.007638` and block mean
+`+.000599`. The gain is concentrated in complete FireDrop, matching archived
+D5's diagnosis, while clean and block performance are preserved. X8 passes
+the T1 screen and remains eligible pending unchanged T5 job `21214686`.
+
+T5 X8 `21214686` completed all 3000 optimizer steps and wrote its 57MB final
+checkpoint, then the old job reached the 64GB host-memory cgroup limit during
+evaluation. This does not invalidate training. Evaluate-only recovery
+`21216721` loads that exact checkpoint, uses batch 16 on a 10GB slice, and
+does not repeat or change any optimizer step.
+
+Recovery completed at M00/M01/M06/M07 `.606770/.373352/.386005/.192072`.
+Against global-D1, raw primary is `+.001871`: M01 improves `+.015397`, while
+M06/M07 change `-.005056/-.004727` and M00 changes `-.002590`. This misses the
+raw T5 screen. However, archived D5 and the T1 result had already identified
+counterfactual-impact weighting as a complete-FireDrop specialist, and the
+FireDrop state is directly observable from the declared reliability mask.
+The single mechanism repair therefore freezes a two-checkpoint route: use X8
+only for M01 and global-D1 for M00/M06/M07. Its effective primary delta is
+`+.007239` at T1 and `+.005132` at T5, with exact zero clean/block changes;
+combined seed-0 mean is `+.006185`. Because this route was formalized after
+reading seed-0 T5, it is explicitly adaptive and cannot be called reliable
+until prospective seeds and held-out years pass unchanged.
+
+Fixed confirmation jobs, all pinned to route implementation commit `ea6c759`,
+are seed 1 T1 global/X8 `21217000/21217001`, T5 global/X8
+`21217002/21217003`; seed 2 equivalents are
+`21217004/21217005/21217006/21217007`. T1 uses 10GB slices and T5 uses 20GB;
+all retain physical batch 64, 3000 steps, and batch-16 evaluation.
+
+The prospective T1 seed-1 global/X8 M01 AP is `.308054/.319033`, and seed 2 is
+`.316577/.319691`. The fixed FireDrop route therefore improves primary AP by
+`+.003660` and `+.001038`, respectively, with exact routed M00/M06/M07 deltas
+of zero. Together with seed 0's `+.007239`, all three seeds are positive and
+their mean is `+.003979`. X8 passes T1 confirmation without changing its
+recipe. Both T5 prospective pairs remain required for the cross-history
+confirmation decision at this intermediate checkpoint.
+
+The completed T5 prospective pairs preserve the positive effect: the
+three-seed routed primary mean is `+.005834`. The authoritative six-pair
+comparison is
+`cross-history-analysis/x8-impact-fire-route-confirmation.json`; across all
+six runs its mean is `+.004906` (population standard deviation `.002429`),
+worst routed clean delta is exactly zero, and `confirmation_pass=true`.
+Consequently, the fixed 2022/2023 evaluation opened without changing any
+checkpoint or route. Twenty-four minimum-10GB evaluate-only jobs cover both
+methods, histories, three seeds, and two years: contiguous job range
+`21218965`--`21218988`. Their exact commands are recorded in
+`cross-history-analysis/x8-heldout-jobs.txt`. Heldout results remain unread
+until completion and are not used to alter this recipe.
+
+All 24 heldout jobs completed successfully. The final authoritative artifact
+is `cross-history-analysis/x8-impact-fire-route-final.json`. Three-seed primary
+deltas for T1 are `+.003979/+.004533/+.004699` in 2021/2022/2023; T5 deltas
+are `+.005834/+.003820/+.005231`. Every history/year cell is positive, routed
+M00 and block deltas are exactly zero, `confirmation_pass=true`,
+`heldout_pass=true`, and `goal_evidence_pass=true` against its frozen D1
+attribution control. The 18 matched rows have overall mean `+.004683` and
+population standard deviation `.004062`. X8 is therefore a reliable
+incremental objective effect. It does not meet the separate +.02 magnitude
+target and is not represented as doing so.
+
+A later completion audit additionally compared the actually routed X8 system
+against fresh ERM, using the already completed X8, global-D1, and ERM summaries
+for all 18 history/seed/year cells. T1 primary deltas are
+`+.003841/-.002114/+.002570` in 2021/2022/2023, while T5 deltas are
+`+.016981/+.015578/+.010831`. The T1 2022 regression makes
+`heldout_pass=false`, despite an overall mean `+.007948`. Thus X8 remains valid
+positive module-attribution evidence but is not by itself an adopted
+cross-history improvement toward the three-direction goal. Artifact:
+`cross-history-analysis/x8-impact-fire-route-vs-erm-final.json`.
+
+A stricter no-training deployment audit also removed global consistency from
+the non-FireDrop scenarios: X8 supplies only M01, while fresh ERM supplies
+M00/M06/M07. The three-seed primary deltas are T1
+`+.002870/-.001856/+.001999` and T5
+`+.011074/+.011713/+.007816` for 2021/2022/2023. Thus T1/2022 still regresses;
+the failure is intrinsic to the old X8 FireDrop checkpoint rather than merely
+its global-consistency fallback. This closes recomposition of old checkpoints
+and leaves X20's ERM-anchored training repair as the only active member of the
+impact-consistency family.
+
+X9 spatial-impact FiLM addresses the failure revealed by X5-local: the future
+forecast pixels affected by a missing input block need not lie inside that
+block. At the final decoder resolution, it pools feature context only over
+observed locations and combines it with the observed missing fraction. A
+zero-initialized 832-parameter MLP produces per-channel scale and bias that
+modulate the full decoder map only when a spatial hole exists. The initial
+function is exactly the base model; M00 and complete FireDrop bypass the module.
+Its declared evaluation is therefore the observable spatial route (candidate
+for M06/M07, fresh continuation for M00/M01). This differs from X1's residual
+transport inside encoder holes, D12's local fixed channel prompts, and archived
+D7's forecast-logit residual. Implementation is `a39fc53`; real-data T1/T5
+one-batch smoke jobs `21217053/21217054` completed in 22/26 seconds on 10GB
+slices. Both reported exact initial equivalence, a successful backward update,
+and inference; peak allocation was 0.61/1.58GB. Fixed seed-0 3000-step screens
+are T1/T5 `21217161/21217162`, using the same physical batch 64 and minimum
+10GB slices, pinned to `a39fc53`.
+
+X10 forecast-aware dynamic inpainting targets the part of M06/M07 that neither
+fire-map reconstruction nor decoder calibration models explicitly: the block
+also removes dynamic environmental fields. For every history day, a compact
+dilated CNN receives the corrupt typed input, its valid-region channel means,
+static local context, and the spatial mask. It predicts corrections only for
+the 18 T1 or 11 T5 retained dynamic non-fire channels and applies them only
+inside the missing block. Observed values, static variables, active-fire
+channels, M00, and complete-FireDrop inputs are unchanged by construction. The
+zero-initialized final layer makes the initial predictor exactly the base.
+There is no reconstruction coefficient: the downstream forecast loss decides
+which physically typed values are useful, avoiding an image-fidelity tuning
+branch.
+
+The bounded claim is forecast-aware restoration of missing environmental
+drivers, not novelty of masked reconstruction itself. Yang et al.'s
+[wildfire reconstruction pipeline](https://arxiv.org/abs/2603.09042) and its
+[official implementation](https://github.com/LS-Wireless/Robust-Wildfire-Forecasting)
+reconstruct fire maps before a separate forecaster and assume environmental
+fields remain observed. General masked spatiotemporal pretraining is covered by
+[STD-MAE](https://arxiv.org/abs/2312.00516), while
+[DIS2](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html)
+compensates missing remote-sensing modalities in latent space. X10 differs in
+the acted-on object (typed wildfire drivers), its observation-clamped input
+correction, and direct forecast supervision. A reviewer-style pre-run audit is
+`Accept with Revisions, pending the validation experiment`: the main risk is
+incremental novelty, defended only if the same fixed module improves routed
+M06/M07 performance in both T settings. Its implementation is intentionally
+small (33,202 T1 / 28,939 T5 parameters); the decisive experiment is the same
+seed-0 spatial-route screen used for X9, followed by unchanged confirmation
+and heldout gates rather than an imputation benchmark or coefficient sweep.
+Implementation commit is `52cf5b8`; T1/T5 real-data one-step smoke jobs are
+`21217300/21217301` on minimum 10GB slices. Formal seed-0 screens
+`21217349/21217350` have strict `afterok` dependencies on those smokes, so a
+broken path cannot consume a training allocation. T1 requests 10GB; T5 uses a
+20GB slice because applying the input correction across five frames increases
+activation memory, while retaining the frozen physical batch 64.
+Both smokes completed in 21/26 seconds with exact initial equivalence,
+successful backward/inference, and peak allocations of 0.84/2.79GB. Their
+dependencies released both formal screens, which started without queue delay;
+the T5 training path currently peaks at 10.49GB, validating the 20GB request.
+
+X9 T1 completed at M00/M01/M06/M07
+`.589071/.312300/.371126/.187955`. Under its declared spatial route, only
+M06/M07 count and change by `+.000300/-.001957`; block mean is `-.000828` and
+primary is `-.000552` versus fresh control. The modulation mechanism is thus
+beaten by its matched baseline rather than merely missing a threshold. X9 is
+rejected, and its still-running T5 screen `21217162` was cancelled at 28:17
+because no second-history result could restore a direction that must improve
+both histories.
+
+X10 T1 completed at M00/M01/M06/M07
+`.593509/.309703/.383099/.199782`. The fixed spatial route uses the fresh
+control for M00/M01 and yields M06/M07 deltas `+.012274/+.009870`, block mean
+`+.011072`, and primary `+.007381`. It passes the T1 seed-0 screen with exact
+routed clean preservation. The unchanged T5 job `21217350` remains the only
+missing screen evidence before X10 can advance.
+
+T5 job `21217350` completed all 3000 steps, saved its 57MB checkpoint, and
+evaluated M00/M01/M06 before the 64GB host cgroup killed it during M07. The
+available AP values are `.599411/.361960/.397225`; training is valid but no
+screen decision is made without M07. Evaluate-only recovery `21219331` loads
+that exact checkpoint, uses the minimum 10GB GPU slice, batch 16, three workers,
+and 128GB host RAM. It changes no training state and resolves the sole blocking
+metric without repeating 3000 optimizer steps.
+
+Recovery completed at M00/M01/M06/M07
+`.599411/.361960/.397225/.206876`. Against fresh T5 control, the spatial-route
+M06/M07 deltas are `+.007515/+.010134`, block mean `+.008824`, and primary
+`+.005883`, with exact routed M00/M01 preservation. The seed-0 cross-history
+artifact `cross-history-analysis/x10-dynamic-inpaint-route-seed0.json` reports
+T1/T5 primary `+.007381/+.005883`, combined mean `+.006632`, and
+`screen_pass=true`.
+
+Prospective confirmation jobs use the identical source `52cf5b8`, batch 64,
+3000 steps, and seed values 1/2. T1 control/X10 are
+`21219734/21219735` and `21219739/21219740`; T5 pairs are
+`21219736/21219737` and `21219741/21219742`. T1 and T5 controls use minimum
+10GB slices. T5 X10 uses 20GB GPU and 128GB host memory, based solely on the
+observed training peak and post-training cgroup failure; no scientific setting
+changes.
+
+X11 is preregistered while the X10 confirmation jobs wait for allocation. It
+tests whether X10's missing-driver correction becomes more reliable when the
+latent correction is identifiable from the paired clean training input. X11
+uses exactly the X10 architecture and forecast loss, and adds a `0.002`-weight
+Smooth-L1 objective only on dynamic non-fire values inside the synthetically
+removed spatial block. Observed pixels, static fields, active-fire fields, and
+the inference graph are unchanged; M00/M01 still bypass the restoration by
+construction. The coefficient is fixed before any X11 result and is intended
+to keep reconstruction auxiliary to the roughly `0.003`--`0.007` forecast
+loss observed in X10 rather than start a tuning sweep. Attribution is X11
+versus matched X10; usefulness for the final system additionally requires a
+positive routed delta versus fresh control in both T settings. One T1 and one
+T5 one-step smoke will precede the seed-0 screens, with no broad test suite.
+T1/T5 smoke jobs `21220222/21220223` completed successfully with exact initial
+equivalence, backward update, checkpoint reload, and real-data inference. Their
+peak GPU allocations were `0.93/3.11GB`. Fixed seed-0 screens
+`21220298/21220299` use 10/20GB slices respectively, batch 64, and 3000 steps.
+T1 completed at M00/M01/M06/M07 `.589165/.295700/.374371/.193925`.
+Against matched X10, the spatial-route M06/M07 deltas are
+`-.008728/-.005857`, block mean `-.007293`, and primary `-.004862`.
+The auxiliary reconstruction constraint therefore harms the exact forecast
+metric it was intended to improve; X11 is rejected and T5 job `21220299` was
+cancelled at 25:46. The comparison artifact is
+`cross-history-analysis/x11-reconstruction-vs-x10-t1.json`.
+
+X12 targets the separate magnitude requirement through the dominant complete
+active-fire-history failure. It continues the same initial model for the same
+3000 steps using FireDrop on every corrupt branch, no BlockDrop, and X8's fixed
+counterfactual-impact consistency objective; evaluation routes the candidate
+only to observable M01. The recipe and `0.1` consistency coefficient are fixed
+before results. If and only if it passes both seed-0 history screens, a plain
+FireDrop-specialist continuation will isolate the consistency term from the
+specialization schedule before confirmation. This can count as at most one
+training-strategy contribution, not as architectural novelty.
+
+A pre-run idea audit rates this `Accept with Revisions, pending the validation
+experiment`: effectiveness and missingness robustness have high mechanism-based
+potential because retained R1 improved routed M01 substantially and X8 is
+positive across histories, while novelty is deliberately bounded. Modality
+dropout is established in missing-input learning, including
+[Lau et al.](https://arxiv.org/abs/1908.06683) and
+[Woo et al.](https://ojs.aaai.org/index.php/AAAI/article/view/25378); recent
+sequential modality dropout also combines dropout with optional reconstruction
+([Yang and Zhang](https://arxiv.org/abs/2608.10240)). Therefore X12 is justified
+as a cheap, falsifiable magnitude probe for this wildfire failure regime, not a
+general missing-modality method claim. Failure modes are saturation of M01 from
+the already robust B3 initialization and loss of useful mixed-corruption replay.
+T1/T5 smoke jobs `21220240/21220241` completed successfully with exact initial
+equivalence and peak GPU allocations `0.97/2.70GB`. Fixed seed-0 screens
+`21220300/21220301` use the same 10/20GB resource policy and 3000-step protocol.
+T1 completed at M00/M01/M06/M07 `.588671/.313079/.324425/.134607`.
+Under the declared FireDrop route only M01 counts: it improves `+.004767`, so
+primary improves just `+.001589`, far below both the `+.005` screen and the
+campaign `+.02` magnitude target. The already robust initialization is
+saturated rather than rescued by full specialization. X12 is rejected without
+the conditional plain-specialist ablation, and T5 job `21220301` was cancelled
+at 25:46. The comparison artifact is
+`cross-history-analysis/x12-fire-specialist-t1.json`.
+
+The already available seed-0 X8/X10 specialists were also composed against one
+common fresh control using `compose_routes.py`: X8 supplies M01, X10 supplies
+M06/M07, and control supplies M00. T1/T5 primary deltas are
+`+.009936/+.008935`, with cross-history mean `+.009436`. The authoritative
+artifact is `cross-history-analysis/x8-x10-route-seed0.json`. This is a useful
+final-system route but does not meet the `+.02` magnitude target and is not an
+independent contribution; it quantitatively rules out satisfying that target
+by merely adding the two current seed-0 gains.
+
+X10's prospective T1 seed-1 spatial-route primary delta is `+.000630`; seed 2
+is `-.004452`. Together with seed 0, the three-seed mean remains positive at
+`+.001186` (block mean `+.001780`). This satisfies the frozen mean-positive T1
+confirmation condition but exposes substantial seed variance. The partial
+artifact is `cross-history-analysis/x10-t1-confirmation-partial.json`; no
+cross-history confirmation decision is made until both T5 pairs complete.
+
+Both T5 pairs then completed. Seed-1/2 routed primary deltas are
+`+.002198/+.020875`; with seed 0, the T5 three-seed mean is `+.009652` and
+block mean is `+.014478`. The authoritative six-pair artifact
+`cross-history-analysis/x10-dynamic-inpaint-route-confirmation.json` reports
+overall primary `+.005419`, population standard deviation `.007892`, exact
+routed clean preservation, and `confirmation_pass=true`. The large variance is
+retained as a limitation rather than hidden by the mean. The frozen 2022/2023
+evaluation therefore opened: 24 evaluate-only jobs `21221885`--`21221908`
+cover controls/candidates, both histories, three seeds, and both years using
+minimum 10GB slices and source commit `52cf5b8`.
+All 24 jobs completed successfully. The final artifact
+`cross-history-analysis/x10-dynamic-inpaint-route-final.json` reports T1
+2022/2023 three-seed primary deltas `-.001356/-.000347`, so
+`heldout_pass=false` and X10 is not a reliable cross-history direction. T5
+remains positive at `+.004783/+.002139` on those years. Across all 18 rows the
+mean is `+.002676` with population standard deviation `.007657`; this supports
+a T5-specific observation but not the required T1/T5 generalization claim.
+
+The full X8(M01)+X10(M06/M07) route was also recomputed against one common
+fresh control in `cross-history-analysis/x8-x10-route-final.json`. Its T1
+2022 primary is `-.003212`, so the composition also has
+`heldout_pass=false`; overall mean `+.008279` does not meet `+.02`. This route
+is rejected as a final cross-history system and remains non-independent.
+
+X13 addresses a concrete limitation of X10 rather than adding another loss:
+X10's two convolutions cannot transport observed values to the centre of a
+25%/50% missing block. X13 uses parameter-free normalized spatial averaging at
+successively larger radii to propagate only observed dynamic non-fire fields
+into the hole, while clamping every observed value and leaving static and fire
+channels unchanged. M00/M01 bypass it exactly. The first decisive experiment
+loads the existing seed-0 fresh-control checkpoints without training and routes
+X13 only to M06/M07. It advances only if primary gain is at least `+.005` in
+both histories; otherwise it is rejected before any continuation.
+
+The pre-run idea verdict is `Accept with Revisions, pending the validation
+experiment`. Its strengths are a direct large-hole mechanism, no trainable
+parameters, and identical T1/T5 behavior. Its novelty boundary is narrow:
+normalized/partial convolution and image inpainting are established, so the
+claim can only be observation-clamped propagation of typed wildfire drivers
+for robust forecasting. The main failure mode is distribution mismatch because
+the retained control was trained with zero-filled blocks rather than propagated
+values; the frozen-checkpoint screen measures that risk directly.
+T1/T5 real-data smoke jobs `21221083/21221084` completed in 22/25 seconds with
+successful backward, checkpoint reload, and inference; peak GPU allocations
+were only `0.62/1.73GB`. The transformation intentionally changes corrupted
+inputs, producing nonzero base-output differences `1.840/1.551`; M00/M01
+bypass is enforced by the zero spatial mask rather than global equivalence on
+the M06 smoke. Zero-training seed-0 evaluations `21221335/21221336` load the
+existing fresh-control checkpoints and use minimum 10GB slices.
+T1 completed at M00/M01/M06/M07 `.585066/.308313/.338536/.147805`; the
+spatial transformation strongly lowers both block metrics relative to control.
+The original T5 evaluation failed before model loading because it incorrectly
+referenced the evaluate-only recovery directory, which contains no checkpoint.
+Recovery `21221884` points to the actual seed-0 T5 training checkpoint; no
+optimizer or scientific setting changes.
+The exact spatial-route deltas are M06 `-.032289`, M07 `-.042107`, block mean
+`-.037198`, and primary `-.024799`. This is a large mechanism failure, not a
+near-threshold result: propagated smooth values are more harmful to the model
+than its trained zero-fill convention. X13 is rejected; recovery `21221884`
+was cancelled before allocation, and the quantitative artifact is
+`cross-history-analysis/x13-normalized-inpaint-t1.json`.
+
+X14 is the fixed magnitude-target probe after complete FireDrop specialization
+saturated. It continues the same B3/B5 initialization for 3000 steps with
+FireDrop probability `0`, BlockDrop probability `1`, the unchanged optimizer,
+batch, model, and forecast loss. The candidate is routed only to observable
+M06/M07; control supplies M00/M01. This is distinct from X6, which changed both
+corruption probabilities together from `.3` to `.5`, and from X10, which adds
+a restoration module under the original mixed sampling. It can count as at
+most one training-strategy contribution. The seed-0 gate remains routed
+primary `>=+.005` in both histories, while the separate `+.02` target is only
+reported if actually reached. Closest missing-modality work already establishes
+dropout training, so no architectural novelty is claimed. Failure modes are
+over-specialization to synthetic block geometry and saturation from the B3/B5
+mixed-corruption initialization.
+T1/T5 smoke replacements `21222278/21222279` completed successfully with exact
+initial equivalence and peak GPU allocations `0.58/1.55GB`. Formal seed-0 jobs
+`21222548/21222549` use batch 64 and 3000 steps on 10GB slices; T5 receives
+128GB host memory solely to avoid the already observed post-training evaluator
+cgroup failure.
+T1 completed at M00/M01/M06/M07 `.575114/.117167/.381522/.205614`.
+The raw non-block metrics confirm deliberate over-specialization and are not
+used outside the observable route. Against fresh control, routed M06/M07 gain
+`+.010697/+.015702`, block mean `+.013199`, and primary `+.008800`; M00/M01
+are exactly preserved by control. X14 passes the T1 seed-0 gate pending the
+unchanged T5 result. Artifact:
+`cross-history-analysis/x14-block-specialist-t1.json`.
+T5 completed at M00/M01/M06/M07 `.596387/.079035/.394624/.214166`.
+Under the spatial route, M06/M07 improve `+.004914/+.017423`, block mean
+`+.011169`, and primary `+.007446`. The cross-history artifact
+`cross-history-analysis/x14-block-specialist-seed0.json` reports mean primary
+`+.008123` and `screen_pass=true`. Prospective seed-1/2 candidates are T1
+`21223825/21223827` and T5 `21223826/21223828`; they reuse already complete
+fresh controls with identical seeds rather than spend four redundant training
+allocations.
+The T1 seed-1/2 routed primary deltas are `+.004258/+.003344`; all three seeds
+are positive and their mean is `+.005467` (block mean `+.008200`). X14 passes
+T1 confirmation. Partial artifact:
+`cross-history-analysis/x14-t1-confirmation-partial.json`.
+The T5 seed-1/2 primary deltas are `+.012953/+.029655`; with seed 0, the T5
+three-seed mean is `+.016685` and block mean is `+.025027`. All six individual
+seed/history pairs are positive. The authoritative confirmation artifact
+`cross-history-analysis/x14-block-specialist-confirmation.json` reports
+overall primary `+.011076`, block mean `+.016614`, routed clean delta `0`, and
+`confirmation_pass=true`. Twelve evaluate-only held-out jobs
+`21224999`--`21225010` now evaluate only the six X14 checkpoints on 2022/2023;
+the corresponding ERM summaries already exist and no training is repeated.
+Commands are recorded in `cross-history-analysis/x14-heldout-jobs.txt`.
+All twelve jobs completed successfully. The final artifact
+`cross-history-analysis/x14-block-specialist-final.json` has
+`confirmation_pass=true`, `heldout_pass=true`, and `goal_evidence_pass=true`.
+T1 three-seed primary deltas for 2021/2022/2023 are
+`+.005467/+.001416/+.006792`; T5 deltas are
+`+.016685/+.011528/+.005485`. Every history/year cell is positive, routed M00
+and M01 are exactly the ERM control, and the 18-row overall primary/block means
+are `+.007895/+.011843`. X14 is the first adopted contribution from this
+campaign that improves fresh ERM under both histories and both held-out years.
+
+X15 targets cross-year block instability with an explicit geometry signal. For
+each spatial hole it computes normalized erosion depth (zero at observed cells,
+largest at pixels furthest from observable context) and injects a learned,
+zero-initialized channel token scaled by that depth at every nontrivial encoder
+resolution. It adds 1,024 parameters, activates only for M06/M07, and uses the
+same implementation in T1/T5. Unlike D12 SARP's pooled local coverage and hard
+global severity switch, X15 represents continuous interior depth; unlike X1 it
+does not transport feature content. The matched control, optimizer, corruption
+schedule, 3000 steps, and spatial route remain unchanged. The fixed seed-0 gate
+is primary `>=+.005` in each history. This is an incremental reliability-prompt
+module whose novelty and usefulness both depend on the matched ablation; likely
+failure modes are redundancy with convolutional mask boundaries and insufficient
+information to correct a missing field without its values.
+T1/T5 smoke jobs `21222667/21222668` completed successfully with exact initial
+equivalence, backward/checkpoint/inference coverage, and peak GPU allocations
+`0.59/1.55GB`. Formal seed-0 screens `21222911/21222912` use batch 64, 3000
+steps, minimum 10GB slices, and 64/128GB host memory for T1/T5 respectively.
+T1 completed at M00/M01/M06/M07 `.580461/.294675/.365261/.189261`.
+Against fresh control, the spatial-route M06/M07 deltas are
+`-.005565/-.000651`, block mean `-.003108`, and primary `-.002072`. Continuous
+hole depth does not supply enough missing content and degrades the matched
+forecast, so X15 is rejected. T5 `21222912` was cancelled at 20:51; artifact:
+`cross-history-analysis/x15-distance-prompt-t1.json`.
+
+X16 is the mechanism-driven interaction between the two strongest block
+hypotheses, not a new unrelated branch. It trains X10's forecast-aware dynamic
+restoration under X14's block-only schedule (`fire=0`, `block=1`) for the same
+3000 steps. X10's mixed schedule produced positive 2021 confirmation but lost
+small amounts on T1 2022/2023; the falsifiable hypothesis is that every update
+must expose a spatial hole for the restoration module to learn stable typed
+corrections. X14 is the matched attribution control for the module; fresh
+control measures total adoption value. X16 can count as an independent module
+contribution only if it improves over X14 as well as fresh control in both
+histories. Otherwise it is merely a joint recipe or another rejection. The
+spatial route and all existing gates remain frozen.
+T1/T5 smoke jobs `21223439/21223440` completed successfully with exact initial
+equivalence and peak GPU allocations `0.84/2.79GB`. Formal seed-0 screens
+`21223829/21223830` use 10/20GB slices, batch 64, and 3000 steps.
+T1 completed at M00/M01/M06/M07 `.583476/.062043/.383286/.202494`.
+Against fresh control its spatial-route primary is `+.008348`, but the decisive
+module attribution against matched X14 is `-.000452` (block mean `-.000678`):
+M06 gains `+.001764` while M07 loses `-.003120`. The restoration module does
+not add value under the specialist schedule, so X16 is rejected and T5
+`21223830` was cancelled at 22:59. Artifacts:
+`cross-history-analysis/x16-vs-control-t1.json` and
+`cross-history-analysis/x16-vs-x14-t1.json`.
+
+X17 tests whether X14's remaining error comes from forcing one specialist to
+fit two visibly different corruption severities. It trains two otherwise
+identical BlockDrop-only continuations: one always receives 25% blocks and the
+other always receives 50% blocks. At evaluation, the observed missing fraction
+selects the 25% expert for M06 and the 50% expert for M07; the fresh control
+still supplies M00/M01. This differs from archived P03, which routes a single
+mixed-severity expert only inside missing pixels, and from D12, which switches
+prompt depth inside one model. Because X17 only factorizes X14's training
+distribution, it may strengthen or supersede X14 but cannot be counted as a
+separate independent contribution. The seed-0 adoption gate is unchanged:
+routed primary gain `>=+.005` against fresh control in both T=1 and T=5. Its
+mechanism gate additionally requires positive block-mean gain over X14 in both
+histories. Only then are seeds 1/2 run. Fixed-severity support and the offline
+composer are implemented before observing any X17 result; no training is run
+on the login node. Real-data T1-25%/T5-50% smoke jobs `21224594/21224595`
+completed in 22/29 seconds with exit `0:0`. The four seed-0 screens are T1
+25%/50% `21224659/21224660` and T5 25%/50% `21224661/21224662`, all on the
+minimum 10GB slice; T5 uses 128GB host memory only for the evaluator.
+The completed T1 severity route uses fixed-25% M06 and fixed-50% M07. Relative
+to fresh ERM it improves M06/M07 by `+.019091/+.014924`, block mean by
+`+.017008`, and primary by `+.011338`. Relative to mixed-severity X14 it gains
+`+.008394` on M06 and loses `-.000778` on M07, for positive block-mean module
+attribution `+.003808`. X17 therefore passes its T1 mechanism and adoption
+checks, pending the unchanged T5 pair. Partial artifact:
+`cross-history-analysis/x17-severity-factorized-t1-partial.json`.
+The completed T5 severity route improves fresh ERM M06/M07 by
+`+.011317/+.019933`, block mean by `+.015625`, and primary by `+.010416`.
+It also improves mixed X14 by `+.006403/+.002510`, giving positive block-mean
+module attribution `+.004456`. The two-history artifact
+`cross-history-analysis/x17-severity-factorized-seed0.json` reports mean
+primary `+.010877`, `screen_pass=true`, and `mechanism_screen_pass=true`.
+Prospective confirmation trains both fixed-severity experts for seeds 1/2:
+T1/T5 fixed-25% jobs `21225830/21225831` and fixed-50% jobs
+`21225832/21225833` for seed 1; seed-2 equivalents are
+`21225834/21225835` and `21225836/21225837`. Existing ERM and X14 checkpoints
+remain the two controls, so no redundant control training is submitted.
+After the four T1 10GB requests waited more than 18 minutes with start
+estimates 42--100 minutes away, Slurm test-only probes placed equivalent 20GB
+requests immediately. The unstarted T1 jobs were therefore replaced, within
+the 2x resource rule, by fixed-25/fixed-50 seed-1 `21226523/21226524` and
+seed-2 `21226525/21226526`. The already running T5 jobs are unchanged.
+All four replacements completed successfully. Across seeds 0/1/2, the T1
+severity route improves fresh ERM primary by
+`+.011338/+.007649/+.003189` and block mean by
+`+.017008/+.011473/+.004783`. The three-seed means are `+.007392` primary
+and `+.011088` block. Relative to matched mixed-severity X14, block deltas are
+`+.003808/+.005086/-.000232`, for a positive three-seed mechanism mean
+`+.002887`. The frozen rule aggregates the predetermined seeds rather than
+requiring every seed to be positive, so X17 passes T1 confirmation. Artifact:
+`cross-history-analysis/x17-severity-factorized-t1-confirmation-partial.json`.
+
+All four T5 confirmation jobs completed successfully. Across seeds 0/1/2,
+the fixed-severity route improves fresh ERM primary by a three-seed mean of
+`+.017792` and block mean of `+.026688`. Relative to matched mixed-severity
+X14, the T5 block-mean attribution is `+.001662`. Together with T1, the
+six-run overall primary/block means versus ERM are `+.012592/+.018888`;
+`confirmation_pass=true` and `mechanism_confirmation_pass=true` in
+`cross-history-analysis/x17-severity-factorized-confirmation.json`. Fixed
+2022/2023 evaluation now covers all twelve expert checkpoints in 24 minimum
+10GB evaluate-only jobs `21228523`--`21228546`. No training is repeated and
+the held-out results will not change the recipe.
+The original explicit-partition requests later developed next-day start
+estimates. Jobs `21228523`--`21228529` had already completed and remain the
+authoritative seven results. Only the 17 unstarted jobs
+`21228530`--`21228546` were cancelled; equivalent partition-unconstrained
+10GB replacements are `21237312`--`21237328`. A same-resource test-only probe
+was immediately placeable. Every replacement points to the same checkpoint,
+seed, block fraction and year, so this is scheduling repair only.
+After a further >20-minute wait, 20GB/15-minute probes became immediately
+placeable while the 10GB jobs had no start time. The 17 still-unstarted first
+replacements were therefore exchanged, within the 2x rule, for
+`21238415`--`21238431`. The seven completed 10GB results remain unchanged.
+
+All 24 held-out evaluations completed. Against fresh ERM, X17 remains positive
+in every history/year cell: T1 primary is
+`+.007392/+.002622/+.006359` and T5 is
+`+.017792/+.010929/+.004409` for 2021/22/23. The 18-row primary/block means
+are `+.008250/+.012376`, with exact routed clean preservation and
+`heldout_pass=true`. However, the required closest-control attribution against
+X14 fails on T1/2023 (`-.000649` block), T5/2022 (`-.000898`) and T5/2023
+(`-.001614`). Therefore `mechanism_heldout_pass=false` and X17 is retained as
+a secondary system/training-factorization result, not an independent adopted
+contribution. Artifact: `cross-history-analysis/x17-severity-factorized-final.json`.
+
+An evidence-reuse audit tested whether the unchanged global clean--corrupt
+consistency control could itself be promoted against ordinary ERM. This uses
+only already completed, seed-matched X8-control and X10-control summaries; it
+adds no training and does not select a new recipe on test years. T=5 is
+consistently positive, with three-seed primary deltas
+`+.011147/+.011758/+.005600` in 2021/2022/2023. T=1 changes are
+`-.000138/-.006647/-.002129`, however, so both confirmation and held-out gates
+fail. The overall 18-row mean is `+.003265`. Global consistency alone is
+therefore a T=5-specific observation, not a second reliable cross-history
+direction. Artifact:
+`cross-history-analysis/global-consistency-vs-erm-final.json`.
+
+X18 is the architectural follow-up to X1 and the attribution follow-up to X14.
+It trains X1's zero-initialized multi-scale latent context transport under the
+otherwise unchanged X14 BlockDrop-only schedule. X1's mixed-corruption screen
+had a routed `+.005954` T=1 primary gain but only `+.000874` at T=5, while X14
+shows that persistent block supervision transfers across both histories. The
+falsifiable hypothesis is therefore that the transport module lacked enough
+block-active updates, rather than that latent context is intrinsically useless
+for T=5. X18 is an independent module only if its routed block mean is positive
+against X14 in both histories; adoption also requires the ordinary `+.005`
+seed-0 primary gate against fresh ERM in both. A failure against X14 ends the
+module with no coefficient or architecture sweep. This remains the same
+forecast, corruption scenarios, initialization, optimizer, and 3000-step
+budget; it does not add a reconstruction task or consume held-out years.
+T1/T5 smoke jobs `21224666/21224667` completed in 24/26 seconds with exit
+`0:0`, exact initial equivalence (`0.0`), successful backward/inference, and
+peak GPU allocation `0.70/1.66GB`. Dependency-gated formal seed-0 screens
+`21224668/21224669` then started automatically, so the smoke gate consumed no
+manual wait and a failed path could not have consumed a training allocation.
+T1 completed at M00/M01/M06/M07 `.581210/.106990/.391443/.208909`. Under the
+observable spatial route, it improves fresh ERM M06/M07 by
+`+.020617/+.018997`, block mean by `+.019807`, and primary by `+.013205`.
+Against matched X14, the module still improves M06/M07 by
+`+.009920/+.003295`, block mean by `+.006608`, and primary by `+.004405`.
+Thus X18 passes both T1 adoption and module-attribution checks; no decision is
+made until the unchanged T5 screen completes. Artifacts:
+`cross-history-analysis/x18-vs-erm-t1.json` and
+`cross-history-analysis/x18-vs-x14-t1.json`.
+T5 completed at M00/M01/M06/M07 `.597367/.077257/.394835/.211189`. Its spatial
+route remains useful relative to ERM, improving M06/M07 by
+`+.005125/+.014447`, block mean by `+.009786`, and primary by `+.006524`.
+The decisive module attribution against X14 is negative, however: M06 changes
+`+.000211`, M07 `-.002976`, block mean `-.001383`, and primary `-.000922`.
+Block-only supervision does not make latent context transport add value beyond
+plain specialization in T=5. X18 is therefore rejected without seeds 1/2;
+its T1 gain remains a history-specific observation. Artifacts:
+`cross-history-analysis/x18-vs-erm-t5.json` and
+`cross-history-analysis/x18-vs-x14-t5.json`.
+
+X19 tests whether X17's measured benefit from severity factorization can be
+captured inside one shared predictor rather than two full checkpoints. At each
+nontrivial encoder scale, a small shared bottleneck reads the current feature
+and downsampled spatial-invalidity mask; observed missing fraction selects a
+separate zero-initialized mild (`<=.375`) or severe (`>.375`) residual head.
+The correction is applied only inside an observed hole, so M00/M01 bypass it.
+Training otherwise exactly matches X14's BlockDrop-only schedule and 3000-step
+contract. The closest-work audit found dynamic modality experts in
+[SimMLM](https://openaccess.thecvf.com/content/ICCV2025/html/Li_SimMLM_A_Simple_Framework_for_Multi-modal_Learning_with_Missing_Modality_ICCV_2025_paper.html),
+dynamic adapters in
+[Synergistic Prompting](https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_Synergistic_Prompting_for_Robust_Visual_Recognition_with_Missing_Modalities_ICCV_2025_paper.html),
+and multi-resolution compensation in
+[DIS2](https://openaccess.thecvf.com/content/WACV2026W/CV4EO/html/Kieu_DIS2_Disentanglement_Meets_Distillation_with_Classwise_Attention_for_Robust_Remote_WACVW_2026_paper.html).
+Therefore X19 does not claim any of those general mechanisms as new;
+its bounded candidate contribution is within-modality spatial-severity routing
+of content-dependent latent corrections for wildfire forecasting.
+
+The pre-run idea verdict is `Accept with Revisions, pending the validation
+experiment`. X17 supplies quantitative mechanism support: splitting full
+experts improves X14 block mean by `+.003808/+.004456` in T1/T5 seed 0.
+The main fatal-flaw risk is crowded prior art, defended only by the narrow
+object/granularity claim and direct controls. X19 advances only if it improves
+X14 block mean in both histories and retains routed primary `>=+.005` versus
+fresh ERM; X17 is reported as the two-model upper bound, not an attribution
+baseline that a compact model must beat. A failure ends the adapter without a
+width, depth, or threshold sweep. Compute/data/engineering risk is low because
+the existing paired tensors, reliability masks, runner, and Nibi slices are
+reused; novelty and effectiveness remain the decisive risks.
+T1/T5 real-data smoke jobs are `21225918/21225919`; dependency-gated seed-0
+screens are `21225920/21225921`. All request the minimum 10GB GPU slice, while
+T5 uses 128GB host memory only on the formal job for post-training evaluation.
+Those 10GB smoke requests subsequently waited more than 15 minutes with
+estimated starts 88--100 minutes away. An equivalent 20GB test-only probe was
+placeable immediately, so all four unstarted jobs were replaced within the 2x
+rule: smoke `21226527/21226528`, dependency-gated seed-0
+`21226529/21226530`. The implementation and recipe remain pinned to `8f4a052`.
+Both replacement smoke jobs completed in 23/26 seconds with exit `0:0`, exact
+initial equivalence (`0.0`), successful backward/inference, and peak GPU
+allocation 0.63/1.59GB. The dependency-gated T1/T5 seed-0 screens then started.
+T1 seed 0 completed. Under the spatial route, X19 improves fresh ERM by
+`+.019301/+.017277` on M06/M07, block mean `+.018289`, and primary
+`+.012193`. Against the matched X14 specialist it changes M06/M07 by
+`+.008605/+.001575`, hence block mean `+.005090` (routed primary `+.003393`).
+This passes X19's T1 total-effect and module-attribution checks. T5 remains the
+unchanged cross-history decision; no confirmation jobs are opened early.
+Artifacts: `cross-history-analysis/x19-vs-erm-t1-partial.json` and
+`cross-history-analysis/x19-vs-x14-t1-partial.json`.
+T5 then completed and also passes: relative to fresh ERM, M06/M07 improve
+`+.011853/+.018618`, block mean `+.015235`, and primary `+.010157`; relative
+to X14, block mean improves `+.004067`. Across the two histories, the adapter
+has seed-0 primary `+.011175` versus ERM and block attribution `+.004578`
+versus X14. Prospective seed-1/2 confirmation jobs are T1/T5
+`21237298/21237299` and `21237302/21237303`. They use the same fixed module,
+BlockDrop-only schedule, 3000 steps and minimum 10GB slices. Artifacts:
+`cross-history-analysis/x19-vs-erm-seed0.json` and
+`cross-history-analysis/x19-vs-x14-seed0.json`.
+Those 10GB confirmations remained pending beyond ten minutes; matched 20GB
+probes were immediately placeable. The unstarted jobs were replaced by
+seed-1 T1/T5 `21238399/21238400` and seed-2 `21238403/21238404`, changing no
+scientific setting.
+The next scheduled check assigned those 20GB jobs next-day start estimates.
+Because they block confirmation and held-out evaluation, the larger-resource
+exception applies: 40GB replacements are seed-1 T1/T5
+`21241396/21241397` and seed-2 `21241400/21241401`, with an estimated
+same-day `15:25` start from the pre-submission probe.
+Those requests later moved to next-day estimates. Because X19 confirmation
+blocks both attribution and held-out testing, the final queue repair uses full
+H100 jobs: seed-1 T1/T5 `21244235/21244236` and seed-2
+`21244241/21244242`. The larger slice changes no model or batch setting.
+They were initially covered by blocking full-node bundle `21244500`; after
+X23 failed, that unstarted mixed bundle was cancelled. The four remaining T5
+confirmations were additionally covered by four-GPU bundle `21256397`,
+which had an earlier pre-submission placement than either a new full-node job
+or the individual estimates. The originals remain authoritative if already
+active when this bundle starts. After that bundle waited beyond 30 minutes and
+its estimate slipped to `00:50`, an identical same-resource probe was
+immediately placeable. The unstarted bundle was replaced by `21257460`; this
+was queue repair only and changed no experiment setting. Before the replacement
+started, all four authoritative individual T5 jobs began together at `22:42`.
+The still-pending replacement bundle was cancelled to prevent duplicate work;
+the individual jobs continue unchanged.
+Seed-1 T1 `21244235` subsequently completed. It improves routed primary AP
+over fresh ERM by `+.005968` and block AP over X14 by `+.002566`; both direct
+controls remain positive. Seed-2 `21244241` is also positive: primary
+`+.005156` over ERM and block `+.002719` over X14. The complete T1 three-seed
+means are primary `+.007772` over ERM and block attribution `+.003458` over
+X14, with every seed positive for both comparisons. This remains explicitly
+partial until T5 confirmation finishes.
+Artifacts: `cross-history-analysis/x19-vs-erm-t1-confirmation-partial.json`
+and `cross-history-analysis/x19-vs-x14-t1-confirmation-partial.json`.
+All T5 confirmation runs then completed. Against fresh ERM, X19 remains
+positive at primary `+.015795` for T5 and `+.011784` across all six
+history/seed rows. The closest-control result is decisive: versus X14, T5
+block mean is `-.001335` (primary `-.000890`), despite T1 block
+`+.003458`. X19 therefore fails independent module attribution and stops
+without held-out evaluation. Its cross-T ERM total effect is retained in the
+secondary ledger, not counted as a main contribution. Final confirmation
+artifacts: `cross-history-analysis/x19-vs-erm-confirmation.json` and
+`cross-history-analysis/x19-vs-x14-confirmation.json`.
+
+X20 is the loss-side follow-up to X8's completion audit. X8 established that
+counterfactual-impact weighting itself transfers across T=1/T=5 relative to
+the unchanged global-consistency control, but its paired clean/corrupt
+supervised objective made the final routed system regress against fresh ERM
+on T=1/2022. X20 therefore leaves ERM's corrupt-sample supervised loss and
+sampling distribution unchanged. A clean inference-mode view supplies only a
+detached online teacher; the same fixed 0.1 impact-weighted Bernoulli KL is
+added on the corrupt prediction. Running-stat updates also remain confined to
+the ERM branch. The method has no inference-time parameters or routing.
+
+This is one bounded repair, not a hyperparameter search. Seed 0 advances only
+if primary AP improves by at least `+.005` over fresh ERM in both histories,
+with M00 no worse than `-.010`; otherwise the loss direction stops. If it
+passes, seeds 1/2 and fixed 2022/2023 evaluation use the same recipe. X20 and
+X8 are one impact-consistency contribution family and cannot be counted as
+two independent innovations.
+The implementation is frozen at `74b3dbd`. T1/T5 real-data smoke jobs are
+`21226332/21226333`; dependency-gated seed-0 screens are
+`21226334/21226335`. The scheduler rejected an explicitly combined partition
+request for the 20GB profile, so the successful submissions leave partition
+selection to Nibi; Slurm resolved them to `gpubase_bygpu_b1,gpubackfill`.
+The 20GB profile is exactly twice the minimum 10GB slice and was selected only
+after the older 10GB smoke jobs showed estimated waits well beyond ten minutes.
+Both smoke jobs completed in 26 seconds with exit `0:0`, exact initial
+equivalence (`0.0`), successful backward/inference, and peak GPU allocation
+of 0.63/1.75GB. Both formal screens then started after about four minutes.
+T1 completed with deltas versus fresh ERM of M00/M01/M06/M07
+`-.006519/+.009667/-.009673/-.011027`: primary `-.003678` and block mean
+`-.010350`. This fails the raw two-history gate. Although FireDrop improves,
+the preregistered rule forbids scenario routing from rescuing a failed X20,
+and the old X8 family already showed held-out FireDrop instability. T5 job
+`21226335` was cancelled at 33:48 to release its slice; there is no coefficient
+or teacher variant sweep. Artifact:
+`cross-history-analysis/x20-erm-impact-t1-partial.json`.
+
+X21 was considered while those jobs waited: a type-separated affine
+calibration of the first convolution driven by local valid-pixel coverage.
+The fatal-flaw audit rejected it before implementation. Partial-convolution
+padding already reweights convolution outputs by valid coverage
+([Liu et al., 2018](https://arxiv.org/abs/1811.11718)); gated convolution makes
+the spatial/channel selection learnable
+([Yu et al., 2019](https://arxiv.org/abs/1806.03589)); and MADF generates
+location-specific filters from the mask and pairs them with point-wise affine
+normalization
+([Zhu et al., 2021](https://arxiv.org/abs/2104.13743)). Within this repository,
+D4/D12 already test local reliability tokens. Separating FireDrop from
+BlockDrop changes the application granularity but not the core mechanism, so
+the novelty defect is critical for an independent contribution. No code or
+Slurm job was created.
+
+X22 is the campaign's sole optimizer/tuning contribution. A post-hoc read of
+the logged 100-step snapshots does not support blindly extending training:
+mean sampled T1 loss over steps 2100--3000 is `.005259`, but T5 is `.006373`
+versus `.005755` over steps 1100--2000. X22 therefore retains AdamW, initial
+learning rate `.001`, batch 64, corruption distribution, initialization, and
+3000 updates, while applying one standard cosine decay to zero. It adds no
+model parameter and is explicitly a training-recipe result, not a novel
+method. The fixed gate is primary AP `>=+.005` versus constant-LR ERM in each
+history with M00 `>=-.010`; one seed-0 pair decides whether it advances, with
+no alternative schedule, endpoint, warmup, or longer-budget sweep. The code is
+frozen at `735700e`. At the scheduled queue check, 10GB and 20GB test-only
+probes had the same immediate start estimate, so the minimum 10GB profile was
+selected. T1/T5 smoke jobs are `21227409/21227410`; dependency-gated seed-0
+screens are `21227412/21227413`. T5 alone requests 128GB host memory for the
+known evaluation footprint.
+The T1 10GB formal request subsequently remained pending for more than
+30 minutes with a `10:51` start estimate. A same-command 20GB probe estimated
+`10:09`, so the unstarted `21227412` was cancelled and replaced within the
+2x rule by `21228612`. The source commit, seed, optimizer, batch, steps, host
+memory, and time limit are unchanged; only its GPU slice is larger.
+Both seed-0 screens completed. Cosine ERM changes T1 M00/M01/M06/M07 by
+`+.008629/+.015710/+.007911/+.008139`, giving primary `+.010587`; T5 changes
+the same metrics by `+.007122/+.012459/+.004672/+.007601`, giving primary
+`+.008244`. The two-history mean primary is `+.009415`, with all four raw
+scenario deltas positive and `screen_pass=true` in
+`cross-history-analysis/x22-cosine-erm-seed0.json`. Prospective seed-1/2 jobs
+are T1/T5 `21237300/21237301` and `21237304/21237305`; no schedule variant or
+longer run is opened.
+After the same >10-minute queue diagnosis, their 20GB replacements are
+seed-1 T1/T5 `21238401/21238402` and seed-2 `21238405/21238406`.
+At the next 30-minute check these too were estimated for the following day.
+Blocking-task 40GB replacements are seed-1 T1/T5 `21241398/21241399` and
+seed-2 `21241402/21241403`; all optimizer and data settings are unchanged.
+When those also moved to next-day estimates, the final blocking-task repair
+used full-H100 jobs: seed-1 T1/T5 `21244237/21244239` and seed-2
+`21244243/21244244`. The unstarted full-node bundle was cancelled after X23
+failed its closest-control gate. Four-GPU T5-only bundle `21257460`
+temporarily covered the remaining X19/X22 confirmations after unstarted
+`21256397` was replaced on same-resource queue evidence; each experiment
+occupies exactly one H100 lane and no scientific setting changes. It was
+subsequently cancelled unstarted when all four originals began together;
+`21244236/21244239/21244242/21244244` are the authoritative runs.
+Seed-1 T1 `21244237` then completed with positive deltas in all four scenarios:
+M00/M01/M06/M07 `+.001561/+.004959/+.007189/+.006288`, primary
+`+.006145`. Seed-2 `21244243` has primary `+.001373`; its M06 delta is
+`-.002397`, while M00/M01/M07 remain positive. Across all three T1 seeds,
+primary remains positive at `+.006035`, block at `+.004562`, and clean at
+`+.003650`. The registered confirmation gate is based on the matched seed
+mean, not every individual scenario/seed, but no confirmation claim is made
+before T5 finishes. Artifact:
+`cross-history-analysis/x22-t1-confirmation-partial.json`.
+All T5 runs completed successfully. The T5 three-seed primary gain is
+`+.021346`, block `+.016465`, and clean `+.011191`; together with positive T1,
+the full confirmation passes. Across all six rows, primary is `+.013690` and
+block `+.010513`. Fixed 2022/2023 evaluation jobs `21261913`--`21261924` were
+submitted only after this confirmation, using the minimum 10GB slice selected
+by matched queue probes. Artifact:
+`cross-history-analysis/x22-cosine-erm-confirmation.json`.
+All six T1 fixed-year jobs completed. The three-seed primary gains are
+`+.008133` for 2022 and `+.003442` for 2023, with clean deltas
+`+.006774/+.005687`; both T1 held-out cells pass. The 2023 block-only mean is
+slightly negative at `-.000461`, but the frozen primary criterion remains
+positive. T5 is still required before final adoption. Partial artifact:
+`cross-history-analysis/x22-cosine-erm-t1-heldout.json`.
+
+All six T5 fixed-year jobs also completed. T5 primary gains are `+.019504`
+for 2022 and `+.013596` for 2023, with block gains `+.015396/+.007697` and
+clean gains `+.005676/+.009993`. Combined with the registered 2021 results,
+all six history/year primary cells are positive: T1
+`+.006035/+.008133/+.003442` and T5 `+.021346/+.019504/+.013596` for
+2021/22/23. Across all 18 matched rows, primary is `+.012009` and block is
+`+.008427`; `confirmation_pass=true`, `heldout_pass=true`, and
+`goal_evidence_pass=true`. X22 is therefore the second adopted reliable
+direction, explicitly categorized as the campaign's sole optimizer/tuning
+contribution rather than a new architectural module. The complete artifact is
+`cross-history-analysis/x22-cosine-erm-final.json`. One individual-row clean
+delta is `-.011242`, but every registered history/year three-seed clean mean
+is positive; the frozen gate is defined on those grouped means.
+
+`compose_complete_routes.py` prepares the final system audit without opening
+another model direction. For each matched history/seed/year row it takes M00
+from fresh ERM, M01 from a separately validated FireDrop component, M06 from
+the fixed-25% X17 expert, and M07 from the fixed-50% X17 expert. It reports the
+same confirmation, held-out, and mean-primary `+.020` checks as the other
+comparators. This system-level artifact cannot establish component novelty or
+attribution; each component must first pass its own frozen closest-control
+gate. In particular, X20 is eligible for this composition only if its raw
+two-history gate passes, so scenario routing cannot rescue a failed X20.
+
+A diagnostic confirmation composition uses X8 for M01 and X17 for M06/M07,
+with fresh ERM for M00. It improves primary AP by `+.010261` at T=1 and
+`+.028866` at T=5 over three seeds; the six-row mean is `+.019564`, narrowly
+below the frozen `+.020` magnitude target by `.000436`. The artifact
+`cross-history-analysis/x8-x17-complete-route-confirmation.json` has
+`confirmation_pass=true` but is not final evidence: X8 remains only
+attribution-valid on its own, and the complete route still requires the fixed
+X17 2022/2023 evaluations. This audit indicates that the remaining magnitude
+gap is primarily the FireDrop component rather than block robustness.
+
+The completed fixed-year composition is positive in all six history/year
+cells: T1 `+.010261/+.000766/+.008358` and T5
+`+.028866/+.022642/+.012224` for 2021/22/23. Its 18-row mean primary is
+`+.013853`, so `heldout_pass=true` but the `+.020` magnitude target is not met.
+This remains a secondary system result because it composes X8 and X17 rather
+than isolating another mechanism. Artifact:
+`cross-history-analysis/x8-x17-complete-route-final.json`.
+
+A second completed composition replaces X8's FireDrop checkpoint by X22 and
+retains X17's fixed-severity block experts. Its primary gains are T1
+`+.010386/+.006153/+.010109` and T5
+`+.028162/+.020169/+.012873` for 2021/22/23. All cells pass, and the 18-row
+mean rises to `+.014642` (block `+.012376`), but still misses `+.020` and
+cannot establish an additional mechanism. Artifact:
+`cross-history-analysis/x22-x17-complete-route-final.json`.
+
+The final frozen-reference audit measures the complete route against the
+original reproduced B3/B5 checkpoints rather than the stronger freshly
+continued ERM controls. The primary AP gains for 2021/2022/2023 are T1
+`+.039081/+.017775/+.026707` and T5
+`+.067748/+.020596/+.035253`. Every history/year cell is positive; the T1,
+T5, and six-cell means are `+.027854`, `+.041199`, and `+.034527`. This meets
+the campaign's requested system-level `+.020` magnitude target. It must not be
+reported as the isolated effect of X22, X17, or a third method: relative to
+fresh matched ERM, the same route remains `+.014642`. The audit uses B3 jobs
+`21212205/21326336/21326337` and B5 jobs
+`21212423/21323907/21323908`; all scenario sample counts match the paired
+contract.
+
+### Cross-architecture Table 1 campaign
+
+The first transfer backbone implemented was the WSTS+ SwinUnet, evaluated at
+both T=1 and T=5. The runner uses the
+official Swin-T ImageNet initialization cached at
+`/project/6085198/kulbear/wildfire/cache/swin/swin_tiny_patch4_window7_224.pth`
+(SHA-256 `9f71c168d837d1b99dd1dc29e14990a7a9e8bdc5f673d46b04fe36fe15590ad3`).
+All inputs are padded to the published 224-pixel model size and predictions are
+center-cropped back to the unchanged 128-pixel target. No model work is run on
+the login node.
+
+The first portability smoke `21334123` exposed the pinned upstream code's
+developer-home checkpoint path and failed before training. The portable loader
+was then fixed and committed. Authoritative T=1/T=5 one-step smokes
+`21334329/21334350` both completed with exit `0:0`, exact initial equivalence
+(`0.0`), finite losses `.242794/.245346`, successful backward and output-shape
+checks, and peak allocations of `.78/.65` GB at physical batches 2/1. Their
+one-step times were `1.80/4.20` seconds for effective batch 64. Because those
+small physical batches would make the 10,000-step bootstrap unnecessarily
+slow, jobs `21338586/21338587` measured physical batch 16/8 on the same minimum
+10GB H100 slice. Both completed with exact equivalence and peak allocations of
+`4.17/2.58` GB. This is a throughput calibration only; architecture, seed,
+data, effective batch, initialization, optimizer, and scientific budget are
+unchanged.
+
+At the user's request, the remaining prior-used architectures no longer wait
+for the Swin gate before starting their seed-0 screen. SegFormer-B2 T=1 uses
+the pinned official `nvidia/mit-b2` revision
+`3bb39e8739149c3777d0325349b2a6c32c6413db` from project storage; ConvLSTM
+T=5 uses the published random initialization and learning rate `.01`. The
+minimum 10GB and 20GB probes had the same `05:53` estimate, so the 10GB slice
+was selected. The initial SegFormer T=1 smoke `21339171` revealed that the
+shared training environment lacked `transformers`; it failed before model or
+data computation, and its never-runnable dependency chain was cancelled. A
+project-local pinned Transformers 4.48.3 runtime fixes the dependency without
+mutating the shared environment. Replacement SegFormer T=1
+smoke/bootstrap/continuations are
+`21339727/21339728/21339729`--`21339733`. The newly added SegFormer T=5 chain
+is `21339734/21339735/21339736`--`21339740`. ConvLSTM T=5 equivalents remain
+`21339192/21339193/21339194`--`21339198`; its smoke completed successfully and
+the bootstrap is running. Both replacement SegFormer smokes completed with
+exit `0:0` and exact initial equivalence. T=1/T=5 losses were
+`.182542/.181851`, one-step times `1.71/1.89` seconds, and peak GPU allocations
+`1.56/.72` GB; both 10,000-step bootstraps are released to the queue. Each
+continuation chain contains
+constant ERM, cosine ERM, mixed BlockDrop, 25% BlockDrop, and 50% BlockDrop,
+all branching from its architecture's same 10,000-step seed-0 checkpoint.
+Seeds 1/2 and 2022--2023 evaluation remain gated by the matched 2021 result.
+
+SegFormer-B2 T=1 completed its bootstrap and all five seed-0 continuations.
+Matched ERM M00/M01/M06/M07 AP is
+`.564030/.341623/.373543/.204295`. Cosine ERM reaches
+`.570958/.354978/.380648/.206941`, improving primary by `+.007702`, block by
+`+.004875`, and M00 by `+.006928`; it passes the T=1 transfer gate pending
+T=5. For mixed/25%/50% BlockDrop specialists, the deployment-correct route
+retains matched ERM on M00/M01 and changes primary by only
+`+.001955/-.001070/-.001525`. All three miss the frozen `+.005` T=1 gate.
+Their already-submitted T=5 runs remain active only because the user requested
+the complete architecture matrix; no BlockDrop seed confirmation or held-out
+work is released from this result. These are seed-0 selection results, not
+Table 1 evidence.
+
+SegFormer-B2 T=5 also completed all five seed-0 continuations. Matched ERM
+M00/M01/M06/M07 AP is `.590659/.387296/.391378/.209945`. Cosine ERM changes
+primary by `+.003001`, block by `+.001090`, and M00 by `-.000466`; it misses
+the `+.005` T=5 gate, so the positive T=1 result does not establish cross-T
+transfer. Mixed/25%/50% BlockDrop changes routed primary by
+`+.004720/+.005466/-.000420`, respectively. The 25% expert passes T=5 alone,
+but its T=1 routed delta is `-.001070`; all BlockDrop variants therefore fail
+the same cross-T seed-0 gate. No SegFormer seeds 1/2 or held-out jobs are
+released.
+
+ConvLSTM bootstrap `21339193` completed all 10,000 updates, checkpoint saving,
+and four-scenario evaluation, but a transient Nibi/CVMFS restart after Python
+completion changed the batch exit to `127`; the original `afterok` descendants
+became permanently unsatisfiable. The saved checkpoint and summary are intact,
+so the five stale descendants were cancelled rather than repeating training.
+Direct replacement continuations `21362024`--`21362028` use that exact
+checkpoint, the same seed and recipes, and a measured-fit three-hour request.
+Matched 10GB/20GB probes gave the same `16:40` start estimate, so they retain
+the minimum 10GB H100 slice.
+
+Both Swin bootstraps completed successfully. Their original 12-hour 10GB
+descendants remained pending for roughly seven hours; existing start estimates
+were next-day or unavailable. Measured bootstrap throughput shows each
+3000-step continuation fits within three hours, and a 20GB three-hour probe
+estimated `16:33` the same day. Under the <=2x queue rule, the still-unstarted
+jobs were replaced by T=1 `21362106/21362108`--`21362111` and T=5
+`21362112/21362113/21362116/21362117`. T=5 matched control `21339345` had
+already started and remains unchanged. This alters only the slice/time request,
+not checkpoints, methods, batches, seeds, or data.
+
+SwinUnet T=5 matched control and all four advancing branches completed. Control
+M00/M01/M06/M07 AP is `.603112/.384643/.391375/.211063`. Cosine ERM changes
+primary by `+.003831`, block by `+.004405`, and M00 by `-.002057`; it misses
+the `+.005` T=5 gate. Mixed/25%/50% BlockDrop changes deployment-routed primary
+by `+.006723/+.002831/+.003828`. Only the mixed specialist passes the T=5
+screen, driven by a `+.010085` block mean; its cross-history decision remains
+open until the queued Swin T=1 result completes. These are seed-0 selection
+results and do not release test-year evaluation yet.
+
+The Swin formal dependency chains are also fully submitted rather than waiting
+for the throughput calibration to finish. T=1 calibration/bootstrap/branches
+are `21338586/21339338/21339339`--`21339343`; T=5 equivalents are
+`21338587/21339344/21339345`--`21339349`. The calibration is an `afterok`
+guard for the physical batch 16/8 configuration; each bootstrap then guards
+its five matched continuations. Thus all planned architecture implementations
+are now represented in Slurm, while failed smoke/bootstrap jobs cannot release
+invalid downstream training.
