@@ -40,10 +40,10 @@ Files: reproductions/cross_history/run_three_directions.py, run_three_directions
 
 ## Task 3: Execute gates and report
 
-- [ ] Complete both-history seed-0 measurements for every direction and every required control; no selective cancellation of missing comparison cells.
-- [ ] Follow predefined positive gates with seeds 1/2, then frozen 2022/2023 evaluation; negative gates stop without retuning.
-- [ ] Produce docs/experiments/three_directions_results.md and small machine-readable paired results, reporting all outcomes, uncertainty, attribution controls, runtime/storage and limitations.
-- [ ] Independently review experimental code and result evidence; resolve load-bearing issues, commit final artifacts and report results to user. Goal is complete only when required jobs and reports are complete.
+- [x] Complete both-history seed-0 measurements for every direction and every required control; no selective cancellation of missing comparison cells.
+- [x] Follow predefined positive gates with seeds 1/2, then frozen 2022/2023 evaluation; negative gates stop without retuning.
+- [x] Produce docs/experiments/three_directions_results.md and small machine-readable paired results, reporting all outcomes, uncertainty, attribution controls, runtime/storage and limitations.
+- [x] Independently review experimental code and result evidence; resolve load-bearing issues, commit final artifacts and report results to user. Goal is complete only when required jobs and reports are complete.
 
 ## Calibration correction after the fixed-forward diagnostic (before revised AP)
 
@@ -60,3 +60,9 @@ Task 1 tests: CPU Slurm21788040,12passed; runner CPU21787125,4passed; unchanged 
 T1 control/mixed/typed/distill completed3000updates and full2021evaluation (21787115–18). Their partial paired assessment is `docs/experiments/three_directions_t1_partial.json`; neither learned candidate passes its T1 gate. Both-history complete screening, normalization gate, required followups and final evidence review remain open.
 
 Corrected BN screen completed for both histories (21788328/21788332, exit0:0): conditional−common primary T1−0.008551/T5−0.013704. The predeclared positive gate fails in both; learned BN-affine extension is not activated. Complete source-linked evidence: `docs/experiments/three_directions_bn_screen.json`.
+
+## Final execution audit
+
+All eight learned runs21787115–21787122 completed3000updates and four-scenario2021evaluation, exit0:0. CorrectedBN21788328/21788332 completed4096calibration examples and original/common/conditional evaluation. `three_directions_screen.json` contains16 source-linked summaries, all3181samples/52,117,504pixels per scenario; all three assessments are `screen_complete`, with no missing cells and overall `screen_pass=false`. T5typed alone passes its local gate; T1typed fails, so no cross-setting confirmation is released. KD fails teacher-retention tolerance in both. Neither BN-affine nor seeds1/2 nor2022/2023 is activated by the predeclared gates.
+
+The final report contains fullAP, individual-scenario deltas through the linked JSON, compute/storage costs, all job commits/nodes and the disclosed oldBNnegative/correction. Runtime tests and smoke evidence are checked; four stdlib assessment tests were rerun and passed. Final independent audit approved all16raw summary/provenance/budget matches and report/cost consistency, with no blocker. All direction-specific negative-stop requirements are met. Final artifacts are committed together with this checked plan.

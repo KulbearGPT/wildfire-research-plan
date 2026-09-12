@@ -1,0 +1,152 @@
+{
+  "learned": [
+    {
+      "history": 1,
+      "arm": "control",
+      "job": 21787115,
+      "parameters": 14444241,
+      "train_seconds": 2218.0026339490432,
+      "peak_gpu_bytes": 1840182272,
+      "checkpoint_bytes": 57893364,
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-control-21787115/result/completed.json",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:38:28"
+    },
+    {
+      "history": 1,
+      "arm": "mixed",
+      "job": 21787116,
+      "parameters": 14455761,
+      "train_seconds": 2217.1896804359276,
+      "peak_gpu_bytes": 2244846080,
+      "checkpoint_bytes": 57942326,
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-mixed-21787116/result/completed.json",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:38:28"
+    },
+    {
+      "history": 1,
+      "arm": "typed",
+      "job": 21787117,
+      "parameters": 14455761,
+      "train_seconds": 2089.4217625530437,
+      "peak_gpu_bytes": 2548937216,
+      "checkpoint_bytes": 57943096,
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-typed-21787117/result/completed.json",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "00:36:12"
+    },
+    {
+      "history": 1,
+      "arm": "distill",
+      "job": 21787118,
+      "parameters": 14444241,
+      "train_seconds": 2294.774258045014,
+      "peak_gpu_bytes": 2463023616,
+      "checkpoint_bytes": 57893364,
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-distill-21787118/result/completed.json",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "00:40:50",
+      "teacher_parameters": 57776964,
+      "teacher_checkpoint_bytes": 231564112
+    },
+    {
+      "history": 5,
+      "arm": "control",
+      "job": 21787119,
+      "parameters": 14704785,
+      "train_seconds": 5586.67137288698,
+      "peak_gpu_bytes": 4937361408,
+      "checkpoint_bytes": 58945284,
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-5-control-21787119/result/completed.json",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "01:36:19"
+    },
+    {
+      "history": 5,
+      "arm": "mixed",
+      "job": 21787120,
+      "parameters": 14714289,
+      "train_seconds": 5630.362529231003,
+      "peak_gpu_bytes": 7031746560,
+      "checkpoint_bytes": 58986374,
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-5-mixed-21787120/result/completed.json",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "01:37:23"
+    },
+    {
+      "history": 5,
+      "arm": "typed",
+      "job": 21787121,
+      "parameters": 14714289,
+      "train_seconds": 5601.430342687992,
+      "peak_gpu_bytes": 8396207104,
+      "checkpoint_bytes": 58987144,
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-5-typed-21787121/result/completed.json",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "01:36:28"
+    },
+    {
+      "history": 5,
+      "arm": "distill",
+      "job": 21787122,
+      "parameters": 14704785,
+      "train_seconds": 5637.93754476402,
+      "peak_gpu_bytes": 6672291840,
+      "checkpoint_bytes": 58945284,
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-5-distill-21787122/result/completed.json",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "01:39:59",
+      "teacher_parameters": 58819140,
+      "teacher_checkpoint_bytes": 235771792
+    }
+  ],
+  "normalization": [
+    {
+      "history": 1,
+      "job": 21788328,
+      "status": "pass",
+      "bank_samples": [
+        2831,
+        1265
+      ],
+      "bn_layers": 30,
+      "calibration_seconds": 48.82078332011588,
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:04:24"
+    },
+    {
+      "history": 5,
+      "job": 21788332,
+      "status": "pass",
+      "bank_samples": [
+        2861,
+        1235
+      ],
+      "bn_layers": 31,
+      "calibration_seconds": 129.95717793214135,
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:11:07"
+    }
+  ]
+}

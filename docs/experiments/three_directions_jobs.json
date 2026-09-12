@@ -17,7 +17,13 @@
       "--output=/project/6085198/kulbear/wildfire/slurm/prefusion-smoke-%j.out",
       "tmp/smoke-three.sh",
       "1"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:01:56"
+    }
   },
   {
     "job": "21786979",
@@ -37,7 +43,13 @@
       "--output=/project/6085198/kulbear/wildfire/slurm/prefusion-smoke-%j.out",
       "tmp/smoke-three.sh",
       "5"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:02:46"
+    }
   },
   {
     "job": "21787115",
@@ -65,7 +77,13 @@
       "--workers",
       "3"
     ],
-    "time_limit_update": "01:30:00"
+    "time_limit_update": "01:30:00",
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:38:28"
+    }
   },
   {
     "job": "21787116",
@@ -93,7 +111,13 @@
       "--workers",
       "3"
     ],
-    "time_limit_update": "01:30:00"
+    "time_limit_update": "01:30:00",
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:38:28"
+    }
   },
   {
     "job": "21787117",
@@ -121,7 +145,13 @@
       "--workers",
       "3"
     ],
-    "time_limit_update": "01:30:00"
+    "time_limit_update": "01:30:00",
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "00:36:12"
+    }
   },
   {
     "job": "21787118",
@@ -149,7 +179,13 @@
       "--workers",
       "3"
     ],
-    "time_limit_update": "01:30:00"
+    "time_limit_update": "01:30:00",
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "00:40:50"
+    }
   },
   {
     "job": "21787119",
@@ -177,7 +213,13 @@
       "--workers",
       "3"
     ],
-    "time_limit_update": "03:00:00"
+    "time_limit_update": "03:00:00",
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "01:36:19"
+    }
   },
   {
     "job": "21787120",
@@ -205,7 +247,13 @@
       "--workers",
       "3"
     ],
-    "time_limit_update": "03:00:00"
+    "time_limit_update": "03:00:00",
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "01:37:23"
+    }
   },
   {
     "job": "21787121",
@@ -233,7 +281,13 @@
       "--workers",
       "3"
     ],
-    "time_limit_update": "03:00:00"
+    "time_limit_update": "03:00:00",
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "01:36:28"
+    }
   },
   {
     "job": "21787122",
@@ -261,7 +315,13 @@
       "--workers",
       "3"
     ],
-    "time_limit_update": "03:00:00"
+    "time_limit_update": "03:00:00",
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "01:39:59"
+    }
   },
   {
     "job": "21787156",
@@ -288,7 +348,13 @@
       "64",
       "--workers",
       "3"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "00:00:31"
+    }
   },
   {
     "job": "21787157",
@@ -315,7 +381,13 @@
       "64",
       "--workers",
       "3"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g30",
+      "elapsed": "00:00:41"
+    }
   },
   {
     "job": "21787290",
@@ -342,7 +414,13 @@
       "64",
       "--workers",
       "3"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "00:04:25"
+    }
   },
   {
     "job": "21787291",
@@ -369,7 +447,13 @@
       "64",
       "--workers",
       "3"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g30",
+      "elapsed": "00:11:01"
+    }
   },
   {
     "job": "21788071",
@@ -398,7 +482,13 @@
       "3",
       "--bn-forward-mode",
       "batch_stats"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "00:00:30"
+    }
   },
   {
     "job": "21788072",
@@ -427,7 +517,13 @@
       "3",
       "--bn-forward-mode",
       "batch_stats"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g35",
+      "elapsed": "00:00:38"
+    }
   },
   {
     "job": "21788328",
@@ -456,7 +552,13 @@
       "3",
       "--bn-forward-mode",
       "batch_stats"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:04:24"
+    }
   },
   {
     "job": "21788332",
@@ -485,6 +587,12 @@
       "3",
       "--bn-forward-mode",
       "batch_stats"
-    ]
+    ],
+    "verified_completion": {
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "node": "g33",
+      "elapsed": "00:11:07"
+    }
   }
 ]
