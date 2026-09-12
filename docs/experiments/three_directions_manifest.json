@@ -1,0 +1,351 @@
+{
+  "teacher_route": "M00 clean ERM; M01 cosine ERM; blocks mild/severe at mask coverage .375, block precedence",
+  "sources": {
+    "1": {
+      "0": {
+        "block_mixed": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21222548/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21222548/result/summary.json",
+          "history": 1,
+          "seed": 0,
+          "method": "block_specialist",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "8895b42e40f8cbcdce95c7ad43bb7d6b679fd33c6bc19dd3627d0a808eb95ff1"
+        },
+        "mild": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21224659/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21224659/result/summary.json",
+          "history": 1,
+          "seed": 0,
+          "method": "block_specialist",
+          "block_fraction": 0.25,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "ca4b01a3068b3e12ebdfd68de55f4158451bb06d16ab52481c3de37057f05883"
+        },
+        "severe": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21224660/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21224660/result/summary.json",
+          "history": 1,
+          "seed": 0,
+          "method": "block_specialist",
+          "block_fraction": 0.5,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "5e3988ca7b0fafb887d91213cecc498735915420e8cc6988fde70c9d55eefd45"
+        },
+        "clean": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-control-21211219/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-control-21211219/result/summary.json",
+          "history": 1,
+          "seed": 0,
+          "method": "control",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57890868,
+          "sha256": "97351133d9f99f49f0b8e16896fdd833047b951ea555f25aa855d31629baf621"
+        },
+        "fire": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-cosine_erm-21228612/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-cosine_erm-21228612/result/summary.json",
+          "history": 1,
+          "seed": 0,
+          "method": "cosine_erm",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57891124,
+          "sha256": "269b9d3cfa5d05c2b1c810760982e19a9174be89e850925ff2d6e6372d0f01bc"
+        }
+      },
+      "1": {
+        "block_mixed": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21223825/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21223825/result/summary.json",
+          "history": 1,
+          "seed": 1,
+          "method": "block_specialist",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "d79b908c2c90bcc4ff51c84a64b6addbbff381b7e6d05331c8a3e7c976af0f0f"
+        },
+        "mild": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21226523/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21226523/result/summary.json",
+          "history": 1,
+          "seed": 1,
+          "method": "block_specialist",
+          "block_fraction": 0.25,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "885d93a82dd566a64d4bbe41e955f945d3f936e77841acd0fa225091ab776ecf"
+        },
+        "severe": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21226524/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21226524/result/summary.json",
+          "history": 1,
+          "seed": 1,
+          "method": "block_specialist",
+          "block_fraction": 0.5,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "e69e0399b6c8fcfea7f874d70f6f120ffaeae915b21ed0b320b5c29d231a7ddc"
+        },
+        "clean": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-control-21219734/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-control-21219734/result/summary.json",
+          "history": 1,
+          "seed": 1,
+          "method": "control",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57890996,
+          "sha256": "c66b7410e6577fb6d9a7fbc3ad7c14c9867b86bd1dc77d2860deddf1368cb5d8"
+        },
+        "fire": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-cosine_erm-21244237/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-cosine_erm-21244237/result/summary.json",
+          "history": 1,
+          "seed": 1,
+          "method": "cosine_erm",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57891124,
+          "sha256": "86aee7a292d8052b42218aa714b44cde77087879ffdc9bd89b87bb3348486aad"
+        }
+      },
+      "2": {
+        "block_mixed": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21223827/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21223827/result/summary.json",
+          "history": 1,
+          "seed": 2,
+          "method": "block_specialist",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "4f99e751750a37c120da146c3010f602692895781c0f5bcfc4e61e1ae103524f"
+        },
+        "mild": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21226525/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21226525/result/summary.json",
+          "history": 1,
+          "seed": 2,
+          "method": "block_specialist",
+          "block_fraction": 0.25,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "4febbccaad31bec55854696c5af15b1e7e61bbf4ae15b41a2b97b314fe7d3ac0"
+        },
+        "severe": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21226526/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-block_specialist-21226526/result/summary.json",
+          "history": 1,
+          "seed": 2,
+          "method": "block_specialist",
+          "block_fraction": 0.5,
+          "architecture": "res18_unet",
+          "bytes": 57891060,
+          "sha256": "173b7517c04bb0322dbcec37f1a47a19051950da98f7925ed38edb62b2ebaf31"
+        },
+        "clean": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-control-21219739/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-control-21219739/result/summary.json",
+          "history": 1,
+          "seed": 2,
+          "method": "control",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57890996,
+          "sha256": "7ed77fe34fdb87a3f902df1fabe236a78d0833d8e87ed82d705c97e2c6fa2919"
+        },
+        "fire": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-1-cosine_erm-21244243/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-1-cosine_erm-21244243/result/summary.json",
+          "history": 1,
+          "seed": 2,
+          "method": "cosine_erm",
+          "block_fraction": null,
+          "architecture": "res18_unet",
+          "bytes": 57891124,
+          "sha256": "c08d629462a1dcf7e6a2bba8fb4e4c73101f422e1aea5f7cc3805519e03cadfa"
+        }
+      }
+    },
+    "5": {
+      "0": {
+        "block_mixed": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21222549/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21222549/result/summary.json",
+          "history": 5,
+          "seed": 0,
+          "method": "block_specialist",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "4297263175308a6abba5857dd8f071918514dae2754630d7c2e44c78dd04e7a7"
+        },
+        "mild": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21224661/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21224661/result/summary.json",
+          "history": 5,
+          "seed": 0,
+          "method": "block_specialist",
+          "block_fraction": 0.25,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "a13c73e259c93750330ab93a637272ab65b2dccc72f4547dd7278d55536b8466"
+        },
+        "severe": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21224662/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21224662/result/summary.json",
+          "history": 5,
+          "seed": 0,
+          "method": "block_specialist",
+          "block_fraction": 0.5,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "69b753f83dbad900da80e0eaaf24cf2b7ab17d7ed27cf476ab2215986c1d6507"
+        },
+        "clean": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-control-21211223/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-control-21213246/result/summary.json",
+          "history": 5,
+          "seed": 0,
+          "method": "control",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58942788,
+          "sha256": "02eb56d2d7410c87c2a9a251cf078466c56a43bf1f1916393fc1f07cefe72347"
+        },
+        "fire": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-cosine_erm-21227413/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-cosine_erm-21227413/result/summary.json",
+          "history": 5,
+          "seed": 0,
+          "method": "cosine_erm",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58943044,
+          "sha256": "05cfe39da08ecce19b265403403a4b8082112ea57b2f81aa320dd966b12962d6"
+        }
+      },
+      "1": {
+        "block_mixed": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21223826/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21223826/result/summary.json",
+          "history": 5,
+          "seed": 1,
+          "method": "block_specialist",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "1d11bab6d4ee2762ae0c6456152790c1f7fa1a251d342a256497822b0db7b051"
+        },
+        "mild": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21225831/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21225831/result/summary.json",
+          "history": 5,
+          "seed": 1,
+          "method": "block_specialist",
+          "block_fraction": 0.25,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "f6430fb8a09f8f12c6fe4ce519a73ff084d01e27d655095b7051a09f782e339c"
+        },
+        "severe": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21225833/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21225833/result/summary.json",
+          "history": 5,
+          "seed": 1,
+          "method": "block_specialist",
+          "block_fraction": 0.5,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "dc3889873d729393aec85c4146b7511b6efc2f4303a90331051b7e0c784fb400"
+        },
+        "clean": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-control-21219736/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-control-21219736/result/summary.json",
+          "history": 5,
+          "seed": 1,
+          "method": "control",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58942916,
+          "sha256": "f4fde29d0ad2f6a1cb6cab64d1def0b933e7f24cd29148ab04045301e18f3aab"
+        },
+        "fire": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-cosine_erm-21244239/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-cosine_erm-21244239/result/summary.json",
+          "history": 5,
+          "seed": 1,
+          "method": "cosine_erm",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58943044,
+          "sha256": "dd5b84042de187bee537985b6941b3c637b397f405d39a70b19811cd6d5a8c58"
+        }
+      },
+      "2": {
+        "block_mixed": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21223828/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21223828/result/summary.json",
+          "history": 5,
+          "seed": 2,
+          "method": "block_specialist",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "6243db4e98a56fad312822eb559484071160a553aea9402256a654c94606f347"
+        },
+        "mild": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21225835/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21225835/result/summary.json",
+          "history": 5,
+          "seed": 2,
+          "method": "block_specialist",
+          "block_fraction": 0.25,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "742cb33e12b910465697eae27fefbff2a48ea6b84fd4ee4764f13a9813788100"
+        },
+        "severe": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21225837/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-block_specialist-21225837/result/summary.json",
+          "history": 5,
+          "seed": 2,
+          "method": "block_specialist",
+          "block_fraction": 0.5,
+          "architecture": "res18_utae",
+          "bytes": 58942980,
+          "sha256": "46515a06e9bfa23afe4758f1ff3601ea8435df0c21f75cd7898d84a3f05cbd55"
+        },
+        "clean": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-control-21219741/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-control-21219741/result/summary.json",
+          "history": 5,
+          "seed": 2,
+          "method": "control",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58942916,
+          "sha256": "81fcf4f0983913518644e8c7b394e20bc5746d41cee10facfa78420d514e99d7"
+        },
+        "fire": {
+          "checkpoint": "/project/6085198/kulbear/wildfire/runs/cross-history-5-cosine_erm-21244244/result/checkpoint.pt",
+          "summary": "/project/6085198/kulbear/wildfire/runs/cross-history-5-cosine_erm-21244244/result/summary.json",
+          "history": 5,
+          "seed": 2,
+          "method": "cosine_erm",
+          "block_fraction": null,
+          "architecture": "res18_utae",
+          "bytes": 58943044,
+          "sha256": "f81d0cef7e704b903ffbd5af8f900223b715727356592a38c3c53ea18a7ebe75"
+        }
+      }
+    }
+  }
+}
