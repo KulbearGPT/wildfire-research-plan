@@ -144,3 +144,10 @@ margin; storage reduction alone is not attributable to KD. T1 training times
 were 2319.91 s (KD) / 2331.26 s (control), which do not establish a speedup given
 shared-node execution. The mechanism's incremental AP gain is small and needs
 the registered both-history/three-seed checks before any adoption claim.
+
+T1 saved-checkpoint audit `21788864` completed with exit `0:0`. Both final
+student files strict-load into the declared architecture, contain only finite
+state tensors, record 3000 updates, match the reported parameter/file sizes,
+and differ from the initial X22 state in 182 tensors. Checkpoint SHA256 and
+full checks are retained in `three-directions-t1-checkpoints.json`; the audit
+is reproducible with `audit_checkpoints.py` inside a CPU Slurm allocation.
