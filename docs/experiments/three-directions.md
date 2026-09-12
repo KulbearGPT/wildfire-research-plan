@@ -86,8 +86,7 @@ Tests and all model execution run in Slurm. Login work is metadata-only.
   T1 `.006080592866055667`, T5 `.006270543788559735`.
   Peak smoke GPU memory for KD was 0.968/1.982 GB at T1/T5.
 - Full-screen commands and job IDs are in `three-directions-jobs.json`.
-  Source `e5593d3` is pinned for the 12 formal runs. No confirmation gate has
-  been evaluated yet; all three directions remain unverified scientifically.
+  Source `e5593d3` is pinned for the 12 formal runs. All seed-0 gates have now been evaluated; see the final screen below.
 
 ## Completed normalization and midpoint screens
 
@@ -122,11 +121,11 @@ recipe, not all possible model-merging algorithms.
 
 By the pre-registered stop rules, N/W do not advance to seeds1/2 or exposed
 test-year evaluation. Their implementation and negative evidence are retained.
-D remains active: jobs `21787047/21787048` (T1 control/KD) and
+D used jobs `21787047/21787048` (T1 control/KD) and
 `21787053/21787054` (T5 control/KD) each target all 3000 updates and full 2021
 four-scene evaluation. No early training loss is used as an AP conclusion.
 
-### D: completed T1 seed-0 pair (T5 pending)
+### D: T1 seed-0 pair
 
 Both T1 jobs completed 3000 updates and all 3181 evaluation samples per scene,
 with Slurm exit `0:0`. The no-KL student AP is
@@ -135,7 +134,7 @@ with Slurm exit `0:0`. The no-KL student AP is
 KD's primary increment over the matched no-KL student is `+.001570`; its
 primary delta against the retained four-teacher route is `+.000710`, with
 worst scene delta `-.002396`. T1 therefore passes its fixed screen gate, but
-D as a cross-history direction remains incomplete until T5 finishes.
+the final cross-history decision also requires T5 (reported below).
 
 The KD checkpoint occupies 57,885,172 bytes versus 231,564,112 bytes for the
 four retained teacher checkpoints (ratio .249975). The no-KL student is also
@@ -151,3 +150,41 @@ state tensors, record 3000 updates, match the reported parameter/file sizes,
 and differ from the initial X22 state in 182 tensors. Checkpoint SHA256 and
 full checks are retained in `three-directions-t1-checkpoints.json`; the audit
 is reproducible with `audit_checkpoints.py` inside a CPU Slurm allocation.
+
+## Final seed-0 decision
+
+All 12 formal jobs completed with Slurm exit `0:0`. Full paired evidence is
+`three-directions-screen.json`; the earlier partial file is an interim snapshot.
+T5 control/KD jobs `21787053/21787054` each completed 3000 updates and all four
+2021 scenes (3181 samples / 52,117,504 pixels each).
+
+| T5 student | M00 | M01 | M06 | M07 |
+| --- | ---: | ---: | ---: | ---: |
+| No KL | .597558 | .374744 | .389190 | .197049 |
+| Routed KD | .604209 | .380023 | .395268 | .202814 |
+
+T5 KD improves primary over no-KL by .005707, but loses .005418 primary and
+.013862 on M07 against the retained route. Both exceed the registered tolerances
+(.005 primary / .010 any scene). T1 passes, T5 fails, so D does not advance.
+Neither seed1/2 confirmation nor 2022/23 evaluation is required or performed.
+Do not reinterpret the positive no-KL comparison as preserved expert capability.
+
+T5 KD/control training cost is 5803.92/5746.66 seconds; peak allocated GPU memory
+is 2,270,857,728/1,487,167,488 bytes. KD stores 58,936,324 bytes versus
+235,771,792 for the four-teacher route, but control also stores one checkpoint.
+These paired runs do not establish inference acceleration or statistical
+significance. The original route already executes one selected teacher per input.
+
+All three fixed recipes are closed by their registered seed-0 gates. This is
+negative evidence for these configurations, not a universal rejection of their
+method families. The retained expert route remains the stronger reference for
+heavy block missingness; distillation shows an incremental teaching signal but
+has not met the capability-preservation requirement. Chinese report:
+`three-directions-results.md`.
+
+T5 saved-checkpoint audit `21790289` completed with exit `0:0` (44 s).
+Both files strict-load, have finite state and 3000-update metadata, and differ
+from the initial X22 in 198 state tensors. SHA256 records are in
+`three-directions-t5-checkpoints.json`. All four student training logs have
+finite recorded numeric values and end at step 3000. Seven report/gate tests
+passed in the final verification.

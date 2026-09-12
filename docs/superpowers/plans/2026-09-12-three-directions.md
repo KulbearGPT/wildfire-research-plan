@@ -41,10 +41,14 @@ Use final matched checkpoints, no test-year selection, no new dependencies.
 - [x] Complete registered four-teacher same-input routing and the matched
   no-KL student in driver; verify per-example teacher choice and detach.
 - [x] Submit D/control seed0 3000-update jobs after GPU smoke passes.
-- [ ] Save source commit, source weights, job/time/memory, per-scenario AP,
+- [x] Save source commit, source weights, job/time/memory, per-scenario AP,
   checkpoint parameter/storage size and finite loss logs.
 - [x] Implement lightweight paired report/gates and verify on synthetic rows
   that failures, missing histories, and missing scenarios cannot count as pass.
-- [ ] Follow the registered confirmation gates; inspect actual terminal jobs
+- [x] Follow the registered confirmation gates; inspect actual terminal jobs
   and artifacts before advancing. Record negative results without retuning.
-- [ ] Commit final tables and explain which hypotheses survived and why.
+- [x] Commit final tables and explain which hypotheses survived and why.
+
+All three fixed seed-0 gates failed across T1/T5; registered stopping rules
+therefore require no confirmation seeds or test-year evaluation. Final evidence:
+`docs/experiments/three-directions-results.md`.
