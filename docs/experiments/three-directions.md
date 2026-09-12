@@ -125,3 +125,22 @@ test-year evaluation. Their implementation and negative evidence are retained.
 D remains active: jobs `21787047/21787048` (T1 control/KD) and
 `21787053/21787054` (T5 control/KD) each target all 3000 updates and full 2021
 four-scene evaluation. No early training loss is used as an AP conclusion.
+
+### D: completed T1 seed-0 pair (T5 pending)
+
+Both T1 jobs completed 3000 updates and all 3181 evaluation samples per scene,
+with Slurm exit `0:0`. The no-KL student AP is
+`.597544/.326218/.387318/.202660`; KD is
+`.598244/.327507/.387521/.205879` for M00/M01/M06/M07.
+KD's primary increment over the matched no-KL student is `+.001570`; its
+primary delta against the retained four-teacher route is `+.000710`, with
+worst scene delta `-.002396`. T1 therefore passes its fixed screen gate, but
+D as a cross-history direction remains incomplete until T5 finishes.
+
+The KD checkpoint occupies 57,885,172 bytes versus 231,564,112 bytes for the
+four retained teacher checkpoints (ratio .249975). The no-KL student is also
+one checkpoint and is already within the route's primary noninferiority
+margin; storage reduction alone is not attributable to KD. T1 training times
+were 2319.91 s (KD) / 2331.26 s (control), which do not establish a speedup given
+shared-node execution. The mechanism's incremental AP gain is small and needs
+the registered both-history/three-seed checks before any adoption claim.

@@ -44,7 +44,27 @@
           "block": -0.24630466943973853,
           "worst_scene": -0.33887973841021035
         },
-        "pass_gate": false
+        "pass_gate": false,
+        "candidate_cost": {
+          "checkpoint_bytes": 58415408,
+          "route_checkpoint_bytes": 231564112,
+          "parameter_bytes": 57776964,
+          "fit_seconds": 28.58357174298726,
+          "total_seconds": 125.1941193130333,
+          "peak_gpu_bytes": 273018880,
+          "checkpoint_to_route_ratio": 0.2522645132506543,
+          "evaluation_seconds": 95.10923836682923
+        },
+        "control_cost": {
+          "checkpoint_bytes": 57998320,
+          "route_checkpoint_bytes": 231564112,
+          "parameter_bytes": 57776964,
+          "fit_seconds": 28.583543278975412,
+          "total_seconds": 128.41700347000733,
+          "peak_gpu_bytes": 288339456,
+          "checkpoint_to_route_ratio": 0.2504633360457859,
+          "evaluation_seconds": 98.37165949889459
+        }
       },
       {
         "history": 5,
@@ -87,7 +107,27 @@
           "block": -0.02199094396862135,
           "worst_scene": -0.03481105848157151
         },
-        "pass_gate": false
+        "pass_gate": false,
+        "candidate_cost": {
+          "checkpoint_bytes": 59466752,
+          "route_checkpoint_bytes": 235771792,
+          "parameter_bytes": 58819140,
+          "fit_seconds": 77.44803337217309,
+          "total_seconds": 274.5405929831322,
+          "peak_gpu_bytes": 679948288,
+          "checkpoint_to_route_ratio": 0.2522216567790264,
+          "evaluation_seconds": 195.54845091421157
+        },
+        "control_cost": {
+          "checkpoint_bytes": 59049664,
+          "route_checkpoint_bytes": 235771792,
+          "parameter_bytes": 58819140,
+          "fit_seconds": 65.01372882002033,
+          "total_seconds": 252.93649191991426,
+          "peak_gpu_bytes": 680326144,
+          "checkpoint_to_route_ratio": 0.25045262412053093,
+          "evaluation_seconds": 186.26159632811323
+        }
       }
     ],
     "screen_pass": false
@@ -138,6 +178,26 @@
           "worst_scene": -0.10969815975213346
         },
         "pass_gate": false,
+        "candidate_cost": {
+          "checkpoint_bytes": 57998960,
+          "route_checkpoint_bytes": 231564112,
+          "parameter_bytes": 57776964,
+          "fit_seconds": 27.546630977187306,
+          "total_seconds": 109.16560541908257,
+          "peak_gpu_bytes": 288339456,
+          "checkpoint_to_route_ratio": 0.2504660998592044,
+          "evaluation_seconds": 80.17691752221435
+        },
+        "control_cost": {
+          "checkpoint_bytes": 57998320,
+          "route_checkpoint_bytes": 231564112,
+          "parameter_bytes": 57776964,
+          "fit_seconds": 28.583543278975412,
+          "total_seconds": 128.41700347000733,
+          "peak_gpu_bytes": 288339456,
+          "checkpoint_to_route_ratio": 0.2504633360457859,
+          "evaluation_seconds": 98.37165949889459
+        },
         "vs_recalibrated_x14": {
           "scenarios": {
             "M00": 0.01648835562462403,
@@ -192,6 +252,26 @@
           "worst_scene": -0.1750837666140474
         },
         "pass_gate": false,
+        "candidate_cost": {
+          "checkpoint_bytes": 59050304,
+          "route_checkpoint_bytes": 235771792,
+          "parameter_bytes": 58819140,
+          "fit_seconds": 84.14102382911369,
+          "total_seconds": 332.48375481995754,
+          "peak_gpu_bytes": 680326144,
+          "checkpoint_to_route_ratio": 0.25045533860980285,
+          "evaluation_seconds": 246.69482695683837
+        },
+        "control_cost": {
+          "checkpoint_bytes": 59049664,
+          "route_checkpoint_bytes": 235771792,
+          "parameter_bytes": 58819140,
+          "fit_seconds": 65.01372882002033,
+          "total_seconds": 252.93649191991426,
+          "peak_gpu_bytes": 680326144,
+          "checkpoint_to_route_ratio": 0.25045262412053093,
+          "evaluation_seconds": 186.26159632811323
+        },
         "vs_recalibrated_x14": {
           "scenarios": {
             "M00": 0.0006126338964208555,
@@ -211,13 +291,6 @@
     "status": "incomplete",
     "missing": [
       {
-        "history": 1,
-        "modes": [
-          "student_distill",
-          "student_control"
-        ]
-      },
-      {
         "history": 5,
         "modes": [
           "student_distill",
@@ -225,7 +298,75 @@
         ]
       }
     ],
-    "cells": [],
+    "cells": [
+      {
+        "history": 1,
+        "ap": {
+          "M00": 0.5982436774192508,
+          "M01": 0.32750687520356536,
+          "M06": 0.3875206341048683,
+          "M07": 0.2058793248146737
+        },
+        "vs_nearest": {
+          "scenarios": {
+            "M00": 0.000699209437551751,
+            "M01": 0.001288411703528336,
+            "M06": 0.00020263354840571735,
+            "M07": 0.0032194860096039224
+          },
+          "primary": 0.0015701770871793252,
+          "block": 0.0017110597790048199,
+          "worst_scene": 0.00020263354840571735
+        },
+        "vs_original_x22": {
+          "scenarios": {
+            "M00": 0.00454864117714715,
+            "M01": 0.0034839489562562,
+            "M06": 0.008784038165032482,
+            "M07": 0.007828408616890548
+          },
+          "primary": 0.006698798579393077,
+          "block": 0.008306223390961515,
+          "worst_scene": 0.0034839489562562
+        },
+        "vs_retained_route": {
+          "scenarios": {
+            "M00": 0.013178041987181865,
+            "M01": 0.0034839489562562,
+            "M06": -0.0023957042259505346,
+            "M07": 0.001043141128302283
+          },
+          "primary": 0.000710461952869316,
+          "block": -0.0006762815488241258,
+          "worst_scene": -0.0023957042259505346
+        },
+        "pass_gate": true,
+        "candidate_cost": {
+          "checkpoint_bytes": 57885172,
+          "route_checkpoint_bytes": 231564112,
+          "parameter_bytes": 57776964,
+          "training_seconds": 2319.909442916978,
+          "fit_seconds": 2322.122942359885,
+          "total_seconds": 2394.875590931857,
+          "updates": 3000,
+          "peak_gpu_bytes": 1029504512,
+          "checkpoint_to_route_ratio": 0.24997471110722028,
+          "evaluation_seconds": 71.27178421220742
+        },
+        "control_cost": {
+          "checkpoint_bytes": 57883316,
+          "route_checkpoint_bytes": 231564112,
+          "parameter_bytes": 57776964,
+          "training_seconds": 2331.263716553105,
+          "fit_seconds": 2332.7702475120313,
+          "total_seconds": 2405.8157983098645,
+          "updates": 3000,
+          "peak_gpu_bytes": 656781824,
+          "checkpoint_to_route_ratio": 0.24996669604830649,
+          "evaluation_seconds": 71.37143358099274
+        }
+      }
+    ],
     "screen_pass": false
   },
   "runs": [
@@ -233,6 +374,8 @@
     "/project/6085198/kulbear/wildfire/runs/three-directions-21787044/result/summary.json",
     "/project/6085198/kulbear/wildfire/runs/three-directions-21787045/result/summary.json",
     "/project/6085198/kulbear/wildfire/runs/three-directions-21787046/result/summary.json",
+    "/project/6085198/kulbear/wildfire/runs/three-directions-21787047/result/summary.json",
+    "/project/6085198/kulbear/wildfire/runs/three-directions-21787048/result/summary.json",
     "/project/6085198/kulbear/wildfire/runs/three-directions-21787049/result/summary.json",
     "/project/6085198/kulbear/wildfire/runs/three-directions-21787050/result/summary.json",
     "/project/6085198/kulbear/wildfire/runs/three-directions-21787051/result/summary.json",
