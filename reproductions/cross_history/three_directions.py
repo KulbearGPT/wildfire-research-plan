@@ -18,12 +18,21 @@ class _Moments:
         self.square_sum = torch.zeros(channels, dtype=torch.float64)
         self.count = 0
 
-    def add(self, value: torch.Tensor) -> None:
-        value = value.detach().to(device="cpu", dtype=torch.float64)
+    @staticmethod
+    def from_tensor(value: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, int]:
+        """Reduce one activation on its device, then transfer channel summaries."""
+        value = value.detach()
         axes = tuple(axis for axis in range(value.ndim) if axis != 1)
-        self.sum += value.sum(dim=axes)
-        self.square_sum += value.square().sum(dim=axes)
-        self.count += value.numel() // value.shape[1]
+        channel_sum = value.sum(dim=axes, dtype=torch.float64).cpu()
+        square_sum = value.square().sum(dim=axes, dtype=torch.float64).cpu()
+        count = value.numel() // value.shape[1]
+        return channel_sum, square_sum, count
+
+    def add_summary(self, summary: tuple[torch.Tensor, torch.Tensor, int]) -> None:
+        channel_sum, square_sum, count = summary
+        self.sum += channel_sum
+        self.square_sum += square_sum
+        self.count += count
 
     def result(self) -> dict[str, object]:
         if self.count < 2:
@@ -69,9 +78,9 @@ class MomentCollector:
 
     def _hook(self, name: str):
         def collect(_module, inputs):
-            value = inputs[0]
-            self._common[name].add(value)
-            self._banks[self.bank][name].add(value)
+            summary = _Moments.from_tensor(inputs[0])
+            self._common[name].add_summary(summary)
+            self._banks[self.bank][name].add_summary(summary)
         return collect
 
     def finalize(self):

@@ -1,12 +1,13 @@
 import copy
 import unittest
+from unittest import mock
 
 import torch
 from torch import nn
 
 from reproductions.cross_history.three_directions import (
     MomentCollector, ShallowInputStem, apply_bn_bank,
-    bernoulli_teacher_kl, observable_routes,
+    bernoulli_teacher_kl, observable_routes, _Moments,
 )
 
 
@@ -22,6 +23,13 @@ class _BNModel(nn.Module):
 
 
 class MomentCollectorTests(unittest.TestCase):
+    def test_reduces_each_bn_activation_once_for_common_and_routed_banks(self):
+        model = nn.Sequential(nn.BatchNorm2d(2))
+        collector = MomentCollector(model)
+        with mock.patch.object(_Moments, "from_tensor", wraps=_Moments.from_tensor) as reduction:
+            model(torch.randn(3, 2, 4, 5))
+        self.assertEqual(reduction.call_count, 1)
+
     def test_collects_unbiased_common_and_independent_bank_moments(self):
         model = _BNModel().train()
         before = copy.deepcopy(model.state_dict())
