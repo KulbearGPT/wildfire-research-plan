@@ -22,7 +22,64 @@ class _BNModel(nn.Module):
         return self.dropout(self.bn2(x)), self.bn1(x.mean((-2, -1)))
 
 
+class _TwoBNModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.bn1 = nn.BatchNorm2d(2)
+        self.dropout = nn.Dropout(p=1.0)
+        self.bn2 = nn.BatchNorm2d(2)
+
+    def forward(self, x):
+        return self.bn2(self.dropout(self.bn1(x)))
+
+
 class MomentCollectorTests(unittest.TestCase):
+    def test_batch_statistics_ignore_running_buffers_and_restore_bn_flags(self):
+        models = (_TwoBNModel(), _TwoBNModel())
+        models[0].bn1.running_mean.fill_(-1000)
+        models[0].bn1.running_var.fill_(0.01)
+        models[1].bn1.running_mean.fill_(1000)
+        models[1].bn1.running_var.fill_(100)
+        inputs = (
+            torch.arange(64, dtype=torch.float32).reshape(2, 2, 4, 4),
+            torch.arange(64, 128, dtype=torch.float32).reshape(2, 2, 4, 4),
+        )
+        results = []
+        for model in models:
+            before = copy.deepcopy(model.state_dict())
+            collector = MomentCollector(model, batch_statistics=True)
+            self.assertFalse(model.training)
+            self.assertFalse(model.dropout.training)
+            self.assertTrue(model.bn1.training)
+            self.assertFalse(model.bn1.track_running_stats)
+            for bank, values in enumerate(inputs):
+                collector.bank = bank
+                model(values)
+            results.append(collector.finalize())
+            self.assertFalse(model.bn1.training)
+            self.assertTrue(model.bn1.track_running_stats)
+            for name, value in before.items():
+                self.assertTrue(torch.equal(model.state_dict()[name], value), name)
+
+        for first, second in zip(results[0], results[1]):
+            if isinstance(first, dict) and "bn2" in first:
+                self.assertTrue(torch.allclose(first["bn2"]["mean"], second["bn2"]["mean"]))
+                self.assertTrue(torch.allclose(first["bn2"]["var"], second["bn2"]["var"]))
+            else:
+                for bank in (0, 1):
+                    self.assertTrue(torch.allclose(first[bank]["bn2"]["mean"], second[bank]["bn2"]["mean"]))
+                    self.assertTrue(torch.allclose(first[bank]["bn2"]["var"], second[bank]["bn2"]["var"]))
+
+    def test_batch_statistics_restore_bn_flags_when_finalize_rejects_empty_bank(self):
+        model = _TwoBNModel()
+        collector = MomentCollector(model, batch_statistics=True)
+        collector.bank = 0
+        model(torch.randn(2, 2, 2, 2))
+        with self.assertRaises(ValueError):
+            collector.finalize()
+        self.assertFalse(model.bn1.training)
+        self.assertTrue(model.bn1.track_running_stats)
+
     def test_reduces_each_bn_activation_once_for_common_and_routed_banks(self):
         model = nn.Sequential(nn.BatchNorm2d(2))
         collector = MomentCollector(model)

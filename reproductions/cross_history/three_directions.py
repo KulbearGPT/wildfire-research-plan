@@ -43,22 +43,28 @@ class _Moments:
 
 
 class MomentCollector:
-    """Collect fixed-forward BN moments into common and two routed banks.
+    """Collect BN moments into common and two routed banks.
 
     Set ``bank`` to 0 (block absent) or 1 (block present) before each
-    homogeneous forward. Hooks observe pre-BN tensors while the model remains
-    in evaluation mode, so neither running statistics nor dropout are active.
+    homogeneous forward. The model remains in evaluation mode. With
+    ``batch_statistics=True``, only BN layers normalize with current-batch
+    statistics; dropout stays inactive and BN running buffers stay untouched.
     """
 
-    def __init__(self, model: nn.Module):
+    def __init__(self, model: nn.Module, *, batch_statistics: bool = False):
         self.model = model
         self._bank = 0
         self._common: dict[str, _Moments] = {}
         self._banks: dict[int, dict[str, _Moments]] = {0: {}, 1: {}}
         self._handles = []
+        self._bn_flags = []
         model.eval()
         for name, module in model.named_modules():
             if isinstance(module, _BatchNorm):
+                self._bn_flags.append((module, module.training, module.track_running_stats))
+                if batch_statistics:
+                    module.training = True
+                    module.track_running_stats = False
                 self._common[name] = _Moments(module.num_features)
                 self._banks[0][name] = _Moments(module.num_features)
                 self._banks[1][name] = _Moments(module.num_features)
@@ -89,13 +95,18 @@ class MomentCollector:
             handle.remove()
         self._handles.clear()
         try:
-            common = {name: moments.result() for name, moments in self._common.items()}
-            banks = {
-                route: {name: moments.result() for name, moments in values.items()}
-                for route, values in self._banks.items()
-            }
-        except ValueError as exc:
-            raise ValueError("cannot finalize an empty or undersized BN bank") from exc
+            try:
+                common = {name: moments.result() for name, moments in self._common.items()}
+                banks = {
+                    route: {name: moments.result() for name, moments in values.items()}
+                    for route, values in self._banks.items()
+                }
+            except ValueError as exc:
+                raise ValueError("cannot finalize an empty or undersized BN bank") from exc
+        finally:
+            for module, training, track_running_stats in self._bn_flags:
+                module.training = training
+                module.track_running_stats = track_running_stats
         return common, banks
 
 
