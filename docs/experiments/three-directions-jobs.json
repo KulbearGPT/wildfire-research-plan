@@ -1,0 +1,44 @@
+[
+  {
+    "job": "21786838",
+    "history": 1,
+    "command": [
+      "sbatch",
+      "--parsable",
+      "--account=def-vislearn_gpu",
+      "--partition=gpubase_bygpu_b1",
+      "--gres=gpu:nvidia_h100_80gb_hbm3_1g.10gb:1",
+      "--cpus-per-task=4",
+      "--mem=64G",
+      "--time=01:00:00",
+      "--job-name=three-smoke-T1",
+      "--export=ALL,WILDFIRE_SOURCE_COMMIT=05cd9463a71764d208b06cbca45ce1ac975deeff",
+      "--output=/project/6085198/kulbear/wildfire/runs/three-smoke-%j.out",
+      "reproductions/three_directions/run_slurm.sh",
+      "smoke-suite",
+      "--history",
+      "1"
+    ]
+  },
+  {
+    "job": "21786839",
+    "history": 5,
+    "command": [
+      "sbatch",
+      "--parsable",
+      "--account=def-vislearn_gpu",
+      "--partition=gpubase_bygpu_b1",
+      "--gres=gpu:nvidia_h100_80gb_hbm3_1g.10gb:1",
+      "--cpus-per-task=4",
+      "--mem=128G",
+      "--time=01:00:00",
+      "--job-name=three-smoke-T5",
+      "--export=ALL,WILDFIRE_SOURCE_COMMIT=05cd9463a71764d208b06cbca45ce1ac975deeff",
+      "--output=/project/6085198/kulbear/wildfire/runs/three-smoke-%j.out",
+      "reproductions/three_directions/run_slurm.sh",
+      "smoke-suite",
+      "--history",
+      "5"
+    ]
+  }
+]
