@@ -88,3 +88,40 @@ Tests and all model execution run in Slurm. Login work is metadata-only.
 - Full-screen commands and job IDs are in `three-directions-jobs.json`.
   Source `e5593d3` is pinned for the 12 formal runs. No confirmation gate has
   been evaluated yet; all three directions remain unverified scientifically.
+
+## Completed normalization and midpoint screens
+
+All eight non-training runs completed with Slurm exit `0:0`; each scene contains
+3181 aligned samples / 52,117,504 pixels. Deltas below are absolute AP, not
+relative percentages. Source result paths and all scene deltas are recorded in
+`three-directions-partial.json` (D is explicitly incomplete).
+
+| Direction | History | M00 | M01 | M06 | M07 | Primary delta vs shared recalibrated X22 | Screen |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| N conditional BN | T1 | .570710 | .075217 | .051037 | .051107 | -.240553 | fail |
+| N conditional BN | T5 | .597608 | .341844 | .379071 | .194650 | -.020333 | fail |
+| W fixed midpoint | T1 | .585799 | .214325 | .383715 | .200754 | -.033409 | fail |
+| W fixed midpoint | T5 | .588583 | .201571 | .389147 | .204937 | -.060303 | fail |
+
+N: shared recalibration largely preserves the original X22, but separating
+statistics without updating weights/affine damages both histories, especially
+T1. Read-only CPU audit `21787230` completed with exit `0:0`: real M00/M01/
+M06/M07 examples route to the intended conditions and teachers; the wrapper is
+exactly equivalent before calibration (maximum logit difference 0.0); every
+network parameter remains bit-identical to X22. All conditions have training
+support. Three examples per scenario reveal greatly expanded T1 logit ranges
+(e.g. M06 approximately [-80.62,13.23] versus original [-4.09,-.46]). This is
+consistent with disrupted feature scaling after replacing statistics, not
+proof that every conditional-normalization design must fail. Detailed audit:
+`three-directions-statistics-audit.json` and `audit_statistics.py`.
+
+W: T1 block mean rises only .003249 against shared X22 while M01 loses .106724;
+T5 primary also falls. A fixed weight midpoint does not preserve the two
+parents' complementary capabilities. This rejects the registered alpha=.5
+recipe, not all possible model-merging algorithms.
+
+By the pre-registered stop rules, N/W do not advance to seeds1/2 or exposed
+test-year evaluation. Their implementation and negative evidence are retained.
+D remains active: jobs `21787047/21787048` (T1 control/KD) and
+`21787053/21787054` (T5 control/KD) each target all 3000 updates and full 2021
+four-scene evaluation. No early training loss is used as an AP conclusion.
