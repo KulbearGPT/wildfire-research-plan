@@ -68,3 +68,23 @@ base `864f675`. Reuse existing runtime, dataset, Forecaster and exact pooled AP.
 Artifacts stay under `/project/6085198/kulbear/wildfire/runs/three-directions-*`.
 Source runs and checksums are recorded in `reproductions/three_directions/sources.json`.
 Tests and all model execution run in Slurm. Login work is metadata-only.
+
+## Execution ledger
+
+- Source audit: all 30 checkpoints have frozen SHA256 and matching metadata.
+  T5 seed0 ERM has a completed M00 scene but no original full summary; that
+  scene is used only as the retained route's M00 reference. Its checkpoint is
+  strictly loaded in the smoke and its training metadata requires 3000 steps.
+- Six mechanism unit tests passed in CPU job `21786795`; six report/gate tests
+  passed on stdlib Python. Tests first failed before their implementation.
+- T1/T5 all-mode real-data smoke jobs `21786838/21786839` both completed with
+  exit `0:0` in 1m52s/2m13s. Every mode produced all four finite scene metrics.
+  Smoke uses only two evaluation samples and provides no AP effectiveness evidence.
+- Within each history, four calibration variants had identical sample grouping.
+  T1 groups were `[62,24,29,13]`, T5 `[58,29,30,11]` for 128 smoke crops.
+  First supervised loss matched exactly between control and KD student:
+  T1 `.006080592866055667`, T5 `.006270543788559735`.
+  Peak smoke GPU memory for KD was 0.968/1.982 GB at T1/T5.
+- Full-screen commands and job IDs are in `three-directions-jobs.json`.
+  Source `e5593d3` is pinned for the 12 formal runs. No confirmation gate has
+  been evaluated yet; all three directions remain unverified scientifically.
