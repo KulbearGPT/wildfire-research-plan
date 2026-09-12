@@ -46,6 +46,16 @@ class ReportTests(unittest.TestCase):
             else:data[0]['results']['M01']['sample_count']=value
             with self.assertRaises(ValueError):assess(data)
 
+    def test_distillation_reports_measured_storage_and_training_cost(self):
+        data=rows()
+        for r in data:
+            r.update(checkpoint_bytes=128,route_checkpoint_bytes=512,
+                     parameter_bytes=100,training_seconds=120,updates=3000)
+        cell=assess(data)['D']['cells'][0]
+        self.assertEqual(cell['candidate_cost']['checkpoint_to_route_ratio'],.25)
+        self.assertEqual(cell['candidate_cost']['training_seconds'],120)
+        self.assertEqual(cell['control_cost']['updates'],3000)
+
     def test_rejects_duplicate_runs(self):
         data=rows()
         with self.assertRaises(ValueError):assess(data+[copy.deepcopy(data[0])])

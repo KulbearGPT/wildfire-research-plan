@@ -31,6 +31,17 @@ def delta(candidate, control):
                 worst_scene=min(per_scene.values()))
 
 
+def costs(row):
+    result={key:row[key] for key in ('checkpoint_bytes','route_checkpoint_bytes',
+        'parameter_bytes','training_seconds','fit_seconds','total_seconds',
+        'updates','peak_gpu_bytes') if key in row}
+    if result.get('route_checkpoint_bytes') and 'checkpoint_bytes' in result:
+        result['checkpoint_to_route_ratio']=result['checkpoint_bytes']/result['route_checkpoint_bytes']
+    if all('evaluation_seconds' in m for m in row['results'].values()):
+        result['evaluation_seconds']=sum(m['evaluation_seconds'] for m in row['results'].values())
+    return result
+
+
 def assess(rows):
     indexed={}
     for row in rows:
@@ -40,7 +51,7 @@ def assess(rows):
         if key in indexed or row['mode'] not in MODES:
             raise ValueError('duplicate or unknown run')
         indexed[key]=dict(ap=values(row['results']), original=values(row['original_x22']),
-                          route=values(row['route_reference']), path=row.get('path'))
+                          route=values(row['route_reference']), path=row.get('path'), cost=costs(row))
     output={}
     for direction,required in [('N',('bn_conditional','bn_shared')),
                                ('W',('merge','bn_shared','x14_shared')),
@@ -67,7 +78,8 @@ def assess(rows):
                 passed=(route['primary']>=-.005 and route['worst_scene']>=-.010
                         and nearest['primary']>0)
             cell=dict(history=history,ap=candidate['ap'],vs_nearest=nearest,
-                      vs_original_x22=original,vs_retained_route=route,pass_gate=passed)
+                      vs_original_x22=original,vs_retained_route=route,pass_gate=passed,
+                      candidate_cost=candidate['cost'],control_cost=control['cost'])
             if direction=='W':
                 cell['vs_recalibrated_x14']=delta(candidate['ap'],indexed[history,'x14_shared']['ap'])
             cells.append(cell)
