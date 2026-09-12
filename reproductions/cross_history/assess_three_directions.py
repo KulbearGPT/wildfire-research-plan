@@ -16,6 +16,7 @@ def difference(candidate, control):
 
 def assess(rows):
     cells = {}
+    bn_modes = set()
     for row in rows:
         if row.get('year') != 2021 or row.get('seed') != 0 or row.get('smoke', False):
             raise ValueError('screen requires nonsmoke 2021 seed-zero results')
@@ -26,6 +27,10 @@ def assess(rows):
         if row.get('architecture', expected) != expected:
             raise ValueError('screen requires canonical architecture')
         key = (history, row['method'].removeprefix('three_'))
+        if key[1].startswith('bn_'):
+            bn_modes.add(row.get('bn_forward_mode', 'fixed'))
+            if len(bn_modes) > 1:
+                raise ValueError('cannot mix BN calibration modes')
         if key in cells:
             raise ValueError(f'duplicate screen cell {key}')
         ap = {}

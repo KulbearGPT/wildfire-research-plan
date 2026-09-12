@@ -153,6 +153,8 @@ def evaluate(model, args, output, name):
         del loader, dataset
     summary = dict(history=args.history, architecture=canonical_architecture(args.history),
                    seed=args.seed, year=args.year, method=f'three_{name}', results=results)
+    if name.startswith('bn_'):
+        summary['bn_forward_mode'] = args.bn_forward_mode
     (output / f'{name}-summary.json').write_text(json.dumps(summary, indent=2))
     return summary
 
@@ -179,7 +181,7 @@ def bn_diagnostic(args, records, metadata):
     seed_everything(args.seed)
     start = time.monotonic()
     loader = train_loader(args, calibration=True)
-    collector = MomentCollector(model)
+    collector = MomentCollector(model, batch_statistics=args.bn_forward_mode == 'batch_stats')
     samples = [0, 0]
     with torch.no_grad():
         for number, (packed, _, _) in enumerate(loader):
@@ -195,7 +197,8 @@ def bn_diagnostic(args, records, metadata):
                 break
     common, banks = collector.finalize()
     calibration_seconds = time.monotonic() - start
-    # Hooks observe eval-mode activations; collecting must not mutate any state.
+    # Only the normalization used during collection changes; no weights,
+    # running buffers or counters may change in either calibration mode.
     for key, tensor in model.state_dict().items():
         if not torch.equal(tensor, original[key]):
             raise RuntimeError(f'calibration collection mutated {key}')
@@ -221,6 +224,7 @@ def bn_diagnostic(args, records, metadata):
                 torch.testing.assert_close(result, again, rtol=0, atol=0)
         return dict(bank_samples=samples, bn_layers=len(common), reload_max_difference=0.,
                     scenarios=list(SCENARIOS), variants=['common', 'conditional'],
+                    bn_forward_mode=args.bn_forward_mode,
                     calibration_seconds=calibration_seconds)
     evaluate(model, args, args.output, 'bn_original')
     apply_bn_bank(model, common)
@@ -326,6 +330,7 @@ def main():
     parser.add_argument('--batch-size', type=int, default=64)
     parser.add_argument('--workers', type=int, default=3)
     parser.add_argument('--calibration-samples', type=int, default=4096)
+    parser.add_argument('--bn-forward-mode', choices=('fixed', 'batch_stats'), default='fixed')
     parser.add_argument('--year', type=int, choices=(2021, 2022, 2023), default=2021)
     parser.add_argument('--evaluate-only', type=Path)
     parser.add_argument('--manifest', type=Path, default=DEFAULT_MANIFEST)
@@ -347,6 +352,7 @@ def main():
         arm=args.arm, seed=args.seed, steps=args.steps, physical_batch=args.batch_size,
         effective_batch=64, lr=.001, schedule='cosine-to-zero', teacher_kl_weight=.1,
         calibration_samples=args.calibration_samples, source_records=records,
+        bn_forward_mode=args.bn_forward_mode,
         job=os.environ['SLURM_JOB_ID'], smoke=args.smoke)
     (args.output / 'started.json').write_text(json.dumps(metadata, indent=2))
     if args.evaluate_only:
@@ -356,6 +362,8 @@ def main():
             raise ValueError('evaluation checkpoint mismatch')
         if saved.get('smoke'):
             raise ValueError('smoke checkpoint cannot supply formal evaluation')
+        if args.arm == 'bn' and saved.get('bn_forward_mode', 'fixed') != args.bn_forward_mode:
+            raise ValueError('BN evaluation calibration mode mismatch')
         model = make_forecaster(args.history, saved['hyper_parameters'], args.arm)
         model.load_state_dict(saved['state_dict'], strict=True)
         model.cuda()

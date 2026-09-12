@@ -34,6 +34,12 @@ class AssessmentTests(unittest.TestCase):
                 for metric in row['results'].values():metric['avg_precision']=.515
         self.assertFalse(self.assess(rows)['distillation']['screen_pass'])
 
+    def test_rejects_mixed_calibration_modes(self):
+        rows = self.rows()
+        rows[0]['bn_forward_mode'] = 'batch_stats'
+        with self.assertRaises(ValueError):
+            self.assess(rows)
+
     def test_rejects_invalid_or_duplicate_evidence(self):
         rows = self.rows()
         with self.assertRaises(ValueError):self.assess(rows+[rows[0]])

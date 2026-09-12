@@ -44,3 +44,11 @@ Files: reproductions/cross_history/run_three_directions.py, run_three_directions
 - [ ] Follow predefined positive gates with seeds 1/2, then frozen 2022/2023 evaluation; negative gates stop without retuning.
 - [ ] Produce docs/experiments/three_directions_results.md and small machine-readable paired results, reporting all outcomes, uncertainty, attribution controls, runtime/storage and limitations.
 - [ ] Independently review experimental code and result evidence; resolve load-bearing issues, commit final artifacts and report results to user. Goal is complete only when required jobs and reports are complete.
+
+## Calibration correction after the fixed-forward diagnostic (before revised AP)
+
+The fixed-activation probe completed for both histories (21787290/91). T1 conditional BN had M06/M07 AP .01745/.01140; T5 .24568/.09005. This is retained as diagnostic evidence, not erased. CPU21787565 verifies nonzero variances and pooled-bank algebra; GPU21787609 shows direct/routed predictions exactly equal, but T1 BN activation RMS grows from .48 to 1.99e6 after replacing all statistics. Downstream statistics were estimated under old upstream normalization, so simultaneously substituting them creates an inconsistent activation chain.
+
+One bounded correction uses the SAME 4096 examples, masks, grouping and frozen weights, but enables per-batch normalization while collecting moments. Only BN modules use training mode with track_running_stats=False; Dropout and all other modules stay eval. Restore BN flags afterwards, and require every state_dict entry to remain unchanged. This follows the batch-stat normalization principle of the installed torch.optim.swa_utils.update_bn, without its model-wide dropout activation or unweighted running-stat updates. Both common/conditional banks still share exactly the same calibration forwards.
+
+Keep `fixed` and `batch_stats` source/summary metadata separate and never mix them in a comparison. Apply the previously frozen positive/negative gate to this corrected calibration assay; there is no coefficient, mask, architecture, sample-budget or test-year search. The optional BN-affine extension remains gated on corrected positive evidence.
