@@ -61,7 +61,13 @@ def evaluate_batches(
                 and predictive_variance.shape != target.shape
             ):
                 raise ValueError("predictive variance shape differs from target")
+            if not torch.isfinite(logits).all():
+                raise ValueError("evaluation produced non-finite logits")
+            if predictive_variance is not None and not torch.isfinite(predictive_variance).all():
+                raise ValueError("evaluation produced non-finite predictive variance")
             loss = model.compute_loss(logits, target)
+            if not torch.isfinite(loss).all():
+                raise ValueError("evaluation produced non-finite loss")
             pixels = target.numel()
             weighted_loss += float(loss.detach().cpu()) * pixels
             probabilities = torch.sigmoid(logits)
