@@ -13,4 +13,12 @@ source /project/6085198/kulbear/wildfire/envs/wsts-res18-t1-nibi-smoke/bin/activ
 export WANDB_MODE=disabled WANDB_SILENT=true HDF5_USE_FILE_LOCKING=FALSE
 export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 OMP_NUM_THREADS=1
 cd "${root}/project"
-python -m reproductions.three_directions.run --output "${root}/result" "$@" 2>&1 | tee "${root}/run.log"
+if [[ "${1:-}" == smoke-suite ]]; then
+  shift
+  for mode in bn_shared bn_conditional merge x14_shared student_control student_distill; do
+    python -m reproductions.three_directions.run --mode "${mode}" --smoke \
+      --output "${root}/smoke-${mode}" "$@" 2>&1 | tee "${root}/${mode}.log"
+  done
+else
+  python -m reproductions.three_directions.run --output "${root}/result" "$@" 2>&1 | tee "${root}/run.log"
+fi
