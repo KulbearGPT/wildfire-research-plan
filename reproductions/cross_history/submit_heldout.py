@@ -26,10 +26,11 @@ def main():
     for run in args.run:
         metadata = json.loads((run / 'started.json').read_text())
         history = int(metadata['history'])
+        architecture = metadata.get('architecture') or {1: 'res18_unet', 5: 'res18_utae'}[history]
         method = metadata['method']
         seed = int(metadata['seed'])
         block_fraction = metadata.get('block_fraction')
-        key = history, method, seed, block_fraction
+        key = history, architecture, method, seed, block_fraction
         if key in seen:
             raise ValueError(f'duplicate training run: {key}')
         seen.add(key)
@@ -49,6 +50,7 @@ def main():
                 '--cpus-per-task=8', '--mem=64G', '--time=01:30:00',
                 f'--export=ALL,WILDFIRE_SOURCE_COMMIT={args.source_commit}',
                 'reproductions/cross_history/run_slurm.sh', str(history), method,
+                '--architecture', architecture,
                 '--seed', str(seed), '--batch-size', '16', '--workers', '7',
                 '--evaluate-only', str(checkpoint), '--year', str(year),
                 *extra,
