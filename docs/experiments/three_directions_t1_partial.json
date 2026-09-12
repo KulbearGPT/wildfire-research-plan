@@ -1,0 +1,409 @@
+{
+  "rows": [
+    {
+      "history": 1,
+      "architecture": "res18_unet",
+      "seed": 0,
+      "year": 2021,
+      "method": "three_control",
+      "results": {
+        "M00": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.5942097346774655,
+          "f1": 0.5309167525502722,
+          "iou": 0.36139323858734573,
+          "precision": 0.6972896941938175,
+          "recall": 0.4286428110546017,
+          "loss": 0.005719206590953182,
+          "brier": 0.011882113479604814
+        },
+        "M01": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.32005383196893455,
+          "f1": 0.21147320675602888,
+          "iou": 0.11823876922328108,
+          "precision": 0.6400342510868133,
+          "recall": 0.1266616988596493,
+          "loss": 0.009236219010870062,
+          "brier": 0.013063100238349107
+        },
+        "M06": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.379640382017139,
+          "f1": 0.3409982515170661,
+          "iou": 0.20554423877424496,
+          "precision": 0.6860228332698346,
+          "recall": 0.22688829168993063,
+          "loss": 0.00847858906481579,
+          "brier": 0.014827146643701869
+        },
+        "M07": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.1977405409183413,
+          "f1": 0.1563471330784446,
+          "iou": 0.0848029126760211,
+          "precision": 0.6785916903053563,
+          "recall": 0.08835165121649717,
+          "loss": 0.010638027635430206,
+          "brier": 0.01732865399752762
+        }
+      },
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-control-21787115/result/control-summary.json"
+    },
+    {
+      "history": 1,
+      "architecture": "res18_unet",
+      "seed": 0,
+      "year": 2021,
+      "method": "three_mixed",
+      "results": {
+        "M00": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.6000584993096422,
+          "f1": 0.5414453138962103,
+          "iou": 0.3712204410672892,
+          "precision": 0.6930015994794915,
+          "recall": 0.4442827131178348,
+          "loss": 0.0056906785677324455,
+          "brier": 0.011805386683900415
+        },
+        "M01": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.32462013985741145,
+          "f1": 0.20735272394367738,
+          "iou": 0.11566844560734581,
+          "precision": 0.6456998773340602,
+          "recall": 0.12350721382064189,
+          "loss": 0.009114969129220626,
+          "brier": 0.012996799629023524
+        },
+        "M06": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.3850672509962538,
+          "f1": 0.3489810153110683,
+          "iou": 0.21137310869676024,
+          "precision": 0.6840479120934895,
+          "recall": 0.2342422392498756,
+          "loss": 0.008388239964995041,
+          "brier": 0.014763880110000597
+        },
+        "M07": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.19969159840135703,
+          "f1": 0.15956896452617905,
+          "iou": 0.08670195266789654,
+          "precision": 0.6758752779626354,
+          "recall": 0.0904633312839319,
+          "loss": 0.010595270584702506,
+          "brier": 0.01726357528986102
+        }
+      },
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-mixed-21787116/result/mixed-summary.json"
+    },
+    {
+      "history": 1,
+      "architecture": "res18_unet",
+      "seed": 0,
+      "year": 2021,
+      "method": "three_typed",
+      "results": {
+        "M00": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.5938951697812968,
+          "f1": 0.5378765121027773,
+          "iou": 0.367873518587909,
+          "precision": 0.6880645729221685,
+          "recall": 0.44150624488102247,
+          "loss": 0.005813504888651806,
+          "brier": 0.01250556390878915
+        },
+        "M01": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.3186193170790606,
+          "f1": 0.20774523480839066,
+          "iou": 0.11591278139867615,
+          "precision": 0.642365608352386,
+          "recall": 0.12390912823676888,
+          "loss": 0.009176647306250977,
+          "brier": 0.01397557221165677
+        },
+        "M06": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.37569202120017603,
+          "f1": 0.3470610954091584,
+          "iou": 0.20996607584541535,
+          "precision": 0.677407552264039,
+          "recall": 0.23329285222367296,
+          "loss": 0.008579610952702273,
+          "brier": 0.015643932075198437
+        },
+        "M07": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.19014087368673713,
+          "f1": 0.16096962469469894,
+          "iou": 0.08752961715924679,
+          "precision": 0.6689327636323205,
+          "recall": 0.09149310119335993,
+          "loss": 0.010783945719343463,
+          "brier": 0.018006562489837043
+        }
+      },
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-typed-21787117/result/typed-summary.json"
+    },
+    {
+      "history": 1,
+      "architecture": "res18_unet",
+      "seed": 0,
+      "year": 2021,
+      "method": "three_distill",
+      "results": {
+        "M00": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.5954461580386222,
+          "f1": 0.5329793888027987,
+          "iou": 0.36330736237430683,
+          "precision": 0.6948829347340187,
+          "recall": 0.4322643858204594,
+          "loss": 0.005660882008177659,
+          "brier": 0.011654653942170887
+        },
+        "M01": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.3213686428196246,
+          "f1": 0.21095908337453106,
+          "iou": 0.11791741676453496,
+          "precision": 0.645575393514656,
+          "recall": 0.12607946608385456,
+          "loss": 0.009158781548592806,
+          "brier": 0.012939853731312118
+        },
+        "M06": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.38312987132057474,
+          "f1": 0.3420454823427728,
+          "iou": 0.20630570905292397,
+          "precision": 0.6858503152222252,
+          "recall": 0.22783550620577583,
+          "loss": 0.008319926387488406,
+          "brier": 0.014278280867585143
+        },
+        "M07": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.2027231221605705,
+          "f1": 0.15720542463743906,
+          "iou": 0.08530816551080288,
+          "precision": 0.676510444209413,
+          "recall": 0.08893605650264938,
+          "loss": 0.010524660701322124,
+          "brier": 0.0165159509981889
+        }
+      },
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-distill-21787118/result/distill-summary.json"
+    },
+    {
+      "history": 1,
+      "architecture": "res18_unet",
+      "seed": 0,
+      "year": 2021,
+      "method": "three_teacher",
+      "results": {
+        "M00": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.5850657414618061,
+          "f1": 0.5349391950177786,
+          "iou": 0.36513105339970525,
+          "precision": 0.6776261214590544,
+          "recall": 0.44189077921428993,
+          "loss": 0.006086272102552567,
+          "brier": 0.013184696871580024
+        },
+        "M01": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.32402292624730916,
+          "f1": 0.2012231281750935,
+          "iou": 0.11186664189814012,
+          "precision": 0.6495045749774807,
+          "recall": 0.11905356758788348,
+          "loss": 0.009061679235843697,
+          "brier": 0.013083702739690018
+        },
+        "M06": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.3899163383308188,
+          "f1": 0.3501484061836178,
+          "iou": 0.2122302439176763,
+          "precision": 0.6767496295927388,
+          "recall": 0.23617142844728511,
+          "loss": 0.008308918690913512,
+          "brier": 0.013973778486720274
+        },
+        "M07": {
+          "sample_count": 3181,
+          "pixel_count": 52117504,
+          "avg_precision": 0.20483618368637138,
+          "f1": 0.17873890229180578,
+          "iou": 0.09814018567503804,
+          "precision": 0.6214398427193005,
+          "recall": 0.10438043263371258,
+          "loss": 0.010538758854146055,
+          "brier": 0.016547551351086744
+        }
+      },
+      "source": "/project/6085198/kulbear/wildfire/runs/three-directions-1-distill-21787118/result/teacher-summary.json"
+    }
+  ],
+  "assessment": {
+    "normalization": {
+      "status": "incomplete",
+      "missing": [
+        [
+          1,
+          "bn_original"
+        ],
+        [
+          1,
+          "bn_common"
+        ],
+        [
+          1,
+          "bn_conditional"
+        ],
+        [
+          5,
+          "bn_original"
+        ],
+        [
+          5,
+          "bn_common"
+        ],
+        [
+          5,
+          "bn_conditional"
+        ]
+      ],
+      "screen_pass": false,
+      "comparisons": []
+    },
+    "fusion": {
+      "status": "incomplete",
+      "missing": [
+        [
+          5,
+          "control"
+        ],
+        [
+          5,
+          "mixed"
+        ],
+        [
+          5,
+          "typed"
+        ]
+      ],
+      "screen_pass": false,
+      "comparisons": [
+        {
+          "history": 1,
+          "candidate": "typed",
+          "references": [
+            "control",
+            "mixed"
+          ],
+          "versus_first": {
+            "scenarios": {
+              "M00": -0.0003145648961687675,
+              "M01": -0.0014345148898739501,
+              "M06": -0.003948360816962981,
+              "M07": -0.007599667231604185
+            },
+            "primary": -0.004327514312813706,
+            "block": -0.005774014024283583,
+            "clean": -0.0003145648961687675
+          },
+          "versus_second": {
+            "scenarios": {
+              "M00": -0.006163329528345418,
+              "M01": -0.006000822778350845,
+              "M06": -0.009375229796077744,
+              "M07": -0.009550724714619901
+            },
+            "primary": -0.008308925763016164,
+            "block": -0.009462977255348823,
+            "clean": -0.006163329528345418
+          },
+          "pass_gate": false
+        }
+      ]
+    },
+    "distillation": {
+      "status": "incomplete",
+      "missing": [
+        [
+          5,
+          "control"
+        ],
+        [
+          5,
+          "teacher"
+        ],
+        [
+          5,
+          "distill"
+        ]
+      ],
+      "screen_pass": false,
+      "comparisons": [
+        {
+          "history": 1,
+          "candidate": "distill",
+          "references": [
+            "control",
+            "teacher"
+          ],
+          "versus_first": {
+            "scenarios": {
+              "M00": 0.0012364233611567021,
+              "M01": 0.001314810850690018,
+              "M06": 0.0034894893034357333,
+              "M07": 0.004982581242229195
+            },
+            "primary": 0.003262293798784982,
+            "block": 0.004236035272832464,
+            "clean": 0.0012364233611567021
+          },
+          "versus_second": {
+            "scenarios": {
+              "M00": 0.010380416576816098,
+              "M01": -0.0026542834276845895,
+              "M06": -0.006786467010244046,
+              "M07": -0.0021130615258008745
+            },
+            "primary": -0.003851270654576503,
+            "block": -0.00444976426802246,
+            "clean": 0.010380416576816098
+          },
+          "pass_gate": false
+        }
+      ]
+    }
+  }
+}
