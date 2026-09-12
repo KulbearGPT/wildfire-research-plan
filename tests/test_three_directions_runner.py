@@ -47,6 +47,30 @@ class RunnerContractTests(unittest.TestCase):
         torch.testing.assert_close(base.last[:, :, -2:], packed[:, :, -2:])
         self.assertEqual(result.shape, (2,1,3,3))
 
+    def test_bn_wrapper_routes_both_banks_and_common_application(self):
+        import torch
+        from torch import nn
+        module = self.module()
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.bn = nn.BatchNorm2d(1)
+            def forward(self, packed):
+                return self.bn(packed[:, 0, :1])
+        model = Model().eval()
+        banks = {i: {'bn': {'mean': torch.tensor([10. * i]),
+                           'var': torch.ones(1), 'count': 10}} for i in (0, 1)}
+        packed = torch.zeros(2, 1, 3, 2, 2)
+        packed[0, 0, 0] = 11.
+        packed[1, 0, 0] = 1.
+        packed[0, 0, -2] = 1.
+        result = module.BankForecaster(model, banks).eval()(packed)
+        torch.testing.assert_close(result, torch.ones_like(result) / (1.+model.bn.eps)**.5)
+        module.apply_bn_bank(model, {'bn': {'mean': torch.tensor([5.]),
+                                          'var': torch.ones(1), 'count': 20}})
+        torch.testing.assert_close(model(packed)[:, 0, 0, 0],
+                                   torch.tensor([6., -4.]) / (1.+model.bn.eps)**.5)
+
     def test_routed_teacher_receives_same_corrupt_input_and_keeps_order(self):
         import torch
         from torch import nn

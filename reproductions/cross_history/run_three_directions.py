@@ -177,6 +177,7 @@ def bn_diagnostic(args, records, metadata):
     model.cuda().eval().requires_grad_(False)
     original = copy.deepcopy(model.state_dict())
     seed_everything(args.seed)
+    start = time.monotonic()
     loader = train_loader(args, calibration=True)
     collector = MomentCollector(model)
     samples = [0, 0]
@@ -193,6 +194,7 @@ def bn_diagnostic(args, records, metadata):
             if args.smoke:
                 break
     common, banks = collector.finalize()
+    calibration_seconds = time.monotonic() - start
     # Hooks observe eval-mode activations; collecting must not mutate any state.
     for key, tensor in model.state_dict().items():
         if not torch.equal(tensor, original[key]):
@@ -200,24 +202,31 @@ def bn_diagnostic(args, records, metadata):
     del loader
     saved = dict(metadata, hyper_parameters=hparams,
                  state_dict={k: v.cpu() for k, v in original.items()},
-                 common=common, banks=banks, bank_samples=samples)
+                 common=common, banks=banks, bank_samples=samples,
+                 calibration_seconds=calibration_seconds)
     torch.save(saved, args.output / 'checkpoint.pt')
     if args.smoke:
-        packed, target = evaluation_dataset(args.history, 2021, 'M06')[0]
-        wrapper = BankForecaster(model, banks).eval()
-        with torch.no_grad():
-            result = wrapper(packed[None].cuda())
-        assert result.shape[-2:] == target.shape[-2:] and torch.isfinite(result).all()
         reloaded = torch.load(args.output / 'checkpoint.pt', map_location='cpu', weights_only=False)
-        with torch.no_grad():
-            again = BankForecaster(model, reloaded['banks']).eval()(packed[None].cuda())
-        torch.testing.assert_close(result, again, rtol=0, atol=0)
-        return dict(bank_samples=samples, bn_layers=len(common), reload_max_difference=0.)
+        for scenario in SCENARIOS:
+            packed, target = evaluation_dataset(args.history, 2021, scenario)[0]
+            packed = packed[None].cuda()
+            for variants, restored in (
+                ({0: common, 1: common}, {0: reloaded['common'], 1: reloaded['common']}),
+                (banks, reloaded['banks']),
+            ):
+                with torch.no_grad():
+                    result = BankForecaster(model, variants).eval()(packed)
+                    again = BankForecaster(model, restored).eval()(packed)
+                assert result.shape[-2:] == target.shape[-2:] and torch.isfinite(result).all()
+                torch.testing.assert_close(result, again, rtol=0, atol=0)
+        return dict(bank_samples=samples, bn_layers=len(common), reload_max_difference=0.,
+                    scenarios=list(SCENARIOS), variants=['common', 'conditional'],
+                    calibration_seconds=calibration_seconds)
     evaluate(model, args, args.output, 'bn_original')
     apply_bn_bank(model, common)
     evaluate(model, args, args.output, 'bn_common')
     evaluate(BankForecaster(model, banks), args, args.output, 'bn_conditional')
-    return dict(bank_samples=samples, bn_layers=len(common))
+    return dict(bank_samples=samples, bn_layers=len(common), calibration_seconds=calibration_seconds)
 
 
 def learned_probe(args, records, metadata):
