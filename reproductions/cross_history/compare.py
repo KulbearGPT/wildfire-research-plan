@@ -16,6 +16,10 @@ def load(path: Path):
     return payload, values
 
 
+def _architecture(metadata):
+    return metadata.get('architecture') or {1: 'res18_unet', 5: 'res18_utae'}[metadata['history']]
+
+
 def aggregate(rows, history, year):
     selected = [r for r in rows if r['history'] == history and r['year'] == year]
     return dict(history=history,year=year,seeds=sorted(r['seed'] for r in selected),
@@ -36,11 +40,18 @@ def main():
     if len(args.control) != len(args.candidate):
         raise ValueError('control and candidate counts differ')
     rows=[]
+    architectures={}
     for control_path,candidate_path in zip(args.control,args.candidate):
         cmeta,control=load(control_path); mmeta,candidate=load(candidate_path)
         keys=('history','seed','year')
         if any(cmeta.get(k) != mmeta.get(k) for k in keys):
             raise ValueError('matched history/seed/year differ')
+        architecture = _architecture(cmeta)
+        if architecture != _architecture(mmeta):
+            raise ValueError('matched control/candidate architectures differ')
+        history = cmeta['history']
+        if architectures.setdefault(history, architecture) != architecture:
+            raise ValueError(f'multiple architectures for history={history}')
         effective = dict(candidate)
         if args.routed_spatial:
             effective['M00']=control['M00']; effective['M01']=control['M01']
@@ -48,7 +59,8 @@ def main():
             effective['M00']=control['M00']
             effective['M06']=control['M06']; effective['M07']=control['M07']
         delta={name:effective[name]-control[name] for name in SCENARIOS}
-        rows.append(dict(history=cmeta['history'],seed=cmeta['seed'],year=cmeta['year'],
+        rows.append(dict(history=cmeta['history'],architecture=architecture,
+            seed=cmeta['seed'],year=cmeta['year'],
             control=control,candidate=candidate,effective=effective,delta=delta,
             primary_delta=mean(delta[x] for x in PRIMARY),
             block_delta=mean(delta[x] for x in BLOCK)))
@@ -58,6 +70,8 @@ def main():
     grouped=[aggregate(rows,history,year) for history in sorted({r['history'] for r in rows})
              for year in sorted({r['year'] for r in rows})
              if any(r['history'] == history and r['year'] == year for r in rows)]
+    for group in grouped:
+        group['architecture'] = architectures[group['history']]
     screen=[r for r in rows if r['year'] == 2021 and r['seed'] == 0]
     screen_pass=(len(screen) == 2 and {r['history'] for r in screen} == {1,5}
                  and all(r['primary_delta'] >= .005 and r['delta']['M00'] >= -.01 for r in screen))
