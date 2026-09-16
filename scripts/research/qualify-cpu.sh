@@ -9,7 +9,7 @@ python -m pytest -q \
   tests/test_diagnostic_artifacts.py tests/test_wsts_fast_track_viirs_reliability.py \
   tests/test_wsts_fast_track_viirs_screen.py \
   tests/test_artifact_bundle.py tests/test_research_launchers.py \
-  tests/test_research_data_preparation.py \
+  tests/test_research_data_preparation.py tests/test_upstream_import_patch.py \
   tests/test_wsts_fast_track_runtime.py \
   tests/test_wsts_fast_track_complete_baseline.py \
   tests/test_wsts_fast_track_complete_reliability_prompt_pyramid.py \

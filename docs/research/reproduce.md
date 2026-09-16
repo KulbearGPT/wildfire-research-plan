@@ -6,11 +6,28 @@
 
 ## 1. 准备代码和集群配置
 
-这里复现的是我们的研究改动，因此需要本交付版本的源码。可以把该提交的 `git archive` 导出包传到新服务器再解压，不要求能访问原工作目录。官方模型代码由安装作业从官方仓库获取；只跑官方 Res18 基线的独立教程仍见 [原教程](../tutorials/res18-baseline-slurm.md)。
+这里复现的是我们的研究改动，因此需要本交付版本的源码和 Git 提交记录。可以通过本地 Git bundle 交付，不要求新服务器访问我们的远程仓库或原工作目录。提交器使用 Git 保存每个作业的精确源码快照，所以单独解压 `git archive` 不足以运行下面的提交命令。官方模型代码由安装作业从官方仓库获取；只跑官方 Res18 基线的独立教程仍见 [原教程](../tutorials/res18-baseline-slurm.md)。
+
+在交付版本已提交的源仓库目录生成 bundle 和提交号：
+
+```bash
+git bundle create ../handoff.bundle HEAD
+git rev-parse HEAD > ../handoff-commit.txt
+```
+
+把这两个文件传到新服务器，然后从本地 bundle 建立工作仓库并固定交付提交：
+
+```bash
+git clone /path/to/transfer/handoff.bundle wildfire-research-plan
+cd wildfire-research-plan
+git checkout --detach "$(cat /path/to/transfer/handoff-commit.txt)"
+```
+
+bundle 携带该提交及其祖先历史；这里的 clone 读取本地文件，不连接我们的远程仓库。把后面的 `WILDFIRE_REPO` 配置为这个新工作仓库的绝对路径。
 
 需要 Linux、Slurm、NVIDIA GPU，以及 Python 3.10（训练）和 Python 3.13（数据审计）。两套 Python 分开是因为原模型依赖与数据审计包的版本要求不同。训练环境不安装要求 Python 3.13 的根项目包，而从归档源码导入研究模块。
 
-在已解压的项目目录执行：
+在上述新工作仓库目录执行：
 
 ```bash
 mkdir -p "$HOME/wildfire-config"
@@ -30,6 +47,8 @@ bash scripts/research/submit.sh cpu setup
 提交器会打印 job ID 与归档目录。用 `squeue -u "$USER"` 看队列，用 `sacct -j JOB_ID --format=JobID,State,ExitCode,NodeList` 检查退出状态（把 `JOB_ID` 换成输出的数字）。日志保存在 `$WILDFIRE_ROOT/jobs/`；成功必须同时有 `COMPLETED`、退出码 `0:0` 和 `allocation-作业号/setup-completed.txt`。
 
 安装固定版本的官方 WildfireSpreadTS，应用仓库内保留的兼容性补丁，创建全新的两个虚拟环境，并在 CPU 作业内下载 ResNet18 预训练权重。依赖输入见 [训练环境](../../environments/research-training.txt) 和 [审计环境](../../environments/research-audit.txt)，作业同时保存实际 `pip freeze`。
+
+安装失败后先保留日志；符合 [恢复条件](setup-recovery.md) 时可以用 `setup-finish` 继续，不能删除环境后盲目重试。
 
 所有训练、张量测试、数据下载和转换都通过 `submit.sh` 提交。`job.sh` 在缺少 `SLURM_JOB_ID` 时拒绝执行。提交器归档的是 **HEAD 提交**，不是未提交的工作区，因此修改后需要先 commit 再提交实验。
 

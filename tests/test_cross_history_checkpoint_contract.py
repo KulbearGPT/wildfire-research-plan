@@ -22,4 +22,3 @@ def test_complete_new_formal_checkpoint_is_accepted():
 def test_smoke_and_incomplete_artifacts_cannot_be_formal_sources(payload):
     with pytest.raises(ValueError):
         require_formal_checkpoint(payload)
-

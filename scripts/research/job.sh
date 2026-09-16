@@ -5,7 +5,7 @@ if [[ -z ${SLURM_JOB_ID:-} ]]; then
   exit 2
 fi
 if (( $# < 3 )); then
-  echo 'usage: job.sh SNAPSHOT SITE_ENV setup|audit|COMMAND [ARGS...]' >&2
+  echo 'usage: job.sh SNAPSHOT SITE_ENV setup|setup-finish|audit|COMMAND [ARGS...]' >&2
   exit 2
 fi
 readonly research_snapshot=$(realpath "$1")
@@ -54,46 +54,54 @@ record_upstream() {
 }
 setup_runtime() {
   local training_env="$WILDFIRE_ROOT/envs/train" audit_env="$WILDFIRE_ROOT/envs/audit"
+  if [[ $1 == setup-finish ]]; then
+    test -x "$training_env/bin/python" || { echo "setup-finish requires the existing training environment" >&2; exit 2; }
+    test -d "$WILDFIRE_UPSTREAM/.git" || { echo "setup-finish requires the existing upstream checkout" >&2; exit 2; }
+  else
   for target in "$training_env" "$audit_env" "$WILDFIRE_UPSTREAM"; do
     if [[ -e $target ]] && [[ ! -d $target || -n $(ls -A "$target") ]]; then
       echo "Refusing nonempty setup target: $target" >&2
       exit 2
     fi
   done
+  fi
   mkdir -p "$WILDFIRE_ROOT/envs" "$(dirname "$WILDFIRE_UPSTREAM")" "$TORCH_HOME" "$HF_HOME"
   load_modules "${WILDFIRE_TRAIN_MODULES:-}" train
-  "${WILDFIRE_TRAIN_PYTHON:-python3.10}" -m venv "$training_env"
+  if [[ $1 == setup ]]; then
+    "${WILDFIRE_TRAIN_PYTHON:-python3.10}" -m venv "$training_env"
+  fi
   "$training_env/bin/python" -m pip install --index-url "$PIP_INDEX_URL" -r "$research_snapshot/environments/research-training.txt"
+  "$training_env/bin/python" -m pip check
   "$training_env/bin/python" -m pip freeze > "$research_logs/train-pip-freeze.txt"
-  git clone https://github.com/slahrichi/WildfireSpreadTS.git "$WILDFIRE_UPSTREAM"
-  git -C "$WILDFIRE_UPSTREAM" checkout --detach ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad
-  git -C "$WILDFIRE_UPSTREAM" apply "$research_snapshot/reproductions/wsts_res18_unet_t1/patches/res18_import_scope.patch"
-  "$training_env/bin/python" - "$WILDFIRE_UPSTREAM" <<'PY'
-from pathlib import Path
-import sys
-path = Path(sys.argv[1]) / 'src/dataloader/FireSpreadDataset.py'
-line = 'from torch.utils.data.dataset import T_co\n'
-text = path.read_text()
-if text.count(line) != 1:
-    raise ValueError('expected exactly one obsolete T_co import in pinned upstream')
-path.write_text(text.replace(line, ''))
-PY
+  if [[ $1 == setup ]]; then
+    git clone https://github.com/slahrichi/WildfireSpreadTS.git "$WILDFIRE_UPSTREAM"
+    git -C "$WILDFIRE_UPSTREAM" checkout --detach ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad
+  fi
+  "$training_env/bin/python" "$research_snapshot/scripts/research/prepare-upstream.py" \
+    --upstream "$WILDFIRE_UPSTREAM" \
+    --patch "$research_snapshot/reproductions/wsts_res18_unet_t1/patches/res18_import_scope.patch"
   record_upstream
   "$training_env/bin/python" - <<'PY'
 import segmentation_models_pytorch as smp
 smp.encoders.get_encoder('resnet18', in_channels=40, weights='imagenet')
 PY
   load_modules "${WILDFIRE_AUDIT_MODULES:-}" audit
-  "${WILDFIRE_AUDIT_PYTHON:-python3.13}" -m venv "$audit_env"
+  if [[ ! -x "$audit_env/bin/python" ]]; then
+    if [[ -e $audit_env && -n $(ls -A "$audit_env") ]]; then
+      echo "Refusing incomplete nonempty audit environment: $audit_env" >&2; exit 2
+    fi
+    "${WILDFIRE_AUDIT_PYTHON:-python3.13}" -m venv "$audit_env"
+  fi
   "$audit_env/bin/python" -m pip install --index-url "$PIP_INDEX_URL" -r "$research_snapshot/environments/research-audit.txt"
   "$audit_env/bin/python" -m pip install --index-url "$PIP_INDEX_URL" --no-deps "$research_snapshot"
+  "$audit_env/bin/python" -m pip check
   "$audit_env/bin/python" -m pip freeze > "$research_logs/audit-pip-freeze.txt"
   printf 'Setup completed from archived source.\n' > "$research_logs/setup-completed.txt"
 }
 
-if [[ $1 == setup ]]; then
-  (( $# == 1 )) || { echo 'setup accepts no additional arguments' >&2; exit 2; }
-  setup_runtime
+if [[ $1 == setup || $1 == setup-finish ]]; then
+  (( $# == 1 )) || { echo 'setup actions accept no additional arguments' >&2; exit 2; }
+  setup_runtime "$1"
   exit 0
 fi
 if [[ $1 == audit ]]; then

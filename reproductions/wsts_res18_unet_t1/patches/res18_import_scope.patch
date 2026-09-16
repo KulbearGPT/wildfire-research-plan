@@ -13,3 +13,4 @@ diff --git a/src/models/__init__.py b/src/models/__init__.py
 -from .TransUnetLightning import TransUnetLightning
 -from .SMPTempModel import SMPTempModel 
 -from .SegFormerLightning import SegFormerLightning
+\ No newline at end of file

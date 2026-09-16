@@ -125,6 +125,24 @@ class ResearchLauncherTests(unittest.TestCase):
                 self.assertEqual(values['WILDFIRE_REPO'], str(snapshot))
                 self.assertEqual(values['TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD'], '1')
 
+    def test_setup_finish_requires_existing_training_environment(self):
+        import shlex
+        with tempfile.TemporaryDirectory(prefix='setup finish ') as directory:
+            root = Path(directory)
+            snapshot = root / 'snapshot'
+            snapshot.mkdir()
+            site = root / 'site.env'
+            site.write_text('WILDFIRE_REPO=/unused\nWILDFIRE_ROOT=' + shlex.quote(str(root)) +
+                            '\nWILDFIRE_UPSTREAM=/unused/upstream\nWILDFIRE_DATA=/unused/data\n'
+                            'WILDFIRE_STATS=/unused/stats\nscontrol() { :; }\n')
+            result = subprocess.run(['bash', str(ROOT / 'scripts/research/job.sh'),
+                                     str(snapshot), str(site), 'setup-finish'],
+                                    env=dict(os.environ, SLURM_JOB_ID='test-boundary'),
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('requires the existing training environment', result.stderr)
+            self.assertFalse((root / 'envs').exists())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -70,8 +70,8 @@ dtrain() {
 
 | 方向 | 提交命令 |
 |---|---|
-| D1 ERM 对照 | `dtrain D1-ERM train_predictive_consistency 64 --lambda-consistency 0.0` |
-| D1 KL | `dtrain D1-KL train_predictive_consistency 64 --lambda-consistency 0.1` |
+| D1 ERM 对照 | `dtrain D1-ERM train_predictive_consistency 32 --lambda-consistency 0.0` |
+| D1 KL | `dtrain D1-KL train_predictive_consistency 32 --lambda-consistency 0.1` |
 | D2 STD 对照 | `dtrain D2-STD train_reliability_normalized 64 --variant standard` |
 | D2 RNC | `dtrain D2-RNC train_reliability_normalized 64 --variant rnc` |
 | D4 token | `dtrain D4 train_reliability_normalized 64 --variant token` |
@@ -83,7 +83,7 @@ dtrain() {
 | D11 complete prompts | `dtrain D11 train_reliability_prompt_pyramid 64 --variant complete-prompt-pyramid` |
 | D12 SARP | `dtrain D12 train_severity_adaptive_reliability_prompting 64` |
 
-这些训练器固定 seed 0、3,000 steps。最近对照要沿用对应实验的 batch 和数据配对设置：D5/D6 的 paired ERM 对照应使用 `train_predictive_consistency --lambda-consistency 0.0 --batch-size 32`，不要直接拿上表 batch 64 的 D1-ERM 替代。其他匹配对照和门槛以原 [量化记录](../experiments/quantitative_reliability_ledger.md) 与 [弃用记录](../experiments/rejected_experiments.md) 为准。
+这些训练器固定 seed 0、3,000 steps。历史 D1-ERM/KL 使用 batch 32；原 launcher 未覆盖训练器的这个默认值。D5/D6 保留相同的 paired clean/corrupt 配方，paired ERM 对照就是上表 batch 32 的 D1-ERM；D5 的最近一致性对照为 D1-KL，D6 还需与 D5 比较。不要改用 batch 64 再当作原结果的匹配对照，因为这会改变采样曝光量和 BatchNorm 行为。其他匹配对照和门槛以原 [量化记录](../experiments/quantitative_reliability_ledger.md) 与 [弃用记录](../experiments/rejected_experiments.md) 为准。
 
 D13 使用 T5 基础模型，standard 和 sarp 两个版本分别提交：
 
@@ -136,4 +136,4 @@ bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compos
 
 X8+X10 使用 `compose_routes --control ... --fire ... --spatial ...`，其中 fire 是 impact_consistency，spatial 是 dynamic_inpaint。汇总器读取已有场景结果，不会训练新网络；输出的路由结果适用于约定的可观测缺失场景，不是额外训练出来的单模型。
 
-自然 VIIRS 和 target-QA 两个诊断性正向信号见 [诊断复现](diagnostics-reproduction.md)。它们依赖历史 P00，不作为 corrected baseline 的科学贡献。架构迁移必须使用对应 pretrained 资产和独立 bootstrap，不能把 Res18 的 B3/B5 权重载入 Swin/SegFormer。
+自然 VIIRS 和 target-QA 两个诊断性正向信号见 [诊断复现](diagnostics-reproduction.md)。它们依赖历史 P00，不作为 corrected baseline 的科学贡献。架构迁移的公开权重下载与 bootstrap 命令见 [架构复现](architectures.md)，不能把 Res18 的 B3/B5 权重载入 Swin/SegFormer。
