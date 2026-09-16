@@ -5,6 +5,9 @@ set -euo pipefail
 export OMP_NUM_THREADS=1
 python -m pytest -q \
   tests/test_portable_paths.py tests/test_routed_source_paths.py \
+  tests/test_teacher_manifest_builder.py tests/test_cross_history_checkpoint_contract.py \
+  tests/test_diagnostic_artifacts.py tests/test_wsts_fast_track_viirs_reliability.py \
+  tests/test_wsts_fast_track_viirs_screen.py \
   tests/test_artifact_bundle.py tests/test_research_launchers.py \
   tests/test_research_data_preparation.py \
   tests/test_wsts_fast_track_runtime.py \

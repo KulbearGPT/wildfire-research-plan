@@ -43,7 +43,7 @@ D4–D8, D10–D11 and D13 are retained as limited positive signals. Their stand
 | ID / implementation | Observation and nearest comparator | Source |
 |---|---|---|
 | natural-viirs-screen — natural VIIRS screen | attention AP +0.000287, with worse F1/Brier/loss; no forecasting-method gain | docs/experiments/rejected_experiments.md |
-| target-qa-censoring — target-QA censoring | P00 AP 0.382293 → 0.398789; 12.54% of zero-label pixels lacked reliable target-day observation; useful 24-event case study, outside the method mainline | docs/experiments/rejected_experiments.md |
+| target-qa-censoring — target-QA censoring | P00 AP 0.382293 → 0.398789; 12.54% of all pixels (12.60% of zero-label pixels) lacked reliable target-day observation; useful 24-event case study, outside the method mainline | docs/experiments/rejected_experiments.md |
 | D2-RNC — D2-RNC | M06 +0.000764, M07 -0.007200 versus D2-STD; primary -0.003218; M00 -0.009428; 21094930 | docs/experiments/rejected_experiments.md |
 | D4 — D4 input token | primary +0.004960; M00 -0.005243 versus D2-STD; missed +0.005 gate by 0.000040; 21103691 | docs/experiments/rejected_experiments.md |
 | D5 — D5 CIWC | 0.584364/0.294861/0.361160/0.179137; primary +0.015468 versus D1-ERM, below +0.020; 21111043 | docs/experiments/rejected_experiments.md |

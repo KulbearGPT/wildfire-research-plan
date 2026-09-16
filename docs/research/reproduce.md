@@ -90,6 +90,8 @@ bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
   --year 2022 --output "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm-2022"
 ```
 
+各 X/D 方法、最近对照、评估器和组合命令见 [方法配方](method-recipes.md)，教师重建及 RF/TD 命令见 [教师与蒸馏](teachers.md)。
+
 ## 5. 如何理解复现结果
 
 M00 为完整输入；主指标是 M01/M06/M07 的 AP 均值，block 指 M06/M07 的均值。AP 差值是绝对值，例如 `+0.005` 是增加 0.5 个百分点。先对最近对照比较，再讨论相对公共基础模型的总收益。

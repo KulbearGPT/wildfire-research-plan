@@ -925,7 +925,7 @@
       "family": "historical",
       "name": "target-QA censoring",
       "status": "positive_signal",
-      "evidence": "P00 AP 0.382293 → 0.398789; 12.54% of zero-label pixels lacked reliable target-day observation; useful 24-event case study, outside the method mainline",
+      "evidence": "P00 AP 0.382293 → 0.398789; 12.54% of all pixels (12.60% of zero-label pixels) lacked reliable target-day observation; useful 24-event case study, outside the method mainline",
       "evidence_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
       "comparator": null,
       "source_document": "docs/experiments/rejected_experiments.md",

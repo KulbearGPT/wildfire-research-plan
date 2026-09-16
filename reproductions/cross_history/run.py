@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from torchvision.ops import sigmoid_focal_loss
+from .checkpoint_contract import require_formal_checkpoint
 from .data import setup, base_dataset, PairedDataset, evaluation_dataset
 from .models import initial_payload, make_base, Forecaster, feature_loss, transition_loss
 from .architectures import (
@@ -49,7 +50,9 @@ def main():
         evaluate_only=a.evaluate_only)
     if not os.environ.get('SLURM_JOB_ID') or not torch.cuda.is_available():
         raise RuntimeError('GPU Slurm allocation required')
-    if 64 % a.batch_size:
+    if a.steps <= 0:
+        raise ValueError('training steps must be positive')
+    if a.batch_size <= 0 or 64 % a.batch_size:
         raise ValueError('physical batch must divide effective batch 64')
     if a.year != 2021 and not a.evaluate_only:
         raise ValueError('training screens are 2021-only')
@@ -62,12 +65,14 @@ def main():
     saved = None
     if a.evaluate_only is not None:
         saved = torch.load(a.evaluate_only,map_location='cpu',weights_only=False)
+        require_formal_checkpoint(saved)
         checkpoint_architecture(saved,expected=a.architecture)
         if saved['history'] != a.history:
             raise ValueError('checkpoint history mismatch')
         initial = str(a.evaluate_only)
     elif a.initial_checkpoint is not None:
         saved = torch.load(a.initial_checkpoint,map_location='cpu',weights_only=False)
+        require_formal_checkpoint(saved)
         checkpoint_architecture(saved,expected=a.architecture)
         if saved['history'] != a.history:
             raise ValueError('checkpoint history mismatch')
@@ -110,6 +115,7 @@ def main():
         dict(base.hparams) if not noncanonical else None).learning_rate)
     metadata = dict(history=a.history,architecture=a.architecture,method=a.method,
                     seed=a.seed,steps=a.steps,bootstrap=a.bootstrap,
+                    smoke=a.smoke,completed_steps=0,
                     physical_batch=a.batch_size,effective_batch=64,learning_rate=learning_rate,
                     learning_rate_schedule=('cosine-to-zero' if a.method.startswith('cosine_') else 'constant'),
                     fire_dropout_probability=fire_probability,
@@ -254,6 +260,7 @@ def main():
                 (loss/(64//a.batch_size)).backward()
                 loss_sum += loss.detach().item()/(64//a.batch_size)
             optimizer.step()
+            metadata['completed_steps'] = step
             if scheduler is not None: scheduler.step()
             if step == 1 or step % 100 == 0:
                 print(json.dumps(dict(step=step,loss=loss_sum,seconds=time.monotonic()-start,
@@ -266,9 +273,34 @@ def main():
         if a.smoke:
             sample_x,sample_y = evaluation_dataset(a.history,2021,'M06')[0]
             model.eval()
-            with torch.no_grad(): result = model(sample_x[None].cuda())
-            assert result.shape[-2:] == sample_y.shape[-2:]
-            (a.output/'smoke.json').write_text(json.dumps(dict(status='pass',history=a.history,method=a.method)))
+            sample = sample_x[None].cuda()
+            with torch.no_grad(): result = model(sample)
+            if result.shape[-2:] != sample_y.shape[-2:] or not torch.isfinite(result).all():
+                raise RuntimeError('smoke sample output has invalid shape or nonfinite values')
+            # Construct a separate model from the saved bytes; a forward through
+            # the original instance alone cannot qualify checkpoint reload.
+            reloaded = torch.load(a.output/'checkpoint.pt',map_location='cpu',weights_only=False)
+            if reloaded.get('smoke') is not True or reloaded.get('completed_steps') != 1:
+                raise RuntimeError('smoke checkpoint provenance mismatch')
+            if noncanonical:
+                reload_base = make_architecture(a.architecture,a.history,reloaded['hyper_parameters'])
+                reload_model = DirectForecaster(reload_base,a.history,40 if a.history == 1 else 33,
+                    input_size=224 if a.architecture == 'swin_unet' else None)
+            else:
+                reload_base = make_base(a.history,reloaded['hyper_parameters'])
+                reload_model = Forecaster(reload_base,a.history,a.method)
+            reload_model.load_state_dict(reloaded['state_dict'],strict=True)
+            reload_model.cuda().eval()
+            with torch.no_grad(): reload_result = reload_model(sample)
+            if reload_result.shape != result.shape or not torch.isfinite(reload_result).all():
+                raise RuntimeError('reloaded smoke output has invalid shape or nonfinite values')
+            reload_max_difference = (result-reload_result).abs().max().item()
+            if not torch.allclose(result,reload_result,rtol=1e-5,atol=1e-6):
+                raise RuntimeError('smoke checkpoint reload output mismatch')
+            (a.output/'smoke.json').write_text(json.dumps(dict(status='pass',history=a.history,
+                architecture=a.architecture,method=a.method,smoke=True,steps=a.steps,
+                completed_steps=metadata['completed_steps'],reload_max_difference=reload_max_difference,
+                reload_rtol=1e-5,reload_atol=1e-6,finite_output=True,strict_reload=True)))
             return
         del loader,iterator,optimizer,metadata['state_dict']
         if scheduler is not None: del scheduler
