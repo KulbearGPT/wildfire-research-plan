@@ -18,9 +18,9 @@
 | 22102098 | c617100 | c3 | 从上述公共环境继续，精确修正官方补丁，训练/审计 `pip check` 均通过，setup 完成 |
 | 22102101 | c617100 | c38 | 从公开源下载 Swin 与 MiT-B2 三个资产，全部匹配固定 SHA256 |
 | 22102100 | c617100 | c3 | 新环境 134 tests pass、2 fail；失败是旧测试断言原服务器路径，已改为显式临时目录，由 22102394 重跑通过 |
-
 | 22102394 | 19132b0 | c333 | 新训练环境 143 tests pass，实际官方 T5 类和保留驱动导入通过 |
 | 22102400 | 19132b0 | c332 | 新审计环境 117 tests pass，覆盖修复/验证、schema、inventory、target gate 和 split |
+| 22102613 | eb702c2 | c422 | 新训练环境中，官方原始年份 converter CLI 与新增年份 converter 均通过 23 波段 GeoTIFF → HDF5 合成样例检查；覆盖数值、日期、坐标及 active-fire 转换语义 |
 
 两次安装失败的日志保留，没有把失败作业写成成功。公共环境来自 `22101770` 创建的空目录，没有复用旧训练 venv；`22102098` 重用的是这次新安装的公共环境。模块配置之后重新隔离 pip 变量，安装记录不依赖本站 wheelhouse。实际版本记录为 [训练 freeze](environment/train-pip-freeze.txt)、[审计 freeze](environment/audit-pip-freeze.txt)，官方改动见 [upstream.diff](environment/upstream.diff)。这些是观察记录，安装输入仍是 `environments/research-*.txt`。
 
@@ -32,4 +32,6 @@ Cross-history 和两套 September smoke 使用实数据、一轮短训练或校�
 
 D 系列正式 evaluator 要求固定训练预算。资格验证只在内存副本中替换其预算/status 字段以调用原模型构造器，其余方法元数据校验和严格 state_dict 加载保留；磁盘上的短预算权重仍被正式校验器拒绝。它证明加载/计算链路，不证明方法效果或完整训练的数值一致性。
 
-截至本次记录，T1/T5 首批 GPU 作业已提交，运行结果待补。后续仍需检查全部保留执行族、诊断 24 事件重放、审计环境测试、独立最终审查及主工作区交付；不能据此页提前声明目标完成。
+截至本次记录，T1/T5 首批 GPU 作业已提交，运行结果待补。后续仍需检查全部保留执行族、诊断 24 事件重放、完整数据审计、独立最终审查及主工作区交付；不能据此页提前声明目标完成。
+
+转换作业的[原始小型报告](environment/conversion-qualification.json)保留逐年份检查结果。它使用八个合成事件，未替代全量公开下载、999 事件转换或修复阶段验证。

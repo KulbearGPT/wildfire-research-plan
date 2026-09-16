@@ -1,0 +1,179 @@
+{
+  "status": "qualification-pass",
+  "scientific_claim": false,
+  "synthetic_fixture": true,
+  "full_public_download_qualified": false,
+  "full_999_event_population_qualified": false,
+  "repair_stage_qualified": false,
+  "python": "3.10.13 (main, Sep 19 2023, 15:54:50) [GCC 12.3.1 20230526]",
+  "rasterio": "1.3.10",
+  "gdal": "3.8.4",
+  "h5py": "3.10.0",
+  "numpy": "1.26.4",
+  "results": {
+    "upstream": [
+      {
+        "file": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/qualification/conversion-6_3pf0mg/upstream-hdf5/2018/qualification_event.hdf5",
+        "shape": [
+          3,
+          23,
+          8,
+          10
+        ],
+        "dtype": "float32",
+        "dates": [
+          "2018-07-01",
+          "2018-07-02",
+          "2018-07-03"
+        ],
+        "lnglat": [
+          -122.95,
+          48.96
+        ],
+        "active_fire_conversion": "NaN-to-zero + floor(HHMM/100)"
+      },
+      {
+        "file": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/qualification/conversion-6_3pf0mg/upstream-hdf5/2019/qualification_event.hdf5",
+        "shape": [
+          3,
+          23,
+          8,
+          10
+        ],
+        "dtype": "float32",
+        "dates": [
+          "2019-07-01",
+          "2019-07-02",
+          "2019-07-03"
+        ],
+        "lnglat": [
+          -122.95,
+          48.96
+        ],
+        "active_fire_conversion": "NaN-to-zero + floor(HHMM/100)"
+      },
+      {
+        "file": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/qualification/conversion-6_3pf0mg/upstream-hdf5/2020/qualification_event.hdf5",
+        "shape": [
+          3,
+          23,
+          8,
+          10
+        ],
+        "dtype": "float32",
+        "dates": [
+          "2020-07-01",
+          "2020-07-02",
+          "2020-07-03"
+        ],
+        "lnglat": [
+          -122.95,
+          48.96
+        ],
+        "active_fire_conversion": "NaN-to-zero + floor(HHMM/100)"
+      },
+      {
+        "file": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/qualification/conversion-6_3pf0mg/upstream-hdf5/2021/qualification_event.hdf5",
+        "shape": [
+          3,
+          23,
+          8,
+          10
+        ],
+        "dtype": "float32",
+        "dates": [
+          "2021-07-01",
+          "2021-07-02",
+          "2021-07-03"
+        ],
+        "lnglat": [
+          -122.95,
+          48.96
+        ],
+        "active_fire_conversion": "NaN-to-zero + floor(HHMM/100)"
+      }
+    ],
+    "added_year": [
+      {
+        "file": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/qualification/conversion-6_3pf0mg/added-hdf5/2016/qualification_event.hdf5",
+        "shape": [
+          3,
+          23,
+          8,
+          10
+        ],
+        "dtype": "float32",
+        "dates": [
+          "2016-07-01",
+          "2016-07-02",
+          "2016-07-03"
+        ],
+        "lnglat": [
+          -122.95,
+          48.96
+        ],
+        "active_fire_conversion": "NaN-to-zero; original values retained"
+      },
+      {
+        "file": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/qualification/conversion-6_3pf0mg/added-hdf5/2017/qualification_event.hdf5",
+        "shape": [
+          3,
+          23,
+          8,
+          10
+        ],
+        "dtype": "float32",
+        "dates": [
+          "2017-07-01",
+          "2017-07-02",
+          "2017-07-03"
+        ],
+        "lnglat": [
+          -122.95,
+          48.96
+        ],
+        "active_fire_conversion": "NaN-to-zero; original values retained"
+      },
+      {
+        "file": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/qualification/conversion-6_3pf0mg/added-hdf5/2022/qualification_event.hdf5",
+        "shape": [
+          3,
+          23,
+          8,
+          10
+        ],
+        "dtype": "float32",
+        "dates": [
+          "2022-07-01",
+          "2022-07-02",
+          "2022-07-03"
+        ],
+        "lnglat": [
+          -122.95,
+          48.96
+        ],
+        "active_fire_conversion": "NaN-to-zero; original values retained"
+      },
+      {
+        "file": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/qualification/conversion-6_3pf0mg/added-hdf5/2023/qualification_event.hdf5",
+        "shape": [
+          3,
+          23,
+          8,
+          10
+        ],
+        "dtype": "float32",
+        "dates": [
+          "2023-07-01",
+          "2023-07-02",
+          "2023-07-03"
+        ],
+        "lnglat": [
+          -122.95,
+          48.96
+        ],
+        "active_fire_conversion": "NaN-to-zero; original values retained"
+      }
+    ]
+  }
+}
