@@ -1,0 +1,29 @@
+{
+  "job": "21790289",
+  "records": [
+    {
+      "run": "/project/6085198/kulbear/wildfire/runs/three-directions-21787053/result",
+      "history": 5,
+      "seed": 0,
+      "mode": "student_control",
+      "updates": 3000,
+      "strict_load": true,
+      "all_state_finite": true,
+      "changed_state_tensors": 198,
+      "checkpoint_sha256": "cebefd728be17b466f983a728324cbff81fc42ee0673dbb85f133ec596b8b26d",
+      "checkpoint_bytes": 58934468
+    },
+    {
+      "run": "/project/6085198/kulbear/wildfire/runs/three-directions-21787054/result",
+      "history": 5,
+      "seed": 0,
+      "mode": "student_distill",
+      "updates": 3000,
+      "strict_load": true,
+      "all_state_finite": true,
+      "changed_state_tensors": 198,
+      "checkpoint_sha256": "d3cbc19d7954d8ee9103df9aee9e811f749151522dde4e3ebdaf7dc5fae6c526",
+      "checkpoint_bytes": 58936324
+    }
+  ]
+}

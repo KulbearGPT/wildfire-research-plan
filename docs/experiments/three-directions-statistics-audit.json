@@ -1,0 +1,145 @@
+{
+  "job": 21787230,
+  "checks": [
+    {
+      "history": 1,
+      "groups": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "teacher_routes": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3
+      ],
+      "original_wrapper_max_error": 0.0,
+      "all_parameters_unchanged": true,
+      "calibration_samples": 2048,
+      "group_samples": [
+        973,
+        474,
+        389,
+        212
+      ],
+      "scenes": [
+        {
+          "scenario": "M00",
+          "original_logit_min": -4.128256797790527,
+          "original_logit_max": -0.15561920404434204,
+          "calibrated_logit_min": -6.386137008666992,
+          "calibrated_logit_max": -0.15403421223163605
+        },
+        {
+          "scenario": "M01",
+          "original_logit_min": -4.127554416656494,
+          "original_logit_max": -0.5030241012573242,
+          "calibrated_logit_min": -25.759201049804688,
+          "calibrated_logit_max": 4.546736240386963
+        },
+        {
+          "scenario": "M06",
+          "original_logit_min": -4.0940775871276855,
+          "original_logit_max": -0.45877569913864136,
+          "calibrated_logit_min": -80.6217041015625,
+          "calibrated_logit_max": 13.23231315612793
+        },
+        {
+          "scenario": "M07",
+          "original_logit_min": -4.023065090179443,
+          "original_logit_max": -0.849311113357544,
+          "calibrated_logit_min": -30.32638168334961,
+          "calibrated_logit_max": 4.633692264556885
+        }
+      ]
+    },
+    {
+      "history": 5,
+      "groups": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "teacher_routes": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3
+      ],
+      "original_wrapper_max_error": 0.0,
+      "all_parameters_unchanged": true,
+      "calibration_samples": 2048,
+      "group_samples": [
+        958,
+        465,
+        432,
+        193
+      ],
+      "scenes": [
+        {
+          "scenario": "M00",
+          "original_logit_min": -4.39343786239624,
+          "original_logit_max": 0.01995053142309189,
+          "calibrated_logit_min": -4.213366508483887,
+          "calibrated_logit_max": -0.07687746733427048
+        },
+        {
+          "scenario": "M01",
+          "original_logit_min": -4.363717079162598,
+          "original_logit_max": -1.038672685623169,
+          "calibrated_logit_min": -4.6388163566589355,
+          "calibrated_logit_max": -1.4377408027648926
+        },
+        {
+          "scenario": "M06",
+          "original_logit_min": -4.225851535797119,
+          "original_logit_max": 0.024149775505065918,
+          "calibrated_logit_min": -4.579496383666992,
+          "calibrated_logit_max": -0.06027740612626076
+        },
+        {
+          "scenario": "M07",
+          "original_logit_min": -4.252380847930908,
+          "original_logit_max": -0.6338516473770142,
+          "calibrated_logit_min": -4.8626837730407715,
+          "calibrated_logit_max": -0.5428526401519775
+        }
+      ]
+    }
+  ]
+}

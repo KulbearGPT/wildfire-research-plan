@@ -101,3 +101,8 @@ def _install_runtime_contract(
 
     utils_module.get_means_stds_missing_values = canonical_training_stats
     dataset_module.get_means_stds_missing_values = canonical_training_stats
+
+    if experiment_id == "C02":
+        models_module = importlib.import_module("models")
+        temporal_module = importlib.import_module("models.SMPTempModel")
+        models_module.SMPTempModel = temporal_module.SMPTempModel
