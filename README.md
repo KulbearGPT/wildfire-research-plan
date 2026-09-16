@@ -1,3 +1,5 @@
+> **新同学先读：[入门首页](docs/START_HERE.md)** — 阅读顺序、首次实验选择和入门完成标准。
+
 > **研究交付（2026-09-16，新环境运行验证完成）：** [正向信号](docs/research/positive-signals.md) · [负结果与未运行档案](docs/research/negative-results.md) · [新集群复现入口](docs/research/reproduce.md)。包含 T1/T5、两套 September 实验与历史诊断；下方正文是早期 T1 阶段记录。
 
 > **学生实操：** [只从官方仓库开始的 Res18-U-Net 教程](docs/tutorials/res18-baseline-slurm.md) · [项目 corrected B0 教程](docs/tutorials/project-b0-slurm.md)。
