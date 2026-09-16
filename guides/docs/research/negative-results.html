@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Negative, mixed, invalid and unrun experiment
+archive · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/negative-results.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#negative-mixed-invalid-and-unrun-experiment-archive"
+id="toc-negative-mixed-invalid-and-unrun-experiment-archive">Negative,
+mixed, invalid and unrun experiment archive</a>
+<ul>
+<li><a href="#status-distinctions" id="toc-status-distinctions">Status
+distinctions</a></li>
+<li><a href="#full-cross-history-register-including-mixed-positives"
+id="toc-full-cross-history-register-including-mixed-positives">Full
+cross-history register, including mixed positives</a></li>
+<li><a href="#historical-implementation-archive"
+id="toc-historical-implementation-archive">Historical implementation
+archive</a></li>
+<li><a
+href="#distinct-later-normalization-weight-merge-branch-and-kd-experiments"
+id="toc-distinct-later-normalization-weight-merge-branch-and-kd-experiments">Distinct
+later normalization, weight-merge, branch and KD experiments</a></li>
+<li><a href="#old-belief-branches-and-natural-observations"
+id="toc-old-belief-branches-and-natural-observations">Old belief
+branches and natural observations</a></li>
+<li><a href="#unfinished-architecture-matrix"
+id="toc-unfinished-architecture-matrix">Unfinished architecture
+matrix</a></li>
+<li><a href="#artifact-and-source-retention-boundary"
+id="toc-artifact-and-source-retention-boundary">Artifact and source
+retention boundary</a></li>
+<li><a href="#additional-positive-controls-and-compositions"
+id="toc-additional-positive-controls-and-compositions">Additional
+positive controls and compositions</a></li>
+<li><a href="#baseline-and-attribution-audit-additions"
+id="toc-baseline-and-attribution-audit-additions">Baseline and
+attribution audit additions</a></li>
+</ul></li>
+</ul></div></details>
+<h1 id="negative-mixed-invalid-and-unrun-experiment-archive">Negative,
+mixed, invalid and unrun experiment archive</h1>
+<p>This archive records what failed and what was never tested. A failed
+strict gate does <strong>not</strong> imply absence of a positive
+signal: see <a href="positive-signals.html">positive-signals.md</a>.
+Retained mechanism details, controls and original numeric outcomes
+remain in the linked ledgers and source commits.
+Reproduction/qualification status is separate from scientific result
+status.</p>
+<h2 id="status-distinctions">Status distinctions</h2>
+<ul>
+<li><strong>Measured negative/mixed:</strong> a valid evaluated
+comparison fails its primary, attribution, clean-input, transfer or
+compression criterion. Positive cells remain in the positive
+collection.</li>
+<li><strong>Invalid/confounded historical foundation:</strong> faulty
+pooled-year exposure or inherited initialization prevents a
+corrected-data efficacy claim; the raw observation is preserved.</li>
+<li><strong>Cancelled/unrun:</strong> no method efficacy conclusion is
+allowed. Includes X7 overlap cancellation, X21/X24 idea rejection, D3
+identifiability rejection, cancelled repairs and never-released
+confirmations.</li>
+<li><strong>Preparation/runtime failure or pending/unreported:</strong>
+failed data alignment, OOM, dependency failure and missing final results
+are not negative model results.</li>
+</ul>
+<h2 id="full-cross-history-register-including-mixed-positives">Full
+cross-history register, including mixed positives</h2>
+<table>
+<thead>
+<tr class="header">
+<th>ID / implementation</th>
+<th>Observation and nearest comparator</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>X1 — X1 context transport</td>
+<td>fresh continuation; observable spatial route; yes; routed +.005954;
+routed +.000874; cross-T reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X1-adapter — X1 frozen adapter</td>
+<td>frozen initial B3/B5 plus fresh continuation; alternative X1
+implementation; +.012151 vs frozen, -.013537 vs fresh; reject; cancelled
+after T1 adoption failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X2 — X2 feature distillation</td>
+<td>fresh continuation; yes; original and block-local rejected; original
+rejected; block-local stopped</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X3 — X3 latent transition</td>
+<td>fresh continuation; yes; original +.011831; decoupled -.045065;
+original -.009413; repair cancelled</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X4 — X4 spatial risk weighting</td>
+<td>fresh continuation; one training-objective contribution; routed
++.003463; routed -.001659; reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X5 — X5 localized consistency</td>
+<td>unchanged global D1 consistency; incremental method contribution;
+-.002294; reject; cancelled after T1 failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X6 — X6 balanced corruption coverage</td>
+<td>fresh continuation; sole corruption-rate tuning contribution;
++.005203; +.002426 with M00 -.017601; reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X7 — X7 missingness-conditioned residual experts</td>
+<td>fresh continuation; no; overlaps archived D7-CRA; cancelled after
+overlap audit; cancelled after overlap audit</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X8 — X8 counterfactual-impact consistency</td>
+<td>unchanged global D1 consistency; fresh ERM adoption; incremental
+FireDrop specialist; incrementally reliable; ERM adoption fails 2022;
+incrementally reliable and ERM-positive</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X9 — X9 spatial-impact FiLM</td>
+<td>fresh continuation with spatial route; yes; context-conditioned
+decoder modulation; routed -.000552; reject; cancelled after T1
+failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X10 — X10 forecast-aware dynamic inpainting</td>
+<td>fresh continuation with spatial route; yes; typed input restoration
+optimized by forecast loss; 2022/23 -.001356/-.000347; reject
+cross-history; 2022/23 +.004783/+.002139; T5-only positive</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X11 — X11 identifiable dynamic restoration</td>
+<td>X10 forecast-only inpainting; incremental reconstruction objective;
+-.004862 vs X10; reject; cancelled after T1 failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X12 — X12 counterfactual FireDrop specialist</td>
+<td>fresh continuation; plain specialist ablation if screen passes; one
+specialist-training contribution; routed +.001589; reject; cancelled
+after T1 failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X13 — X13 normalized diffusion inpainting</td>
+<td>same frozen control checkpoint with spatial route; yes;
+parameter-free typed spatial propagation; routed -.024799; reject;
+cancelled after T1 failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X14 — X14 BlockDrop specialist continuation</td>
+<td>fresh continuation with spatial route; one block-specialization
+training contribution; reliable: +.005467/+.001416/+.006792 in
+2021/22/23; reliable: +.016685/+.011528/+.005485 in 2021/22/23</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X15 — X15 distance-to-evidence prompting</td>
+<td>fresh continuation with spatial route; yes; continuous
+missing-geometry encoder prompt; routed -.002072; reject; cancelled
+after T1 failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X16 — X16 block-specialized dynamic restoration</td>
+<td>X14 specialist plus fresh-control total check; no; restoration loses
+to X14; -.000452 vs X14; reject; cancelled after T1 attribution
+failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X17 — X17 severity-factorized block specialists</td>
+<td>X14 mixed-severity specialist plus fresh ERM; no; secondary only
+after heldout attribution failure; ERM-positive all years; X14 2023
+block -.000649; ERM-positive all years; X14 2022/23 block
+-.000898/-.001614</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X18 — X18 block-specialized context transport</td>
+<td>X14 specialist plus fresh ERM; yes only if positive vs X14; +.013205
+vs ERM; +.004405 vs X14; +.006524 vs ERM but -.000922 vs X14;
+reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X19 — X19 severity-conditioned latent adapters</td>
+<td>X14 specialist; X17 two-checkpoint upper bound; fresh ERM; no; T5
+closest-control confirmation fails; primary +.007772 vs ERM; block
++.003458 vs X14; primary +.015795 vs ERM but block -.001335 vs X14;
+reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X20 — X20 ERM-anchored impact consistency</td>
+<td>fresh ERM; X8 diagnoses the repair; same impact-consistency family
+as X8; -.003678; reject; cancelled after T1 failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X21 — X21 first-layer reliability calibration</td>
+<td>D4/D12 and fresh ERM; no; pre-run closest-work reject; not run; not
+run</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X22 — X22 cosine-decayed ERM</td>
+<td>fresh constant-LR ERM; sole optimizer/tuning contribution; reliable:
++.006035/+.008133/+.003442 in 2021/22/23; reliable:
++.021346/+.019504/+.013596 in 2021/22/23</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X23 — X23 impact-consistent BlockDrop specialist</td>
+<td>X14 BlockDrop specialist plus fresh ERM; no; closest-control gate
+fails; +.011199 vs ERM but only +.002400 vs X14; reject; cancelled after
+T1 attribution failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X24 — X24 frozen-clean FireDrop distillation</td>
+<td>X8 impact consistency and plain FireDrop specialist; no;
+closest-work reject before implementation; not run; not run</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X25 — X25 block-specialized severity reliability prompts</td>
+<td>X14 specialist plus fresh ERM; inherited D12 mechanism disclosed;
+no; closest-control gate fails; +.010081 vs ERM but only +.001282 vs
+X14; reject; smoke host-OOM; formal cancelled after T1 failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X26 — X26 cosine-anchored impact consistency</td>
+<td>cosine FireDrop global-consistency control; X22 cosine ERM adoption;
+no; frozen closest-control screen fails; +.001555 vs global, +.004877 vs
+X22; reject; +.003225 vs global, +.002167 vs X22; reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X27 — X27 forecast-guided hard BlockDrop</td>
+<td>cosine random-BlockDrop specialist; X22 cosine ERM adoption; no;
+closest-control screen fails; +.000465 vs random, +.007683 vs X22;
+reject; cancelled before start after T1 attribution failure</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X28 — X28 VIIRS reliability-footprint augmentation</td>
+<td>cosine rectangular BlockDrop specialist; X22 cosine ERM adoption;
+no; geometry transfer fails decisively; -.034394 vs rectangle, -.027177
+vs X22; reject; -.036784 vs rectangle, -.029450 vs X22; reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X29 — X29 valid-context memory attention</td>
+<td>cosine rectangular BlockDrop specialist; X22 cosine ERM adoption;
+no; T5 attention interference; +.000661 vs specialist, +.007878 vs X22;
+reject; -.007990 vs specialist, -.000656 vs X22; reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X30 — X30 training-only fire-change auxiliary heads</td>
+<td>X22 cosine ERM; no; main-task interference in both architectures;
+-.010378 vs X22; reject; -.010875 vs X22; reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X31 — X31 multi-scale forecast deep supervision</td>
+<td>X22 cosine ERM; no; same-target auxiliary interference; -.007688 vs
+X22; reject; -.015340 vs X22; reject</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X1+X3 — X1+X3 composition</td>
+<td>fresh continuation / component ablations; no; interaction only;
++.008200, below X3; reject; cancelled</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X2-block-signal — Feature KD, original variant</td>
+<td>T1 block AP +0.003103 against fresh continuation although primary
+-0.005219; repaired distill_block primary -0.013556/block
+-0.001936.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X3-decoupled — Decoupled transition repair</td>
+<td>T1 primary -0.045065 versus fresh control; T5 repair cancelled.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X4-strong — Spatial risk 5x repair</td>
+<td>T1/T5 cancelled after 11 seconds before meaningful computation; no
+efficacy result.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X2-block-repair — Block-local feature KD</td>
+<td>T1 primary -0.013556/block -0.001936; T5 stopped.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>X8+X17 — X8+X17 complete observable route</td>
+<td>Three seeds; all six history/year cells positive; final primary mean
++0.013853 vs fresh ERM.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>X22+X17 — X22+X17 complete observable route</td>
+<td>Three seeds 2021/22/23; primary +0.014642 vs fresh ERM, +0.034527 vs
+frozen B3/B5; T1 +.010386/+.006153/+.010109, T5
++.028162/+.020169/+.012873 vs ERM.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+</tbody>
+</table>
+<h2 id="historical-implementation-archive">Historical implementation
+archive</h2>
+<p>The full pre-cleanup tree is commit
+<code>4b843add48862dcfac668b643ecd2a564cbe00df</code>. P03 routes legacy
+P00/P02; P04–P06 test output/decoder correction, P07 stochastic
+residuals, P08 a clean posterior teacher, P09 year-corruption GroupDRO,
+P10 matched ERM, P11 a missingness router, P12 normalized focal alpha
+and P13 a FireDrop expert. D2 normalizes convolution by reliability; D4
+learns an input token; D5 weights consistency by counterfactual impact;
+D6 adds ranking; D7/D8 use reliability/factorized adapters; D9 ranks
+error pairs; D10/D11 use deep/input prompt pyramids; D13 transfers SARP
+to T5. Exact implementation details and fixed settings are retained in
+the archived
+<code>docs/experiments/quantitative_reliability_ledger.md</code> and
+<code>p00_p06_rapid_reliability.md</code>.</p>
+<table>
+<thead>
+<tr class="header">
+<th>ID / implementation</th>
+<th>Observation and nearest comparator</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>legacy-c00-c02-3k — Legacy C00/C02 3K</td>
+<td>2021 AP 0.547372/0.584540; pooled-year resolver was invalid; runtime
+evidence only</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>legacy-c00-c02-six-10k-runs — Legacy C00/C02 six 10K runs</td>
+<td>completed and used for 96 M00--M07 evaluations; training exposure
+invalid; retain only the failure-regime diagnosis</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>P00 — P00 FireDrop</td>
+<td>M01 0.045920 → 0.299465; useful signal rebuilt correctly as B2</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>P02 — P02 FireDrop+BlockDrop</td>
+<td>versus P00: M06 +0.0183, M07 +0.0303, M00 -0.0200, M01 -0.0322;
+useful signal rebuilt correctly as B3</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>P09 — P09 GroupDRO</td>
+<td>2021 M06/M07 0.365531/0.185136; tied matched P10 ERM; no GroupDRO
+attribution</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>P10 — P10 matched ERM</td>
+<td>mean M06/M07 delta versus P00 +0.052345/+0.023389/+0.020189 in
+2021/2022/2023; motivation only; rebuilt from scratch in corrected
+baselines</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>P01 — P01 validity channel</td>
+<td>M00/M01/M02 decreased; M07 +0.0002; no useful gain</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>P03 — P03 hard router</td>
+<td>M06/M07 improved in 2021 and 2023 but changed -0.0231/-0.0261 in
+2022; temporally unstable</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>P04 — P04 1×1 residual</td>
+<td>M06/M07 0.332083/0.139913, below P03 0.350878/0.166982; insufficient
+correction</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>P05 — P05 3×3 residual</td>
+<td>M06/M07 0.327723/0.138767; extra output capacity did not help</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>P06 — P06 decoder adaptation</td>
+<td>M06/M07 0.330240/0.141035; below P03</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>P07 — P07 stochastic residual</td>
+<td>predictive variance approximately 1e-8; latent state not
+identifiable</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>P08 — P08 teacher posterior</td>
+<td>M06/M07 0.306096/0.123222; below P00</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>P11 — P11 missingness router</td>
+<td>M01 0.291202 versus P00 0.299465; routed complete FireDrop
+regressed</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>P12 — P12 focal alpha</td>
+<td>M06/M07 0.070432/0.061832 with severe overprediction;
+prevalence-derived alpha rejected</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>P13 — P13 FireDrop expert</td>
+<td>M01 delta +0.004771/-0.002058/+0.019928 in 2021/2022/2023; mixed
+temporal result</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>belief-filter-t-1 — belief filter T=1</td>
+<td>M01/M06/M07 0.260952/0.316738/0.131167; mean delta -0.012264 versus
+P00; reject</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>belief-attention-t-1 — belief attention T=1</td>
+<td>M01/M06/M07 0.274733/0.316787/0.130474; mean delta -0.007884;
+reject</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>belief-reconstruction-t-1 — belief reconstruction T=1</td>
+<td>M01/M06/M07 0.206976/0.315143/0.129389; mean delta -0.031380;
+reject</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>corresponding-t-5-probes — corresponding T=5 probes</td>
+<td>every candidate had negative corrupted mean delta; outside current
+scope and no rescue of the branch</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>natural-viirs-screen — natural VIIRS screen</td>
+<td>attention AP +0.000287, with worse F1/Brier/loss; no
+forecasting-method gain</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>target-qa-censoring — target-QA censoring</td>
+<td>P00 AP 0.382293 → 0.398789; 12.54% of all pixels (12.60% of
+zero-label pixels) lacked reliable target-day observation; useful
+24-event case study, outside the method mainline</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>2016-2020-qa-cohort — 2016--2020 QA cohort</td>
+<td>preparation failed because added-year TIFFs lack CRS/geotransform;
+cross-year alignment infeasible with current files</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>B4 — B4 equal-year sampling</td>
+<td>0.534606/0.252345/0.329461/0.166855; mean M06/M07 -0.009390 and M00
+-0.023712 versus B3; 21094665</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>D2-RNC — D2-RNC</td>
+<td>M06 +0.000764, M07 -0.007200 versus D2-STD; primary -0.003218; M00
+-0.009428; 21094930</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>D3 — D3 temporal fusion</td>
+<td>no GPU run; frozen corruptions cannot identify temporal selection;
+—</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>D4 — D4 input token</td>
+<td>primary +0.004960; M00 -0.005243 versus D2-STD; missed +0.005 gate
+by 0.000040; 21103691</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>D5 — D5 CIWC</td>
+<td>0.584364/0.294861/0.361160/0.179137; primary +0.015468 versus
+D1-ERM, below +0.020; 21111043</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>D6 — D6 CIWC+rank</td>
+<td>0.570395/0.280630/0.355114/0.179208; primary +0.008733; M00 and M06
+guardrails failed; 21112470</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>D7 — D7 reliability adapter</td>
+<td>0.579199/0.281434/0.366924/0.185442; primary +0.015015, below
++0.020; 21114921</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>D8 — D8 factorized adapter</td>
+<td>0.578203/0.289113/0.361630/0.181149; primary +0.014379, below
++0.020; 21116301</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>D9 — D9 error-pair rank</td>
+<td>0.528919/0.260790/0.325537/0.153634; primary -0.016265; M00
+-0.054101; 21117395</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>D10 — D10 prompt pyramid</td>
+<td>0.583725/0.302593/0.374300/0.191693; total +0.026610, but module
++0.002915 and below D4; 21120041</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>D11 — D11 complete prompts</td>
+<td>0.583391/0.300108/0.375842/0.191872; total +0.026356; module
++0.004928, 0.000072 below gate; 21121610</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="odd">
+<td>D13 — T5 severity-adaptive prompting</td>
+<td>Against D13-STD: block mean +0.002577; standard AP
+.600267/.357375/.387873/.196784, SARP .602925/.355388/.389202/.200609.
+Below +.005 gate; no heldout.</td>
+<td>docs/experiments/rejected_experiments.md</td>
+</tr>
+<tr class="even">
+<td>P04-P07-block — Residual corrections over legacy P00</td>
+<td>P04/P05/P06/P07 2021 M06/M07 AP .332083/.139913, .327723/.138767,
+.330240/.141035, .331009/.140771 vs P00 .317005/.129176. All improve
+this weak reference; P03 remains stronger and P07 variance ~1e-8.</td>
+<td>archive/pre-t1-cleanup-2026-09-04:docs/experiments/p00_p06_rapid_reliability.md</td>
+</tr>
+</tbody>
+</table>
+<h2
+id="distinct-later-normalization-weight-merge-branch-and-kd-experiments">Distinct
+later normalization, weight-merge, branch and KD experiments</h2>
+<table>
+<thead>
+<tr class="header">
+<th>ID / implementation</th>
+<th>Observation and nearest comparator</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>RF-BN — Missingness-conditional BN</td>
+<td>Conditional minus common primary -.008551/-.013704 in T1/T5. T1 M00
++.000452 and M01 +.000973 versus common are isolated metric positives,
+not robustness gain.</td>
+<td>docs/experiments/three_directions_results.md</td>
+</tr>
+<tr class="even">
+<td>RF-BN-fixed — Original fixed-forward BN diagnostic</td>
+<td>Conditional minus original X22 primary -.260871/-.096705; unstable
+layer activations; superseded by batch-stat diagnostic.</td>
+<td>docs/experiments/three_directions_results.md</td>
+</tr>
+<tr class="odd">
+<td>RF-MIXED — Equal-capacity mixed shallow branch</td>
+<td>Primary +.003981/+.001866 T1/T5 vs matched control (derived from
+rounded table).</td>
+<td>docs/experiments/three_directions_results.md</td>
+</tr>
+<tr class="even">
+<td>RF-TYPED — Static/dynamic shallow branches</td>
+<td>T1 -.008309 vs mixed/-.004328 vs control; T5 +.005372 vs
+mixed/+.007238 vs control.</td>
+<td>docs/experiments/three_directions_results.md</td>
+</tr>
+<tr class="odd">
+<td>RF-KD — Same-input routed-expert distillation</td>
+<td>T1/T5 primary +.003262/+.005630 vs no-KD; -.003851/-.007891 vs
+teacher; M00 improves both.</td>
+<td>docs/experiments/three_directions_results.md</td>
+</tr>
+<tr class="even">
+<td>TD-N — Four-bank conditional normalization</td>
+<td>T1/T5 primary -.240553/-.020333 vs shared BN calibration.</td>
+<td>docs/experiments/three-directions-results.md</td>
+</tr>
+<tr class="odd">
+<td>TD-W — Fixed 0.5 weight merge</td>
+<td>Primary -.033409/-.060303 vs recalibrated X22; T1 block +.003249 but
+M01 -.106724.</td>
+<td>docs/experiments/three-directions-results.md</td>
+</tr>
+<tr class="even">
+<td>TD-D — Routed-expert KD student</td>
+<td>Primary +.001570/+.005707 vs no-KD; vs route +.000710/-.005418; T1
+replacement gate passes, T5 M07 -.013862 fails.</td>
+<td>docs/experiments/three-directions-results.md</td>
+</tr>
+</tbody>
+</table>
+<h2 id="old-belief-branches-and-natural-observations">Old belief
+branches and natural observations</h2>
+<p><code>codex/belief-filter</code> (<code>fac140f</code>),
+<code>codex/belief-attention</code> (<code>f451934</code>) and
+<code>codex/belief-reconstruction</code> (<code>12cdc2d</code>) have
+August 27, 2026 tips; they are old historical probes, not new September
+directions. The archive contains <code>state_filter.py</code>,
+<code>state_attention.py</code>,
+<code>reconstruction_baseline.py</code>,
+<code>train_belief_state.py</code> and
+<code>evaluate_belief_state.py</code>. All six T1/T5 primary comparisons
+were negative; numeric T1 values are above. T5 magnitudes are not stated
+in the compact rejection summary and must not be invented. Natural VIIRS
+attention’s +.000287 AP and target-QA’s .382293→.398789 AP are
+diagnostic positives with explicit metric/population caveats, not
+successful forecasting-method claims. The added-year QA alignment
+preparation failed on missing CRS/geotransform; it is not an efficacy
+experiment.</p>
+<h2 id="unfinished-architecture-matrix">Unfinished architecture
+matrix</h2>
+<table>
+<thead>
+<tr class="header">
+<th>ID / implementation</th>
+<th>Observation and nearest comparator</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ARCH-SegFormer-B2 — SegFormer-B2</td>
+<td>T1 cosine +.007702; T5 +.003001 vs matched ERM. Routed mixed/25%/50%
+BlockDrop T1 +.001955/-.001070/-.001525, T5 +.004720/+.005466/-.000420.
+All cross-T gates fail.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="even">
+<td>ARCH-SwinUnet — SwinUnet</td>
+<td>T5 cosine +.003831; mixed/25%/50% BlockDrop
++.006723/+.002831/+.003828 vs matched ERM. T1 not resolved in committed
+ledger; do not infer a negative.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+<tr class="odd">
+<td>ARCH-ConvLSTM — ConvLSTM</td>
+<td>Bootstrap saved, continuation replacement jobs 21362024–21362028
+submitted; committed ledger has no final screen values.</td>
+<td>docs/experiments/t1_t5_innovations.md</td>
+</tr>
+</tbody>
+</table>
+<h2 id="artifact-and-source-retention-boundary">Artifact and source
+retention boundary</h2>
+<p>Source refs and recipe pointers are machine-readable in <a
+href="../../../docs/research/method-inventory.json">method-inventory.json</a>.
+Existing compact JSON result tables remain committed for both
+three-direction campaigns (legacy hyphenated files require branch
+recovery). Larger run summaries/checkpoints/logs remain external.
+Historical narrative without a compact JSON is evidence of the reported
+result, not a substitute for recovered raw evaluation artifacts. Never
+label archived code portable or reproduced solely because Git can
+recover it.</p>
+<h2 id="additional-positive-controls-and-compositions">Additional
+positive controls and compositions</h2>
+<p>The frozen register’s column headings say seed 0 but some rows were
+updated with later confirmation results. X8, X10, X14, X17 and X22 have
+three-seed 2021/2022/2023 evidence; X19 has three-seed 2021 evidence.
+Other register entries should not inherit that strength.</p>
+<table>
+<thead>
+<tr class="header">
+<th>ID</th>
+<th>Scope and observation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>X8</td>
+<td>unchanged global D1 consistency; fresh ERM adoption; incremental
+FireDrop specialist; incrementally reliable; ERM adoption fails 2022;
+incrementally reliable and ERM-positive Final three-seed primary deltas
+vs global D1: T1 +.003979/+.004533/+.004699; T5
++.005834/+.003820/+.005231. Against fresh ERM: T1
++.003841/-.002114/+.002570; T5 +.016981/+.015578/+.010831
+(2021/22/23).</td>
+</tr>
+<tr class="even">
+<td>X10</td>
+<td>fresh continuation with spatial route; yes; typed input restoration
+optimized by forecast loss; 2022/23 -.001356/-.000347; reject
+cross-history; 2022/23 +.004783/+.002139; T5-only positive 2021
+three-seed routed primary +.001186 T1/+.009652 T5; T1 seed 2 -.004452.
+Seed-0 +.007381/+.005883.</td>
+</tr>
+<tr class="odd">
+<td>X17</td>
+<td>X14 mixed-severity specialist plus fresh ERM; no; secondary only
+after heldout attribution failure; ERM-positive all years; X14 2023
+block -.000649; ERM-positive all years; X14 2022/23 block
+-.000898/-.001614 Final three-seed primary vs ERM: T1
++.007392/+.002622/+.006359; T5 +.017792/+.010929/+.004409 for
+2021/22/23.</td>
+</tr>
+<tr class="even">
+<td>GLOBAL-D1</td>
+<td>T5 three-seed primary +.011147/+.011758/+.005600 versus ERM in
+2021/22/23; T1 -.000138/-.006647/-.002129; overall +.003265.</td>
+</tr>
+<tr class="odd">
+<td>X8+X10</td>
+<td>Overall primary +.008279 versus fresh ERM; T1 2022 -.003212; mixed
+secondary system evidence.</td>
+</tr>
+<tr class="even">
+<td>X11-vs-ERM</td>
+<td>T1 seed-0 routed primary +.002519 versus fresh ERM, derived from X10
++.007381 and X11 minus X10 -.004862. Incremental reconstruction itself
+fails.</td>
+</tr>
+</tbody>
+</table>
+<p>Source: <code>docs/experiments/t1_t5_innovations.md</code>, including
+its global-consistency reuse audit and completed confirmation sections.
+The X11 total effect is arithmetic on rounded reported deltas and does
+not reverse its failed X10 attribution.</p>
+<h2 id="baseline-and-attribution-audit-additions">Baseline and
+attribution audit additions</h2>
+<table>
+<thead>
+<tr class="header">
+<th>ID</th>
+<th>Observation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>X16</td>
+<td>X14 specialist plus fresh-control total check; no; restoration loses
+to X14; -.000452 vs X14; reject; cancelled after T1 attribution failure
+T1 routed primary +.008348 vs fresh ERM; M06 +.001764 versus X14 even
+though block mean -.000678.</td>
+</tr>
+<tr class="even">
+<td>B1</td>
+<td>B1 minus B0 M00/M01/M06/M07: 2021
++.014277/+.054310/+.005778/+.006518; 2022
++.039479/+.041762/+.016716/+.013413; 2023
++.000400/+.010055/-.002538/-.000651. Architecture/history confounded;
+not a new method.</td>
+</tr>
+<tr class="odd">
+<td>B5</td>
+<td>2021 AP .557715/.288461/.336086/.158021; block .247054. Compared
+with B1 .595265/.093697/.329582/.140190, M01/block improve and M00
+regresses; not clean dominance.</td>
+</tr>
+<tr class="even">
+<td>P09-total</td>
+<td>Block gain vs P00 +.052243/+.018699/+.022378 in 2021/22/23; matched
+P10 is +.000102/+.004690/-.002189 relative to P09, so no stable GroupDRO
+attribution.</td>
+</tr>
+<tr class="odd">
+<td>FOUNDATION-RULES</td>
+<td>Test event-macro AP .000531 and .070538; deterministic reference,
+not learned contribution.</td>
+</tr>
+<tr class="even">
+<td>FOUNDATION-OFFICIAL</td>
+<td>Fold-2 trained AP .554664; twelve released folds .452764 ± .088217;
+original WSTS contract.</td>
+</tr>
+</tbody>
+</table>
+<p>B1/B5 and P09 source: archived quantitative ledger at
+<code>4b843ad</code>; X16 source: current cross-history ledger. B5’s
+comparator values here are explicit APs, not a claim of matched history
+against B0.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

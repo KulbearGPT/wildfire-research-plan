@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Swin and SegFormer
+reproduction · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/architectures.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#swin-and-segformer-reproduction"
+id="toc-swin-and-segformer-reproduction">Swin and SegFormer
+reproduction</a></li>
+</ul></div></details>
+<h1 id="swin-and-segformer-reproduction">Swin and SegFormer
+reproduction</h1>
+<p>The cross-history runner retains Swin-Unet and SegFormer-B2 for both
+T1 and T5, including single-setting positive signals that did not pass
+the cross-history gate. Their historical campaign uses a 10,000-step
+seed-zero architecture bootstrap, then independently initialized
+3,000-step matched continuations from that same bootstrap. Do not
+replace those initializations with B3/B5.</p>
+<p>The public Swin-T ImageNet-1K asset is linked by the <a
+href="https://github.com/microsoft/Swin-Transformer/blob/main/MODELHUB.md">official
+Swin model hub</a>. SegFormer uses NVIDIA's <a
+href="https://huggingface.co/nvidia/mit-b2/tree/3bb39e8739149c3777d0325349b2a6c32c6413db">pinned
+MiT-B2 revision</a>. The fetch script pins all three SHA256 values
+already enforced by
+<code>reproductions/cross_history/architectures.py</code>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Artifact</th>
+<th>SHA256</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Swin-T <code>swin_tiny_patch4_window7_224.pth</code></td>
+<td><code>9f71c168d837d1b99dd1dc29e14990a7a9e8bdc5f673d46b04fe36fe15590ad3</code></td>
+</tr>
+<tr class="even">
+<td>MiT-B2 <code>config.json</code></td>
+<td><code>d9a879499e7d73e2b33af0638cee320b1070c8f0dadb620eac8907df3d18caa9</code></td>
+</tr>
+<tr class="odd">
+<td>MiT-B2 <code>pytorch_model.bin</code></td>
+<td><code>4500b5665471b593e6757e15bcca5034f433fe3902fe8ec2b7230774a57f264f</code></td>
+</tr>
+</tbody>
+</table>
+<p>After committing the handoff and configuring
+<code>WILDFIRE_SITE_ENV</code>, submit the public download on CPU:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu bash scripts/research/fetch-architectures.sh</span></code></pre></div>
+<p>Downloads go beneath <code>$WILDFIRE_ROOT/cache/swin</code> and
+<code>$WILDFIRE_ROOT/cache/huggingface/nvidia-mit-b2-3bb39e87</code>.
+Files are downloaded to unique <code>.partial</code> paths, checked,
+then atomically published without replacing an existing destination.
+Valid existing assets are reused; bad existing files cause an error and
+remain untouched. No download occurs outside Slurm. Network failures can
+be retried by submitting a new job. The configured training environment
+must include the pinned Transformers dependency for SegFormer.</p>
+<p>For each architecture/history, run the following bootstrap and wait
+for successful completion before submitting its continuations. Set
+<code>ARCH=swin_unet</code> or <code>ARCH=segformer_b2</code>; set
+<code>HISTORY=1</code> or <code>HISTORY=5</code>. These commands assume
+the configured <code>WILDFIRE_ROOT</code> is also exported in the
+submission shell. Each output directory must be new.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">ARCH</span><span class="op">=</span>segformer_b2</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">HISTORY</span><span class="op">=</span>1</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="st">&quot;</span><span class="va">$ARCH</span><span class="st">:</span><span class="va">$HISTORY</span><span class="st">&quot;</span> <span class="kw">in</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="ss">swin_unet:1</span><span class="kw">|</span><span class="ss">segformer_b2:1</span><span class="kw">)</span> <span class="va">BATCH</span><span class="op">=</span>16 <span class="cf">;;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="ss">swin_unet:5</span><span class="kw">)</span> <span class="va">BATCH</span><span class="op">=</span>8 <span class="cf">;;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="ss">segformer_b2:5</span><span class="kw">)</span> <span class="va">BATCH</span><span class="op">=</span>4 <span class="cf">;;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="pp">*</span><span class="kw">)</span> <span class="bu">echo</span> <span class="st">&quot;Unsupported architecture/history&quot;</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1 <span class="cf">;;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="cf">esac</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="va">RUN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/reproduced-</span><span class="va">${ARCH}</span><span class="st">-t</span><span class="va">${HISTORY}</span><span class="st">-s0&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--architecture</span> <span class="st">&quot;</span><span class="va">$ARCH</span><span class="st">&quot;</span> <span class="at">--history</span> <span class="st">&quot;</span><span class="va">$HISTORY</span><span class="st">&quot;</span> <span class="at">--method</span> control <span class="dt">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--bootstrap</span> <span class="at">--seed</span> 0 <span class="at">--steps</span> 10000 <span class="at">--batch-size</span> <span class="st">&quot;</span><span class="va">$BATCH</span><span class="st">&quot;</span> <span class="at">--workers</span> 3 <span class="dt">\</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$RUN</span><span class="st">/bootstrap&quot;</span></span></code></pre></div>
+<p>After that job completes, submit the matched control and independent
+cosine/block branches:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">BASE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$RUN</span><span class="st">/bootstrap/checkpoint.pt&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> METHOD <span class="kw">in</span> control cosine_erm block_specialist<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--architecture</span> <span class="st">&quot;</span><span class="va">$ARCH</span><span class="st">&quot;</span> <span class="at">--history</span> <span class="st">&quot;</span><span class="va">$HISTORY</span><span class="st">&quot;</span> <span class="at">--method</span> <span class="st">&quot;</span><span class="va">$METHOD</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--initial-checkpoint</span> <span class="st">&quot;</span><span class="va">$BASE</span><span class="st">&quot;</span> <span class="at">--seed</span> 0 <span class="at">--steps</span> 3000 <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--batch-size</span> <span class="st">&quot;</span><span class="va">$BATCH</span><span class="st">&quot;</span> <span class="at">--workers</span> 3 <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$RUN</span><span class="st">/</span><span class="va">$METHOD</span><span class="st">&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> FRACTION <span class="kw">in</span> .25 .5<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--architecture</span> <span class="st">&quot;</span><span class="va">$ARCH</span><span class="st">&quot;</span> <span class="at">--history</span> <span class="st">&quot;</span><span class="va">$HISTORY</span><span class="st">&quot;</span> <span class="at">--method</span> block_specialist <span class="dt">\</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--block-fraction</span> <span class="st">&quot;</span><span class="va">$FRACTION</span><span class="st">&quot;</span> <span class="at">--initial-checkpoint</span> <span class="st">&quot;</span><span class="va">$BASE</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--seed</span> 0 <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> <span class="st">&quot;</span><span class="va">$BATCH</span><span class="st">&quot;</span> <span class="at">--workers</span> 3 <span class="dt">\</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$RUN</span><span class="st">/block-</span><span class="va">$FRACTION</span><span class="st">&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>The runner accumulates these historical physical microbatches to
+effective batch64. Preserve the physical batch as well as the
+optimizer-step budget: changing it can change training behavior and
+random-number consumption, not merely floating-point rounding. Swin
+T1/T5 uses 16/8, confirmed by the <a
+href="../../../docs/experiments/t1_t5_innovations.md">historical
+campaign ledger</a> and bootstrap <code>result/started.json</code>
+records for jobs <code>21339338/21339344</code> (source
+<code>375e0370eba6e277fab2eab585031d7f8846dc1f</code>). SegFormer T1/T5
+uses 16/4, confirmed by bootstrap jobs <code>21339728/21339735</code>
+and all continuation jobs <code>21339729–21339733</code> /
+<code>21339736–21339740</code> (source
+<code>74b2be6416504102555f78431207db2461af66a6</code>). These small
+metadata records reside under the historical provenance root
+<code>/project/6085198/kulbear/wildfire/runs/cross-history-{history}-{method}-{job}/result/started.json</code>;
+that root is evidence only and is not required by the commands above.
+Repeat with the other history/architecture to retain matched
+comparisons. Historical seed-zero positives and failures are described
+in <a href="positive-signals.html">the positive catalog</a> and <a
+href="negative-results.html">negative archive</a>; these commands do not
+imply every block variant passed a gate. They evaluate 2021 by default
+and do not authorize new seed sweeps or test-set selection.</p>
+<p><code>--bootstrap</code> loads the public architecture initialization
+and emits a <strong>cross-history checkpoint.pt</strong> containing
+architecture/history, metadata and its trained state.
+<code>--initial-checkpoint</code> here requires that cross-history
+checkpoint format from the same architecture and history. It does not
+accept the raw downloaded ImageNet <code>.pth</code>/<code>.bin</code>,
+a B3/B5 Lightning <code>.ckpt</code>, or a B3/B5 completion-record JSON.
+Canonical ResNet B3/B5 regeneration instead uses <a
+href="baselines.html">the baseline recipe</a>. Public architecture
+assets remain required at their verified cache paths during
+reconstruction even when loading a task checkpoint.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

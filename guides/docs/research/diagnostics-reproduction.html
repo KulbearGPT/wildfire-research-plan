@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reproduce the two positive diagnostic
+observations · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/diagnostics-reproduction.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#reproduce-the-two-positive-diagnostic-observations"
+id="toc-reproduce-the-two-positive-diagnostic-observations">Reproduce
+the two positive diagnostic observations</a>
+<ul>
+<li><a href="#recovered-code-and-changes"
+id="toc-recovered-code-and-changes">Recovered code and changes</a></li>
+<li><a href="#prerequisites-and-transfer-status"
+id="toc-prerequisites-and-transfer-status">Prerequisites and transfer
+status</a></li>
+<li><a href="#prepare-public-viirs-maps"
+id="toc-prepare-public-viirs-maps">Prepare public VIIRS maps</a></li>
+<li><a href="#relocate-the-frozen-artifacts-and-evaluate"
+id="toc-relocate-the-frozen-artifacts-and-evaluate">Relocate the frozen
+artifacts and evaluate</a></li>
+<li><a
+href="#regenerate-the-attention-head-and-the-public-only-boundary"
+id="toc-regenerate-the-attention-head-and-the-public-only-boundary">Regenerate
+the attention head, and the public-only boundary</a></li>
+<li><a href="#verification-status"
+id="toc-verification-status">Verification status</a></li>
+</ul></li>
+</ul></div></details>
+<h1 id="reproduce-the-two-positive-diagnostic-observations">Reproduce
+the two positive diagnostic observations</h1>
+<p>These are historical <strong>24-event, 2021, T1 diagnostics</strong>,
+not adopted forecasting methods. Recovered source is
+<code>4b843add48862dcfac668b643ecd2a564cbe00df</code>. The original
+compact results are preserved in <a
+href="../../../docs/research/diagnostics-results.json">diagnostics-results.json</a>,
+copied from completed archived jobs without recomputation.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Diagnostic</th>
+<th>Exact recorded observation</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Natural VIIRS attention screen, job 20814289</td>
+<td>AP .3822925055272726 → .38257901744809514; delta
++.00028651192082251864</td>
+<td>F1 .26853028377806015 → .2632027257240204; Brier worsens by
+.00002638172979156292; no forecasting-method gain</td>
+</tr>
+<tr class="even">
+<td>Target-QA censoring, job 20823565</td>
+<td>Frozen P00 AP .3822925055272726 → .39878926089761657</td>
+<td>Evaluation population changes; not improvement to the predictor</td>
+</tr>
+</tbody>
+</table>
+<p>The original population has 393,216 pixels and 1,867 positives. QA
+retains all positives and only reliably observed zero labels: 49,310
+unknown zero pixels are excluded, leaving 343,906 pixels. This is 12.54%
+of <strong>all</strong> pixels, or 12.60% of zero-label pixels; some
+older prose rounds/describes the denominator loosely. After censoring,
+attention AP .3979113680650778 is below P00 by .0008778928325387514. Do
+not present the diagnostic as attention becoming useful after QA.</p>
+<h2 id="recovered-code-and-changes">Recovered code and changes</h2>
+<p>The entrypoints are:</p>
+<ul>
+<li><code>reproductions.wsts_fast_track.viirs_reliability</code>:
+public-product acquisition and fixed reliability-map preparation.</li>
+<li><code>reproductions.wsts_fast_track.evaluate_viirs_reliability</code>:
+natural-observation attention versus frozen P00.</li>
+<li><code>reproductions.wsts_fast_track.evaluate_viirs_target_quality</code>:
+standard versus QA-censored metrics for the same predictions.</li>
+<li><code>reproductions.wsts_fast_track.train_belief_state</code>:
+regenerate the attention head from an available valid historical P00
+completion record.</li>
+</ul>
+<p>The recovered closure includes the historical
+attention/filter/reconstruction heads, latent-state support, belief
+evaluator, and censored-cohort support used by the builder. These
+dependencies are retained for source integrity; this guide covers only
+the two T1 diagnostic entrypoints. The general
+<code>evaluate_belief_state</code> CLI is dependency code here: its
+broader T5 and standalone relocation paths are not supported or
+qualified by this recovery, and no general negative-belief replay is
+promised. No scientific objective, mask classes, cohort selection, layer
+math or evaluation arithmetic was changed. Imports use retained
+runtime/corruption code and <code>diagnostic_support.py</code> contains
+the exact historical sampling/index/checkpoint-record helpers.
+<code>diagnostic_artifacts.py</code> adds explicit checksum-verified
+path relocation. Original absolute checkpoint provenance remains
+untouched inside transferred files.</p>
+<h2 id="prerequisites-and-transfer-status">Prerequisites and transfer
+status</h2>
+<p>Run data preparation, hashing large files, training and evaluation
+<strong>inside Slurm</strong>. Use the configured environment from <a
+href="reproduce.html">reproduce.md</a>, with the pinned upstream
+checkout and corrected 999-event HDF5 dataset/statistics. Diagnostics
+additionally need <code>requests</code>, <code>rasterio</code>
+(including its GDAL/PROJ runtime), <code>h5py</code>, NumPy and the
+system <code>curl</code> executable. The model steps use the shared
+PyTorch/upstream model dependencies. These extra imports have not yet
+been qualified in a fresh environment by this recovery task.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Asset</th>
+<th>Acquisition / exact requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Original georeferenced daily rasters</td>
+<td><code>WildfireSpreadTS.zip</code>, Zenodo record
+<code>8006177</code>, MD5 <code>dc1a04e63ccc70037b277d585b8fe761</code>;
+existing <code>docs/tutorials/res18/download.sh original</code>
+downloads and verifies it. Builder expects
+<code>2021/&lt;event&gt;/&lt;date&gt;.tif</code> (also accepts a
+<code>WSTSPlus/</code> prefix). Corrected HDF5 alone cannot supply the
+georeferencing.</td>
+</tr>
+<tr class="even">
+<td>VIIRS products</td>
+<td>Builder queries NASA CMR collection <code>C2734202914-LPCLOUD</code>
+(VNP14IMG) and downloads matching VNP14IMG fire-mask and VNP03IMG
+geolocation products from LAADS. An Earthdata bearer-token file is
+required; obtain credentials yourself and keep the file mode 600. A
+transferred cache can avoid repeated downloads, but the current builder
+still requires a nonempty token file.</td>
+</tr>
+<tr class="odd">
+<td>Input/target reliability</td>
+<td>Either regenerate the <code>model</code> and <code>target</code>
+gates below or transfer each entire <code>output/</code> directory,
+including <code>manifest.json</code> and all 24 referenced NPZ files.
+Their names are relative and need no path rewrite. The provenance gate
+is not a substitute for either gate.</td>
+</tr>
+<tr class="even">
+<td>Historical frozen P00</td>
+<td>Transfer <code>completed.json</code> and its exact checkpoint;
+corrected B2/B3 is not a substitute. P00 is seed 0, 10,000 updates,
+legacy FireDrop and legacy pooled-year training exposure.</td>
+</tr>
+<tr class="odd">
+<td>Historical attention head</td>
+<td>Transfer <code>belief-state.pt</code> from
+<code>prototype-fire-belief-attention-t1-20655225</code>, or regenerate
+the attention head from that P00 as below. Historical SHA256:
+<code>e576bafff00776ef3482cb09092bd43972a367c34e30dc0eaa65cf762f09942a</code>.</td>
+</tr>
+<tr class="even">
+<td>Historical statistics</td>
+<td>Original attention input log records SHA256
+<code>4f6d308f00afcfcafcd14404dca9fff4f5beb89e1c2d0f615723f4d08b690f49</code>
+for <code>train-2016-2020-stats.npz</code>. Verify the transferred file
+before claiming numeric reproduction.</td>
+</tr>
+</tbody>
+</table>
+<p>Original run-directory names under the archived run root are
+<code>prototype-P00-FireDrop-C00-20398173</code>,
+<code>prototype-fire-belief-attention-t1-20655225</code>,
+<code>viirs-reliability-24-model-20807932</code>, and
+<code>viirs-reliability-24-target-20823563</code>. The original site
+root is recorded in
+<code>docs/experiments/artifact-archive-manifest.tsv</code>; it is
+provenance, not a required runtime location. Small metadata/existence
+checks on 2026-09-16 found the P00 record/checkpoint, attention
+checkpoint and all 48 referenced map files present at that archive. No
+large checkpoint hashing, transfer or fresh model execution was
+performed for this recovery.</p>
+<p>The historical P00 record SHA256 is
+<code>9b74bd49d15bf7aaf8beec9b830b6db224a50209110a8f133b65293115b6d8ac</code>.
+Leave its bytes and checkpoint field unchanged. The map below redirects
+the old field without requiring the old path to exist. A SHA computed on
+transfer verifies that transferred content stays unchanged; the P00
+checkpoint itself still needs comparison with a trusted source-side
+checksum generated during transfer. Its existence alone does not
+establish integrity.</p>
+<h2 id="prepare-public-viirs-maps">Prepare public VIIRS maps</h2>
+<p>Set <code>WSTS_ZIP</code>, <code>VIIRS_CACHE</code>,
+<code>EARTHDATA_TOKEN_FILE</code>, <code>INPUT_QA</code>,
+<code>TARGET_QA</code> to site-selected paths. Both output directories
+must be new. Run the following submission commands from the committed
+Git checkout on the login shell, after setting
+<code>WILDFIRE_SITE_ENV</code>, sourcing it and changing to
+<code>WILDFIRE_REPO</code>. The submitter creates the allocation; do not
+execute the Python commands directly on login. The two map jobs are
+independent. Wait for both to finish with Slurm state COMPLETED and exit
+0:0 before submitting dependent evaluations:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.wsts_fast_track.viirs_reliability <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--archive</span> <span class="st">&quot;</span><span class="va">$WSTS_ZIP</span><span class="st">&quot;</span> <span class="at">--cache-root</span> <span class="st">&quot;</span><span class="va">$VIIRS_CACHE</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--token-file</span> <span class="st">&quot;</span><span class="va">$EARTHDATA_TOKEN_FILE</span><span class="st">&quot;</span> <span class="at">--gate</span> model <span class="at">--output-root</span> <span class="st">&quot;</span><span class="va">$INPUT_QA</span><span class="st">&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.wsts_fast_track.viirs_reliability <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--archive</span> <span class="st">&quot;</span><span class="va">$WSTS_ZIP</span><span class="st">&quot;</span> <span class="at">--cache-root</span> <span class="st">&quot;</span><span class="va">$VIIRS_CACHE</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--token-file</span> <span class="st">&quot;</span><span class="va">$EARTHDATA_TOKEN_FILE</span><span class="st">&quot;</span> <span class="at">--gate</span> target <span class="at">--output-root</span> <span class="st">&quot;</span><span class="va">$TARGET_QA</span><span class="st">&quot;</span></span></code></pre></div>
+<p>The 24 identities are frozen in <code>FIXED_2021_MODEL_GATE</code>
+and <code>FIXED_2021_TARGET_GATE</code>; do not replace them by
+convenient available events. Valid fire-mask classes remain 5/8/9,
+acquisition ages are anchored at next-day 00:00 UTC, and unobserved age
+is 24 hours. Reliability-map generation is CPU/geospatial work and can
+use a CPU allocation; model evaluation requires the configured GPU
+allocation. Historical model/target mean reliable fractions were
+.8583887641562177/.8792395447601579. The 2016–2020 cohort extension
+failed because its added-year TIFFs lacked usable georeferencing; it is
+not part of these successful 2021 map preparations.</p>
+<h2 id="relocate-the-frozen-artifacts-and-evaluate">Relocate the frozen
+artifacts and evaluate</h2>
+<p>Set <code>P00_RECORD</code>, <code>P00_CHECKPOINT</code>,
+<code>ATTENTION_CHECKPOINT</code> to transferred files,
+<code>ARTIFACT_MAP</code> to a new JSON path, <code>DIAG_OUTPUT</code>
+to an output directory, and the shared <code>WILDFIRE_UPSTREAM</code>,
+<code>WILDFIRE_DATA</code>, <code>WILDFIRE_STATS</code> configuration.
+Submit map creation to a CPU allocation; the long original record string
+below is an immutable provenance key, never a file read:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.wsts_fast_track.diagnostic_artifacts <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--p00-record</span> <span class="st">&quot;</span><span class="va">$P00_RECORD</span><span class="st">&quot;</span> <span class="at">--p00-checkpoint</span> <span class="st">&quot;</span><span class="va">$P00_CHECKPOINT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--recorded-p00-record</span> /project/6085198/kulbear/wildfire/runs/prototype-P00-FireDrop-C00-20398173/completed.json <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$ARTIFACT_MAP</span><span class="st">&quot;</span></span></code></pre></div>
+<p>Wait for the map job to complete successfully, then submit the GPU
+evaluations (they may run independently):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">common</span><span class="op">=</span><span class="va">(</span>--p00-record <span class="st">&quot;</span><span class="va">$P00_RECORD</span><span class="st">&quot;</span> --attention-checkpoint <span class="st">&quot;</span><span class="va">$ATTENTION_CHECKPOINT</span><span class="st">&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>        --artifact-map <span class="st">&quot;</span><span class="va">$ARTIFACT_MAP</span><span class="st">&quot;</span> --upstream-root <span class="st">&quot;</span><span class="va">$WILDFIRE_UPSTREAM</span><span class="st">&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        --data-root <span class="st">&quot;</span><span class="va">$WILDFIRE_DATA</span><span class="st">&quot;</span> --stats-path <span class="st">&quot;</span><span class="va">$WILDFIRE_STATS</span><span class="st">&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        --batch-size 8 --device cuda<span class="va">)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.wsts_fast_track.evaluate_viirs_reliability <span class="st">&quot;</span><span class="va">${common</span><span class="op">[@]</span><span class="va">}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--reliability-root</span> <span class="st">&quot;</span><span class="va">$INPUT_QA</span><span class="st">&quot;</span> <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$DIAG_OUTPUT</span><span class="st">/natural.json&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.wsts_fast_track.evaluate_viirs_target_quality <span class="st">&quot;</span><span class="va">${common</span><span class="op">[@]</span><span class="va">}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-reliability-root</span> <span class="st">&quot;</span><span class="va">$INPUT_QA</span><span class="st">&quot;</span> <span class="at">--target-reliability-root</span> <span class="st">&quot;</span><span class="va">$TARGET_QA</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$DIAG_OUTPUT</span><span class="st">/target-qa.json&quot;</span></span></code></pre></div>
+<p>The map has schema version 1 and an <code>artifacts</code> object
+keyed by recorded source path. Each entry has <code>path</code>,
+<code>bytes</code>, <code>sha256</code>; <code>path</code> can be
+relative to the map file. With a map provided, missing entries, changed
+bytes, or checksum mismatch fail instead of falling back to the
+historical filesystem. Every input/target NPZ is checked against its
+sample manifest SHA256 before its first decode; cached decoded arrays
+reuse that verified content. Missing digests and checksum mismatches
+fail explicitly. Scientific record/checkpoint fields and finite state
+checks remain enforced. A map generated from the wrong files is not
+evidence they match the historical run; first verify the source
+checksums described above.</p>
+<h2
+id="regenerate-the-attention-head-and-the-public-only-boundary">Regenerate
+the attention head, and the public-only boundary</h2>
+<p>With the historical P00 record/checkpoint available, this preserves
+the archived attention recipe (seed 0, 3,000 AdamW updates, LR .001,
+effective batch 64, state-loss coefficient .1):</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">DIAGNOSTIC_SOURCE_COMMIT</span><span class="op">=</span><span class="va">$(</span><span class="fu">git</span> rev-parse HEAD<span class="va">)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.wsts_fast_track.train_belief_state <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--method</span> attention <span class="at">--history</span> 1 <span class="at">--p00-record</span> <span class="st">&quot;</span><span class="va">$P00_RECORD</span><span class="st">&quot;</span> <span class="at">--artifact-map</span> <span class="st">&quot;</span><span class="va">$ARTIFACT_MAP</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--upstream-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_UPSTREAM</span><span class="st">&quot;</span> <span class="at">--data-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_DATA</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stats-path</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_STATS</span><span class="st">&quot;</span> <span class="at">--output-path</span> <span class="st">&quot;</span><span class="va">$NEW_ATTENTION_CHECKPOINT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--git-commit</span> <span class="st">&quot;</span><span class="va">$DIAGNOSTIC_SOURCE_COMMIT</span><span class="st">&quot;</span> <span class="at">--batch-size</span> 64 <span class="at">--accumulation-steps</span> 1 <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--num-workers</span> 8 <span class="at">--device</span> cuda</span></code></pre></div>
+<p>Compute <code>DIAGNOSTIC_SOURCE_COMMIT</code> in the submission
+checkout as shown; it is passed literally into the archived job. Do not
+run <code>git rev-parse</code> inside the archive, which has no Git
+metadata. Wait for this training job to complete before evaluating its
+checkpoint.</p>
+<p>The regenerated checkpoint records the current P00 paths. The map
+generator includes checksum-verified identity entries for those paths as
+well as historical aliases, so the same map supports the regenerated
+head: set <code>ATTENTION_CHECKPOINT="$NEW_ATTENTION_CHECKPOINT"</code>
+and rerun the two evaluation commands with new result filenames. Do not
+silently edit immutable source metadata.</p>
+<p>If historical P00 is unavailable, use the recovered <a
+href="legacy-p00.html">legacy P00 bootstrap and completion recipe</a>.
+It preserves the archived 10,000-step training policy and known
+pooled-year indexing defect; it is not corrected B2. On the current
+prepared data this regenerates the old algorithm, while exact numerical
+replay additionally requires the historical data/statistics snapshot.
+Pair a newly regenerated P00 with a newly trained attention head, not a
+transferred historical head. Use fresh checksums and provenance, and do
+not claim that qualification or algorithm regeneration reproduced the
+historical scores.</p>
+<h2 id="verification-status">Verification status</h2>
+<p>Source AST parsing and relative-import closure checks passed. Five
+stdlib tests verify relocation, unchanged provenance, missing-map-entry
+rejection, independent byte counts, NPZ manifest integrity, path
+containment and corruption detection. The two original VIIRS mechanism
+test files are recovered for execution in Slurm, not run on login.
+Fresh-environment imports passed in CPU job <code>22102394</code>. GPU
+job <code>22102452</code> (source <code>e13b9fb5db55</code>, node
+<code>g36</code>) completed both actual 24-sample evaluations using
+relocated, checksum-verified artifacts. The <a
+href="../../../docs/research/environment/diagnostics-replay.json">new
+replay results</a> remain separate from the historical results. Natural
+AP delta is +0.0002895645 (historical +0.0002865119); QA-censored AP
+delta is −0.0008735966 (historical −0.0008778928). The direction of both
+comparisons, Brier deterioration, and QA ranking reversal agree. Across
+corresponding numeric fields, the largest absolute difference is
+0.00000429624; this is not bitwise numerical identity or a new efficacy
+experiment. This qualifies inference with transferred weights, not
+full-budget training or regenerated historical scores. Separately, GPU
+job <code>22103112</code> completed one actual attention optimizer
+update, strict trainable-state reload, formal short-checkpoint rejection
+and controlled M00/M06 evaluation; see the <a
+href="../../../docs/research/environment/gpu-qualification-final-batch.json">final
+qualification batch</a>.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

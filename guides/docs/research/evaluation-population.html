@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verified evaluation
+populations · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/evaluation-population.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#verified-evaluation-populations"
+id="toc-verified-evaluation-populations">Verified evaluation
+populations</a>
+<ul>
+<li><a href="#original-source-directories"
+id="toc-original-source-directories">Original source
+directories</a></li>
+<li><a href="#statistics-identity"
+id="toc-statistics-identity">Statistics identity</a></li>
+</ul></li>
+</ul></div></details>
+<h1 id="verified-evaluation-populations">Verified evaluation
+populations</h1>
+<p>The earlier <strong>2,312</strong> figure for 2023 in the
+quantitative reliability ledger was a documentation error. The original
+completed B0/B2/B3/D1-ERM/D1-KL/D2-STD/D12-SARP summaries all report
+<strong>2,102</strong>, consistent with the cross-history population. No
+dataset change is needed to explain this discrepancy.</p>
+<p>On 2026-09-16, all 21 original year/method summary JSON files were
+read without loading HDF5 or model weights. Every scenario in every
+method reports 3,181 samples for 2021, 2,856 for 2022, and 2,102 for
+2023. All 84 M00/M01/M06/M07 AP entries reproduce the ledger's
+six-decimal values exactly. Only the population sentence was corrected;
+metric values and method conclusions were not changed.</p>
+<h2 id="original-source-directories">Original source directories</h2>
+<p>These paths identify historical evidence, not required runtime
+locations. The original root is
+<code>/project/6085198/kulbear/wildfire/runs</code>. Within each listed
+directory the inspected file is
+<code>results-YEAR/summary.json</code>.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>2021 source directory</th>
+<th>2022 source directory</th>
+<th>2023 source directory</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>B0</td>
+<td><code>corrected-B0-S0-3K-21093263</code></td>
+<td><code>heldout-B0-2022-21098505</code></td>
+<td><code>heldout-B0-2023-21098506</code></td>
+</tr>
+<tr class="even">
+<td>B2</td>
+<td><code>corrected-B2-S0-3K-21093265</code></td>
+<td><code>heldout-B2-2022-21098505</code></td>
+<td><code>heldout-B2-2023-21098506</code></td>
+</tr>
+<tr class="odd">
+<td>B3</td>
+<td><code>corrected-B3-S0-3K-21093266</code></td>
+<td><code>heldout-B3-2022-21099907</code></td>
+<td><code>heldout-B3-2023-21099907</code></td>
+</tr>
+<tr class="even">
+<td>D1-ERM</td>
+<td><code>D1-erm-S0-3K-21102676</code></td>
+<td><code>heldout-D1-ERM-2022-21105328</code></td>
+<td><code>heldout-D1-ERM-2023-21105328</code></td>
+</tr>
+<tr class="odd">
+<td>D1-KL</td>
+<td><code>D1-kl-S0-3K-21102677</code></td>
+<td><code>heldout-D1-KL-2022-21105328</code></td>
+<td><code>heldout-D1-KL-2023-21105328</code></td>
+</tr>
+<tr class="even">
+<td>D2-STD</td>
+<td><code>D2-standard-S0-3K-21094929</code></td>
+<td><code>heldout-D2-STD-2022-21122938</code></td>
+<td><code>heldout-D2-STD-2023-21122938</code></td>
+</tr>
+<tr class="odd">
+<td>D12-SARP</td>
+<td><code>D12-SARP-S0-3K-21122172</code></td>
+<td><code>heldout-D12-SARP-2022-21122938</code></td>
+<td><code>heldout-D12-SARP-2023-21122938</code></td>
+</tr>
+</tbody>
+</table>
+<p>For all seven 2023 runs, each of the four scenarios has
+<code>sample_count: 2102</code> and <code>pixel_count: 34439168</code>,
+equal to 2,102 × 128 × 128. Their saved upstream commits are all
+<code>ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad</code>. The archived
+runner scripts select <code>hdf5/wstsplus-active-fixed</code>; the saved
+data summary records 999 HDF5 events, including 68 events in 2023. Event
+count and evaluated window count are different quantities.</p>
+<h2 id="statistics-identity">Statistics identity</h2>
+<p>Every inspected 2023 run's <code>inputs.sha256</code> records the
+same training-statistics SHA-256:</p>
+<pre class="text"><code>4f6d308f00afcfcafcd14404dca9fff4f5beb89e1c2d0f615723f4d08b690f49</code></pre>
+<p>The original 824-byte
+<code>runs/nibi-wstsplus-data-20260823/train-2016-2020-stats.npz</code>
+and the 824-byte transferred
+<code>handoff-20260916/public environment/data/train-2016-2020-stats.npz</code>,
+both beneath <code>/project/6085198/kulbear/wildfire</code>, were
+independently hashed during this check and both match that recorded
+value. These files were hashed as small metadata; no bulk data or
+checkpoint I/O occurred on login.</p>
+<p>This verification resolves the false historical population mismatch.
+It does not by itself prove byte identity of all HDF5 files or claim a
+new model replay; fresh allocated evaluations must still compare their
+metrics with these recorded results. The archive directory inspected
+contains run artifacts rather than a separate historical HDF5 snapshot,
+but a separate snapshot is not needed to explain the erroneous 2,312
+statement.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

@@ -1,92 +1,34 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wildfire Research Plan · T=1 Mainline</title>
-  <style>
-    :root { color-scheme: light; --ink:#17212b; --muted:#5e6b78; --line:#d9e0e6; --accent:#b4472d; --paper:#fffdf8; }
-    * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); background:#f3f0e9; font:16px/1.65 system-ui,-apple-system,sans-serif; }
-    main { width:min(1080px,calc(100% - 32px)); margin:36px auto; padding:40px; background:var(--paper); border:1px solid var(--line); border-radius:18px; }
-    h1,h2 { line-height:1.2; } h1 { margin-top:0; font-size:clamp(2rem,5vw,3.8rem); } h2 { margin-top:2.2rem; }
-    a { color:var(--accent); } code { background:#f0ece4; padding:.1em .35em; border-radius:4px; }
-    .lead { max-width:760px; color:var(--muted); font-size:1.12rem; }
-    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
-    .card { padding:18px; border:1px solid var(--line); border-radius:12px; background:#fff; }
-    .number { display:block; color:var(--accent); font-size:1.55rem; font-weight:750; }
-    .table-wrap { overflow-x:auto; }
-    table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
-    th,td { padding:9px 11px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
-    th:first-child,td:first-child { text-align:left; } thead { background:#f4efe7; }
-    .note { padding:14px 18px; border-left:4px solid var(--accent); background:#f7f1e8; }
-    footer { margin-top:2rem; color:var(--muted); font-size:.92rem; }
-    @media (max-width:640px) { main { margin:0; width:100%; padding:24px 18px; border:0; border-radius:0; } }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="野火预测科研方法教学：从研究基础、官方单 fold 复现到受控缺失方法验证。">
+<title>野火预测 · 科研方法教学与实验入门</title>
+<link rel="stylesheet" href="assets/course.css">
 </head>
 <body>
+<nav aria-label="主导航"><a href="./" aria-current="page">课程首页</a><a href="related-work/">研究基础</a><a href="baseline-reproduction/">基线复现</a><a href="guides/docs/START_HERE.html">新同学入门</a></nav>
 <main>
-  <p><strong>WSTS+ · fast prototyping · Nibi</strong></p>
-  <h1>T=1 受控缺失山火预测主线</h1>
-  <p class="lead">当前仓库只保留已有量化支持的 T=1 基线、训练方法和最小评测路径。2022–2023 年继续作为固定测试集；T=5、自然缺失、外部数据和已失败方向退出当前执行面，但完整历史仍可恢复。</p>
-
-  <h2>已保留的量化贡献</h2>
-  <div class="cards">
-    <div class="card"><span class="number">+0.150109</span>FireDrop（B2 vs B0），三年平均 M01 AP。</div>
-    <div class="card"><span class="number">+0.027821</span>BlockDrop（B3 vs B2），三年平均 M06/M07 AP。</div>
-    <div class="card"><span class="number">+0.008970</span>D1-KL vs D1-ERM，三年平均 M01/M06/M07 AP。</div>
-    <div class="card"><span class="number">+0.020699</span>D12-SARP vs D1-ERM，总方法三年平均 M01/M06/M07 AP。</div>
-  </div>
-
-  <h2>T=1 结果（AP）</h2>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>模型 / 年份</th><th>M00</th><th>M01</th><th>M06</th><th>M07</th></tr></thead>
-      <tbody>
-        <tr><td>B0 · 2021</td><td>0.580988</td><td>0.039387</td><td>0.323805</td><td>0.133672</td></tr>
-        <tr><td>B0 · 2022</td><td>0.278852</td><td>0.006669</td><td>0.135278</td><td>0.071779</td></tr>
-        <tr><td>B0 · 2023</td><td>0.412674</td><td>0.010101</td><td>0.205411</td><td>0.078691</td></tr>
-        <tr><td>B2 · 2021</td><td>0.559282</td><td>0.262091</td><td>0.308248</td><td>0.125715</td></tr>
-        <tr><td>B2 · 2022</td><td>0.276522</td><td>0.130812</td><td>0.131567</td><td>0.066482</td></tr>
-        <tr><td>B2 · 2023</td><td>0.388503</td><td>0.113583</td><td>0.191418</td><td>0.072856</td></tr>
-        <tr><td>B3 · 2021</td><td>0.558318</td><td>0.276890</td><td>0.343010</td><td>0.172086</td></tr>
-        <tr><td>B3 · 2022</td><td>0.285884</td><td>0.153926</td><td>0.150064</td><td>0.086647</td></tr>
-        <tr><td>B3 · 2023</td><td>0.400610</td><td>0.113681</td><td>0.214931</td><td>0.096476</td></tr>
-        <tr><td>D1-ERM · 2021</td><td>0.583021</td><td>0.251367</td><td>0.361236</td><td>0.176152</td></tr>
-        <tr><td>D1-ERM · 2022</td><td>0.296328</td><td>0.127506</td><td>0.150888</td><td>0.083153</td></tr>
-        <tr><td>D1-ERM · 2023</td><td>0.416895</td><td>0.093385</td><td>0.225807</td><td>0.101777</td></tr>
-        <tr><td>D1-KL · 2021</td><td>0.584376</td><td>0.267385</td><td>0.364239</td><td>0.184740</td></tr>
-        <tr><td>D1-KL · 2022</td><td>0.301379</td><td>0.140425</td><td>0.161299</td><td>0.099263</td></tr>
-        <tr><td>D1-KL · 2023</td><td>0.418699</td><td>0.100499</td><td>0.230400</td><td>0.103755</td></tr>
-        <tr><td>D2-STD · 2021</td><td>0.583073</td><td>0.301982</td><td>0.368775</td><td>0.189082</td></tr>
-        <tr><td>D2-STD · 2022</td><td>0.281631</td><td>0.150352</td><td>0.148539</td><td>0.087816</td></tr>
-        <tr><td>D2-STD · 2023</td><td>0.415177</td><td>0.138737</td><td>0.222552</td><td>0.099945</td></tr>
-        <tr><td>D12-SARP · 2021</td><td>0.585151</td><td>0.302867</td><td>0.376175</td><td>0.195433</td></tr>
-        <tr><td>D12-SARP · 2022</td><td>0.284437</td><td>0.165423</td><td>0.155997</td><td>0.097884</td></tr>
-        <tr><td>D12-SARP · 2023</td><td>0.413585</td><td>0.137976</td><td>0.225100</td><td>0.100707</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <p class="note">D12 的独立模块增益（vs D2-STD）为三年平均 <strong>+0.005764</strong>；因此 <strong>+0.020699</strong> 应表述为整体配方相对 D1-ERM 的提升，不能全部归因于新模块。</p>
-
-  <h2>当前执行面</h2>
-  <ul>
-    <li>基线：B0、B2、B3。</li>
-    <li>方法：D1-ERM、D1-KL、D2-STD、D12-SARP。</li>
-    <li>矩阵：M00–M07，固定 2021 选择集和 2022/2023 测试集。</li>
-    <li>集群：Nibi；训练和批量评测仅通过 Slurm，login node 只做编辑、提交和轻量检查。</li>
-  </ul>
-
-  <h2>文档入口</h2>
-  <ul>
-    <li><a href="README.md">仓库说明与最短运行路径</a></li>
-    <li><a href="docs/experiments/quantitative_reliability_ledger.md">完整 T=1 定量账本</a></li>
-    <li><a href="docs/experiments/rejected_experiments.md">负结果与退出方向汇总</a></li>
-    <li><a href="docs/research-roadmap.md">收敛后的下一步路线</a></li>
-  </ul>
-
-  <footer>主线整理日期：2026-09-04。历史 Git 快照：<code>archive/pre-t1-cleanup-2026-09-04</code>。</footer>
-</main>
-</body>
-</html>
+<p class="eyebrow">Wildfire forecasting · Research methods</p>
+<h1>从跑通一个基线，<br>到做出可信的实验。</h1>
+<p class="lead">面向刚加入项目的学生：先理解问题和数据，再完成一个官方 fold，最后学习如何公平比较方法、解释正负结果。当前研究覆盖 T=1/T=5、受控缺失、路由与蒸馏，以及跨架构验证。</p>
+<a class="button" href="guides/docs/START_HERE.html">开始入门</a><a href="guides/docs/tutorials/res18-baseline-slurm.html">直接进入 Slurm 实操 →</a>
+<section aria-labelledby="route"><h2 id="route">按这个顺序学习</h2><div class="cards">
+<article class="card"><span class="step">01 · 明确问题</span><h3><a href="related-work/">研究基础与相关工作</a></h3><p>理解卫星观测、活跃火点标签、数据集与已有方法。先知道我们能回答什么，再讨论模型创新。</p><p>完成目标：讲清输入、预测目标与证据边界。</p></article>
+<article class="card"><span class="step">02 · 学会复现</span><h3><a href="baseline-reproduction/">从论文指标到可信基线</a></h3><p>学习固定实验协议、核对数据和 fold、校准运行预算，以及区分自己训练与发布权重的结果。</p><p>完成目标：能解释一项结果如何产生、如何核验。</p></article>
+<article class="card"><span class="step">03 · 动手运行</span><h3><a href="guides/docs/tutorials/res18-baseline-slurm.html">官方 Res18 单 fold 实操</a></h3><p>从官方代码与公开数据开始，按 Slurm 命令准备环境、转换数据、完成 smoke，再训练和评估 Fold 2。</p><p>首次只跑一个 fold；完整 12-fold 为选做。</p></article>
+<article class="card"><span class="step">04 · 接入研究</span><h3><a href="guides/docs/research/reproduce.html">复现项目方法与控制组</a></h3><p>搭建可迁移的研究环境，理解 corrected baseline，再从已有证据中选一个方法和它的匹配控制。</p><p>完成目标：复现一个公平比较，并写出自己的判断。</p></article>
+</div></section>
+<section><h2>先分清两种 baseline</h2><div class="table-wrap"><table><thead><tr><th>路径</th><th>数据与预算</th><th>与你的任务如何对应</th></tr></thead><tbody>
+<tr><td><a href="guides/docs/tutorials/res18-baseline-slurm.html">官方 Fold 2</a></td><td>原始 WSTS 四年；2018/2020 训练、2019 验证、2021 测试；10,000 步。</td><td>第一次上手。只依赖官方代码与公开资产，不需要本项目模块。</td></tr>
+<tr><td><a href="guides/docs/tutorials/project-b0-slurm.html">项目 corrected B0</a></td><td>八年数据；2016–2020 训练、2021 验证、2022/2023 测试；3,000 步。</td><td>接入项目研究。包含索引修正与训练统计量，不是官方 fold 的别名。</td></tr>
+</tbody></table></div><p class="note">划分、处理或预算不同，分数就不能直接解释成方法增益。下载、安装、数据处理、训练与评估均通过 Slurm；登录节点仅做编辑、Git、提交和轻量检查。</p></section>
+<section><h2>当前研究与结果入口</h2><div class="cards">
+<article class="card"><h3><a href="guides/docs/research/positive-signals.html">发现过正向信号的方向</a></h3><p>51 项收录，包括单 seed、单指标或单场景改善。每项保留代码、结果来源与复现路径；收录不等于贡献已经确认。</p></article>
+<article class="card"><h3><a href="guides/docs/research/negative-results.html">负结果与未运行档案</a></h3><p>保留实现思路、设置和结果。明确区分测得无效、比较无效、取消与未运行，避免重复试错。</p></article>
+<article class="card"><h3><a href="guides/docs/research/qualification.html">哪些链路实际验证过</a></h3><p>新环境下通过 260 项 CPU 检查、91 个 GPU 短预算 case、999 事件审计及历史诊断重放。</p><p>验证在原物理集群的新环境和迁移路径进行；不是完整重跑所有历史分数。</p></article>
+</div><p><a href="guides/docs/research-roadmap.html">研究过程与实验契约</a> · <a href="guides/docs/research/method-recipes.html">方法复现配方</a> · <a href="guides/docs/research/data-preparation.html">数据准备</a> · <a href="guides/docs/research/teachers.html">教师与蒸馏</a> · <a href="guides/docs/research/architectures.html">跨架构实验</a></p></section>
+<section><h2>读结果时记住三件事</h2><ol><li><strong>目标是下一日活跃火点代理。</strong> 它不是完整火场边界；现有数据审计支持受控缺失研究，不支持自然缺失或业务部署的整体性能声明。</li><li><strong>T=1/T=5 是跨设置比较。</strong> 两者同时改变历史长度、架构与特征，不能把差异全部归因于更多历史。</li><li><strong>测试年份已有历史评估暴露。</strong> 可以复现固定结果；设计新方法前要明确确认方案，不能把这些年份重新称为未见测试集。</li></ol></section>
+<section><h2>第一次实验交什么</h2><p>一份实验笔记：代码提交号、环境和数据版本、划分、seed、batch、训练预算、Slurm job ID 与退出状态、checkpoint 和指标路径，以及与参照结果的差异解释。</p><p>Smoke 通过后再启动正式训练。详细完成标准和问题反馈模板见 <a href="guides/docs/START_HERE.html">新同学入门页</a>。</p></section>
+</main><footer>课程与项目状态更新：2026-09-16。方法结论以链接中的原始记录为准。<a href="docs/START_HERE.md">Markdown 源文档</a> · <a href="README.md">仓库说明</a></footer>
+</body></html>

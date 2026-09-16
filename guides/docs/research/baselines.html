@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Regenerating corrected B3 and B5
+baselines · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/baselines.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#regenerating-corrected-b3-and-b5-baselines"
+id="toc-regenerating-corrected-b3-and-b5-baselines">Regenerating
+corrected B3 and B5 baselines</a></li>
+</ul></div></details>
+<h1 id="regenerating-corrected-b3-and-b5-baselines">Regenerating
+corrected B3 and B5 baselines</h1>
+<p>Use the generic submitter from the committed checkout after
+environment/data setup. The historical
+<code>initialization: from_scratch</code> label means no wildfire task
+checkpoint; the encoder starts from ImageNet weights.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_SITE_ENV</span><span class="st">&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_REPO</span><span class="st">&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> baseline <span class="kw">in</span> B3 B5<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.wsts_fast_track.train_corrected_baseline <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--baseline-id</span> <span class="st">&quot;</span><span class="va">$baseline</span><span class="st">&quot;</span> <span class="at">--upstream-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_UPSTREAM</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--data-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_DATA</span><span class="st">&quot;</span> <span class="at">--stats-path</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_STATS</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--run-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/</span><span class="va">$baseline</span><span class="st">&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>Wait for both training jobs to finish successfully. Then export the
+selected checkpoints in CPU allocations:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> baseline <span class="kw">in</span> B3 B5<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.wsts_fast_track.complete_baseline <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">--baseline-id</span> <span class="st">&quot;</span><span class="va">$baseline</span><span class="st">&quot;</span> <span class="at">--run-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/</span><span class="va">$baseline</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--checkpoint-output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/checkpoints/</span><span class="va">${baseline</span><span class="op">,,</span><span class="va">}</span><span class="st">.ckpt&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--record-output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/checkpoints/</span><span class="va">$baseline</span><span class="st">-completed.json&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>These checkpoint destinations match the example site configuration;
+if you customized them, use your configured destinations instead.
+B0/B1/B2 use the same two commands with their own baseline ID and new
+output paths. After export succeeds, evaluate the completed baseline,
+for example B3:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.wsts_fast_track.evaluate_corrected_baseline <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--record</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/checkpoints/B3-completed.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--upstream-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_UPSTREAM</span><span class="st">&quot;</span> <span class="at">--data-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_DATA</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stats-path</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_STATS</span><span class="st">&quot;</span> <span class="at">--year</span> 2021 <span class="at">--device</span> cuda <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/B3/eval-2021&quot;</span></span></code></pre></div>
+<p>For a frozen held-out evaluation, change the year and output
+directory and add <code>--heldout-authorized</code>. Do not retrain or
+select checkpoints using 2022/2023.</p>
+<p>B3 is C00/T1 and B5 is C02/T5. Both retain seed zero, 3,000 optimizer
+steps, AdamW learning rate .001, batch64 and their original
+FireDrop/BlockDrop policy. Training uses 2016–2020; checkpoint selection
+maximizes 2021 validation AP. The selected checkpoint can precede step
+3,000.</p>
+<p>The trainer writes <code>training-completion.json</code> only after
+upstream fitting and final validation return successfully. It records
+the actual completed fit step separately from the selected best
+checkpoint. The completion command verifies baseline configuration, full
+fit length, selection monitor/mode, source SHA256, selected checkpoint
+step and stored ModelCheckpoint best-score metadata. It then copies the
+checkpoint, verifies its digest and creates a compatible immutable
+completion record. Existing outputs are rejected. A lone
+<code>best.ckpt</code> or interrupted training run is insufficient; this
+helper cannot retroactively certify old runs without a receipt.</p>
+<p>Use
+<code>--b3-record "$WILDFIRE_ROOT/checkpoints/B3-completed.json"</code>
+for the recovered T1 D-series continuations and
+<code>--b5-record "$WILDFIRE_ROOT/checkpoints/B5-completed.json"</code>
+for <code>train_temporal_reliability_prompting</code> with
+<code>--variant standard</code> or <code>--variant sarp</code>. Records
+point to absolute external checkpoint paths; after moving artifacts,
+update only the record's <code>checkpoint</code> field to the
+transferred file and verify its recorded SHA256. Keep the scientific
+provenance fields intact.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

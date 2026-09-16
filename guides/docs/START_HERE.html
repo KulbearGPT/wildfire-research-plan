@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>新同学从这里开始 · 野火预测课程</title><link rel="stylesheet" href="../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../index.html">课程首页</a><a href="START_HERE.html">入门路线</a><a href="../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../docs/START_HERE.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#新同学从这里开始"
+id="toc-新同学从这里开始">新同学从这里开始</a>
+<ul>
+<li><a href="#1-先了解我们在研究什么" id="toc-1-先了解我们在研究什么">1.
+先了解我们在研究什么</a></li>
+<li><a href="#2-选择你的首次实验" id="toc-2-选择你的首次实验">2.
+选择你的首次实验</a></li>
+<li><a href="#3-开始敲命令前准备好什么"
+id="toc-3-开始敲命令前准备好什么">3. 开始敲命令前准备好什么</a></li>
+<li><a href="#4-怎样算完成入门" id="toc-4-怎样算完成入门">4.
+怎样算完成入门</a></li>
+<li><a href="#5-跑通后怎样进入研究" id="toc-5-跑通后怎样进入研究">5.
+跑通后，怎样进入研究</a></li>
+<li><a href="#6-遇到问题去哪里找" id="toc-6-遇到问题去哪里找">6.
+遇到问题去哪里找</a></li>
+</ul></li>
+</ul></div></details>
+<h1 id="新同学从这里开始">新同学从这里开始</h1>
+<p>配套网站：<a href="../../index.html">课程首页</a> · <a
+href="../../related-work/index.html">研究基础课</a> · <a
+href="../../baseline-reproduction/index.html">基线复现课</a>。</p>
+<p>欢迎加入野火预测研究项目。这一页帮助你了解项目、完成第一次实验，再接上已有研究。<strong>第一次上手只需跑通一个官方
+fold，不要求重跑全部实验。</strong></p>
+<h2 id="1-先了解我们在研究什么">1. 先了解我们在研究什么</h2>
+<p>我们研究：当卫星输入出现预设的缺失时，如何预测下一日的活跃火点。模型输出逐像素的火点概率；标签是活跃火点代理，不是完整火场边界。现有结果主要针对受控缺失实验。</p>
+<p>先读 <a href="research-roadmap.html">研究 Roadmap</a>
+的问题定义、研究过程和实验契约，理解为什么要先审计数据、修正索引、建立基线，再比较方法。Roadmap
+保留早期教学脉络；<strong>当前方法、证据与运行状态以 <a
+href="research/reproduce.html">研究交付文档</a> 为准</strong>。</p>
+<p>阅读后，试着用自己的话回答：输入是什么、预测哪一天、标签代表什么，以及我们如何判断一个改动有效。</p>
+<h2 id="2-选择你的首次实验">2. 选择你的首次实验</h2>
+<table>
+<thead>
+<tr class="header">
+<th>你的目的</th>
+<th>从哪里开始</th>
+<th>首次完成范围</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>学习从下载数据到训练、评估的完整流程；只用官方代码</td>
+<td><strong><a href="tutorials/res18-baseline-slurm.html">官方
+Res18-U-Net 手把手教程</a></strong>（默认推荐）</td>
+<td>从空的个人目录开始，准备环境和数据，通过 smoke，再训练和评估 Fold
+2</td>
+</tr>
+<tr class="even">
+<td>已会基本流程，要接入本项目的 corrected B0</td>
+<td><a href="tutorials/project-b0-slurm.html">项目 B0 教程</a></td>
+<td>按该教程的 B0 路线运行固定时间划分、seed 0 的基线；不是再选一个
+fold</td>
+</tr>
+<tr class="odd">
+<td>已熟悉基线，要迁移环境或复现我们的研究方法</td>
+<td><a href="research/reproduce.html">新集群复现指南</a></td>
+<td>配置个人路径和 Slurm
+资源，准备数据及所需权重，再选择一个方法及其匹配控制</td>
+</tr>
+</tbody>
+</table>
+<p><strong>官方 Fold 2 与项目 B0 不是同一个实验。</strong>
+前者使用原始四年数据的官方划分和 10,000
+步预算；后者使用八年数据的固定前向时间划分、修正索引与训练统计量，预算为
+3,000 步。不能直接把两者分数当作方法增益。</p>
+<p>第一条路线不需要 clone 本项目，也不依赖老师的环境或野火检查点。完整
+12-fold 是后续选做项；首次入门不要直接批量启动所有 fold。</p>
+<h2 id="3-开始敲命令前准备好什么">3. 开始敲命令前准备好什么</h2>
+<ul>
+<li>自己的集群账号、CPU/GPU account，以及站点实际可用的
+GPU/partition。</li>
+<li>计算节点可读写的个人实验目录和足够存储配额。</li>
+<li>教程要求的 Python/module 环境，以及计算节点的下载渠道。</li>
+<li>一份实验笔记，用来记录配置、提交号、作业 ID 和结果路径。</li>
+</ul>
+<p>具体目录、空间准备和命令都在对应教程中。账户、模块名及 GPU
+名称按你的站点填写，不复制老师的个人路径或 Slurm account。</p>
+<p>登录节点只做编辑、Git、查看轻量日志和提交/查询作业。<strong>安装、下载、数据转换、训练与模型评估通过
+Slurm 执行。</strong> <code>sbatch</code> 返回 job ID
+只表示提交成功；还要确认作业 <code>COMPLETED</code>、退出码
+<code>0:0</code>，并检查实际产物。排队时不要重复提交同一实验。</p>
+<h2 id="4-怎样算完成入门">4. 怎样算完成入门</h2>
+<p>首次使用官方教程时，完成以下事项即可交给导师检查：</p>
+<ul>
+<li>能解释所用数据、年份划分、T=1 输入和下一日预测目标。</li>
+<li>环境与数据准备作业成功，smoke 检查通过。</li>
+<li>Fold 2 正式训练完成，训练步数、日志和选定 checkpoint 可查。</li>
+<li>对 checkpoint 完成教程规定的评估，能找到 AP
+等指标及其对应划分。</li>
+<li>能区分自己训练的结果、作者发布权重的结果和论文的多 fold
+汇总值。</li>
+</ul>
+<p>Smoke
+通过只说明运行链路可用，不代表已经复现论文效果。分数不同先核对划分、数据处理、预算、checkpoint
+选择和指标口径；不要为了追上某个数字反复调整测试集上的选择。</p>
+<p>实验笔记至少保留下面这些信息：</p>
+<pre class="text"><code>实验目的与采用的教程：
+代码提交号、环境配置：
+数据版本/处理记录、年份划分：
+模型、seed、batch、训练步数：
+Slurm job ID、最终状态与退出码：
+日志、checkpoint、评估结果路径：
+指标、对照来源、差异及尚未解决的问题：</code></pre>
+<p>如果走项目 B0 路线，把上面的 Fold 2 换成该教程规定的 B0
+训练和评价协议；不要混用两套验收口径。</p>
+<h2 id="5-跑通后怎样进入研究">5. 跑通后，怎样进入研究</h2>
+<p>先看 <a href="research/positive-signals.html">正向信号清单</a>，再读
+<a
+href="research/negative-results.html">负结果与未运行档案</a>。正向清单也收录单
+seed、单指标或单场景的改善，<strong>收录不等于已经确认贡献</strong>；未运行或比较无效也不等于方法无效。</p>
+<p>与导师选定一个方向后，按 <a
+href="research/method-recipes.html">方法复现配方</a>
+找到它的最近控制组，先复现已有比较，再讨论新改动。需要基础权重时看 <a
+href="research/baselines.html">基线训练与导出</a>；涉及教师或蒸馏时看 <a
+href="research/teachers.html">教师生成与使用</a>。</p>
+<p>每次实验开始前写清：要检验什么、与谁比较、哪些条件保持相同、什么结果支持或否定判断。项目历史测试年已有评估暴露，继续设计新方法时应先与导师确定确认方案。</p>
+<h2 id="6-遇到问题去哪里找">6. 遇到问题去哪里找</h2>
+<table>
+<thead>
+<tr class="header">
+<th>问题</th>
+<th>文档</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>新服务器如何安装、配置和提交作业</td>
+<td><a href="research/reproduce.html">新集群复现指南</a></td>
+</tr>
+<tr class="even">
+<td>数据如何下载、转换、修复和计算统计量</td>
+<td><a href="research/data-preparation.html">数据准备</a></td>
+</tr>
+<tr class="odd">
+<td>权重从哪里来，如何迁移或重新生成</td>
+<td><a href="research/artifacts.html">外部资产说明</a>、<a
+href="research/baselines.html">基线</a>、<a
+href="research/teachers.html">教师</a></td>
+</tr>
+<tr class="even">
+<td>哪些运行检查确实做过，有什么边界</td>
+<td><a href="research/qualification.html">资格验证记录</a></td>
+</tr>
+<tr class="odd">
+<td>历史评估样本数为何曾出现不同写法</td>
+<td><a href="research/evaluation-population.html">评估总体核对</a></td>
+</tr>
+</tbody>
+</table>
+<p>报告运行问题时，附上提交命令、代码提交号、job
+ID、退出状态和日志中的第一处错误。优先保留失败现场，不覆盖原结果，也不要在登录节点重跑模型来排查。</p>
+</main><footer>Wildfire research methods · <a href="../../index.html">返回课程首页</a></footer></body></html>

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Regenerate teacher checkpoints and
+manifests · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/teachers.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#regenerate-teacher-checkpoints-and-manifests"
+id="toc-regenerate-teacher-checkpoints-and-manifests">Regenerate teacher
+checkpoints and manifests</a>
+<ul>
+<li><a href="#train-the-five-source-runs"
+id="toc-train-the-five-source-runs">Train the five source runs</a></li>
+<li><a href="#build-both-manifest-formats"
+id="toc-build-both-manifest-formats">Build both manifest
+formats</a></li>
+<li><a href="#run-the-downstream-drivers"
+id="toc-run-the-downstream-drivers">Run the downstream drivers</a></li>
+</ul></li>
+</ul></div></details>
+<h1 id="regenerate-teacher-checkpoints-and-manifests">Regenerate teacher
+checkpoints and manifests</h1>
+<p>Teacher manifests describe newly trained source runs. Generate them
+from actual checkpoints and completed 2021 evaluation summaries; do not
+copy historical SHA-256 values onto regenerated artifacts. This
+procedure prepares sources shared by the reliability-fusion driver
+(<code>reproductions.cross_history.run_three_directions</code>) and the
+separate routed-teacher driver
+(<code>reproductions.three_directions.run</code>). It is a regeneration
+recipe, not a claim that these full training jobs were rerun during
+handoff qualification.</p>
+<p>First finish <a href="reproduce.html">environment and B3/B5 setup</a>
+and <a href="data-preparation.html">corrected dataset preparation</a>.
+Set <code>WILDFIRE_B3_CHECKPOINT</code> and
+<code>WILDFIRE_B5_CHECKPOINT</code> in your site configuration to the
+corresponding regenerated Lightning baseline checkpoints. Each history
+uses its same baseline checkpoint for all source methods and seeds. Keep
+those paths fixed throughout source training:
+<code>initial_checkpoint</code> is an embedded provenance identity, and
+the builder checks literal equality across all sources for each
+history.</p>
+<h2 id="train-the-five-source-runs">Train the five source runs</h2>
+<p>Use these output directory names directly beneath a common runs
+root:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Directory suffix</th>
+<th>Cross-history method</th>
+<th>Block fraction</th>
+<th>Reliability role</th>
+<th>Routed role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tH-sS-control</code></td>
+<td><code>control</code></td>
+<td>unspecified</td>
+<td><code>clean</code></td>
+<td><code>erm</code></td>
+</tr>
+<tr class="even">
+<td><code>tH-sS-cosine_erm</code></td>
+<td><code>cosine_erm</code></td>
+<td>unspecified</td>
+<td><code>fire</code></td>
+<td><code>x22</code></td>
+</tr>
+<tr class="odd">
+<td><code>tH-sS-block_specialist</code></td>
+<td><code>block_specialist</code></td>
+<td>unspecified</td>
+<td><code>block_mixed</code></td>
+<td><code>x14</code></td>
+</tr>
+<tr class="even">
+<td><code>tH-sS-block025</code></td>
+<td><code>block_specialist</code></td>
+<td><code>0.25</code></td>
+<td><code>mild</code></td>
+<td><code>mild</code></td>
+</tr>
+<tr class="odd">
+<td><code>tH-sS-block050</code></td>
+<td><code>block_specialist</code></td>
+<td><code>0.5</code></td>
+<td><code>severe</code></td>
+<td><code>severe</code></td>
+</tr>
+</tbody>
+</table>
+<p>Here <code>H</code> is history 1 or 5 and <code>S</code> is seed 0,
+1, or 2. A run directory must contain <code>checkpoint.pt</code> and
+<code>summary.json</code>, not an additional <code>result</code>
+subdirectory. The commands below retain the source recipe's 3,000
+optimizer steps and physical/effective batch size 64. Choose sufficient
+GPU memory in your site configuration; reducing physical batch changes
+this exact source recipe and the manifest builder rejects it.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WILDFIRE_SITE_ENV</span><span class="op">=</span><span class="st">&quot;/path/to/site.env&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_SITE_ENV</span><span class="st">&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="va">TEACHER_RUNS</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/teacher-sources&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$TEACHER_RUNS</span><span class="st">&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> history <span class="kw">in</span> 1 5<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> seed <span class="kw">in</span> 0 1 2<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> method <span class="kw">in</span> control cosine_erm block_specialist<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">--history</span> <span class="st">&quot;</span><span class="va">$history</span><span class="st">&quot;</span> <span class="at">--seed</span> <span class="st">&quot;</span><span class="va">$seed</span><span class="st">&quot;</span> <span class="at">--method</span> <span class="st">&quot;</span><span class="va">$method</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> 64 <span class="at">--year</span> 2021 <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$TEACHER_RUNS</span><span class="st">/t</span><span class="va">${history}</span><span class="st">-s</span><span class="va">${seed}</span><span class="st">-</span><span class="va">${method}</span><span class="st">&quot;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">done</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">--history</span> <span class="st">&quot;</span><span class="va">$history</span><span class="st">&quot;</span> <span class="at">--seed</span> <span class="st">&quot;</span><span class="va">$seed</span><span class="st">&quot;</span> <span class="at">--method</span> block_specialist <span class="dt">\</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">--block-fraction</span> 0.25 <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> 64 <span class="at">--year</span> 2021 <span class="dt">\</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$TEACHER_RUNS</span><span class="st">/t</span><span class="va">${history}</span><span class="st">-s</span><span class="va">${seed}</span><span class="st">-block025&quot;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">--history</span> <span class="st">&quot;</span><span class="va">$history</span><span class="st">&quot;</span> <span class="at">--seed</span> <span class="st">&quot;</span><span class="va">$seed</span><span class="st">&quot;</span> <span class="at">--method</span> block_specialist <span class="dt">\</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">--block-fraction</span> 0.5 <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> 64 <span class="at">--year</span> 2021 <span class="dt">\</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$TEACHER_RUNS</span><span class="st">/t</span><span class="va">${history}</span><span class="st">-s</span><span class="va">${seed}</span><span class="st">-block050&quot;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">done</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>This submits 30 training/evaluation jobs. For an initial single-seed
+regeneration, change <code>for seed in 0 1 2</code> to
+<code>for seed in 0</code>, then request only seed 0 in manifest
+generation and downstream runs. Do not pass <code>--smoke</code>: smoke
+outputs are rejected. Do not substitute a cross-history continuation
+checkpoint for the baseline environment variables; those variables
+select upstream Lightning base-model state.</p>
+<h2 id="build-both-manifest-formats">Build both manifest formats</h2>
+<p>Wait until every requested source job has finished successfully,
+including its full 3,181-sample 2021 evaluation in each of
+M00/M01/M06/M07. The submitter does not wait or automatically add job
+dependencies. Then run the builder in CPU Slurm allocations using the
+training environment:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.build_teacher_manifest <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--runs-root</span> <span class="st">&quot;</span><span class="va">$TEACHER_RUNS</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/manifests/reliability-teachers.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--format</span> reliability <span class="at">--histories</span> 1 5 <span class="at">--seeds</span> 0 1 2</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.build_teacher_manifest <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--runs-root</span> <span class="st">&quot;</span><span class="va">$TEACHER_RUNS</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/manifests/routed-teachers.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--format</span> routed <span class="at">--histories</span> 1 5 <span class="at">--seeds</span> 0 1 2</span></code></pre></div>
+<p>The builder loads checkpoints on CPU and validates history, seed,
+architecture, method, block fraction, 3,000 steps, batch sizes, source
+initialization identity, and matching summary metadata. It hashes
+checkpoint bytes afresh. Missing summaries, incomplete evaluation
+populations, smoke runs, mismatched sources, and existing output
+manifests fail explicitly. <code>--histories</code> defaults to
+<code>1 5</code>; <code>--seeds</code> defaults to <code>0</code>.</p>
+<p>Artifact <code>checkpoint</code> and <code>summary</code> paths are
+relative to the manifest's directory. Transfer manifests and run folders
+together, preserving their relative layout.
+<code>metadata.initial_checkpoint</code> is deliberately left as the
+exact identity stored in the checkpoint; do not rewrite it when
+relocating files. The downstream loaders verify checkpoint hashes and
+metadata before use. Manifest generation alone does not qualify a
+scientific improvement or reproduce historical scores.</p>
+<h2 id="run-the-downstream-drivers">Run the downstream drivers</h2>
+<p>After both manifest jobs succeed, an example reliability-fusion
+distillation run and matched control are:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> arm <span class="kw">in</span> control mixed typed distill<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run_three_directions <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">--history</span> 1 <span class="at">--seed</span> 0 <span class="at">--arm</span> <span class="st">&quot;</span><span class="va">$arm</span><span class="st">&quot;</span> <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> 64 <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--manifest</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/manifests/reliability-teachers.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/reliability-t1-s0-</span><span class="va">$arm</span><span class="st">&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>Compare mixed against control, typed against both mixed and control,
+and distill against its no-KD control. For the corrected RF
+normalization diagnostic:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run_three_directions <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--seed</span> 0 <span class="at">--arm</span> bn <span class="at">--bn-forward-mode</span> batch_stats <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--manifest</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/manifests/reliability-teachers.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/reliability-t1-s0-bn&quot;</span></span></code></pre></div>
+<p>Compare its <code>bn_conditional</code> and <code>bn_common</code>
+outputs. The legacy default <code>fixed</code> is the superseded
+diagnostic, not the positive catalog's recipe. For the separate
+routed-teacher family:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> mode <span class="kw">in</span> student_control student_distill<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.three_directions.run <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">--history</span> 1 <span class="at">--seed</span> 0 <span class="at">--mode</span> <span class="st">&quot;</span><span class="va">$mode</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--sources</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/manifests/routed-teachers.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/routed-t1-s0-</span><span class="va">$mode</span><span class="st">&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>Other routed modes are <code>bn_shared</code>,
+<code>bn_conditional</code>, <code>merge</code>, and
+<code>x14_shared</code>; select the exact recipe described in the
+evidence catalog. Repeat with history 5 and the required seeds only
+after their source manifests exist. Held-out evaluation uses each
+driver's separate evaluation/checkpoint arguments; it must not refit on
+held-out years.</p>
+<p>For TD-W, fit the recalibrated X22 comparator and the weight merge
+separately. <code>student_control</code> is the TD-D comparator and does
+not substitute for <code>bn_shared</code> here:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> mode <span class="kw">in</span> bn_shared merge x14_shared<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.three_directions.run <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">--history</span> 1 <span class="at">--seed</span> 0 <span class="at">--mode</span> <span class="st">&quot;</span><span class="va">$mode</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--sources</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/manifests/routed-teachers.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/routed-t1-s0-</span><span class="va">$mode</span><span class="st">&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>After a model is frozen, these are the two distinct held-out
+evaluation interfaces:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run_three_directions <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--seed</span> 0 <span class="at">--arm</span> distill <span class="at">--year</span> 2022 <span class="at">--batch-size</span> 64 <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--manifest</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/manifests/reliability-teachers.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--evaluate-only</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/reliability-t1-s0-distill/checkpoint.pt&quot;</span> <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/reliability-t1-s0-distill-2022&quot;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.three_directions.run <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--seed</span> 0 <span class="at">--mode</span> student_distill <span class="at">--year</span> 2022 <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sources</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/manifests/routed-teachers.json&quot;</span> <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--checkpoint</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/routed-t1-s0-student_distill/checkpoint.pt&quot;</span> <span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/routed-t1-s0-student_distill-2022&quot;</span></span></code></pre></div>
+<p>For RF-BN evaluation retain
+<code>--arm bn --bn-forward-mode batch_stats</code>; for other
+arms/modes, keep the exact training arm/mode. These are executable
+interfaces, not permission to extend rejected screens into new held-out
+experiments or a claim that historical campaigns already ran those
+evaluations.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

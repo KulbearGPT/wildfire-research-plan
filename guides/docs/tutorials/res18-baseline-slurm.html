@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>在新集群从官方 codebase 跑通 Res18-U-Net：独立 Slurm
+教程 · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/tutorials/res18-baseline-slurm.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#在新集群从官方-codebase-跑通-res18-u-net独立-slurm-教程"
+id="toc-在新集群从官方-codebase-跑通-res18-u-net独立-slurm-教程">在新集群从官方
+codebase 跑通 Res18-U-Net：独立 Slurm 教程</a>
+<ul>
+<li><a href="#0-本教程到底复现哪一个-baseline"
+id="toc-0-本教程到底复现哪一个-baseline">0. 本教程到底复现哪一个
+baseline</a></li>
+<li><a href="#1-登录新集群并配置自己的目录"
+id="toc-1-登录新集群并配置自己的目录">1.
+登录新集群并配置自己的目录</a></li>
+<li><a href="#2-创建自包含的脚本文件" id="toc-2-创建自包含的脚本文件">2.
+创建自包含的脚本文件</a>
+<ul>
+<li><a href="#21-训练环境依赖" id="toc-21-训练环境依赖">2.1
+训练环境依赖</a></li>
+<li><a href="#22-官方权重清单固定版本"
+id="toc-22-官方权重清单固定版本">2.2 官方权重清单（固定版本）</a></li>
+<li><a href="#23-下载和验证官方权重" id="toc-23-下载和验证官方权重">2.3
+下载和验证官方权重</a></li>
+<li><a href="#24-只评价发布权重的入口"
+id="toc-24-只评价发布权重的入口">2.4 只评价发布权重的入口</a></li>
+<li><a href="#25-保存结果及检查完整-12-fold"
+id="toc-25-保存结果及检查完整-12-fold">2.5 保存结果及检查完整
+12-fold</a></li>
+<li><a href="#26-统一-slurm-作业脚本"
+id="toc-26-统一-slurm-作业脚本">2.6 统一 Slurm 作业脚本</a></li>
+</ul></li>
+<li><a href="#3-创建环境并取得官方代码"
+id="toc-3-创建环境并取得官方代码">3. 创建环境并取得官方代码</a></li>
+<li><a href="#4-下载原始四年-wsts" id="toc-4-下载原始四年-wsts">4.
+下载原始四年 WSTS</a></li>
+<li><a href="#5-cpu-转换geotiff--hdf5"
+id="toc-5-cpu-转换geotiff--hdf5">5. CPU 转换：GeoTIFF → HDF5</a></li>
+<li><a href="#6-一个验证-batch--一步-gpu-smoke"
+id="toc-6-一个验证-batch--一步-gpu-smoke">6. 一个验证 batch + 一步 GPU
+smoke</a></li>
+<li><a href="#7-正式训练官方-fold-2" id="toc-7-正式训练官方-fold-2">7.
+正式训练官方 Fold 2</a></li>
+<li><a href="#8-可选仅评价官方-fold-2-权重"
+id="toc-8-可选仅评价官方-fold-2-权重">8. 可选：仅评价官方 Fold 2
+权重</a></li>
+<li><a href="#9-可选完整-12-fold" id="toc-9-可选完整-12-fold">9.
+可选：完整 12-fold</a>
+<ul>
+<li><a href="#91-从头训练十二个-fold"
+id="toc-91-从头训练十二个-fold">9.1 从头训练十二个 fold</a></li>
+<li><a href="#92-或者只评价十二个发布权重"
+id="toc-92-或者只评价十二个发布权重">9.2
+或者只评价十二个发布权重</a></li>
+<li><a href="#93-汇总实际完成的十二个-fold"
+id="toc-93-汇总实际完成的十二个-fold">9.3 汇总实际完成的十二个
+fold</a></li>
+<li><a href="#94-与论文数字如何比较" id="toc-94-与论文数字如何比较">9.4
+与论文数字如何比较</a></li>
+</ul></li>
+<li><a href="#10-常见问题与交付清单" id="toc-10-常见问题与交付清单">10.
+常见问题与交付清单</a></li>
+<li><a href="#11-本版独立性与验证边界"
+id="toc-11-本版独立性与验证边界">11. 本版独立性与验证边界</a></li>
+</ul></li>
+</ul></div></details>
+<h1
+id="在新集群从官方-codebase-跑通-res18-u-net独立-slurm-教程">在新集群从官方
+codebase 跑通 Res18-U-Net：独立 Slurm 教程</h1>
+<p>本版只需要作者的官方仓库、公开数据和公开权重，<strong>不 clone
+<code>wildfire-research-plan</code>，不调用我们的模块，不读取老师的缓存、环境或检查点</strong>。所需的小型脚本全部在本文给出，学生复制后保存在自己的实验目录。</p>
+<p>按你的说明，新集群采用与现有服务器相同的 Alliance/Nibi 软件栈与
+Slurm。模块名沿用
+<code>StdEnv/2023 gcc/12.3 python/3.10.13 cuda/12.2</code>；账户、存储目录和可申请
+GPU
+必须使用新服务器自己的值。本文不是对任意未知集群免配置兼容的承诺。</p>
+<h2 id="0-本教程到底复现哪一个-baseline">0. 本教程到底复现哪一个
+baseline</h2>
+<p>模型是作者 WSTS+ 工作中的 <strong>ResNet18-U-Net、T=1、All
+features</strong>。ResNet18 编码器提取特征，U-Net
+解码器输出下一天活跃火点的逐像素概率。输入一天观测，原始 23
+波段经过官方特征处理后成为 40 通道。ResNet18 用 ImageNet
+初始化，不使用我们已经训练好的野火 checkpoint。</p>
+<p>学生只需训练 <strong>Fold 2</strong>：2018/2020 训练、2019 验证、2021
+测试，10000 个优化器更新。完整 12-fold
+和发布权重评价在文末作为可选步骤。</p>
+<p><strong>这里的官方 baseline 不等于项目 roadmap 的 corrected
+B0。</strong> 项目 B0 另有八年时间划分、索引修正、训练统计量及 3000
+步预算；官方原样代码不会自动产生那些行为。你的“不依赖我们仓库”要求在本教程中优先落实为官方
+baseline 复现。</p>
+<p>WSTS+ 是作者工作的名字，但这里固定的十二个官方权重使用原始四年 WSTS
+划分，所以下载原始 <code>WildfireSpreadTS.zip</code> 即可。不要改成
+<code>additional_data=true</code>：锁定代码的八年设置只有四个
+fold，既不能套用 0–11，也不能直接比较下面的十二 fold 参照。</p>
+<p>官方来源：<a
+href="https://github.com/slahrichi/WildfireSpreadTS">作者代码</a>、<a
+href="https://zenodo.org/records/8006177">原始 WSTS 数据</a>、<a
+href="https://huggingface.co/saadlahrichi/WSTSPlus">作者发布权重</a>。代码固定为
+`ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad`，权重固定为
+<code>acf70a37394849f4ec8d108a51d6f4325a554d0a</code>。</p>
+<h2 id="1-登录新集群并配置自己的目录">1. 登录新集群并配置自己的目录</h2>
+<p>在自己电脑终端执行，替换用户名和新服务器地址：</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> YOUR_USERNAME@YOUR_NEW_CLUSTER</span></code></pre></div>
+<p>后续命令均在该集群的 Bash 终端执行。先检查站点软件和账户：</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">module</span> avail python cuda</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">sacctmgr</span> <span class="at">-nP</span> show assoc where user=<span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span> format=Account,Partition</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">sinfo</span> <span class="at">-h</span> <span class="at">-o</span> <span class="st">&#39;%P %G&#39;</span></span></code></pre></div>
+<p>从输出或管理员处取得 CPU/GPU account。不要复制教师的
+account。实验目录应位于计算节点可见、可写的共享存储，而不是教师目录。为约
+48.4GB 的 ZIP、HDF5、环境和 checkpoint 准备充足配额；建议预留约
+250GB，并在转换作业申请约 200GB
+临时磁盘。这是保守准备量，不是实测峰值。</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;你的实验根目录绝对路径：&#39;</span> <span class="va">WF_ROOT</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;CPU account：&#39;</span> <span class="va">WF_CPU_ACCOUNT</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;GPU account：&#39;</span> <span class="va">WF_GPU_ACCOUNT</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;GPU 类型及数量，例如 h100:1：&#39;</span> <span class="va">WF_GPU</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_ROOT</span> <span class="va">WF_CPU_ACCOUNT</span> <span class="va">WF_GPU_ACCOUNT</span> <span class="va">WF_GPU</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">&quot;</span>/<span class="dt">{scripts</span><span class="op">,</span><span class="dt">downloads</span><span class="op">,</span><span class="dt">data</span><span class="op">,</span><span class="dt">runs</span><span class="op">,</span><span class="dt">logs</span><span class="op">,</span><span class="dt">cache</span><span class="op">,</span><span class="dt">weights}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_ROOT=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">&quot;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_CPU_ACCOUNT=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_GPU_ACCOUNT=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_GPU=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-h</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">&quot;</span></span></code></pre></div>
+<p>如集群要求显式 partition，请在下面 CPU/GPU 的 <code>sbatch</code>
+命令中分别加上 <code>--partition=实际分区</code>。GPU 可以是整卡或至少约
+20GB 的适用分片，名称以 <code>sinfo</code> 为准。申请 1 块设备，保持正式
+batch 64；先通过 smoke 验证驱动与环境兼容。教师当前服务器的 MIG
+名称不是跨服务器通用名称。</p>
+<p>重新登录后恢复：</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;你的 config.env 绝对路径：&#39;</span> <span class="va">WF_CONFIG</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WF_CONFIG</span><span class="st">&quot;</span></span></code></pre></div>
+<p><strong>Slurm 使用原则：</strong> <code>sbatch</code> 返回 job
+ID，不等于完成。查看 <code>squeue -j JOBID</code> 和
+<code>sacct -j JOBID --format=JobID,State,ExitCode,Elapsed,MaxRSS</code>，只有
+<code>COMPLETED 0:0</code> 后再检查结果。每一节都可提前提交带
+<code>afterok</code>
+的后续任务，但不要把还在排队的任务当作成功。重新登录还需要从笔记恢复后续依赖所用的
+job ID。</p>
+<p>下载、安装、数据转换和模型运行都通过
+Slurm。下面的从零安装与下载任务需要出站网络；若新集群计算节点禁止联网，应先由管理员提供可联网的
+CPU/数据传输节点或镜像渠道，不能在普通登录节点偷偷执行批量工作。</p>
+<h2 id="2-创建自包含的脚本文件">2. 创建自包含的脚本文件</h2>
+<p>下面各个 <code>cat … EOF</code> 块应整段复制，包括最后的
+<code>EOF</code>。它们只是写小文件，不训练、不下载大文件，也不需要 clone
+任何额外仓库。</p>
+<h3 id="21-训练环境依赖">2.1 训练环境依赖</h3>
+<p>保留项目以前使用过的 Python 3.10 / PyTorch 2.6 / Lightning 2.0.2
+环境输入。在这个单官方 fold 教程中<strong>不需要 Python 3.13
+的项目审计环境</strong>。</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/requirements.txt&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="st">h5py==3.10.0</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="st">numpy==1.26.4</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="st">pandas==1.5.3</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="st">einops==0.6.1</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="st">torch==2.6.0</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="st">torchmetrics==1.4.0.post0</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="st">torchvision==0.21.0</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="st">tqdm==4.65.0</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="st">wandb==0.15.3</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="st">xarray==2023.4.2</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="st">rasterio==1.3.10</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="st">geopandas==0.12.2</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="st">matplotlib==3.7.2</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="st">imageio==2.27.0</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="st">pytorch-lightning==2.0.2</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="st">scikit-learn==1.2.1</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="st">segmentation-models-pytorch==0.3.3</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="st">jsonargparse[signatures]==4.40.2</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="st">psutil==7.2.2</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="st">setuptools==80.9.0</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<p>安装使用同类型集群的 Alliance
+wheelhouse（<code>--no-index</code>）。如果新站点没有该软件源，应停止并确认安装渠道；不能认为换个服务器仍自动存在相同
+wheel。第一次安装的 freeze 和 GPU smoke 才是新环境的实际证据。</p>
+<h3 id="22-官方权重清单固定版本">2.2 官方权重清单（固定版本）</h3>
+<p>每行依次为
+fold、文件名、SHA-256、字节数。下载脚本会核验这些值，不凭文件名认定下载正确。</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/weights.tsv&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="st">0 fold0_testAP0.528.pth be33d244916d71158dab42b3aa607395a49989f862165529f38cabd735dd69eb 57889221</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="st">1 fold1_testAP0.426.pth 367cdec7a9a0f5729d2c01db1c195345aaf78768976293277b5386e7bcc0e36f 57889221</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="st">2 fold2_testAP0.571.pth e17cd58e29ee7b91f6a8ba85ddcb5783ec69b9541e2de93298ba3241e785a9ec 57889221</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="st">3 fold3_testAP0.307.pth 41e24f55dd0270566351fa5b52d50c77a45d01074805f18a591791b29860ab81 57889221</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="st">4 fold4_testAP0.483.pth aa8e512a63bdcc229dedb358a0e8cf9e40c6559ae3b2504adbd3e30ccc97fd3d 57889221</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="st">5 fold5_testAP0.322.pth 0b31b3749c239123de159171fc0f60390a14ae25bd986b713135b73f5faecda9 57889221</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">6 fold6_testAP0.577.pth e83c49de0bf7524c92946a205e3eadd2ffce76d04502e23ffcab9a3593e8afd9 57889221</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="st">7 fold7_testAP0.474.pth 5ed6e8c59a57d6d948522efd4f90c64596f4292f16a18f96610b310faa30d41a 57889221</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="st">8 fold8_testAP0.478.pth 6004ab1060a6cfed1ffa70174dcf0c68717e75ea5b96ebde0e60a63297f45ab4 57889221</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="st">9 fold9_testAP0.471.pth 7237244ce4a5ee5f3084985fc074275e69caca853b9bde2e1ada7000c5f5d3d0 57889221</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="st">10 fold10_testAP0.324.pth 2c9247afccdab53cda6bb3da00b4ba414ce963e6ad0e3e43bcf4623e431d3e96 57889405</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="st">11 fold11_testAP0.474.pth 9ecc0ee9e5908dff4f242a6b6a58060c4bfdd9ceb6857c4a12e13b633fa4c709 57889405</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<h3 id="23-下载和验证官方权重">2.3 下载和验证官方权重</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/weights.py&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="st">import hashlib</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="st">from pathlib import Path</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="st">import sys</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="st">import urllib.request</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="st">import shutil</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="st">root, fold = Path(sys.argv[1]), sys.argv[2]</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="st">verify_only = &#39;--verify-only&#39; in sys.argv[3:]</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="st">assert fold in [&#39;all&#39;] + [str(i) for i in range(12)]</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="st">revision = &#39;acf70a37394849f4ec8d108a51d6f4325a554d0a&#39;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="st">for line in (root / &#39;scripts/weights.tsv&#39;).read_text().splitlines():</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="st">    index, name, expected_hash, size = line.split()</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="st">    if fold != &#39;all&#39; and fold != index:</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="st">        continue</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="st">    path = root / &#39;weights&#39; / name</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="st">    if not path.exists() and not verify_only:</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="st">        url = f&#39;https://huggingface.co/saadlahrichi/WSTSPlus/resolve/{revision}/trained_model_weights/Res18Unet_T1/All/{name}&#39;</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="st">        with urllib.request.urlopen(url, timeout=180) as response, path.with_suffix(&#39;.partial&#39;).open(&#39;wb&#39;) as out:</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="st">            shutil.copyfileobj(response, out)</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="st">        candidate = path.with_suffix(&#39;.partial&#39;)</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="st">    else:</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="st">        candidate = path</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="st">    assert candidate.stat().st_size == int(size), candidate</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="st">    assert hashlib.sha256(candidate.read_bytes()).hexdigest() == expected_hash, candidate</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="st">    if candidate != path:</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="st">        candidate.rename(path)</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="st">    print(&#39;VERIFIED&#39;, index, name, expected_hash)</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<h3 id="24-只评价发布权重的入口">2.4 只评价发布权重的入口</h3>
+<p>此小脚本使用作者 <code>train.py</code> 中的模型类、LightningCLI 和
+DataModule，严格加载作者 raw state dict，然后只调用
+<code>Trainer.test</code>。不重新实现网络、损失或数据集。</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/evaluate_weight.py&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="st">import runpy</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">import sys</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">from pathlib import Path</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="st">import torch</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="st">code, weight = Path(sys.argv[1]), Path(sys.argv[2])</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="st">sys.path.insert(0, str(code / &#39;src&#39;))</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="st">sys.argv = [str(code / &#39;src/train.py&#39;), *sys.argv[3:]]</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="st">ns = runpy.run_path(str(code / &#39;src/train.py&#39;), run_name=&#39;official_weight_evaluation&#39;)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="st">cli = ns[&#39;MyLightningCLI&#39;](ns[&#39;BaseModel&#39;], ns[&#39;FireSpreadDataModule&#39;],</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="st">    subclass_mode_model=True, save_config_kwargs={&#39;overwrite&#39;: True},</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="st">    parser_kwargs={&#39;parser_mode&#39;: &#39;yaml&#39;}, run=False)</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="st">state = torch.load(weight, map_location=&#39;cpu&#39;, weights_only=True)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="st">assert isinstance(state, dict) and &#39;state_dict&#39; not in state</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="st">cli.model.load_state_dict(state, strict=True)</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="st">print(&#39;OFFICIAL_WEIGHT_STRICT_LOAD=1&#39;, flush=True)</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="st">cli.trainer.test(cli.model, cli.datamodule)</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<h3 id="25-保存结果及检查完整-12-fold">2.5 保存结果及检查完整
+12-fold</h3>
+<p>每项指标必须存在且为合法有限值；完整汇总要求十二个 fold
+恰好各一个，禁止混用自己训练和发布权重评价结果。</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/results.py&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">import json</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">import math</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">from pathlib import Path</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">import re</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">import statistics</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">import sys</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">if sys.argv[1] == &#39;record&#39;:</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">    run, mode, fold = Path(sys.argv[2]), sys.argv[3], int(sys.argv[4])</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">    text = re.sub(r&#39;\x1b\[[0-?]*[ -/]*[@-~]&#39;, &#39;&#39;, (run / &#39;output.log&#39;).read_text(errors=&#39;replace&#39;))</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="st">    marker = (&#39;`Trainer.fit` stopped: `max_steps=10000` reached.&#39; if mode == &#39;train&#39; else &#39;OFFICIAL_WEIGHT_STRICT_LOAD=1&#39;)</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="st">    assert marker in text, &#39;Incomplete training or strict loading&#39;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="st">    metrics = {}</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="st">    for name in (&#39;AP&#39;,&#39;f1&#39;,&#39;iou&#39;,&#39;precision&#39;,&#39;recall&#39;,&#39;loss&#39;):</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="st">        matches = re.findall(r&#39;\btest_&#39; + name + r&#39;\b[ \t│┃|:=]*([^\s│┃|]+)&#39;, text)</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="st">        assert matches, name</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="st">        value = float(matches[-1])</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="st">        assert math.isfinite(value) and value &gt;= 0 and (name == &#39;loss&#39; or value &lt;= 1), name</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="st">        metrics[name] = value</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="st">    result = {&#39;mode&#39;:mode, &#39;fold&#39;:fold, &#39;metrics&#39;:metrics, &#39;run&#39;:str(run)}</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="st">    if mode == &#39;train&#39;:</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="st">        checkpoints = list((run / &#39;work&#39;).rglob(&#39;*.ckpt&#39;))</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="st">        assert len(checkpoints) == 1, checkpoints</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="st">        result[&#39;checkpoint&#39;] = str(checkpoints[0])</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="st">    with (run / &#39;result.json&#39;).open(&#39;x&#39;) as handle:</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="st">        json.dump(result, handle, indent=2)</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="st">    print(json.dumps(result, indent=2))</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="st">elif sys.argv[1] == &#39;aggregate&#39;:</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="st">    root, array = Path(sys.argv[2]), sys.argv[3]</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="st">    assert array.isdigit()</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="st">    rows = []</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="st">    for meta in (root / &#39;runs&#39;).glob(&#39;*/slurm-job.txt&#39;):</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="st">        if re.search(r&#39;\bArrayJobId=&#39; + array + r&#39;\b&#39;, meta.read_text()):</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="st">            rows.append(json.loads((meta.parent / &#39;result.json&#39;).read_text()))</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="st">    assert len(rows) == 12 and sorted(r[&#39;fold&#39;] for r in rows) == list(range(12)), &#39;Missing/duplicate folds&#39;</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="st">    assert len({r[&#39;mode&#39;] for r in rows}) == 1, &#39;Do not mix trained and released-weight results&#39;</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="st">    values = [r[&#39;metrics&#39;][&#39;AP&#39;] for r in rows]</span></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a><span class="st">    assert all(math.isfinite(v) and 0 &lt;= v &lt;= 1 for v in values)</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a><span class="st">    result = {&#39;mean_AP&#39;:statistics.mean(values), &#39;population_std_AP&#39;:statistics.pstdev(values),</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a><span class="st">              &#39;sample_std_AP&#39;:statistics.stdev(values), &#39;rows&#39;:sorted(rows,key=lambda r:r[&#39;fold&#39;])}</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a><span class="st">    with (root / f&#39;summary-{array}.json&#39;).open(&#39;x&#39;) as handle:</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a><span class="st">        json.dump(result, handle, indent=2)</span></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a><span class="st">    print(json.dumps(result, indent=2))</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a><span class="st">else:</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a><span class="st">    raise ValueError(&#39;Use record or aggregate&#39;)</span></span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<h3 id="26-统一-slurm-作业脚本">2.6 统一 Slurm 作业脚本</h3>
+<p>这个脚本里的唯一 <code>git clone</code>
+指向作者仓库。为让锁定版本在该 PyTorch 环境可导入，setup
+只裁剪未用架构的包导入，并删除未使用的 <code>T_co</code>
+类型导入；完整差异保存为
+<code>setup-runtime.patch</code>。不修正官方样本索引、不替换数据划分、不改损失。</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="st">#!/usr/bin/env bash</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="st">set -euo pipefail</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="st">: &quot;${SLURM_JOB_ID:?Use sbatch to run this script}&quot;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="st">source &quot;${1:?Pass config.env}&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="st">action=${2:?Pass setup/download/convert/smoke/train/fetch-weight/test-weight/aggregate}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="st">fold=${3:-${SLURM_ARRAY_TASK_ID:-2}}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="st">case &quot;$action&quot; in setup|download|convert|smoke|train|fetch-weight|test-weight|aggregate) ;; *) exit 2;; esac</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; != aggregate &amp;&amp; &quot;$fold&quot; != all ]]; then</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="st">  [[ &quot;$fold&quot; =~ ^([0-9]|1[01])$ ]] || exit 2</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="st">export TORCH_HOME=&quot;$WF_ROOT/cache/torch&quot;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="st">export WANDB_MODE=disabled WANDB_SILENT=true PYTHONUNBUFFERED=1</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="st">export HDF5_USE_FILE_LOCKING=FALSE OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="st"># Only our own checkpoints and the checksum-verified official weights are loaded.</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="st">export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="st">module purge</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="st">module load StdEnv/2023 gcc/12.3 python/3.10.13 cuda/12.2</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="st">code=&quot;$WF_ROOT/official-code&quot;</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="st">env_dir=&quot;$WF_ROOT/env&quot;</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; == setup ]]; then</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="st">  test ! -e &quot;$code&quot;</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="st">  test ! -e &quot;$env_dir&quot;</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="st">  virtualenv --no-download &quot;$env_dir&quot;</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="st">  source &quot;$env_dir/bin/activate&quot;</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="st">  python -m pip install --no-index -r &quot;$WF_ROOT/scripts/requirements.txt&quot;</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="st">  git clone https://github.com/slahrichi/WildfireSpreadTS.git &quot;$code&quot;</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="st">  git -C &quot;$code&quot; checkout --detach ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="st">  python - &quot;$code&quot; &lt;&lt;&#39;PATCH&#39;</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="st">from pathlib import Path</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="st">import sys</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="st">root = Path(sys.argv[1])</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="st">p = root / &#39;src/models/__init__.py&#39;</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="st">keep = [&#39;from .BaseModel import BaseModel&#39;,</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="st">        &#39;from .ConvLSTMLightning import ConvLSTMLightning&#39;,</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="st">        &#39;from .LogisticRegression import LogisticRegression&#39;,</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="st">        &#39;from .SMPModel import SMPModel&#39;]</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="st">assert all(p.read_text().splitlines().count(line) == 1 for line in keep)</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="st">p.write_text(&#39;\n&#39;.join(keep) + &#39;\n&#39;)</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="st">p = root / &#39;src/dataloader/FireSpreadDataset.py&#39;</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="st">s = p.read_text()</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="st">assert s.count(&#39;from torch.utils.data.dataset import T_co\n&#39;) == 1</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="st">p.write_text(s.replace(&#39;from torch.utils.data.dataset import T_co\n&#39;, &#39;&#39;))</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="st">PATCH</span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="st">  git -C &quot;$code&quot; diff &gt; &quot;$WF_ROOT/setup-runtime.patch&quot;</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="st">  python - &lt;&lt;&#39;ENCODER&#39;</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a><span class="st">import segmentation_models_pytorch as smp</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a><span class="st">smp.encoders.get_encoder(&#39;resnet18&#39;, in_channels=40, weights=&#39;imagenet&#39;)</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a><span class="st">print(&#39;ImageNet encoder cached&#39;)</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a><span class="st">ENCODER</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="st">  python -m pip freeze &gt; &quot;$WF_ROOT/environment-freeze.txt&quot;</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a><span class="st">  touch &quot;$WF_ROOT/SETUP_READY&quot;</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a><span class="st">  exit 0</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; == download ]]; then</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a><span class="st">  cd &quot;$WF_ROOT/downloads&quot;</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a><span class="st">  if [[ ! -f WildfireSpreadTS.zip ]]; then</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a><span class="st">    curl -fL --retry 8 --retry-delay 5 --continue-at - \</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a><span class="st">      https://zenodo.org/api/records/8006177/files/WildfireSpreadTS.zip/content \</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a><span class="st">      -o WildfireSpreadTS.zip.partial</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a><span class="st">    printf &#39;%s  %s\n&#39; dc1a04e63ccc70037b277d585b8fe761 WildfireSpreadTS.zip.partial | md5sum -c -</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a><span class="st">    mv WildfireSpreadTS.zip.partial WildfireSpreadTS.zip</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a><span class="st">  fi</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a><span class="st">  printf &#39;%s  %s\n&#39; dc1a04e63ccc70037b277d585b8fe761 WildfireSpreadTS.zip | md5sum -c -</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a><span class="st">  exit 0</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a><span class="st">test -f &quot;$WF_ROOT/SETUP_READY&quot;</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a><span class="st">source &quot;$env_dir/bin/activate&quot;</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a><span class="st">export PYTHONPATH=&quot;$code/src&quot;</span></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; == fetch-weight ]]; then</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a><span class="st">  python &quot;$WF_ROOT/scripts/weights.py&quot; &quot;$WF_ROOT&quot; &quot;$fold&quot;</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a><span class="st">  exit 0</span></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; == aggregate ]]; then</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a><span class="st">  python &quot;$WF_ROOT/scripts/results.py&quot; aggregate &quot;$WF_ROOT&quot; &quot;$fold&quot;</span></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a><span class="st">  exit 0</span></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; == convert ]]; then</span></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a><span class="st">  test ! -e &quot;$WF_ROOT/data/hdf5&quot;</span></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a><span class="st">  stage=&quot;${SLURM_TMPDIR:?}/wsts-raw&quot;</span></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a><span class="st">  mkdir &quot;$stage&quot;</span></span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a><span class="st">  unzip -q &quot;$WF_ROOT/downloads/WildfireSpreadTS.zip&quot; -d &quot;$stage&quot;</span></span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a><span class="st">  mapfile -t found &lt; &lt;(find &quot;$stage&quot; -type d -name 2018 -print)</span></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a><span class="st">  [[ ${#found[@]} -eq 1 ]]</span></span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a><span class="st">  raw=$(dirname &quot;${found[0]}&quot;)</span></span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a><span class="st">  python &quot;$code/src/preprocess/CreateHDF5Dataset.py&quot; \</span></span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a><span class="st">    --data_dir &quot;$raw&quot; --target_dir &quot;$WF_ROOT/data/hdf5&quot;</span></span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a><span class="st">  python - &quot;$WF_ROOT/data/hdf5&quot; &lt;&lt;&#39;COUNTS&#39;</span></span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a><span class="st">from pathlib import Path</span></span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a><span class="st">import sys</span></span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a><span class="st">p = Path(sys.argv[1])</span></span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a><span class="st">expected = {2018:176, 2019:74, 2020:201, 2021:156}</span></span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a><span class="st">actual = {y:len(list((p / str(y)).glob(&#39;*.hdf5&#39;))) for y in expected}</span></span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a><span class="st">assert actual == expected, actual</span></span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a><span class="st">print(&#39;PASS: 607 events&#39;, actual)</span></span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a><span class="st">(p / &#39;READY&#39;).touch()</span></span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a><span class="st">COUNTS</span></span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a><span class="st">  exit 0</span></span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a><span class="st">test -f &quot;$WF_ROOT/data/hdf5/READY&quot;</span></span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a><span class="st">[[ &quot;$fold&quot; =~ ^([0-9]|1[01])$ ]] || exit 2</span></span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a><span class="st">run=&quot;$WF_ROOT/runs/$action-fold$fold-${SLURM_JOB_ID}${SLURM_ARRAY_TASK_ID:+-$SLURM_ARRAY_TASK_ID}&quot;</span></span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a><span class="st">mkdir &quot;$run&quot;</span></span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a><span class="st">mkdir &quot;$run/work&quot;</span></span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a><span class="st">cp &quot;$WF_ROOT/config.env&quot; &quot;$run/config.env&quot;</span></span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a><span class="st">cp -r &quot;$WF_ROOT/scripts&quot; &quot;$run/scripts&quot;</span></span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a><span class="st">git -C &quot;$code&quot; rev-parse HEAD &gt; &quot;$run/upstream-commit.txt&quot;</span></span>
+<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a><span class="st">git -C &quot;$code&quot; diff &gt; &quot;$run/runtime.patch&quot;</span></span>
+<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a><span class="st">python -m pip freeze &gt; &quot;$run/pip-freeze.txt&quot;</span></span>
+<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a><span class="st">module list &gt; &quot;$run/modules.txt&quot; 2&gt;&amp;1</span></span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a><span class="st">nvidia-smi -q &gt; &quot;$run/nvidia-smi.txt&quot;</span></span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a><span class="st">scontrol show job &quot;$SLURM_JOB_ID&quot; &gt; &quot;$run/slurm-job.txt&quot;</span></span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a><span class="st">export WANDB_DIR=&quot;$run/work&quot;</span></span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a><span class="st">cd &quot;$run/work&quot;</span></span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a><span class="st">batch=64</span></span>
+<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a><span class="st">steps=10000</span></span>
+<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a><span class="st">extra=()</span></span>
+<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; == smoke ]]; then</span></span>
+<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a><span class="st">  batch=4</span></span>
+<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a><span class="st">  steps=1</span></span>
+<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a><span class="st">  extra+=(--trainer.num_sanity_val_steps=1 --trainer.limit_val_batches=1 --do_test=false)</span></span>
+<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a><span class="st">args=(</span></span>
+<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a><span class="st">  &quot;--config=$code/cfgs/unet/res18_monotemporal.yaml&quot;</span></span>
+<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a><span class="st">  &quot;--trainer=$code/cfgs/trainer_single_gpu.yaml&quot;</span></span>
+<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a><span class="st">  &quot;--data=$code/cfgs/data_monotemporal_full_features.yaml&quot;</span></span>
+<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a><span class="st">  --seed_everything=0 &quot;--data.data_dir=$WF_ROOT/data/hdf5&quot;</span></span>
+<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a><span class="st">  --data.additional_data=false &quot;--data.data_fold_id=$fold&quot;</span></span>
+<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a><span class="st">  --data.n_leading_observations=1 --data.features_to_keep=null</span></span>
+<span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a><span class="st">  --data.remove_duplicate_features=true --data.n_leading_observations_test_adjustment=5</span></span>
+<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a><span class="st">  &quot;--data.batch_size=$batch&quot; --data.num_workers=8 &quot;--trainer.max_steps=$steps&quot;</span></span>
+<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a><span class="st">  &quot;--trainer.default_root_dir=$run/work&quot; --trainer.logger.init_args.log_model=false</span></span>
+<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a><span class="st">  --do_train=true --do_validate=false --do_test=true --do_predict=false &quot;${extra[@]}&quot;</span></span>
+<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a><span class="st">)</span></span>
+<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; == test-weight ]]; then</span></span>
+<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a><span class="st">  python &quot;$run/scripts/weights.py&quot; &quot;$WF_ROOT&quot; &quot;$fold&quot; --verify-only</span></span>
+<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a><span class="st">  weight=$(awk -v f=&quot;$fold&quot; &#39;$1==f {print $2}&#39; &quot;$WF_ROOT/scripts/weights.tsv&quot;)</span></span>
+<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a><span class="st">  command=(python &quot;$run/scripts/evaluate_weight.py&quot; &quot;$code&quot; &quot;$WF_ROOT/weights/$weight&quot; &quot;${args[@]}&quot; --do_train=false)</span></span>
+<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a><span class="st">else</span></span>
+<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a><span class="st">  command=(python &quot;$code/src/train.py&quot; &quot;${args[@]}&quot;)</span></span>
+<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a><span class="st">printf &#39;%q &#39; &quot;${command[@]}&quot; &gt; &quot;$run/command.txt&quot;</span></span>
+<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a><span class="st">printf &#39;\n&#39; &gt;&gt; &quot;$run/command.txt&quot;</span></span>
+<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;${command[@]}&quot; 2&gt;&amp;1 | tee &quot;$run/output.log&quot;</span></span>
+<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a><span class="st">if [[ &quot;$action&quot; == smoke ]]; then</span></span>
+<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a><span class="st">  grep -F &#39;`Trainer.fit` stopped: `max_steps=1` reached.&#39; &quot;$run/output.log&quot;</span></span>
+<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a><span class="st">  touch &quot;$run/SMOKE_PASSED&quot;</span></span>
+<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a><span class="st">else</span></span>
+<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a><span class="st">  python &quot;$run/scripts/results.py&quot; record &quot;$run&quot; &quot;$action&quot; &quot;$fold&quot;</span></span>
+<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<h2 id="3-创建环境并取得官方代码">3. 创建环境并取得官方代码</h2>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">SETUP_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>4 <span class="at">--mem</span><span class="op">=</span>16G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-setup.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> setup<span class="va">)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="va">SETUP_JOB</span><span class="op">=</span><span class="va">${SETUP_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;%s\n&#39;</span> <span class="st">&quot;</span><span class="va">$SETUP_JOB</span><span class="st">&quot;</span></span></code></pre></div>
+<p>成功后：</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/SETUP_READY&quot;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/environment-freeze.txt&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/setup-runtime.patch&quot;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/official-code&quot;</span> remote <span class="at">-v</span></span></code></pre></div>
+<p>最后一条应只显示 <code>slahrichi/WildfireSpreadTS</code>。setup
+会缓存 ImageNet
+编码器，避免训练时临时联网。已存在的环境/代码目录拒绝被覆盖；安装失败先检查日志，不要直接反复覆盖或升级依赖。</p>
+<h2 id="4-下载原始四年-wsts">4. 下载原始四年 WSTS</h2>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">DOWNLOAD_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>08:00:00 <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-download.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> download<span class="va">)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="va">DOWNLOAD_JOB</span><span class="op">=</span><span class="va">${DOWNLOAD_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
+<p>实际地址是
+<code>https://zenodo.org/api/records/8006177/files/WildfireSpreadTS.zip/content</code>。MD5
+应为 <code>dc1a04e63ccc70037b277d585b8fe761</code>；只在校验通过后把
+<code>.partial</code> 改为 <code>.zip</code>。日志应显示校验
+<code>OK</code>。网络下载可续传，训练失败不能因此被默认自动重试。</p>
+<h2 id="5-cpu-转换geotiff--hdf5">5. CPU 转换：GeoTIFF → HDF5</h2>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="va">DATA_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SETUP_JOB</span><span class="st">:</span><span class="va">$DOWNLOAD_JOB</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>4 <span class="at">--mem</span><span class="op">=</span>32G <span class="at">--tmp</span><span class="op">=</span>200G <span class="at">--time</span><span class="op">=</span>08:00:00 <span class="dt">\</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-convert.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> convert<span class="va">)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="va">DATA_JOB</span><span class="op">=</span><span class="va">${DATA_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
+<p>GeoTIFF 是逐日地理栅格，HDF5 将同一事件整理成
+<code>day × channel × height × width</code>，减少训练时频繁打开小文件的开销。转换直接调用作者
+<code>src/preprocess/CreateHDF5Dataset.py</code>，原始活跃火点 HHMM
+值转为小时；预测目标是次日活跃火点代理，不是完整火场边界。</p>
+<p>成功标准：2018/2019/2020/2021 分别为 <strong>176/74/201/156</strong>
+个 HDF5，共 <strong>607</strong> 个事件。脚本打印数量并写 READY：</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/data/hdf5/READY&quot;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 30 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$DATA_JOB</span><span class="st">-convert.out&quot;</span></span></code></pre></div>
+<p>不要把新增四年 <code>WSTSPlus.zip</code>
+直接塞给此转换器：扩展包的日期/编码/缺失地理信息需要另做处理；这不是本次官方十二
+fold 的输入。</p>
+<h2 id="6-一个验证-batch--一步-gpu-smoke">6. 一个验证 batch + 一步 GPU
+smoke</h2>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="va">SMOKE_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$DATA_JOB</span><span class="st">&quot;</span> <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>64G <span class="at">--time</span><span class="op">=</span>00:20:00 <span class="dt">\</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-smoke.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> smoke 2<span class="va">)</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="va">SMOKE_JOB</span><span class="op">=</span><span class="va">${SMOKE_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
+<p>成功后：</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/smoke-fold2-</span><span class="va">$SMOKE_JOB</span><span class="st">/SMOKE_PASSED&quot;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 40 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$SMOKE_JOB</span><span class="st">-smoke.out&quot;</span></span></code></pre></div>
+<p>smoke 只训练一步，batch 4，验证一个 batch，不测试。没有最佳验证
+checkpoint
+的提示在该一步检查中可能出现；它不代表完整训练已完成，也不能用来报告论文
+AP。正式任务恢复 batch 64 和完整验证集。</p>
+<h2 id="7-正式训练官方-fold-2">7. 正式训练官方 Fold 2</h2>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="va">TRAIN_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SMOKE_JOB</span><span class="st">&quot;</span> <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>12:00:00 <span class="dt">\</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-train.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> train 2<span class="va">)</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="va">TRAIN_JOB</span><span class="op">=</span><span class="va">${TRAIN_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
+<p>任务调用的训练程序是<strong>作者的
+<code>official-code/src/train.py</code></strong>。关键设置：</p>
+<table>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>值与含义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>fold / seed</td>
+<td>Fold 2、seed 0，是两个不同概念</td>
+</tr>
+<tr class="even">
+<td>数据</td>
+<td><code>additional_data=false</code>；2018/2020 train、2019 val、2021
+test</td>
+</tr>
+<tr class="odd">
+<td>模型</td>
+<td>Res18-U-Net、T=1、All、ImageNet 编码器初始化</td>
+</tr>
+<tr class="even">
+<td>更新预算</td>
+<td>10000 步、batch 64、AdamW、lr 0.001、官方 Focal loss</td>
+</tr>
+<tr class="odd">
+<td>选择与评价</td>
+<td>用 validation AP 选最佳
+checkpoint，训练结束后官方入口自动测试它</td>
+</tr>
+<tr class="even">
+<td>时间对齐</td>
+<td>保留 <code>n_leading_observations_test_adjustment=5</code></td>
+</tr>
+</tbody>
+</table>
+<p>有效 positive class weight 由官方入口按训练年份重算，不能因为 YAML
+中看到 236 就手动改回 236。历史 Fold 2 有效值为 608.4653828020165。</p>
+<p>成功后：</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">TRAIN_RUN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/train-fold2-</span><span class="va">$TRAIN_JOB</span><span class="st">&quot;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$TRAIN_RUN</span><span class="st">/result.json&quot;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$TRAIN_RUN</span><span class="st">/command.txt&quot;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="ex">sacct</span> <span class="at">-j</span> <span class="st">&quot;</span><span class="va">$TRAIN_JOB</span><span class="st">&quot;</span> <span class="at">--format</span><span class="op">=</span>JobID,State,ExitCode,Elapsed,MaxRSS</span></code></pre></div>
+<p>验收要求：<code>COMPLETED 0:0</code>，日志确认 10000
+步完成，六项测试指标合法，一个最佳 checkpoint，以及
+<code>result.json</code>。最佳 checkpoint 的保存步数可以早于
+10000：训练做满预算，测试选择验证集表现最好的那个，而不是强行选最后一步。</p>
+<p><strong>历史参照：</strong> 自己训练的官方 Fold 2 测试 AP
+<strong>0.554664</strong>；作者发布权重同 fold 实测
+<strong>0.570902</strong>。这些是历史记录，不是承诺新服务器逐位复现的数值。记录自己实际测得的
+AP，不为了接近它们使用测试集调参。</p>
+<p>学生到这里就完成了一个官方 baseline fold。</p>
+<h2 id="8-可选仅评价官方-fold-2-权重">8. 可选：仅评价官方 Fold 2
+权重</h2>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="va">FETCH_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SETUP_JOB</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-weight-download.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> fetch-weight 2<span class="va">)</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="va">FETCH_JOB</span><span class="op">=</span><span class="va">${FETCH_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="va">WEIGHT_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$DATA_JOB</span><span class="st">:</span><span class="va">$FETCH_JOB</span><span class="st">&quot;</span> <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-weight-test.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> test-weight 2<span class="va">)</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="va">WEIGHT_JOB</span><span class="op">=</span><span class="va">${WEIGHT_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
+<p>结束后读取
+<code>runs/test-weight-fold2-JOBID/result.json</code>。发布文件
+<code>fold2_testAP0.571.pth</code> 的 0.571
+是四舍五入标签，不是学生自己训练的成绩。此评价不进行训练；如果只想验证官方权重，可以跳过第
+7 节的 10000 步训练。</p>
+<h2 id="9-可选完整-12-fold">9. 可选：完整 12-fold</h2>
+<h3 id="91-从头训练十二个-fold">9.1 从头训练十二个 fold</h3>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="va">FULL_ARRAY</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SMOKE_JOB</span><span class="st">&quot;</span> <span class="at">--array</span><span class="op">=</span>0-11%2 <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>12:00:00 <span class="dt">\</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%A_%a-train12.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> train<span class="va">)</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="va">FULL_ARRAY</span><span class="op">=</span><span class="va">${FULL_ARRAY</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
+<p><code>%2</code> 限制同时运行两个 fold；每个 fold
+都是完整独立训练。这个独立 campaign 会包含 Fold
+2；若不想重复训练，选择单 fold 教学或全数组之一，不默认混入旧运行。</p>
+<h3 id="92-或者只评价十二个发布权重">9.2 或者只评价十二个发布权重</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="va">FETCH_ALL</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SETUP_JOB</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-fetch12.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> fetch-weight all<span class="va">)</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="va">FETCH_ALL</span><span class="op">=</span><span class="va">${FETCH_ALL</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="va">WEIGHT_ARRAY</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$DATA_JOB</span><span class="st">:</span><span class="va">$FETCH_ALL</span><span class="st">&quot;</span> <span class="at">--array</span><span class="op">=</span>0-11%2 <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%A_%a-weights12.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> test-weight<span class="va">)</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="va">WEIGHT_ARRAY</span><span class="op">=</span><span class="va">${WEIGHT_ARRAY</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
+<h3 id="93-汇总实际完成的十二个-fold">9.3 汇总实际完成的十二个 fold</h3>
+<p>选择一种已提交的数组：</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 发布权重评价用此行；如果做的是训练，改成 ARRAY_ID=&quot;$FULL_ARRAY&quot;。</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="va">ARRAY_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WEIGHT_ARRAY</span><span class="st">&quot;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$ARRAY_ID</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>2G <span class="at">--time</span><span class="op">=</span>00:10:00 <span class="dt">\</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-summary.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> aggregate <span class="st">&quot;</span><span class="va">$ARRAY_ID</span><span class="st">&quot;</span></span></code></pre></div>
+<p>汇总文件为 <code>$WF_ROOT/summary-ARRAY_ID.json</code>，包含每 fold
+AP、均值、总体标准差和样本标准差。缺一个 fold、重复 fold
+或混合训练与发布权重结果都会报错。</p>
+<h3 id="94-与论文数字如何比较">9.4 与论文数字如何比较</h3>
+<table>
+<thead>
+<tr class="header">
+<th>参照</th>
+<th style="text-align: right;">AP</th>
+<th>能说明什么</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>作者 WSTS+ 工作的 Res18-U-Net T=1 All 结果表</td>
+<td style="text-align: right;">0.460 ± 0.084</td>
+<td>论文/作者表格参照</td>
+</tr>
+<tr class="even">
+<td>我们历史上重算十二个发布权重</td>
+<td style="text-align: right;">0.452764 ± 0.088217</td>
+<td>总体标准差；支持发布权重可执行复现</td>
+</tr>
+<tr class="odd">
+<td>我们历史完整训练 Fold 2</td>
+<td style="text-align: right;">0.554664</td>
+<td>一个测试年份的单 fold 结果</td>
+</tr>
+</tbody>
+</table>
+<p>作者表格见<a
+href="https://github.com/slahrichi/WildfireSpreadTS#benchmark-results-ap--standard-deviation">官方
+README</a>。历史十二权重均值与参照相差约
+-0.007236，数值接近，但不能据此证明论文表格与发布资产具有完全相同的运行来源。文件名分数统计也不能替代真实评价。单
+fold 高于跨 fold 均值很正常。</p>
+<p>新服务器的本次结果应单独报告；不要把以上历史数字直接填成自己的实验结果。</p>
+<h2 id="10-常见问题与交付清单">10. 常见问题与交付清单</h2>
+<table>
+<thead>
+<tr class="header">
+<th>问题</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>module、GPU 名称或 account 不存在</td>
+<td>对照新集群的 <code>module avail</code>、<code>sinfo</code>
+和账户；不能直接复制旧服务器值</td>
+</tr>
+<tr class="even">
+<td><code>--no-index</code> 找不到依赖</td>
+<td>确认同类型集群的软件源和固定 wheel 可用性；不要盲目升级全部依赖</td>
+</tr>
+<tr class="odd">
+<td>下载/安装连接失败</td>
+<td>确认计算节点出站网络；申请允许联网的节点/镜像渠道</td>
+</tr>
+<tr class="even">
+<td><code>SLURM_TMPDIR</code> 未定义、临时空间不足</td>
+<td>转换需要管理员提供节点临时目录；按本集群约定设置，不使用教师目录</td>
+</tr>
+<tr class="odd">
+<td><code>DependencyNeverSatisfied</code></td>
+<td>检查前置任务失败原因；修复后用新的 job ID 重新提交下游</td>
+</tr>
+<tr class="even">
+<td>目录已存在</td>
+<td>脚本拒绝覆盖已有环境和科学运行，先保留日志并定位失败阶段</td>
+</tr>
+<tr class="odd">
+<td>CUDA/CPU OOM</td>
+<td>根据 <code>nvidia-smi</code>、MaxRSS 增加显存/内存；不擅改正式
+batch、特征或精度</td>
+</tr>
+<tr class="even">
+<td>已有 checkpoint 却没有 result.json</td>
+<td>检查训练是否做满、测试是否结束、指标是否完整；不能手写成功文件</td>
+</tr>
+<tr class="odd">
+<td>分数不同</td>
+<td>先核对数据、fold、参数、软件版本和测试口径，不使用测试 AP
+挑配置</td>
+</tr>
+</tbody>
+</table>
+<p>交付：config、官方 commit 和补丁、环境
+freeze、下载校验、转换数量、job ID、真实命令、日志、checkpoint
+路径和结果
+JSON。大数据和模型留在个人实验存储中；同目录内不要并行改动上游代码或安装环境。</p>
+<h2 id="11-本版独立性与验证边界">11. 本版独立性与验证边界</h2>
+<p>本文所有脚本都由第 2
+节现场创建。运行时只依赖学生自己的目录、作者仓库、官方数据与权重，以及同类型集群提供的软件环境。全文没有要求取得
+<code>wildfire-research-plan</code> 代码，也不调用其 Python 包。</p>
+<p>上一版依赖本项目的 corrected B0 路线另存为
+<code>project-b0-slurm.md</code>，不属于本独立教程的执行步骤。</p>
+<p>新服务器尚未连接验证。文档中的历史成绩与此前 Nibi smoke
+不能冒充此独立版本在新服务器的完整训练结果；本版新增脚本的具体本地检查范围记录在同目录
+<code>official-standalone-validation.md</code>
+中，该记录不是学生执行依赖。</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

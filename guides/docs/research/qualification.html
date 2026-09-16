@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>交付资格验证记录 · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/qualification.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#交付资格验证记录"
+id="toc-交付资格验证记录">交付资格验证记录</a>
+<ul>
+<li><a href="#已核实的环境与-cpu-证据"
+id="toc-已核实的环境与-cpu-证据">已核实的环境与 CPU 证据</a></li>
+<li><a href="#gpu-验证的边界" id="toc-gpu-验证的边界">GPU
+验证的边界</a></li>
+<li><a href="#后续实际验证" id="toc-后续实际验证">后续实际验证</a></li>
+</ul></li>
+</ul></div></details>
+<h1 id="交付资格验证记录">交付资格验证记录</h1>
+<p>验证对象是一个全新虚拟环境、独立的官方源码 checkout、每作业 Git
+归档，以及迁移后的数据和权重路径。运行在现有集群的计算节点上，<strong>没有声称已在另一套物理集群执行过</strong>。新集群通过
+site 配置选择账户、GPU、Python/module 和存储路径。</p>
+<p>新环境运行资格验证已完成：训练环境 143 项、审计环境 117
+项检查通过，91 个 GPU 短预算 case 通过，并完成 999
+事件审计和历史诊断重放。此结论是运行链路验证，不是所有历史分数的全预算重新复现。所有
+tensor/model、依赖安装、下载和大文件校验均在
+Slurm。登录节点只做源码/小型元数据/Git/提交检查。</p>
+<h2 id="已核实的环境与-cpu-证据">已核实的环境与 CPU 证据</h2>
+<table>
+<thead>
+<tr class="header">
+<th>作业</th>
+<th>源提交</th>
+<th>节点</th>
+<th>结果与适用范围</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>22101442</td>
+<td>98d12f0</td>
+<td>c142</td>
+<td>66 tests pass；旧环境，只作早期回归</td>
+</tr>
+<tr class="even">
+<td>22101813</td>
+<td>58cf86a</td>
+<td>c56</td>
+<td>106 tests pass，实际官方 T5 类及驱动导入通过；旧环境</td>
+</tr>
+<tr class="odd">
+<td>22102010</td>
+<td>7416004</td>
+<td>c376</td>
+<td>133 tests pass，实际官方 T5 类及驱动导入通过；旧环境</td>
+</tr>
+<tr class="even">
+<td>22101774</td>
+<td>454f192</td>
+<td>c14</td>
+<td>数据改放独立目录，B3/B5 与两套 seed 0
+教师权重迁移；教师逐文件摘要校验</td>
+</tr>
+<tr class="odd">
+<td>22102009</td>
+<td>7416004</td>
+<td>c350</td>
+<td>P00、attention、48 个 QA map 迁移与摘要记录</td>
+</tr>
+<tr class="even">
+<td>22101441</td>
+<td>98d12f0</td>
+<td>c83</td>
+<td>安装失败：官方文件末尾缺换行导致旧补丁不适用；另发现 module 重设 pip
+wheelhouse</td>
+</tr>
+<tr class="odd">
+<td>22101770</td>
+<td>454f192</td>
+<td>c56</td>
+<td>全新公开 PyPI 训练环境已安装；在同一个旧补丁处停止</td>
+</tr>
+<tr class="even">
+<td>22102098</td>
+<td>c617100</td>
+<td>c3</td>
+<td>从上述公共环境继续，精确修正官方补丁，训练/审计
+<code>pip check</code> 均通过，setup 完成</td>
+</tr>
+<tr class="odd">
+<td>22102101</td>
+<td>c617100</td>
+<td>c38</td>
+<td>从公开源下载 Swin 与 MiT-B2 三个资产，全部匹配固定 SHA256</td>
+</tr>
+<tr class="even">
+<td>22102100</td>
+<td>c617100</td>
+<td>c3</td>
+<td>新环境 134 tests pass、2
+fail；失败是旧测试断言原服务器路径，已改为显式临时目录，由 22102394
+重跑通过</td>
+</tr>
+<tr class="odd">
+<td>22102394</td>
+<td>19132b0</td>
+<td>c333</td>
+<td>新训练环境 143 tests pass，实际官方 T5 类和保留驱动导入通过</td>
+</tr>
+<tr class="even">
+<td>22102400</td>
+<td>19132b0</td>
+<td>c332</td>
+<td>新审计环境 117 tests pass，覆盖修复/验证、schema、inventory、target
+gate 和 split</td>
+</tr>
+<tr class="odd">
+<td>22102613</td>
+<td>eb702c2</td>
+<td>c422</td>
+<td>新训练环境中，官方原始年份 converter CLI 与新增年份 converter 均通过
+23 波段 GeoTIFF → HDF5 合成样例检查；覆盖数值、日期、坐标及 active-fire
+转换语义</td>
+</tr>
+</tbody>
+</table>
+<p>两次安装失败的日志保留，没有把失败作业写成成功。公共环境来自
+<code>22101770</code> 创建的空目录，没有复用旧训练
+venv；<code>22102098</code>
+重用的是这次新安装的公共环境。模块配置之后重新隔离 pip
+变量，安装记录不依赖本站 wheelhouse。实际版本记录为 <a
+href="../../../docs/research/environment/train-pip-freeze.txt">训练
+freeze</a>、<a
+href="../../../docs/research/environment/audit-pip-freeze.txt">审计
+freeze</a>，官方改动见 <a
+href="../../../docs/research/environment/upstream.diff">upstream.diff</a>。这些是观察记录，安装输入仍是
+<code>environments/research-*.txt</code>。</p>
+<p>完整数据来自已审计的既有 999 事件数据，迁移时使用同文件系统 hard
+link；因此这里验证新路径和新软件环境，没有重复完整公开下载/转换。权重实际复制并校验。公开数据的完整重建命令、逐阶段检查与原始校验值见
+<a href="data-preparation.html">数据准备</a>。</p>
+<h2 id="gpu-验证的边界">GPU 验证的边界</h2>
+<p>Cross-history 和两套 September smoke
+使用实数据、一轮短训练或校准、checkpoint
+保存/重载，以及有限样本评估。历史 D 系列和基础模型使用 <a
+href="../../../scripts/research/README-qualification.md">qualification
+driver</a>；短预算输出明确标记为 qualification，不能作为
+3,000/10,000-step 结果、教师或完整基线完成记录。</p>
+<p>D 系列正式 evaluator
+要求固定训练预算。资格验证只在内存副本中替换其预算/status
+字段以调用原模型构造器，其余方法元数据校验和严格 state_dict
+加载保留；磁盘上的短预算权重仍被正式校验器拒绝。它证明加载/计算链路，不证明方法效果或完整训练的数值一致性。</p>
+<p>GPU 作业
+<code>22102452</code>（<code>e13b9fb5db55</code>，<code>g36</code>）已完成两项实际
+24 样本诊断；<a
+href="../../../docs/research/environment/diagnostics-replay.json">重放结果</a>与历史记录的比较方向相同，数值最大绝对差约
+<code>4.3e-6</code>。这验证迁移权重后的推理链路，不代表重新训练。</p>
+<p>首批 6 个训练/校准 GPU 作业已成功退出，合计 19 个短预算 case
+的报告见<a
+href="../../../docs/research/environment/gpu-qualification-first-batch.json">原始记录</a>：</p>
+<table>
+<thead>
+<tr class="header">
+<th>作业</th>
+<th>节点</th>
+<th>已通过的范围</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>22102102 / 22102104</td>
+<td>g32 / g35</td>
+<td>T1 / T5：control、cosine_erm、context、transition；每项实际 1
+step，strict reload，预测重载差为 0</td>
+</tr>
+<tr class="even">
+<td>22102396</td>
+<td>g36</td>
+<td>B5：实际 Lightning 2 steps、最佳权重选择、strict reload、M00/M06 各
+2 样本评估</td>
+</tr>
+<tr class="odd">
+<td>22102397</td>
+<td>g32</td>
+<td>RNC：实际 1 step、正式 validator 拒绝短权重、strict reload、M00/M06
+各 2 样本评估</td>
+</tr>
+<tr class="even">
+<td>22102787</td>
+<td>g36</td>
+<td>RF T1：control、mixed、typed、distill、BN batch_stats；重载差为
+0</td>
+</tr>
+<tr class="odd">
+<td>22102798</td>
+<td>g35</td>
+<td>Routed T1：student_control、student_distill、merge、bn_shared；重载
+state 严格相等后评估</td>
+</tr>
+</tbody>
+</table>
+<p>这些短预算样本不用于效果判断，AP 为 0
+的小样本也不能解释为方法失效。后续批次补齐其余执行族，见下文。</p>
+<p>转换作业的<a
+href="../../../docs/research/environment/conversion-qualification.json">原始小型报告</a>保留逐年份检查结果。它使用八个合成事件，未替代全量公开下载、999
+事件转换或修复阶段验证。</p>
+<h2 id="后续实际验证">后续实际验证</h2>
+<p>第二批 9 个 GPU
+作业（<code>22102808/09/10/82/84/88/93/94/95</code>，源
+<code>a7e8e0a</code>）全部正常退出，新增 50 个通过的 case，见<a
+href="../../../docs/research/environment/gpu-qualification-second-batch.json">逐项报告</a>。包括其余列入正向清单的
+cross-history 方法在 T1/T5 的短训练及重载、RF 与 routed 的 T5 分支，以及
+B1、token 和 CRA。架构、剩余 D 系列和 attention 训练由最终批次验证。</p>
+<p>CPU 作业 <code>22102402</code>（源
+<code>19132b0</code>，<code>c333</code>）完成全量 999 事件审计：<a
+href="../../../docs/research/environment/data-audit-phase0_report.md">报告</a>显示无无效文件错误，门控结论为
+<code>continue_controlled</code>。原始数据缺少 observation/availability
+时间、QA、coverage 和 target validity
+等字段，因此支持既定受控缺失实验，不支持自然缺失或 operational
+声明。报告的 target days
+是原始事件的逐日统计，与模型按历史窗口构造的评估样本数不是同一口径。</p>
+<p>历史入口的下一批 10 个 GPU case 也已通过，见<a
+href="../../../docs/research/environment/gpu-qualification-legacy-batch.json">逐项报告</a>：D1-KL
+/ paired0、原始
+D12-SARP、B2、B3、legacy-P00、CIWC、rank、FFCA、prompt-pyramid。B2/B3/P00
+使用实际 Lightning 2 steps，其余 1 step；报告均保留 qualification
+标记。另有 CPU 作业
+<code>22103003</code>（<code>c86</code>）在迁移后的历史 summary 上执行
+T1/T5 的 complete-route 与 severity-route CLI，见<a
+href="../../../docs/research/environment/composition-qualification.json">输出</a>；它验证汇总命令，不是重新评估模型。</p>
+<p>最终 10 个 GPU 作业的 12 个 case 全部通过，见<a
+href="../../../docs/research/environment/gpu-qualification-final-batch.json">逐项报告</a>：complete-pyramid、T5
+standard/SARP、Swin/SegFormer 的 T1/T5 公开初始化短训练、T1/T5 固定
+25%/50% 缺失比例训练、attention 的实际 1 step 训练与重载。Swin/SegFormer
+使用 microbatch 2 做链路验证，正式复现仍按架构教程的历史 batch；其实际
+completed_steps 为 1，不是元数据中的目标预算 10,000。所有作业 exit code
+均为 0。</p>
+<p>独立覆盖审查核对了 51 项正向信号、代码入口、控制组、历史
+batch、路由组合及短预算校验边界，没有发现新的关键缺口。保留的负结果、比较无效与未运行状态按原证据归档；未为它们追加效果实验。</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

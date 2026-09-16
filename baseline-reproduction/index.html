@@ -328,16 +328,16 @@
     <button class="tool-button hide-mobile" id="fontUp" aria-label="Increase font size">A+</button>
     <button class="tool-button" id="themeToggle" aria-label="Toggle light and dark theme">◐</button>
     <button class="tool-button hide-mobile" onclick="window.print()" aria-label="Print or export as PDF">Print / PDF</button>
-    <a class="plan-link hide-mobile" href="../related-work/">← Lecture 02</a>
-    <a class="plan-link hide-mobile" href="../">Research plan →</a>
+    <a class="plan-link hide-mobile" href="../related-work/">← Research foundations</a>
+    <a class="plan-link hide-mobile" href="../">Course home →</a>
     <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
   </header>
 
   <section class="hero">
     <div class="hero-inner">
-      <div class="eyebrow">03 · Baseline reproduction</div>
+      <div class="eyebrow">02 · Baseline reproduction</div>
       <h1>From a Paper Claim to a Verified Baseline</h1>
-      <p class="subtitle">A beginner-friendly walkthrough of reproducing Res18-U-Net with T=1—from a frozen scientific question to twelve independently verified folds.</p>
+      <p class="subtitle">A beginner-friendly walkthrough of reproducing Res18-U-Net with T=1—from a frozen scientific question to one trained fold and an audit of twelve released checkpoints.</p>
       <div class="hero-pills">
         <div class="hero-pill"><strong>25–30 min</strong><span>guided lecture</span></div>
         <div class="hero-pill"><strong>16</strong><span>learning stages</span></div>
@@ -347,7 +347,7 @@
     </div>
   </section>
 
-  <div class="truth-banner">
+  <div class="truth-banner"><strong>从这里开始实操：</strong> <a href="../guides/docs/tutorials/res18-baseline-slurm.html">官方 Res18 单 fold · 完整 Slurm 命令</a>。首次只需 Fold 2；十二个发布权重为选做。本课中的历史耗时与显存记录不是新集群的资源保证。<br>
     <strong>Purpose of this chapter:</strong> reproduction is how we turn “the paper reports this number” into “we understand the exact task, can execute the baseline, can audit the evidence, and know where our future method must improve.”
   </div>
 
@@ -426,7 +426,7 @@
         <h2>What exactly did we reproduce?</h2>
         <p class="lead">A reproducible target includes the model, horizon, features, label, folds, and metrics.</p>
 
-        <div class="callout blue"><strong>Dataset boundary:</strong> this lecture reproduces the original WSTS 2018–2021 baseline. It is separate from the later WSTS+ four-fold protocol used for our future cross-year experiments.</div>
+        <div class="callout blue"><strong>Dataset boundary:</strong> this lecture records the original WSTS 2018–2021 official baseline. The current project instead uses a fixed 2016–2020 / 2021 / 2022–2023 split with corrected indexing. Neither is interchangeable with the upstream eight-year four-fold setting.</div>
 
         <div class="table-wrap">
           <table>
@@ -602,7 +602,7 @@
       <section class="section searchable" id="released-weights">
         <div class="section-kicker">10 · Test-only campaign</div>
         <h2>Evaluate all twelve released weights</h2>
-        <p class="lead">Next, test every official released checkpoint under its official fold.</p>
+        <p class="lead">Optional extension after your first fold: test the twelve released checkpoints under their official folds. This is evaluation of published weights, not twelve new training runs.</p>
 
         <div class="callout accent"><strong>This is a test-only evaluation of official released weights, not twelve new training runs.</strong> Each state dictionary loaded 182 tensors with <code>strict=True</code>; training, validation, prediction, and automatic retry were disabled.</div>
 
@@ -799,8 +799,8 @@
             <div class="closing-item"><strong>Learned:</strong><br>Cross-fold variability is large, and AP does not replace fixed-threshold F1, IoU, or Recall.</div>
             <div class="closing-item"><strong>Enabled:</strong><br>Future model changes can now be compared under a frozen, audited, official-fold protocol.</div>
           </div>
-          <p style="margin-top:20px;color:#d7efe1"><strong>Next step:</strong> freeze this baseline as the control, then resolve the training-setting discrepancy and run one declared ablation at a time.</p>
-          <p><a href="../related-work/">← Previous lecture: research foundations and related work</a> · <a href="../">Return to the research plan →</a></p>
+          <p style="margin-top:20px;color:#d7efe1"><strong>Next step:</strong> follow the <a href="../guides/docs/tutorials/res18-baseline-slurm.html">official single-fold Slurm tutorial</a>. To join the project experiments, use the separate <a href="../guides/docs/research/reproduce.html">research reproduction guide</a> and its corrected baselines; do not treat an official-fold score as their matched control.</p>
+          <p><a href="../related-work/">← Previous lecture: research foundations and related work</a> · <a href="../">Return to the course home →</a></p>
         </div>
       </section>
     </main>
@@ -808,7 +808,7 @@
 
   <footer class="footer">
     <p>Wildfire Forecasting · From a Paper Claim to a Verified Baseline · English Courseware</p>
-    <p>Built from the independently verified Res18-U-Net T=1 reproduction evidence. Result publication completed 13 August 2026.</p>
+    <p>Historical reproduction results published 13 August 2026; teaching route and project boundaries updated 16 September 2026. The recorded historical numbers have not been relabelled as new runs.</p>
   </footer>
 
   <script>

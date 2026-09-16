@@ -633,13 +633,13 @@
     <button class="tool-button" id="themeToggle" aria-label="Toggle light and dark theme">◐</button>
     <button class="tool-button hide-mobile" onclick="window.print()" aria-label="Print or export as PDF">Print / PDF</button>
     <a class="plan-link hide-mobile" href="../baseline-reproduction/">Next: Baseline →</a>
-    <a class="plan-link hide-mobile" href="https://kulbeargpt.github.io/wildfire-research-plan/" target="_blank" rel="noopener">Research plan ↗</a>
+    <a class="plan-link hide-mobile" href="../">Course home ↗</a>
     <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
   </header>
 
   <section class="hero">
     <div class="hero-inner">
-      <div class="eyebrow">02 · Research foundations and related work</div>
+      <div class="eyebrow">01 · Research foundations and related work</div>
       <h1>Reliable Next-Day Wildfire Spread Forecasting</h1>
       <p class="subtitle">How physical drivers, satellite observation limits, benchmark contracts, baselines, and missing-data research define the scope of the project.</p>
       <div class="hero-pills">
@@ -651,7 +651,7 @@
     </div>
   </section>
 
-  <div class="truth-banner">
+  <div class="truth-banner"><strong>项目状态 · 2026-09-16：</strong> 本课保留研究基础与文献教学；当前执行路线是 T=1/T=5 受控缺失实验。<a href="../guides/docs/START_HERE.html">入门路线</a> · <a href="../guides/docs/research/positive-signals.html">现有证据</a> · <a href="../guides/docs/research/negative-results.html">负结果档案</a>。<br>
     <strong>Purpose of this chapter:</strong> related work should constrain the research claim, not simply accumulate citations. The lecture moves from why the problem is difficult to what existing methods already cover, then ends with a narrow, testable project boundary.
   </div>
 
@@ -808,7 +808,7 @@
         <div class="grid-3">
           <article class="card primary"><h3>Input admissibility</h3><p>Observation and availability times must be audited where recoverable. Without that lineage, describe the work as a retrospective benchmark rather than an operational forecast.</p></article>
           <article class="card accent"><h3>Label semantics</h3><p>WSTS/WSTS+ active-fire maps and TS-SatFire newly burned areas cannot be merged as if they were the same target.</p></article>
-          <article class="card blue"><h3>Split discipline</h3><p>Retain official folds for comparison, then use a frozen 2016–2020 train, 2021 validation, and 2022–2023 untouched test split.</p></article>
+          <article class="card blue"><h3>Split discipline</h3><p>Keep official-fold reproduction separate from the project split: 2016–2020 train, 2021 validation, 2022–2023 historical test years. Those test years have already been evaluated; new methods need an explicit confirmation plan.</p></article>
         </div>
 
         <div class="callout accent"><strong>Teaching point:</strong> if the contract is not fixed first, later numerical comparisons have no stable meaning.</div>
@@ -851,7 +851,7 @@
           </table>
         </div>
 
-        <div class="positioning">Project line: keep WSTS+ as the primary dataset. Treat natural missingness as a main result only when validity provenance can be recovered; otherwise retain controlled missingness. Use TS-SatFire only as a separately reported cross-label stress test.</div>
+        <div class="positioning">Current project line: use the audited 999-event WSTS+ tree for controlled missingness. Observation/availability timestamps, QA, coverage and target validity are incomplete. The retained VIIRS mini-screen is diagnostic evidence, not a natural-missingness benchmark. TS-SatFire is related-work context, not a completed project evaluation.</div>
       </section>
 
       <section class="section searchable" id="challenges">
@@ -893,10 +893,10 @@
         <div class="grid-3">
           <article class="card accent"><h3>Rule baselines</h3><p><strong>No-fire · persistence · morphological dilation</strong></p><p>Test whether the model exceeds simple assumptions about fire continuation.</p></article>
           <article class="card primary"><h3>Spatial CNNs</h3><p><strong>U-Net · Res-UNet</strong></p><p>Provide the minimum reproducible learned baseline.</p></article>
-          <article class="card blue"><h3>Temporal models</h3><p><strong>UTAE · ConvLSTM · temporal stacks</strong></p><p>Test whether additional history truly helps.</p></article>
+          <article class="card blue"><h3>Temporal models</h3><p><strong>UTAE · ConvLSTM · temporal stacks</strong></p><p>Compare settings carefully: the project T=1/T=5 pair also changes architecture and features, so it does not isolate history length.</p></article>
           <article class="card purple"><h3>Transformers</h3><p><strong>SegFormer · Swin-Unet</strong></p><p>Offer a strong representation comparison under a controlled budget.</p></article>
           <article class="card accent"><h3>Partial observability</h3><p><strong>Reconstruction → forecasting</strong></p><p>The closest baseline family for corrupted fire observations.</p></article>
-          <article class="card primary"><h3>Project control</h3><p><strong>Concatenate + mask</strong></p><p>The essential comparison for testing whether observation age adds value beyond availability.</p></article>
+          <article class="card primary"><h3>Project control</h3><p><strong>Matched training and routing controls</strong></p><p>Match initialization, seed, optimizer budget and evaluation population. Distillation needs a student control; extra modules need their nearest attribution control.</p></article>
         </div>
       </section>
 
@@ -917,7 +917,7 @@
           <article class="card purple"><h3>Quality fields</h3><p>QA and confidence variables may be used only when their provenance is documented in the data package.</p></article>
         </div>
 
-        <div class="callout warning"><strong>Protocol:</strong> random pixels are only an MCAR sanity check. Primary controlled corruption should match missing fraction, connected-component shape, temporal run length, and cross-modal co-missingness. Natural-missingness claims require recoverable coverage/QA and target validity.</div>
+        <div class="callout warning"><strong>Current protocol:</strong> M00 uses complete input, M01 removes active-fire history, and M06/M07 apply 25%/50% structured blocks to dynamic inputs. Primary AP averages M01/M06/M07. Observation-age and asynchrony remain background concepts; they are not established current contributions.</div>
       </section>
 
       <section class="section searchable" id="closest-work">
@@ -937,10 +937,10 @@
 
         <div class="grid-2">
           <article class="card primary"><h3>What to borrow</h3><ul><li>Corruption protocol</li><li>Leave-one-year-out evaluation</li><li>Missingness-intensity curves</li><li>A strong reconstruction-first baseline</li></ul></article>
-          <article class="card accent"><h3>How this project differs</h3><p>The proposed study does not only reconstruct fire maps. It explicitly tests <code>q</code>, <code>Δt</code>, <code>mask</code>, and modality identity across asynchronous multimodal inputs.</p></article>
+          <article class="card accent"><h3>How this project differs</h3><p>The retained experiments compare corruption training, consistency, prompts, spatial specialists, observable routing and distillation under matched controlled-missingness protocols. Their positive and negative evidence is recorded separately; no general asynchronous-fusion contribution is established.</p></article>
         </div>
 
-        <div class="callout blue"><strong>Second direct prior:</strong> <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">FireEx</a> already uses fuel, weather, and generalist experts for modality-aware next-day wildfire spread prediction. The present project must therefore add explicit missingness, observation age, QA, and dynamically conditioned reliability rather than claim modality awareness itself.</div>
+        <div class="callout blue"><strong>Second direct prior:</strong> <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">FireEx</a> already uses fuel, weather, and generalist experts for modality-aware next-day wildfire spread prediction. This limits novelty claims about modality awareness. Our current claims must instead follow the measured controlled-missingness comparisons and their nearest controls; QA and observation-age fusion are not assumed results.</div>
 
         <p class="small">Direct sources: Yang et al. 2026, <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">Robust Wildfire Forecasting under Partial Observability</a> <span class="badge preprint">preprint</span>; Andrianarivony and Akhloufi 2026, <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">FireEx</a> <span class="badge peer">peer reviewed</span>.</p>
       </section>
@@ -982,13 +982,13 @@
             <tbody>
               <tr><td><strong>Task</strong></td><td>Public benchmarks already cover next-day active-fire prediction and burned-area progression.</td><td>Fix the next-UTC-calendar-day active-fire proxy contract and state explicitly why active-fire and burned-area labels cannot be merged.</td></tr>
               <tr><td><strong>Data</strong></td><td>WSTS/WSTS+ provide multimodal time-series inputs and public baselines.</td><td>Audit timestamps, QA, validity, and sensor or product delay field by field to prevent future-information leakage.</td></tr>
-              <tr><td><strong>Method</strong></td><td>U-Net, UTAE, Transformers, and reconstruction-before-forecasting already exist.</td><td>Test a lightweight gate using <code>q</code>, <code>Δt</code>, <code>mask</code>, and modality ID against a matched concatenate-plus-mask control.</td></tr>
-              <tr><td><strong>Evaluation</strong></td><td>Average precision, F1, IoU, and leave-one-year-out protocols are established.</td><td>Use a frozen future holdout, paired event bootstrap, FSS, calibration diagnostics, matched corruption masks, and negative controls.</td></tr>
+              <tr><td><strong>Method</strong></td><td>U-Net, UTAE, Transformers, and reconstruction-before-forecasting already exist.</td><td>Compare each retained consistency, prompt, routing or distillation method against its matched control. Separate total recipe gain from the incremental module gain.</td></tr>
+              <tr><td><strong>Evaluation</strong></td><td>Average precision, F1, IoU, and leave-one-year-out protocols are established.</td><td>Preserve matched scenarios and target dates; report AP, M00 and per-scenario results, seed/history/year scope and cost. Historical test exposure must be disclosed. Additional metrics are not automatically part of a completed experiment.</td></tr>
             </tbody>
           </table>
         </div>
 
-        <div class="positioning">One-sentence positioning: test whether recoverable observation age, validity, and quality metadata improve next-calendar-day active-fire proxy forecasting under controlled and identifiable natural missingness.</div>
+        <div class="positioning">Current positioning: study reliable next-calendar-day active-fire proxy forecasting under controlled missingness, using audited data, matched controls and explicit limits on each observed signal.</div>
       </section>
 
       <section class="section searchable" id="roadmap">
@@ -999,19 +999,19 @@
         <div class="timeline">
           <article class="timeline-item">
             <h3>Step 1 · Establish the data contract</h3>
-            <p>Read Huot, WSTS, WSTS+, and TS-SatFire. Audit observation time, availability time, validity, QA, target validity, ROI provenance, and split rules. Produce <code>data_manifest.csv</code> and an explicit continue/pivot decision by day 14.</p>
+            <p>Read the task and dataset definitions, then the completed data audit. Explain why the current gate is <code>continue_controlled</code>. Keep dataset-card counts distinct from the 999 files in our audited prepared tree.</p>
           </article>
           <article class="timeline-item">
             <h3>Step 2 · Reproduce the baseline ladder</h3>
-            <p>Run no-fire, two persistence variants, Res18-U-Net, UTAE(Res18), concatenate-plus-mask, LOCF, and uniform fusion. Fix the split, history length, seeds, corruption masks, and training budget.</p>
+            <p>First complete official Res18 Fold 2 with the hands-on Slurm tutorial. Then learn the corrected B0 → B2 → B3 project ladder; these are different protocols, not directly comparable scores.</p>
           </article>
           <article class="timeline-item">
-            <h3>Step 3 · Add missingness and asynchrony</h3>
-            <p>Read the partial-observability, FireEx, AnytimeFormer/AGFlow, and incomplete-multimodal papers. Adapt reconstruction-first plus one reliability-fusion control; keep the comparison budget fixed.</p>
+            <h3>Step 3 · Reproduce a matched comparison</h3>
+            <p>Choose one retained method from the positive-signal catalog with your supervisor. Run its nearest control with matching seed, initialization, budget and scenarios. Read the negative archive before proposing an extension.</p>
           </article>
           <article class="timeline-item">
             <h3>Step 4 · Fix the writing boundary</h3>
-            <p>End the related-work section with the exact project distinction: quality and observation-age fusion under a forecast issue-time constraint.</p>
+            <p>Write what the experiment supports and what it does not: a single-seed improvement is a signal; total recipe gain is not necessarily module gain; controlled corruption is not natural missingness.</p>
           </article>
         </div>
 
@@ -1025,10 +1025,10 @@
           <p class="lead">The project is valuable only if the claim stays narrower than the ideas it builds upon.</p>
           <div class="closing-grid">
             <div class="closing-item"><strong>Not:</strong> reintroducing wildfire prediction, missing modalities, or asynchronous fusion.</div>
-            <div class="closing-item"><strong>Instead:</strong> testing whether recoverable <code>q</code>, observation age, and validity improve next-calendar-day active-fire proxy forecasting.</div>
-            <div class="closing-item"><strong>Required:</strong> official-fold comparability, a frozen future holdout, matched controlled missingness, negative controls, and paired event-level inference.</div>
+            <div class="closing-item"><strong>Instead:</strong> measuring which training, routing and distillation choices help under matched controlled missingness.</div>
+            <div class="closing-item"><strong>Required:</strong> a declared data protocol, nearest controls, matching target dates, honest seed/year scope, and disclosure of historical test exposure.</div>
           </div>
-          <p style="margin-top:20px;color:#d7efe1"><strong>Next section:</strong> Research questions and hypotheses H1/H2/H3.</p>
+          <p style="margin-top:20px;color:#d7efe1"><strong>Next:</strong> <a href="../baseline-reproduction/">learn baseline reproduction</a>, then follow the <a href="../guides/docs/tutorials/res18-baseline-slurm.html">official single-fold Slurm tutorial</a>.</p>
         </div>
       </section>
 
@@ -1061,7 +1061,7 @@
 
   <footer class="footer">
     <p>Wildfire Forecasting · Research Foundations and Related Work · English Courseware</p>
-    <p>Adapted from the supplied Chinese courseware and the minimum-necessary-revision research plan. Source status last reviewed 18 August 2026.</p>
+    <p>Project framing and learning route updated 16 September 2026. Literature references retain their 18 August 2026 review scope; this update is not a new literature survey.</p>
   </footer>
 
   <script>

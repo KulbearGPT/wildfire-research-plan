@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prepare the corrected eight-year
+dataset · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/data-preparation.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#prepare-the-corrected-eight-year-dataset"
+id="toc-prepare-the-corrected-eight-year-dataset">Prepare the corrected
+eight-year dataset</a>
+<ul>
+<li><a href="#source-and-validation-contracts"
+id="toc-source-and-validation-contracts">Source and validation
+contracts</a></li>
+<li><a href="#storage-and-restarts"
+id="toc-storage-and-restarts">Storage and restarts</a></li>
+</ul></li>
+</ul></div></details>
+<h1 id="prepare-the-corrected-eight-year-dataset">Prepare the corrected
+eight-year dataset</h1>
+<p>These stages reproduce the data path used by the retained
+experiments: original WSTS years 2018–2021, WSTS+ added years
+2016/2017/2022/2023, verified active-fire repair, a 999-event combined
+inventory, and normalization statistics computed only from 2016–2020.
+They reuse the tracked conversion, assembly, repair, and statistics
+implementations. This is a complete preparation recipe; the handoff
+qualification does not imply that a new full download/conversion has
+been executed.</p>
+<p>Start with the site configuration and fresh environments described in
+<a href="reproduce.html">reproduce.md</a>. Commit the handoff scripts
+before submission: the launcher executes an archive of the selected
+commit. Set absolute site paths, including paths containing spaces,
+using quoted Bash values:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WILDFIRE_SITE_ENV</span><span class="op">=</span><span class="st">&quot;/path/to/site.env&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># In site.env:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># export WILDFIRE_ROOT=&quot;/path/to/research artifacts&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># export WILDFIRE_DATA=&quot;$WILDFIRE_ROOT/hdf5/wstsplus-active-fixed&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># export WILDFIRE_STATS=&quot;$WILDFIRE_ROOT/hdf5/train-2016-2020-stats.npz&quot;</span></span></code></pre></div>
+<p>The configured training Python is 3.10 and audit Python is 3.13.
+<code>submit.sh cpu</code> activates training;
+<code>submit.sh cpu audit</code> activates audit. The preparation script
+checks the selected environment and refuses execution without
+<code>SLURM_JOB_ID</code>. Do not invoke bulk preparation on a login
+node.</p>
+<p>Run the following commands from the committed checkout. <strong>Wait
+for each job to finish successfully before submitting its dependent next
+stage.</strong> <code>submit.sh</code> returns immediately and prints
+the job ID and log directory; it does not automatically sequence these
+commands. Adjust <code>WILDFIRE_CPU_SBATCH</code> in the site
+configuration for download time, conversion memory/CPUs, and
+repair/audit time. Compute nodes need outbound access for the
+downloads.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Download and verify both source archives; these two jobs are independent.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu bash scripts/research/prepare-data.sh download original</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu bash scripts/research/prepare-data.sh download plus</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. After both downloads succeed, convert original and added years.</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># These conversion jobs are independent of one another.</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu bash scripts/research/prepare-data.sh original</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu bash scripts/research/prepare-data.sh added</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. After added conversion succeeds, repair and verify in the audit environment.</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu audit bash scripts/research/prepare-data.sh repair</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. After original conversion and repair succeed, assemble and audit all years.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu audit bash scripts/research/prepare-data.sh assemble</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. After assembly/audit succeeds, compute and validate training-only statistics.</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu bash scripts/research/prepare-data.sh stats</span></code></pre></div>
+<p>The final usable locations are exactly <code>WILDFIRE_DATA</code> and
+<code>WILDFIRE_STATS</code>; no source edits or historical worktree
+paths are needed. <code>WILDFIRE_DATA/READY</code> is written only after
+statistics load successfully and the final inventory passes validation.
+Stage evidence appears in
+<code>WILDFIRE_ROOT/preparation/STAGE-JOBID-SUFFIX</code>; a
+<code>COMPLETED</code> marker means that stage passed.
+Scheduler/source/environment provenance remains in the generic
+launcher's <code>WILDFIRE_ROOT/jobs</code> directory.</p>
+<h2 id="source-and-validation-contracts">Source and validation
+contracts</h2>
+<p>The download stage uses the same Zenodo API endpoints and checksums
+as the existing tutorial:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Archive</th>
+<th>Record</th>
+<th>Required MD5</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>WildfireSpreadTS.zip</code></td>
+<td><code>8006177</code></td>
+<td><code>dc1a04e63ccc70037b277d585b8fe761</code></td>
+</tr>
+<tr class="even">
+<td><code>WSTSPlus.zip</code></td>
+<td><code>17584629</code></td>
+<td><code>42da7598cc33a170064e78d8027148c9</code></td>
+</tr>
+</tbody>
+</table>
+<p>Downloads resume through <code>.partial</code> files and are renamed
+only after checksum validation. Existing complete archives are checked
+again; conversion also rechecks the archive before extraction. WSTS+
+supplies only the four added years, so it cannot replace the original
+archive.</p>
+<p>Original conversion must produce 176, 74, 201, and 156 events for
+2018, 2019, 2020, and 2021 respectively. Added conversion and verified
+repair must produce 92, 110, 122, and 68 events for 2016, 2017, 2022,
+and 2023. Assembly validates those per-year counts, totaling 999 HDF5
+files.</p>
+<p>The repair verifier retains these exact <code>--expect</code>
+contracts:</p>
+<pre class="text"><code>2016:92:2102:886:303648
+2017:110:2490:1481:177972
+2022:122:3424:2158:105377
+2023:68:2442:1297:167952</code></pre>
+<p>Repair evidence must be ready and contain exactly these empty-source
+exclusions:</p>
+<pre class="text"><code>2022/fire_CA4186812327820220730
+2022/fire_ID4570411652620220904
+2022/fire_OR4513211711020220825
+2022/fire_WA4687912083320220803
+2022/fire_WA4796412068520220909</code></pre>
+<p>The assembly stage runs the existing data gate and checks its exit
+status. Statistics use
+<code>reproductions.wsts_fast_track.compute_stats</code> with the frozen
+training years 2016–2020, excluding validation/test years. Their three
+23-feature arrays are subsequently checked by
+<code>load_training_stats</code>, and the generated <code>.npz</code>
+receives a SHA-256 record.</p>
+<h2 id="storage-and-restarts">Storage and restarts</h2>
+<p>Raw extraction persists under
+<code>WILDFIRE_ROOT/raw/{original,plus}</code> so separate Slurm jobs
+can access the TIFFs; node-local temporary directories are not used.
+Keep the plus TIFFs through repair and source verification. Intermediate
+HDF5 directories are
+<code>WILDFIRE_ROOT/hdf5/{original,added-source,added-verified}</code>.
+The assembler uses hard links, so <code>WILDFIRE_DATA</code> must be on
+the same filesystem as those intermediate HDF5 directories. Do not edit
+intermediate or assembled files after preparation; hard links share file
+contents.</p>
+<p>Plan space for both archives, extracted TIFFs, and intermediate HDF5
+data. Conversion, repair, extraction, and statistics refuse existing
+targets instead of overwriting results. A failed stage may leave partial
+output: inspect its Slurm logs and evidence, then explicitly remove only
+that failed stage's outputs or use a fresh root before rerunning.
+Downloads alone support automatic byte-range resumption. Never run two
+instances of the same stage against the same root concurrently. The
+workflow intentionally does not automatically delete raw inputs or
+unsuccessful output directories.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

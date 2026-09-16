@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Finish an interrupted environment
+setup · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
+<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/setup-recovery.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
+<details><summary>本页目录</summary><div id="TOC"><ul>
+<li><a href="#finish-an-interrupted-environment-setup"
+id="toc-finish-an-interrupted-environment-setup">Finish an interrupted
+environment setup</a></li>
+</ul></div></details>
+<h1 id="finish-an-interrupted-environment-setup">Finish an interrupted
+environment setup</h1>
+<p>Ordinary <code>submit.sh cpu setup</code> intentionally refuses
+existing nonempty environment or upstream directories. If setup
+completed the training dependency installation and upstream clone but
+stopped before completion, inspect its Slurm log, fix the relevant
+tracked source, and commit that fix. Then use the same site
+configuration and root:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WILDFIRE_SITE_ENV</span><span class="op">=</span><span class="st">&quot;/path/to/site.env&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu setup-finish</span></code></pre></div>
+<p>Wait for the original setup job to terminate first; never run two
+setup jobs against one root. The new job runs from the newly committed
+archive and records its own source, allocation, upstream diff, and
+dependency freezes. It does not change the already submitted or
+completed job's archived source or logs.</p>
+<p><code>setup-finish</code> requires an existing executable training
+environment and cloned upstream repository. It reruns the pinned pip
+requirements without forcing reinstall, checks dependency consistency,
+validates the exact upstream commit, applies any missing approved
+compatibility change, reuses the encoder download cache, and creates or
+finishes the audit environment. It does not delete environments, reset
+the upstream checkout, or discard partial outputs. A nonempty audit
+directory without an executable Python is rejected for explicit
+inspection.</p>
+<p>Upstream may be pristine or already contain the retained model-import
+patch and/or removal of the obsolete <code>T_co</code> import. Both
+affected files are compared in full against their pinned originals and
+exact expected transformed bytes. Any other tracked change, untracked
+file, unexpected commit, or unexpected contents in those files is
+rejected. The model-import patch includes the pinned upstream file's
+missing terminal-newline marker; it does not silently accept source
+drift.</p>
+<p>This action verifies requirements rather than proving that earlier
+installations came from public wheels. If a previous job used a site
+vendor wheelhouse, <code>setup-finish</code> can reuse those installed
+packages. To qualify an entirely public-PyPI installation, choose a
+distinct empty root/upstream and run ordinary <code>setup</code> with
+the corrected launcher. Completing setup also does not verify a training
+or checkpoint-resume path; those require separate allocated
+qualification jobs.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>

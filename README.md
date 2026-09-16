@@ -1,3 +1,5 @@
+> **配套教学网站：[课程首页](index.html)** — 研究基础、基线复现课程及可直接阅读的 Slurm 实操页面。
+
 > **新同学先读：[入门首页](docs/START_HERE.md)** — 阅读顺序、首次实验选择和入门完成标准。
 
 > **研究交付（2026-09-16，新环境运行验证完成）：** [正向信号](docs/research/positive-signals.md) · [负结果与未运行档案](docs/research/negative-results.md) · [新集群复现入口](docs/research/reproduce.md)。包含 T1/T5、两套 September 实验与历史诊断；下方正文是早期 T1 阶段记录。
