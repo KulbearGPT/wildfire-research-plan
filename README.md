@@ -1,3 +1,5 @@
+> **研究交付（2026-09-16，运行资格验证进行中）：** [正向信号](docs/research/positive-signals.md) · [负结果与未运行档案](docs/research/negative-results.md) · [新集群复现入口](docs/research/reproduce.md)。包含 T1/T5、两套 September 实验与历史诊断；下方正文是早期 T1 阶段记录。
+
 > **学生实操：** [只从官方仓库开始的 Res18-U-Net 教程](docs/tutorials/res18-baseline-slurm.md) · [项目 corrected B0 教程](docs/tutorials/project-b0-slurm.md)。
 
 > **教学接手入口（2026-09-11）：** [完整实验 Roadmap](docs/research-roadmap.md) · [Git 提交核对](docs/project-handoff-git-audit.md)。最新 T=1/T=5 与跨架构实现位于 `research/t1-t5-innovations` 分支；下方 README 正文保留早期 T=1 阶段说明，当前状态以 Roadmap 为准。
