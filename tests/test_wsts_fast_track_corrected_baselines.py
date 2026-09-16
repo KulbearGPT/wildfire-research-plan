@@ -15,7 +15,15 @@ def test_corrected_baselines_are_from_scratch_single_variable_controls() -> None
         corrected_baselines.corrected_baseline_spec("B3").training_policy
         == "fire-block"
     )
-    assert tuple(corrected_baselines.CORRECTED_BASELINES) == ("B0", "B2", "B3")
+    assert tuple(corrected_baselines.CORRECTED_BASELINES) == (
+        "B0", "B1", "B5", "B2", "B3"
+    )
+    for baseline_id in ("B0", "B2", "B3"):
+        assert corrected_baselines.corrected_baseline_spec(baseline_id).experiment_id == "C00"
+    for baseline_id, policy in (("B1", "clean"), ("B5", "fire-block")):
+        spec = corrected_baselines.corrected_baseline_spec(baseline_id)
+        assert spec.experiment_id == "C02"
+        assert spec.training_policy == policy
     assert all(
         spec.seed == 0 and spec.max_steps == 3_000
         for spec in corrected_baselines.CORRECTED_BASELINES.values()
