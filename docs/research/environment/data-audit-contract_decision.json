@@ -1,0 +1,18 @@
+{
+  "missing_required": [
+    "observation_time",
+    "availability_time",
+    "qa",
+    "coverage",
+    "target_validity"
+  ],
+  "notes": [
+    "Natural missingness is not recoverable from this contract."
+  ],
+  "operational_blockers": [
+    "availability_time",
+    "event_roi_provenance",
+    "target_validity"
+  ],
+  "status": "continue_controlled"
+}
