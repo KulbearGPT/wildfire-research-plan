@@ -2,7 +2,7 @@
 
 验证对象是一个全新虚拟环境、独立的官方源码 checkout、每作业 Git 归档，以及迁移后的数据和权重路径。运行在现有集群的计算节点上，**没有声称已在另一套物理集群执行过**。新集群通过 site 配置选择账户、GPU、Python/module 和存储路径。
 
-尚在进行中；本页不代表全部方法已通过。所有 tensor/model、依赖安装、下载和大文件校验均在 Slurm。登录节点只做源码/小型元数据/Git/提交检查。
+新环境运行资格验证已完成：训练环境 143 项、审计环境 117 项检查通过，91 个 GPU 短预算 case 通过，并完成 999 事件审计和历史诊断重放。此结论是运行链路验证，不是所有历史分数的全预算重新复现。所有 tensor/model、依赖安装、下载和大文件校验均在 Slurm。登录节点只做源码/小型元数据/Git/提交检查。
 
 ## 已核实的环境与 CPU 证据
 
@@ -44,14 +44,18 @@ GPU 作业 `22102452`（`e13b9fb5db55`，`g36`）已完成两项实际 24 样本
 | 22102787 | g36 | RF T1：control、mixed、typed、distill、BN batch_stats；重载差为 0 |
 | 22102798 | g35 | Routed T1：student_control、student_distill、merge、bn_shared；重载 state 严格相等后评估 |
 
-这些短预算样本不用于效果判断，AP 为 0 的小样本也不能解释为方法失效。后续仍需检查全部保留训练执行族、完整数据审计、独立最终审查及主工作区交付；不能据此页提前声明目标完成。
+这些短预算样本不用于效果判断，AP 为 0 的小样本也不能解释为方法失效。后续批次补齐其余执行族，见下文。
 
 转换作业的[原始小型报告](environment/conversion-qualification.json)保留逐年份检查结果。它使用八个合成事件，未替代全量公开下载、999 事件转换或修复阶段验证。
 
 ## 后续实际验证
 
-第二批 9 个 GPU 作业（`22102808/09/10/82/84/88/93/94/95`，源 `a7e8e0a`）全部正常退出，新增 50 个通过的 case，见[逐项报告](environment/gpu-qualification-second-batch.json)。包括其余列入正向清单的 cross-history 方法在 T1/T5 的短训练及重载、RF 与 routed 的 T5 分支，以及 B1、token 和 CRA。仍需补齐架构、剩余 D 系列和 attention 训练等验证，不能把这个批次当成整体完成。
+第二批 9 个 GPU 作业（`22102808/09/10/82/84/88/93/94/95`，源 `a7e8e0a`）全部正常退出，新增 50 个通过的 case，见[逐项报告](environment/gpu-qualification-second-batch.json)。包括其余列入正向清单的 cross-history 方法在 T1/T5 的短训练及重载、RF 与 routed 的 T5 分支，以及 B1、token 和 CRA。架构、剩余 D 系列和 attention 训练由最终批次验证。
 
 CPU 作业 `22102402`（源 `19132b0`，`c333`）完成全量 999 事件审计：[报告](environment/data-audit-phase0_report.md)显示无无效文件错误，门控结论为 `continue_controlled`。原始数据缺少 observation/availability 时间、QA、coverage 和 target validity 等字段，因此支持既定受控缺失实验，不支持自然缺失或 operational 声明。报告的 target days 是原始事件的逐日统计，与模型按历史窗口构造的评估样本数不是同一口径。
 
 历史入口的下一批 10 个 GPU case 也已通过，见[逐项报告](environment/gpu-qualification-legacy-batch.json)：D1-KL / paired0、原始 D12-SARP、B2、B3、legacy-P00、CIWC、rank、FFCA、prompt-pyramid。B2/B3/P00 使用实际 Lightning 2 steps，其余 1 step；报告均保留 qualification 标记。另有 CPU 作业 `22103003`（`c86`）在迁移后的历史 summary 上执行 T1/T5 的 complete-route 与 severity-route CLI，见[输出](environment/composition-qualification.json)；它验证汇总命令，不是重新评估模型。
+
+最终 10 个 GPU 作业的 12 个 case 全部通过，见[逐项报告](environment/gpu-qualification-final-batch.json)：complete-pyramid、T5 standard/SARP、Swin/SegFormer 的 T1/T5 公开初始化短训练、T1/T5 固定 25%/50% 缺失比例训练、attention 的实际 1 step 训练与重载。Swin/SegFormer 使用 microbatch 2 做链路验证，正式复现仍按架构教程的历史 batch；其实际 completed_steps 为 1，不是元数据中的目标预算 10,000。所有作业 exit code 均为 0。
+
+独立覆盖审查核对了 51 项正向信号、代码入口、控制组、历史 batch、路由组合及短预算校验边界，没有发现新的关键缺口。保留的负结果、比较无效与未运行状态按原证据归档；未为它们追加效果实验。

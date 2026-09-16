@@ -1,0 +1,398 @@
+{
+  "scientific_claim": false,
+  "scope": "bounded real-data qualification; architecture bootstrap microbatch2 is not the full-budget recipe",
+  "cases": [
+    {
+      "job_id": "22102989",
+      "source_commit": "875a4b2",
+      "node": "g31",
+      "case": "complete-pyramid",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "complete-pyramid",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 3.305545396870002e-05,
+            "brier": 0.0007233470678329468
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0005783080705441535,
+            "brier": 0.003761345287784934
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.005133631639182568,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_reliability_prompt_pyramid",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_reliability_prompt_pyramid",
+        "candidate_id": "D11-CRPP",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102990",
+      "source_commit": "875a4b2",
+      "node": "g31",
+      "case": "standard-t5",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "standard-t5",
+        "history": 5,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0010895399609580636,
+            "brier": 0.007756290026009083
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0019841338507831097,
+            "brier": 0.012125717476010323
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.0018739862134680152,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_temporal_reliability_prompting",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_temporal_reliability_prompting",
+        "candidate_id": "D13-STD-T5",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102992",
+      "source_commit": "875a4b2",
+      "node": "g31",
+      "case": "sarp-t5",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "sarp-t5",
+        "history": 5,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0010881198104470968,
+            "brier": 0.00775114493444562
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0019835680723190308,
+            "brier": 0.01212296076118946
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.0018739862134680152,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_temporal_reliability_prompting",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_temporal_reliability_prompting",
+        "candidate_id": "D13-SARP-T5",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102993",
+      "source_commit": "875a4b2",
+      "node": "g32",
+      "case": "swin_unet-t1",
+      "result": {
+        "status": "pass",
+        "history": 1,
+        "architecture": "swin_unet",
+        "method": "control",
+        "smoke": true,
+        "steps": 10000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102994",
+      "source_commit": "875a4b2",
+      "node": "g32",
+      "case": "swin_unet-t5",
+      "result": {
+        "status": "pass",
+        "history": 5,
+        "architecture": "swin_unet",
+        "method": "control",
+        "smoke": true,
+        "steps": 10000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102996",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "segformer_b2-t1",
+      "result": {
+        "status": "pass",
+        "history": 1,
+        "architecture": "segformer_b2",
+        "method": "control",
+        "smoke": true,
+        "steps": 10000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102999",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "segformer_b2-t5",
+      "result": {
+        "status": "pass",
+        "history": 5,
+        "architecture": "segformer_b2",
+        "method": "control",
+        "smoke": true,
+        "steps": 10000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22103110",
+      "source_commit": "bf6bff6",
+      "node": "g33",
+      "case": "fixed-severity-t1-.25",
+      "result": {
+        "status": "pass",
+        "history": 1,
+        "architecture": "res18_unet",
+        "method": "block_specialist",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22103110",
+      "source_commit": "bf6bff6",
+      "node": "g33",
+      "case": "fixed-severity-t1-.5",
+      "result": {
+        "status": "pass",
+        "history": 1,
+        "architecture": "res18_unet",
+        "method": "block_specialist",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22103111",
+      "source_commit": "bf6bff6",
+      "node": "g33",
+      "case": "fixed-severity-t5-.25",
+      "result": {
+        "status": "pass",
+        "history": 5,
+        "architecture": "res18_utae",
+        "method": "block_specialist",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22103111",
+      "source_commit": "bf6bff6",
+      "node": "g33",
+      "case": "fixed-severity-t5-.5",
+      "result": {
+        "status": "pass",
+        "history": 5,
+        "architecture": "res18_utae",
+        "method": "block_specialist",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22103112",
+      "source_commit": "aa46860",
+      "node": "g33",
+      "case": "attention-training",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "method": "attention",
+        "history": 1,
+        "actual_optimizer_steps": 1,
+        "physical_batch_size": 2,
+        "accumulation_steps": 32,
+        "effective_batch_size": 64,
+        "final_training_loss": 0.011581429411307909,
+        "final_loss_components": {
+          "forecast": 0.003699618713653763,
+          "state": 0.07881810644175857
+        },
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        },
+        "qualification_validator_removed_markers": [
+          "scientific_claim",
+          "qualification_only"
+        ],
+        "strict_reload_tensor_equality": true,
+        "m00_exact": true,
+        "evaluation_year": 2021,
+        "evaluation_samples_per_scenario": 2,
+        "natural_viirs_evaluation": false,
+        "metrics": {
+          "M00": {
+            "model": {
+              "sample_count": 2,
+              "pixel_count": 32768,
+              "avg_precision": 0.0,
+              "f1": 0.0,
+              "iou": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "loss": 1.1382429875084199e-05,
+              "brier": 0.0003720650856848806
+            },
+            "p00": {
+              "sample_count": 2,
+              "pixel_count": 32768,
+              "avg_precision": 0.0,
+              "f1": 0.0,
+              "iou": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "loss": 1.1382429875084199e-05,
+              "brier": 0.0003720650856848806
+            }
+          },
+          "M06": {
+            "model": {
+              "sample_count": 2,
+              "pixel_count": 32768,
+              "avg_precision": 0.0,
+              "f1": 0.0,
+              "iou": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "loss": 8.08536060503684e-05,
+              "brier": 0.0012940627057105303
+            },
+            "p00": {
+              "sample_count": 2,
+              "pixel_count": 32768,
+              "avg_precision": 0.0,
+              "f1": 0.0,
+              "iou": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "loss": 5.5860509746707976e-05,
+              "brier": 0.001018665381707251
+            }
+          }
+        }
+      }
+    }
+  ]
+}
