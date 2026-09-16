@@ -2,7 +2,7 @@
 
 This collection uses the user’s inclusive criterion: retain a measured positive change even when it is confined to one seed, history, year, scenario, or weak comparator. **A positive signal is not a confirmed contribution or a passed adoption gate.** Mixed results also appear in the negative archive. No new efficacy experiment was performed for this inventory.
 
-AP differences are absolute, not percentages. Primary is mean AP over M01/M06/M07; block is mean AP over M06/M07. M00 is clean. T1/T5 differ in architecture and features as well as history. Historical T1 2023 uses 2,312 samples; the later paired campaign uses 2,102. Never combine those populations. Unless stated otherwise, a screen is seed 0 on 2021; later confirmation/heldout detail is in the source ledger, not implied by a positive sign.
+AP differences are absolute, not percentages. Primary is mean AP over M01/M06/M07; block is mean AP over M06/M07. M00 is clean. T1/T5 differ in architecture and features as well as history. The corrected retained T1 and paired campaigns use 3,181/2,856/2,102 samples in 2021/2022/2023. The old ledger's 2,312 was a documentation typo, corrected against all original result summaries; see [population audit](evaluation-population.md). Unless stated otherwise, a screen is seed 0 on 2021; later confirmation/heldout detail is in the source ledger, not implied by a positive sign.
 
 The [machine-readable inventory](method-inventory.json) records source commits, entrypoints, scope, unavailable dependencies, and unrun states. The [negative collection](negative-results.md) preserves failed attribution, mixed settings, invalid foundations and cancelled work separately. Runtime commands and artifact provisioning belong to [the reproduction guide](reproduce.md); the entrypoints below identify real existing source interfaces and are not complete configured job commands.
 
@@ -166,10 +166,10 @@ All 51 inclusive positive entries are listed here; the narrative tables above gr
 | D10 | D10 prompt pyramid | T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline |
 | D11 | D11 complete prompts | T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline |
 | D13 | T5 severity-adaptive prompting | T5; 2021; one screen |
-| B2 | FireDrop observable B0/B2 route | T1; 2021/2022/2023; 3181/2856/2312 samples; historical one-run chain |
-| B3 | Additional BlockDrop | T1; 2021/2022/2023; 3181/2856/2312 samples; historical one-run chain |
-| D1-KL | Predictive consistency | T1; 2021/2022/2023; 3181/2856/2312 samples; historical one-run chain |
-| D12 | Severity-adaptive reliability prompts | T1; 2021/2022/2023; 3181/2856/2312 samples; historical one-run chain |
+| B2 | FireDrop observable B0/B2 route | T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain |
+| B3 | Additional BlockDrop | T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain |
+| D1-KL | Predictive consistency | T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain |
+| D12 | Severity-adaptive reliability prompts | T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain |
 | RF-BN | Missingness-conditional BN | 2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN |
 | RF-MIXED | Equal-capacity mixed shallow branch | 2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN |
 | RF-TYPED | Static/dynamic shallow branches | 2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN |

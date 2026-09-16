@@ -52,7 +52,10 @@ the data and rule baselines are documented in [`phase0.md`](phase0.md).
 | D12-SARP | 2022 | 0.284437 | 0.165423 | 0.155997 | 0.097884 |
 | D12-SARP | 2023 | 0.413585 | 0.137976 | 0.225100 | 0.100707 |
 
-Each row contains 3,181 samples in 2021, 2,856 in 2022, and 2,312 in 2023.
+Each row contains 3,181 samples in 2021, 2,856 in 2022, and 2,102 in 2023.
+The former 2,312 figure was a documentation error: all 21 original result
+summaries agree with these counts, and all 84 AP cells above are unchanged.
+See the [source verification](../research/evaluation-population.md).
 The retained training jobs are B0 `21093263`, B2 `21093265`, B3 `21093266`,
 D1-ERM/KL `21102676/21102677`, D2-STD `21094929`, and D12 `21122172`.
 Held-out jobs are `21098505/21098506`, `21099907`, `21105328`, and `21122938`.

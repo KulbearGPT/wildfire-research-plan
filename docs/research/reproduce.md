@@ -117,4 +117,4 @@ M00 为完整输入；主指标是 M01/M06/M07 的 AP 均值，block 指 M06/M07
 
 保留两套不同的 September three-directions 实现：`cross_history.run_three_directions` 是 RF 系列；`three_directions.run` 是 TD 系列。它们的初始化、batch 和目标不同，不可混用 checkpoint、命令或结果表。
 
-历史 T1 的部分 2023 结果使用 2,312 个样本，后来的 paired campaign 使用 2,102 个样本。源码恢复不等于重建了旧样本集合；未核实样本清单前，不把两者差异称为模型收益或复现误差。GPU smoke、单 seed screen、三 seed 确认和 heldout 结果分别记录，不能互相替代。
+已核对全部 21 份原始 retained 结果：2021/2022/2023 样本数均为 3,181/2,856/2,102；旧量化记录中的 2,312 是文档笔误，84 个 AP 数值不变，见 [样本量核对](evaluation-population.md)。GPU smoke、单 seed screen、三 seed 确认和 heldout 结果分别记录，不能互相替代。

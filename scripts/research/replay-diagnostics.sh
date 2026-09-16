@@ -4,6 +4,7 @@ set -euo pipefail
 : "${WILDFIRE_ROOT:?}" "${WILDFIRE_UPSTREAM:?}" "${WILDFIRE_DATA:?}" "${WILDFIRE_STATS:?}"
 diagnostics=${1:-"$WILDFIRE_ROOT/diagnostics"}
 output=${2:-"$WILDFIRE_ROOT/qualification/diagnostics-$SLURM_JOB_ID"}
+mkdir -p "$(dirname "$output")"
 mkdir "$output"
 common=(--p00-record "$diagnostics/p00-completed.json"
         --attention-checkpoint "$diagnostics/attention.pt"

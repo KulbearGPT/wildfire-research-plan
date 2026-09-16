@@ -17,7 +17,10 @@
 | 22101770 | 454f192 | c56 | 全新公开 PyPI 训练环境已安装；在同一个旧补丁处停止 |
 | 22102098 | c617100 | c3 | 从上述公共环境继续，精确修正官方补丁，训练/审计 `pip check` 均通过，setup 完成 |
 | 22102101 | c617100 | c38 | 从公开源下载 Swin 与 MiT-B2 三个资产，全部匹配固定 SHA256 |
-| 22102100 | c617100 | c3 | 新环境 134 tests pass、2 fail；失败是旧测试断言原服务器路径，已改为显式临时目录，重跑待记录 |
+| 22102100 | c617100 | c3 | 新环境 134 tests pass、2 fail；失败是旧测试断言原服务器路径，已改为显式临时目录，由 22102394 重跑通过 |
+
+| 22102394 | 19132b0 | c333 | 新训练环境 143 tests pass，实际官方 T5 类和保留驱动导入通过 |
+| 22102400 | 19132b0 | c332 | 新审计环境 117 tests pass，覆盖修复/验证、schema、inventory、target gate 和 split |
 
 两次安装失败的日志保留，没有把失败作业写成成功。公共环境来自 `22101770` 创建的空目录，没有复用旧训练 venv；`22102098` 重用的是这次新安装的公共环境。模块配置之后重新隔离 pip 变量，安装记录不依赖本站 wheelhouse。实际版本记录为 [训练 freeze](environment/train-pip-freeze.txt)、[审计 freeze](environment/audit-pip-freeze.txt)，官方改动见 [upstream.diff](environment/upstream.diff)。这些是观察记录，安装输入仍是 `environments/research-*.txt`。
 

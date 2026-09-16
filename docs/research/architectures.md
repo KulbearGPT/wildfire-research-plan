@@ -23,11 +23,17 @@ For each architecture/history, run the following bootstrap and wait for successf
 ```bash
 ARCH=segformer_b2
 HISTORY=1
+case "$ARCH:$HISTORY" in
+  swin_unet:1|segformer_b2:1) BATCH=16 ;;
+  swin_unet:5) BATCH=8 ;;
+  segformer_b2:5) BATCH=4 ;;
+  *) echo "Unsupported architecture/history" >&2; exit 1 ;;
+esac
 RUN="$WILDFIRE_ROOT/runs/reproduced-${ARCH}-t${HISTORY}-s0"
 
 bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
   --architecture "$ARCH" --history "$HISTORY" --method control \
-  --bootstrap --seed 0 --steps 10000 --batch-size 8 --workers 3 \
+  --bootstrap --seed 0 --steps 10000 --batch-size "$BATCH" --workers 3 \
   --output "$RUN/bootstrap"
 ```
 
@@ -39,17 +45,17 @@ for METHOD in control cosine_erm block_specialist; do
   bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
     --architecture "$ARCH" --history "$HISTORY" --method "$METHOD" \
     --initial-checkpoint "$BASE" --seed 0 --steps 3000 \
-    --batch-size 8 --workers 3 --output "$RUN/$METHOD"
+    --batch-size "$BATCH" --workers 3 --output "$RUN/$METHOD"
 done
 for FRACTION in .25 .5; do
   bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
     --architecture "$ARCH" --history "$HISTORY" --method block_specialist \
     --block-fraction "$FRACTION" --initial-checkpoint "$BASE" \
-    --seed 0 --steps 3000 --batch-size 8 --workers 3 \
+    --seed 0 --steps 3000 --batch-size "$BATCH" --workers 3 \
     --output "$RUN/block-$FRACTION"
 done
 ```
 
-The runner accumulates physical microbatches to its fixed effective batch64; batch8 is a conservative supported allocation choice, not a changed optimizer-step budget. Use the historical per-job batch settings when seeking exact floating-point reruns. Repeat with the other history/architecture to retain matched comparisons. Historical seed-zero positives and failures are described in [the positive catalog](positive-signals.md) and [negative archive](negative-results.md); these commands do not imply every block variant passed a gate. They evaluate 2021 by default and do not authorize new seed sweeps or test-set selection.
+The runner accumulates these historical physical microbatches to effective batch64. Preserve the physical batch as well as the optimizer-step budget: changing it can change training behavior and random-number consumption, not merely floating-point rounding. Swin T1/T5 uses 16/8, confirmed by the [historical campaign ledger](../experiments/t1_t5_innovations.md) and bootstrap `result/started.json` records for jobs `21339338/21339344` (source `375e0370eba6e277fab2eab585031d7f8846dc1f`). SegFormer T1/T5 uses 16/4, confirmed by bootstrap jobs `21339728/21339735` and all continuation jobs `21339729–21339733` / `21339736–21339740` (source `74b2be6416504102555f78431207db2461af66a6`). These small metadata records reside under the historical provenance root `/project/6085198/kulbear/wildfire/runs/cross-history-{history}-{method}-{job}/result/started.json`; that root is evidence only and is not required by the commands above. Repeat with the other history/architecture to retain matched comparisons. Historical seed-zero positives and failures are described in [the positive catalog](positive-signals.md) and [negative archive](negative-results.md); these commands do not imply every block variant passed a gate. They evaluate 2021 by default and do not authorize new seed sweeps or test-set selection.
 
 `--bootstrap` loads the public architecture initialization and emits a **cross-history checkpoint.pt** containing architecture/history, metadata and its trained state. `--initial-checkpoint` here requires that cross-history checkpoint format from the same architecture and history. It does not accept the raw downloaded ImageNet `.pth`/`.bin`, a B3/B5 Lightning `.ckpt`, or a B3/B5 completion-record JSON. Canonical ResNet B3/B5 regeneration instead uses [the baseline recipe](baselines.md). Public architecture assets remain required at their verified cache paths during reconstruction even when loading a task checkpoint.
