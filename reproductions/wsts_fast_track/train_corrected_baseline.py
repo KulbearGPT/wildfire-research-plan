@@ -74,7 +74,57 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
         flush=True,
     )
-    runpy.run_path(str(train_path), run_name="__main__")
+    # Capture completed fit state before the subsequent best-checkpoint
+    # validation can change trainer state. Publish only after the full upstream
+    # command returns successfully; a saved best checkpoint alone is not proof
+    # that all training steps ran.
+    import pytorch_lightning as pl
+    from .complete_baseline import sha256
+
+    completed_fit = {}
+    original_fit = pl.Trainer.fit
+
+    def observed_fit(trainer, *fit_args, **fit_kwargs):
+        result = original_fit(trainer, *fit_args, **fit_kwargs)
+        callback = trainer.checkpoint_callback
+        if trainer.global_step != baseline.max_steps:
+            raise ValueError("baseline fit did not reach its required max_steps")
+        if callback is None or callback.monitor != "val_avg_precision" or callback.mode != "max":
+            raise ValueError("baseline requires best validation AP checkpoint selection")
+        checkpoint = Path(callback.best_model_path).resolve(strict=True)
+        completed_fit.update(
+            fit_global_step=trainer.global_step,
+            selection={
+                "checkpoint": str(checkpoint.relative_to(run_root)),
+                "monitor": callback.monitor,
+                "mode": callback.mode,
+                "score": float(callback.best_model_score),
+                "sha256": sha256(checkpoint),
+            },
+        )
+        return result
+
+    pl.Trainer.fit = observed_fit
+    try:
+        runpy.run_path(str(train_path), run_name="__main__")
+    finally:
+        pl.Trainer.fit = original_fit
+    if not completed_fit:
+        raise ValueError("upstream command did not complete baseline fitting")
+    receipt = {
+        "schema_version": 1, "status": "pass",
+        "baseline_id": baseline.baseline_id,
+        "experiment": baseline.experiment_id,
+        "training_policy": baseline.training_policy,
+        "seed": baseline.seed, "max_steps": baseline.max_steps,
+        "corrected_index": True, "initialization": "from_scratch",
+        "validation_years": [2021], "test_enabled": False,
+        "slurm_job_id": os.environ.get("SLURM_JOB_ID", ""),
+        **completed_fit,
+    }
+    with (run_root / "training-completion.json").open("x") as handle:
+        json.dump(receipt, handle, indent=2)
+        handle.write("\n")
 
     import torch
 

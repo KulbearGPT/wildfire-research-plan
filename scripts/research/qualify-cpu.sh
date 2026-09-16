@@ -8,6 +8,7 @@ python -m pytest -q \
   tests/test_artifact_bundle.py tests/test_research_launchers.py \
   tests/test_research_data_preparation.py \
   tests/test_wsts_fast_track_runtime.py \
+  tests/test_wsts_fast_track_complete_baseline.py \
   tests/test_wsts_fast_track_complete_reliability_prompt_pyramid.py \
   tests/test_wsts_fast_track_counterfactual_impact_consistency.py \
   tests/test_wsts_fast_track_counterfactual_rank_consistency.py \

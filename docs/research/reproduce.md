@@ -54,6 +54,8 @@ bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.trai
 
 将 `B3` 和输出目录同时改成 `B0`、`B1`、`B2` 或 `B5` 可运行对应基础模型。B0 是 T1 clean，B2 是 T1 FireDrop，B1 是 T5 clean，B5 是 T5 FireDrop+BlockDrop。每项都是 seed 0、3,000 个 optimizer steps；`from_scratch` 指没有从已训练任务模型继续，并不表示禁用 ImageNet 编码器初始化。
 
+成功后按照 [基础模型导出](baselines.md) 生成经过检查的 checkpoint 和完成记录。不能手工把未完成的训练标记为完成。
+
 基础训练和后续 continuation 是不同阶段。T1 continuation 从 B3 开始；T5 continuation 从 B5 开始。配置中的两个 checkpoint 必须是正确的 Lightning 基础模型文件，不能用 continuation 的包装 checkpoint 冒充。
 
 ## 4. Cross-history 方法
