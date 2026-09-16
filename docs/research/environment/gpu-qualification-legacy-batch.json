@@ -1,0 +1,477 @@
+{
+  "scientific_claim": false,
+  "scope": "bounded real-data training and reload; not full-budget reproduction",
+  "cases": [
+    {
+      "job_id": "22102935",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "d1-kl",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "d1-kl",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0003494078409858048,
+            "brier": 0.004522790666669607
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.001331072999164462,
+            "brier": 0.009519416838884354
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.005090988241136074,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_predictive_consistency",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_predictive_consistency",
+        "candidate_id": "D1-KL",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102948",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "d1-paired0",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "d1-paired0",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00022276007803156972,
+            "brier": 0.0032020839862525463
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0017488207668066025,
+            "brier": 0.010014131665229797
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.004869857337325811,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_predictive_consistency",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_predictive_consistency",
+        "candidate_id": "D1-ERM",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102949",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "d12-sarp",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "d12-sarp",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 3.28257265209686e-05,
+            "brier": 0.0007197101949714124
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0005722864880226552,
+            "brier": 0.0037335813976824284
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.005133771803230047,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_severity_adaptive_reliability_prompting",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_severity_adaptive_reliability_prompting",
+        "candidate_id": "D12-SARP",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102963",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "B2",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "B2",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.20106743276119232,
+            "brier": 0.26812830567359924
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.1810702234506607,
+            "brier": 0.25151297450065613
+          }
+        },
+        "fit_global_step": 2,
+        "selected_global_step": 2,
+        "selection_score": 0.0008248942322097719
+      }
+    },
+    {
+      "job_id": "22102974",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "B3",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "B3",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.21721132099628448,
+            "brier": 0.2807973325252533
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.22559469938278198,
+            "brier": 0.286713182926178
+          }
+        },
+        "fit_global_step": 2,
+        "selected_global_step": 2,
+        "selection_score": 0.0007043424993753433
+      }
+    },
+    {
+      "job_id": "22102976",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "legacy-P00",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "legacy-P00",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.21451660990715027,
+            "brier": 0.2709466516971588
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.22168400883674622,
+            "brier": 0.2729947566986084
+          }
+        },
+        "fit_global_step": 2,
+        "selected_global_step": 2,
+        "legacy_index_semantics": true,
+        "formal_completion_rejected_smoke": true,
+        "selection_score": 0.0005575132672674954
+      }
+    },
+    {
+      "job_id": "22102978",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "ciwc",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "ciwc",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0002255921281175688,
+            "brier": 0.0031921030022203922
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0010134665062651038,
+            "brier": 0.007696113083511591
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.0061770048923790455,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_counterfactual_impact_consistency",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_counterfactual_impact_consistency",
+        "candidate_id": "D5-CIWC",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102980",
+      "source_commit": "875a4b2",
+      "node": "g33",
+      "case": "rank",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "rank",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00023421691730618477,
+            "brier": 0.0032803136855363846
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0010177510557696223,
+            "brier": 0.007738315034657717
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.00626999931409955,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_counterfactual_rank_consistency",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_counterfactual_rank_consistency",
+        "candidate_id": "D6-CIRC",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102986",
+      "source_commit": "875a4b2",
+      "node": "g34",
+      "case": "ffca",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "ffca",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00022558208729606122,
+            "brier": 0.0031919963657855988
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0010135400807484984,
+            "brier": 0.0076963454484939575
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.0061770048923790455,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_counterfactual_reliability_adapter",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_counterfactual_reliability_adapter",
+        "candidate_id": "D8-FFCA",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    },
+    {
+      "job_id": "22102988",
+      "source_commit": "875a4b2",
+      "node": "g34",
+      "case": "pyramid",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "pyramid",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 3.280684177298099e-05,
+            "brier": 0.0007194329518824816
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0005717515596188605,
+            "brier": 0.003731141332536936
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.005133771803230047,
+        "training_entrypoint": "reproductions.wsts_fast_track.train_reliability_prompt_pyramid",
+        "evaluator_module": "reproductions.wsts_fast_track.evaluate_reliability_prompt_pyramid",
+        "candidate_id": "D10-RPP",
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    }
+  ]
+}

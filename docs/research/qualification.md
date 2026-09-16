@@ -53,3 +53,5 @@ GPU 作业 `22102452`（`e13b9fb5db55`，`g36`）已完成两项实际 24 样本
 第二批 9 个 GPU 作业（`22102808/09/10/82/84/88/93/94/95`，源 `a7e8e0a`）全部正常退出，新增 50 个通过的 case，见[逐项报告](environment/gpu-qualification-second-batch.json)。包括其余列入正向清单的 cross-history 方法在 T1/T5 的短训练及重载、RF 与 routed 的 T5 分支，以及 B1、token 和 CRA。仍需补齐架构、剩余 D 系列和 attention 训练等验证，不能把这个批次当成整体完成。
 
 CPU 作业 `22102402`（源 `19132b0`，`c333`）完成全量 999 事件审计：[报告](environment/data-audit-phase0_report.md)显示无无效文件错误，门控结论为 `continue_controlled`。原始数据缺少 observation/availability 时间、QA、coverage 和 target validity 等字段，因此支持既定受控缺失实验，不支持自然缺失或 operational 声明。报告的 target days 是原始事件的逐日统计，与模型按历史窗口构造的评估样本数不是同一口径。
+
+历史入口的下一批 10 个 GPU case 也已通过，见[逐项报告](environment/gpu-qualification-legacy-batch.json)：D1-KL / paired0、原始 D12-SARP、B2、B3、legacy-P00、CIWC、rank、FFCA、prompt-pyramid。B2/B3/P00 使用实际 Lightning 2 steps，其余 1 step；报告均保留 qualification 标记。另有 CPU 作业 `22103003`（`c86`）在迁移后的历史 summary 上执行 T1/T5 的 complete-route 与 severity-route CLI，见[输出](environment/composition-qualification.json)；它验证汇总命令，不是重新评估模型。
