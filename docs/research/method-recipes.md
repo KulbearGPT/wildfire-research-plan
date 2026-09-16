@@ -52,6 +52,21 @@ ch() {
 
 对照名称同样可传给 `ch`，例如 `ch cosine_fire_global`。这些是原实现的开关，不是用某个“类似模块”替代被恢复的旧方法。
 
+### 从场景结果重建“routed”指标
+
+单个模型的 `summary.json` 是四个场景的原始指标。清单里标注 routed 的结果需要再组合：spatial 路由在 M00/M01 使用对照，在 M06/M07 使用候选；fire 路由只在 M01 使用候选，其他场景使用对照。它们与直接对四场景取平均不同。例如 X10 相对 ERM 的 spatial 路由：
+
+```bash
+bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compare \
+  --control "$WILDFIRE_ROOT/runs/t1-s0-control/summary.json" \
+  --candidate "$WILDFIRE_ROOT/runs/t1-s0-dynamic_inpaint/summary.json" \
+  --routed-spatial --output "$WILDFIRE_ROOT/runs/t1-s0-X10-routed.json"
+```
+
+X1/X4/X10/X11/X14 及 BlockDrop 专家的 routed-spatial 总收益采用这个方式；X12 的 FireDrop specialist 比较使用 `--routed-fire`。不带路由参数得到候选模型本身的四场景比较。对 X16/X18/X19/X23/X25 等最近对照归因，将 `--control` 换成 `block_specialist/summary.json`，并使用记录规定的 block 指标，不能用相对 ERM 的总收益替代模块收益。
+
+三 seed 或多年份汇总时，依次重复 `--control` 和 `--candidate`，同一位置必须对应相同 history/seed/year。T5 和保留年份使用它们自己的评估输出。一个 seed 的汇总不会满足三 seed 确认门槛。
+
 ## D 系列：历史独立实现
 
 D 系列和 X 系列不是相同训练配方。D 的基础完成记录由 [基础模型导出](baselines.md) 生成；不能只传 checkpoint。以下辅助函数显式传入新环境路径：
@@ -133,6 +148,19 @@ bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compos
   --severe "$WILDFIRE_ROOT/runs/t1-s0-block050/summary.json" \
   --output "$WILDFIRE_ROOT/runs/t1-s0-X22-X17.json"
 ```
+
+X17 单独对 ERM 的正向信号，以及相对 X14 的机制归因，使用以下命令同时输出两种比较：
+
+```bash
+bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_severity_routes \
+  --control "$WILDFIRE_ROOT/runs/t1-s0-control/summary.json" \
+  --mixed "$WILDFIRE_ROOT/runs/t1-s0-block_specialist/summary.json" \
+  --mild "$WILDFIRE_ROOT/runs/t1-s0-block025/summary.json" \
+  --severe "$WILDFIRE_ROOT/runs/t1-s0-block050/summary.json" \
+  --output "$WILDFIRE_ROOT/runs/t1-s0-X17.json"
+```
+
+RF-BN 的清单信号来自修正后的 `--bn-forward-mode batch_stats`，必须显式指定；默认 fixed 是旧诊断，不能拿来复现修正后的数字。RF-MIXED/ RF-TYPED 分别使用 `--arm mixed` / `--arm typed`，二者都需与 `--arm control` 比较，typed 另需与 mixed 作等容量比较。
 
 X8+X10 使用 `compose_routes --control ... --fire ... --spatial ...`，其中 fire 是 impact_consistency，spatial 是 dynamic_inpaint。汇总器读取已有场景结果，不会训练新网络；输出的路由结果适用于约定的可观测缺失场景，不是额外训练出来的单模型。
 

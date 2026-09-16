@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 
 import numpy as np
 import pytest
@@ -142,6 +143,7 @@ def test_target_quality_dataset_aligns_target_day_and_center_crop(tmp_path) -> N
             full = np.zeros((4, 4), dtype=np.uint8)
             full[1:3, 1:3] = np.array([[1, 0], [0, 1]], dtype=np.uint8)
             np.savez(path, reliability=full, age_hours=np.full((4, 4), 4.0))
+            target_records[-1]["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
     (tmp_path / "manifest.json").write_text(
         json.dumps(
             {
@@ -173,3 +175,23 @@ def test_target_quality_dataset_aligns_target_day_and_center_crop(tmp_path) -> N
     assert target.tolist() == [[1, 0], [0, 0]]
     assert reliability.tolist() == [[1, 0], [0, 1]]
     assert sample_index == 0
+    # A fresh loader must verify the manifest before decoding altered NPZ bytes.
+    (tmp_path / target_records[0]["output"]).write_bytes(b'corrupted NPZ')
+    fresh = TargetQualityDataset(InputDataset(), tmp_path)
+    with pytest.raises(ValueError, match='SHA256 mismatch'):
+        fresh[0]
+
+
+def test_natural_reliability_rejects_corrupt_map_before_numpy_load(tmp_path) -> None:
+    from reproductions.wsts_fast_track.evaluate_viirs_reliability import NaturalReliabilityDataset
+
+    path = tmp_path / 'sample.npz'
+    path.write_bytes(b'corrupted bytes')
+    record = dict(output=path.name, sha256=hashlib.sha256(b'original bytes').hexdigest())
+    dataset = object.__new__(NaturalReliabilityDataset)
+    dataset.root = tmp_path
+    dataset.samples = (('event', '2021-01-01', 0, record),)
+    dataset.standard = [(torch.zeros((1, 41, 2, 2)), torch.zeros((2, 2)))]
+    dataset._reliability_cache = {}
+    with pytest.raises(ValueError, match='SHA256 mismatch'):
+        dataset[0]

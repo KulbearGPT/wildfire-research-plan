@@ -18,7 +18,7 @@ The entrypoints are:
 - `reproductions.wsts_fast_track.evaluate_viirs_target_quality`: standard versus QA-censored metrics for the same predictions.
 - `reproductions.wsts_fast_track.train_belief_state`: regenerate the attention head from an available valid historical P00 completion record.
 
-The recovered closure includes the historical attention/filter/reconstruction heads, latent-state support, belief evaluator, and censored-cohort support used by the builder. These dependencies are retained for source integrity; this guide qualifies only the two T1 diagnostics. No scientific objective, mask classes, cohort selection, layer math or evaluation arithmetic was changed. Imports use retained runtime/corruption code and `diagnostic_support.py` contains the exact historical sampling/index/checkpoint-record helpers. `diagnostic_artifacts.py` adds explicit checksum-verified path relocation. Original absolute checkpoint provenance remains untouched inside transferred files.
+The recovered closure includes the historical attention/filter/reconstruction heads, latent-state support, belief evaluator, and censored-cohort support used by the builder. These dependencies are retained for source integrity; this guide covers only the two T1 diagnostic entrypoints. The general `evaluate_belief_state` CLI is dependency code here: its broader T5 and standalone relocation paths are not supported or qualified by this recovery, and no general negative-belief replay is promised. No scientific objective, mask classes, cohort selection, layer math or evaluation arithmetic was changed. Imports use retained runtime/corruption code and `diagnostic_support.py` contains the exact historical sampling/index/checkpoint-record helpers. `diagnostic_artifacts.py` adds explicit checksum-verified path relocation. Original absolute checkpoint provenance remains untouched inside transferred files.
 
 ## Prerequisites and transfer status
 
@@ -39,13 +39,13 @@ The historical P00 record SHA256 is `9b74bd49d15bf7aaf8beec9b830b6db224a50209110
 
 ## Prepare public VIIRS maps
 
-Set `WSTS_ZIP`, `VIIRS_CACHE`, `EARTHDATA_TOKEN_FILE`, `INPUT_QA`, `TARGET_QA` to site-selected paths. Both output directories must be new. In an allocation:
+Set `WSTS_ZIP`, `VIIRS_CACHE`, `EARTHDATA_TOKEN_FILE`, `INPUT_QA`, `TARGET_QA` to site-selected paths. Both output directories must be new. Run the following submission commands from the committed Git checkout on the login shell, after setting `WILDFIRE_SITE_ENV`, sourcing it and changing to `WILDFIRE_REPO`. The submitter creates the allocation; do not execute the Python commands directly on login. The two map jobs are independent. Wait for both to finish with Slurm state COMPLETED and exit 0:0 before submitting dependent evaluations:
 
 ```bash
-python -m reproductions.wsts_fast_track.viirs_reliability \
+bash scripts/research/submit.sh cpu python -m reproductions.wsts_fast_track.viirs_reliability \
   --archive "$WSTS_ZIP" --cache-root "$VIIRS_CACHE" \
   --token-file "$EARTHDATA_TOKEN_FILE" --gate model --output-root "$INPUT_QA"
-python -m reproductions.wsts_fast_track.viirs_reliability \
+bash scripts/research/submit.sh cpu python -m reproductions.wsts_fast_track.viirs_reliability \
   --archive "$WSTS_ZIP" --cache-root "$VIIRS_CACHE" \
   --token-file "$EARTHDATA_TOKEN_FILE" --gate target --output-root "$TARGET_QA"
 ```
@@ -54,44 +54,51 @@ The 24 identities are frozen in `FIXED_2021_MODEL_GATE` and `FIXED_2021_TARGET_G
 
 ## Relocate the frozen artifacts and evaluate
 
-Set `P00_RECORD`, `P00_CHECKPOINT`, `ATTENTION_CHECKPOINT` to transferred files, `ARTIFACT_MAP` to a new JSON path, `DIAG_OUTPUT` to an output directory, and the shared `WILDFIRE_UPSTREAM`, `WILDFIRE_DATA`, `WILDFIRE_STATS` configuration. Generate a map in an allocation; the long original record string below is an immutable provenance key, never a file read:
+Set `P00_RECORD`, `P00_CHECKPOINT`, `ATTENTION_CHECKPOINT` to transferred files, `ARTIFACT_MAP` to a new JSON path, `DIAG_OUTPUT` to an output directory, and the shared `WILDFIRE_UPSTREAM`, `WILDFIRE_DATA`, `WILDFIRE_STATS` configuration. Submit map creation to a CPU allocation; the long original record string below is an immutable provenance key, never a file read:
 
 ```bash
-python -m reproductions.wsts_fast_track.diagnostic_artifacts \
+bash scripts/research/submit.sh cpu python -m reproductions.wsts_fast_track.diagnostic_artifacts \
   --p00-record "$P00_RECORD" --p00-checkpoint "$P00_CHECKPOINT" \
   --recorded-p00-record /project/6085198/kulbear/wildfire/runs/prototype-P00-FireDrop-C00-20398173/completed.json \
   --output "$ARTIFACT_MAP"
+```
 
+Wait for the map job to complete successfully, then submit the GPU evaluations (they may run independently):
+
+```bash
 common=(--p00-record "$P00_RECORD" --attention-checkpoint "$ATTENTION_CHECKPOINT"
         --artifact-map "$ARTIFACT_MAP" --upstream-root "$WILDFIRE_UPSTREAM"
         --data-root "$WILDFIRE_DATA" --stats-path "$WILDFIRE_STATS"
         --batch-size 8 --device cuda)
-python -m reproductions.wsts_fast_track.evaluate_viirs_reliability "${common[@]}" \
+bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.evaluate_viirs_reliability "${common[@]}" \
   --reliability-root "$INPUT_QA" --output "$DIAG_OUTPUT/natural.json"
-python -m reproductions.wsts_fast_track.evaluate_viirs_target_quality "${common[@]}" \
+bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.evaluate_viirs_target_quality "${common[@]}" \
   --input-reliability-root "$INPUT_QA" --target-reliability-root "$TARGET_QA" \
   --output "$DIAG_OUTPUT/target-qa.json"
 ```
 
-The map has schema version 1 and an `artifacts` object keyed by recorded source path. Each entry has `path`, `bytes`, `sha256`; `path` can be relative to the map file. With a map provided, missing entries, changed bytes, or checksum mismatch fail instead of falling back to the historical filesystem. Scientific record/checkpoint fields and finite state checks remain enforced. A map generated from the wrong files is not evidence they match the historical run; first verify the source checksums described above.
+The map has schema version 1 and an `artifacts` object keyed by recorded source path. Each entry has `path`, `bytes`, `sha256`; `path` can be relative to the map file. With a map provided, missing entries, changed bytes, or checksum mismatch fail instead of falling back to the historical filesystem. Every input/target NPZ is checked against its sample manifest SHA256 before its first decode; cached decoded arrays reuse that verified content. Missing digests and checksum mismatches fail explicitly. Scientific record/checkpoint fields and finite state checks remain enforced. A map generated from the wrong files is not evidence they match the historical run; first verify the source checksums described above.
 
 ## Regenerate the attention head, and the public-only boundary
 
 With the historical P00 record/checkpoint available, this preserves the archived attention recipe (seed 0, 3,000 AdamW updates, LR .001, effective batch 64, state-loss coefficient .1):
 
 ```bash
-python -m reproductions.wsts_fast_track.train_belief_state \
+DIAGNOSTIC_SOURCE_COMMIT=$(git rev-parse HEAD)
+bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.train_belief_state \
   --method attention --history 1 --p00-record "$P00_RECORD" --artifact-map "$ARTIFACT_MAP" \
   --upstream-root "$WILDFIRE_UPSTREAM" --data-root "$WILDFIRE_DATA" \
   --stats-path "$WILDFIRE_STATS" --output-path "$NEW_ATTENTION_CHECKPOINT" \
-  --git-commit "$(git rev-parse HEAD)" --batch-size 64 --accumulation-steps 1 \
+  --git-commit "$DIAGNOSTIC_SOURCE_COMMIT" --batch-size 64 --accumulation-steps 1 \
   --num-workers 8 --device cuda
 ```
 
+Compute `DIAGNOSTIC_SOURCE_COMMIT` in the submission checkout as shown; it is passed literally into the archived job. Do not run `git rev-parse` inside the archive, which has no Git metadata. Wait for this training job to complete before evaluating its checkpoint.
+
 The regenerated checkpoint records the current P00 paths. The map generator includes checksum-verified identity entries for those paths as well as historical aliases, so the same map supports the regenerated head: set `ATTENTION_CHECKPOINT="$NEW_ATTENTION_CHECKPOINT"` and rerun the two evaluation commands with new result filenames. Do not silently edit immutable source metadata.
 
-If historical P00 is unavailable, exact replay is blocked until it is transferred or its **legacy** training recipe is rebuilt. The archive retains `prototype_entrypoint.py` and `prototype_completion.py` at `4b843ad`; those entrypoints accept explicit upstream/data/stats/run paths and run the old 10,000-step initialization chain. They intentionally use the old pooled-year behavior, unlike the corrected B2 chain. That public-only legacy bootstrap is not recovered or newly qualified by this task, so this guide does not claim a complete public-only regeneration of the exact historical numbers. Fresh attention training on a corrected substitute would be a new experiment, not reproduction of these diagnostic observations.
+If historical P00 is unavailable, use the recovered [legacy P00 bootstrap and completion recipe](legacy-p00.md). It preserves the archived 10,000-step training policy and known pooled-year indexing defect; it is not corrected B2. On the current prepared data this regenerates the old algorithm, while exact numerical replay additionally requires the historical data/statistics snapshot. Pair a newly regenerated P00 with a newly trained attention head, not a transferred historical head. Use fresh checksums and provenance, and do not claim that qualification or algorithm regeneration reproduced the historical scores.
 
 ## Verification status
 
-Source AST parsing and relative-import closure checks passed. Three stdlib tests verify relocation, unchanged provenance, missing-map-entry rejection, independent byte counts and corruption detection. The two original VIIRS mechanism test files are recovered for execution in Slurm, not run on login. Fresh environment imports and the actual 24-event evaluations remain pending controller qualification; historical results above are not new successful reproduction results.
+Source AST parsing and relative-import closure checks passed. Five stdlib tests verify relocation, unchanged provenance, missing-map-entry rejection, independent byte counts, NPZ manifest integrity, path containment and corruption detection. The two original VIIRS mechanism test files are recovered for execution in Slurm, not run on login. Fresh environment imports and the actual 24-event evaluations remain pending controller qualification; historical results above are not new successful reproduction results.

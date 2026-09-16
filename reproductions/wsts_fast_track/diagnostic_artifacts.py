@@ -42,6 +42,28 @@ def provenance_matches(recorded: object, actual: Path, *, artifact_map: Path | N
     return resolve_artifact(recorded, artifact_map=artifact_map) == actual.resolve(strict=True)
 
 
+def verified_reliability_path(root: Path, record: dict) -> Path:
+    """Verify the manifest digest before an input/target NPZ is decoded."""
+    import re
+    relative = record.get('output')
+    expected = record.get('sha256')
+    if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
+        raise ValueError('reliability manifest output must be a relative path')
+    if not isinstance(expected, str) or re.fullmatch(r'[0-9a-f]{64}', expected) is None:
+        raise ValueError(f'reliability manifest lacks a valid SHA256: {relative}')
+    root = Path(root).resolve(strict=True)
+    path = (root / relative).resolve(strict=True)
+    if not path.is_relative_to(root) or not path.is_file():
+        raise ValueError(f'reliability artifact must be a file within its root: {relative}')
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for chunk in iter(lambda: stream.read(4 * 1024 * 1024), b''):
+            digest.update(chunk)
+    if digest.hexdigest() != expected:
+        raise ValueError(f'reliability artifact SHA256 mismatch: {path}')
+    return path
+
+
 def main():
     """Create a relocation map from transferred, byte-preserved P00 artifacts."""
     import argparse

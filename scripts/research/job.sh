@@ -18,6 +18,11 @@ configure_runtime_environment() {
   # Reapply after modules and activation: sites may restore vendor pip/Python paths.
   export WILDFIRE_REPO="$research_snapshot" WILDFIRE_SITE_ENV="$research_site"
   export WILDFIRE_ROOT WILDFIRE_UPSTREAM WILDFIRE_DATA WILDFIRE_STATS
+  if [[ -f "$(dirname "$research_snapshot")/source-commit.txt" ]]; then
+    WILDFIRE_SOURCE_COMMIT=$(cat "$(dirname "$research_snapshot")/source-commit.txt")
+    [[ $WILDFIRE_SOURCE_COMMIT =~ ^[0-9a-f]{40}$ ]] || { echo 'invalid archived source commit' >&2; exit 2; }
+    export WILDFIRE_SOURCE_COMMIT
+  fi
   export PYTHONNOUSERSITE=1
   export PYTHONPATH="$research_snapshot/src:$research_snapshot:$WILDFIRE_UPSTREAM/src"
   export TORCH_HOME="$WILDFIRE_ROOT/cache/torch" HF_HOME="$WILDFIRE_ROOT/cache/huggingface"

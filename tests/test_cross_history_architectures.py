@@ -119,11 +119,11 @@ def test_canonical_backbones_cannot_enter_hparam_free_bootstrap_path():
                             evaluate_only=None)
 
 
-def test_swin_pretraining_is_project_rooted_and_checksum_guarded(tmp_path):
+def test_swin_pretraining_is_project_rooted_and_checksum_guarded(tmp_path, monkeypatch):
+    configured_root = tmp_path / "relocated assets"
+    monkeypatch.setenv("WILDFIRE_ROOT", str(configured_root))
     asset = swin_pretrained_asset()
-    assert str(asset.path) == (
-        "/project/6085198/kulbear/wildfire/cache/swin/"
-        "swin_tiny_patch4_window7_224.pth")
+    assert asset.path == configured_root / "cache/swin/swin_tiny_patch4_window7_224.pth"
     assert asset.sha256 == "9f71c168d837d1b99dd1dc29e14990a7a9e8bdc5f673d46b04fe36fe15590ad3"
     assert "/home/" not in str(asset.path)
 
@@ -144,12 +144,18 @@ def test_swin_runtime_config_matches_published_padding_and_selected_channels():
     assert config.MODEL.SWIN.NUM_HEADS == [3, 6, 12, 24]
 
 
-def test_segformer_uses_pinned_project_cache_instead_of_network_model_id():
+def test_segformer_uses_pinned_project_cache_instead_of_network_model_id(tmp_path, monkeypatch):
+    configured_root = tmp_path / "relocated assets"
+    monkeypatch.setenv("WILDFIRE_ROOT", str(configured_root))
     assets = segformer_pretrained_assets()
-    root = "/project/6085198/kulbear/wildfire/cache/huggingface/nvidia-mit-b2-3bb39e87"
+    root = str(configured_root / "cache/huggingface/nvidia-mit-b2-3bb39e87")
 
     assert {str(asset.path) for asset in assets} == {
         f"{root}/config.json", f"{root}/pytorch_model.bin"}
     assert all("/home/" not in str(asset.path) for asset in assets)
+    assert {asset.path.name: asset.sha256 for asset in assets} == {
+        "config.json": "d9a879499e7d73e2b33af0638cee320b1070c8f0dadb620eac8907df3d18caa9",
+        "pytorch_model.bin": "4500b5665471b593e6757e15bcca5034f433fe3902fe8ec2b7230774a57f264f",
+    }
     config = architecture_config("segformer_b2", 1)
     assert config.kwargs["encoder_weights"] == root

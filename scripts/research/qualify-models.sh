@@ -17,8 +17,10 @@ for method in "$@"; do
         --seed 0 --batch-size 8 --workers 2 --smoke --output "$output"
       ;;
     rf)
+      extra=()
+      if [[ $method == bn ]]; then extra=(--bn-forward-mode batch_stats); fi
       python -m reproductions.cross_history.run_three_directions --history "$history" \
-        --arm "$method" --seed 0 --batch-size 8 --workers 2 --smoke --output "$output"
+        --arm "$method" --seed 0 --batch-size 8 --workers 2 --smoke --output "$output" "${extra[@]}"
       ;;
     routed)
       : "${WILDFIRE_ROUTED_SOURCES:?}"

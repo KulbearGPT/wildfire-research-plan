@@ -14,6 +14,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from .diagnostic_artifacts import verified_reliability_path
 from .contract import validate_inventory
 from .runtime import _install_runtime_contract, load_training_stats
 from .diagnostic_support import resolve_dataset_index
@@ -195,7 +196,8 @@ class TargetQualityDataset(Dataset[Any]):
         record = self.samples[index][4]
         relative = str(record["output"])
         if relative not in self._reliability_cache:
-            with np.load(self.root / relative) as payload:
+            path = verified_reliability_path(self.root, record)
+            with np.load(path, allow_pickle=False) as payload:
                 self._reliability_cache[relative] = payload["reliability"].copy()
         full = self._reliability_cache[relative]
         if target.shape[-2] != target.shape[-1]:

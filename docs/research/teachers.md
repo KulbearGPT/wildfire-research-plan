@@ -71,7 +71,7 @@ Artifact `checkpoint` and `summary` paths are relative to the manifest's directo
 After both manifest jobs succeed, an example reliability-fusion distillation run and matched control are:
 
 ```bash
-for arm in control distill; do
+for arm in control mixed typed distill; do
   bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run_three_directions \
     --history 1 --seed 0 --arm "$arm" --steps 3000 --batch-size 64 \
     --manifest "$WILDFIRE_ROOT/manifests/reliability-teachers.json" \
@@ -79,7 +79,16 @@ for arm in control distill; do
 done
 ```
 
-For reliability-fusion normalization diagnostics, use `--arm bn`; `--bn-forward-mode batch_stats` explicitly requests the corrected batch-statistics calibration variant. The legacy default `fixed` remains available for auditing the historical fixed-forward result. For the separate routed-teacher family:
+Compare mixed against control, typed against both mixed and control, and distill against its no-KD control. For the corrected RF normalization diagnostic:
+
+```bash
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run_three_directions \
+  --history 1 --seed 0 --arm bn --bn-forward-mode batch_stats \
+  --manifest "$WILDFIRE_ROOT/manifests/reliability-teachers.json" \
+  --output "$WILDFIRE_ROOT/runs/reliability-t1-s0-bn"
+```
+
+Compare its `bn_conditional` and `bn_common` outputs. The legacy default `fixed` is the superseded diagnostic, not the positive catalog's recipe. For the separate routed-teacher family:
 
 ```bash
 for mode in student_control student_distill; do
@@ -91,3 +100,31 @@ done
 ```
 
 Other routed modes are `bn_shared`, `bn_conditional`, `merge`, and `x14_shared`; select the exact recipe described in the evidence catalog. Repeat with history 5 and the required seeds only after their source manifests exist. Held-out evaluation uses each driver's separate evaluation/checkpoint arguments; it must not refit on held-out years.
+
+For TD-W, fit the recalibrated X22 comparator and the weight merge separately. `student_control` is the TD-D comparator and does not substitute for `bn_shared` here:
+
+```bash
+for mode in bn_shared merge x14_shared; do
+  bash scripts/research/submit.sh gpu python -m reproductions.three_directions.run \
+    --history 1 --seed 0 --mode "$mode" \
+    --sources "$WILDFIRE_ROOT/manifests/routed-teachers.json" \
+    --output "$WILDFIRE_ROOT/runs/routed-t1-s0-$mode"
+done
+```
+
+After a model is frozen, these are the two distinct held-out evaluation interfaces:
+
+```bash
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run_three_directions \
+  --history 1 --seed 0 --arm distill --year 2022 --batch-size 64 \
+  --manifest "$WILDFIRE_ROOT/manifests/reliability-teachers.json" \
+  --evaluate-only "$WILDFIRE_ROOT/runs/reliability-t1-s0-distill/checkpoint.pt" \
+  --output "$WILDFIRE_ROOT/runs/reliability-t1-s0-distill-2022"
+bash scripts/research/submit.sh gpu python -m reproductions.three_directions.run \
+  --history 1 --seed 0 --mode student_distill --year 2022 \
+  --sources "$WILDFIRE_ROOT/manifests/routed-teachers.json" \
+  --checkpoint "$WILDFIRE_ROOT/runs/routed-t1-s0-student_distill/checkpoint.pt" \
+  --output "$WILDFIRE_ROOT/runs/routed-t1-s0-student_distill-2022"
+```
+
+For RF-BN evaluation retain `--arm bn --bn-forward-mode batch_stats`; for other arms/modes, keep the exact training arm/mode. These are executable interfaces, not permission to extend rejected screens into new held-out experiments or a claim that historical campaigns already ran those evaluations.

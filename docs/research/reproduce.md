@@ -44,7 +44,7 @@ cd "$WILDFIRE_REPO"
 bash scripts/research/submit.sh cpu setup
 ```
 
-提交器会打印 job ID 与归档目录。用 `squeue -u "$USER"` 看队列，用 `sacct -j JOB_ID --format=JobID,State,ExitCode,NodeList` 检查退出状态（把 `JOB_ID` 换成输出的数字）。日志保存在 `$WILDFIRE_ROOT/jobs/`；成功必须同时有 `COMPLETED`、退出码 `0:0` 和 `allocation-作业号/setup-completed.txt`。
+提交器会打印 job ID 与归档目录。用 `squeue -u "$USER"` 看队列，用 `sacct -j JOB_ID --format=JobID,State,ExitCode,NodeList` 检查退出状态（把 `JOB_ID` 换成输出的数字）。日志保存在 `$WILDFIRE_ROOT/jobs/`；成功必须同时有 Slurm 状态 `COMPLETED`、退出码 `0:0` 和 `allocation-作业号/setup-completed.txt`。
 
 安装固定版本的官方 WildfireSpreadTS，应用仓库内保留的兼容性补丁，创建全新的两个虚拟环境，并在 CPU 作业内下载 ResNet18 预训练权重。依赖输入见 [训练环境](../../environments/research-training.txt) 和 [审计环境](../../environments/research-audit.txt)，作业同时保存实际 `pip freeze`。
 

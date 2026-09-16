@@ -4,14 +4,14 @@ set -euo pipefail
 : "${WILDFIRE_UPSTREAM:?}"
 export OMP_NUM_THREADS=1
 python -m pytest -q \
-  tests/test_portable_paths.py tests/test_routed_source_paths.py \
+  tests/test_cra_portability.py tests/test_portable_paths.py tests/test_routed_source_paths.py \
   tests/test_teacher_manifest_builder.py tests/test_cross_history_checkpoint_contract.py \
   tests/test_diagnostic_artifacts.py tests/test_wsts_fast_track_viirs_reliability.py \
   tests/test_wsts_fast_track_viirs_screen.py \
   tests/test_artifact_bundle.py tests/test_research_launchers.py \
   tests/test_research_data_preparation.py tests/test_upstream_import_patch.py \
   tests/test_wsts_fast_track_runtime.py \
-  tests/test_wsts_fast_track_complete_baseline.py \
+  tests/test_wsts_fast_track_complete_baseline.py tests/test_wsts_fast_track_legacy_p00.py \
   tests/test_wsts_fast_track_complete_reliability_prompt_pyramid.py \
   tests/test_wsts_fast_track_counterfactual_impact_consistency.py \
   tests/test_wsts_fast_track_counterfactual_rank_consistency.py \

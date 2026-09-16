@@ -12,6 +12,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from .diagnostic_artifacts import verified_reliability_path
 from .contract import validate_inventory
 from .runtime import _install_runtime_contract, load_training_stats
 from .diagnostic_support import resolve_dataset_index
@@ -106,8 +107,8 @@ class NaturalReliabilityDataset(Dataset[Any]):
         packed, target = self.standard[base_index]
         relative = str(record["output"])
         if relative not in self._reliability_cache:
-            path = self.root / relative
-            with np.load(path) as payload:
+            path = verified_reliability_path(self.root, record)
+            with np.load(path, allow_pickle=False) as payload:
                 self._reliability_cache[relative] = payload["reliability"].copy()
         natural = self._reliability_cache[relative]
         return replace_t1_reliability(packed, natural), target

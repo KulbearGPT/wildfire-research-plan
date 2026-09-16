@@ -83,6 +83,7 @@ class ResearchLauncherTests(unittest.TestCase):
                 base = Path(directory)
                 snapshot = base / 'source'
                 snapshot.mkdir()
+                (base / 'source-commit.txt').write_text('a' * 40 + '\n')
                 fake_bin = base / 'bin'
                 fake_bin.mkdir()
                 observed = base / 'observed.env'
@@ -123,6 +124,7 @@ class ResearchLauncherTests(unittest.TestCase):
                 self.assertEqual(values['PYTHONPATH'],
                                  f'{snapshot}/src:{snapshot}:{root}/upstream/src')
                 self.assertEqual(values['WILDFIRE_REPO'], str(snapshot))
+                self.assertEqual(values.get('WILDFIRE_SOURCE_COMMIT'), 'a' * 40)
                 self.assertEqual(values['TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD'], '1')
 
     def test_setup_finish_requires_existing_training_environment(self):

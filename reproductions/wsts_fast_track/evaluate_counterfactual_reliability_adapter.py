@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import importlib
+import sys
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -19,7 +21,7 @@ from .counterfactual_reliability_adapter import (
 from .evaluate_corrected_baseline import SCREEN_SCENARIOS, evaluation_boundary
 from .evaluate_missingness import (
     evaluate_batches,
-    load_checkpoint_model,
+    checkpoint_init_args,
     write_result_new,
 )
 from .evaluation import build_controlled_dataset
@@ -95,12 +97,13 @@ def load_cra_model(
     checkpoint_value = payload.get("base_b3_checkpoint")
     if not isinstance(checkpoint_value, str):
         raise ValueError("CRA checkpoint lacks its B3 initialization path")
-    base_model = load_checkpoint_model(
-        Path(checkpoint_value).resolve(strict=True),
-        experiment_id="C00",
-        upstream_root=upstream_root,
-        device=device,
-    )
+    # The embedded base state is complete; the old B3 path is provenance only.
+    upstream = Path(upstream_root).resolve()
+    sys.path.insert(0, str(upstream))
+    sys.path.insert(0, str(upstream / "src"))
+    model_class = getattr(importlib.import_module("models.SMPModel"), "SMPModel")
+    init_args = checkpoint_init_args(payload["hyper_parameters"], experiment_id="C00")
+    base_model = model_class(**init_args)
     base_model.load_state_dict(payload["base_state_dict"], strict=True)
     adapter_scope = "block" if payload.get("candidate_id") == "D8-FFCA" else "all"
     model = CounterfactualReliabilityAdapter(

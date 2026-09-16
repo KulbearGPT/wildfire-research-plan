@@ -56,6 +56,26 @@ def make_model(payload, history):
     return model
 
 
+def reload_smoke_checkpoint(model, payload, history, banks, path):
+    """Reconstruct a fresh CPU model and verify every serialized tensor."""
+    saved = torch.load(path, map_location='cpu', weights_only=False)
+    if saved['history'] != history or saved['bn_banks'] != banks or not saved['smoke']:
+        raise ValueError('smoke reload checkpoint metadata mismatch')
+    reloaded = make_model(payload, history)
+    if banks:
+        reloaded = StatisticsModel(reloaded, banks)
+    reloaded.load_state_dict(saved['state_dict'], strict=True)
+    reference = model.state_dict()
+    restored = reloaded.state_dict()
+    if reference.keys() != restored.keys():
+        raise ValueError('smoke reload state keys differ')
+    for key, value in reference.items():
+        other = restored[key]
+        if value.dtype != other.dtype or not torch.equal(value.detach().cpu(), other):
+            raise ValueError(f'smoke reload tensor differs: {key}')
+    return reloaded
+
+
 def loader_for_training(history, seed, workers):
     seed_all(seed)
     dataset = PairedDataset(base_dataset(history), history,
@@ -236,6 +256,11 @@ def main():
         torch.save(dict(metadata, state_dict=cpu_state), args.output / 'checkpoint.pt')
         metadata['checkpoint_bytes'] = (args.output / 'checkpoint.pt').stat().st_size
         del cpu_state
+        if args.smoke:
+            model = reload_smoke_checkpoint(model, payload, args.history, banks,
+                                            args.output / 'checkpoint.pt')
+            model.cuda()
+            metadata['smoke_reload'] = 'strict_state_equal'
     results = {}
     model.eval()
     for scenario in SCENARIOS:

@@ -1,0 +1,28 @@
+diff --git a/src/dataloader/FireSpreadDataset.py b/src/dataloader/FireSpreadDataset.py
+index 75b380a..2b18c13 100644
+--- a/src/dataloader/FireSpreadDataset.py
++++ b/src/dataloader/FireSpreadDataset.py
+@@ -5,7 +5,6 @@ import rasterio
+ from torch.utils.data import Dataset
+ import torch
+ import numpy as np
+-from torch.utils.data.dataset import T_co
+ import glob
+ import warnings
+ from .utils import get_means_stds_missing_values, get_indices_of_degree_features
+diff --git a/src/models/__init__.py b/src/models/__init__.py
+index 9f75245..93a1440 100644
+--- a/src/models/__init__.py
++++ b/src/models/__init__.py
+@@ -2,10 +2,3 @@ from .BaseModel import BaseModel
+ from .ConvLSTMLightning import ConvLSTMLightning
+ from .LogisticRegression import LogisticRegression
+ from .SMPModel import SMPModel
+-from .UTAELightning import UTAELightning
+-from .SwinUnetLightning import SwinUnetLightning
+-from .SwinUnetTempLightning import SwinUnetTempLightning
+-from .UTAELightningDumb import UTAELightningDumb
+-from .TransUnetLightning import TransUnetLightning
+-from .SMPTempModel import SMPTempModel 
+-from .SegFormerLightning import SegFormerLightning
+\ No newline at end of file

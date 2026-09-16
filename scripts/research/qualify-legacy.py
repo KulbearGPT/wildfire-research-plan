@@ -95,6 +95,47 @@ def baseline_case(case, paths, output, torch):
                                  'selection_score': receipt['selection']['score']}
 
 
+def legacy_p00_case(paths, output, torch):
+    module = importlib.import_module(PREFIX + 'legacy_p00')
+    original_arguments = module.upstream_arguments
+
+    def smoke_arguments(*args, **kwargs):
+        arguments = original_arguments(*args, **kwargs)
+        prefixes = ('--data.batch_size=', '--data.num_workers=')
+        return [arg for arg in arguments if not arg.startswith(prefixes)] + [
+            '--data.batch_size=2', '--data.num_workers=0',
+            '--trainer.val_check_interval=1', '--trainer.limit_val_batches=1',
+            '--trainer.enable_progress_bar=false',
+        ]
+
+    with override(module, 'MAX_STEPS', 2), override(module, 'upstream_arguments', smoke_arguments):
+        module.main(['--upstream-root', str(paths.upstream), '--data-root', str(paths.data),
+                     '--stats-path', str(paths.stats), '--run-root', str(output / 'run')])
+    receipt_path = output / 'run/legacy-training-completion.json'
+    receipt = json.loads(receipt_path.read_text())
+    if receipt['status'] != 'qualification' or receipt['fit_global_step'] != 2:
+        raise ValueError('legacy bootstrap qualification receipt differs')
+    from reproductions.wsts_fast_track.legacy_p00_completion import validate_receipt
+    try:
+        validate_receipt(receipt)
+    except ValueError:
+        pass
+    else:
+        raise ValueError('legacy formal completion accepted a two-step qualification')
+    (output / 'legacy-p00-qualification.json').write_text(json.dumps(receipt, indent=2) + '\n')
+    receipt_path.unlink()
+    checkpoint = output / 'run' / receipt['checkpoint']
+    from reproductions.wsts_fast_track.evaluate_missingness import load_checkpoint_model
+    model = load_checkpoint_model(checkpoint, experiment_id='C00',
+                                  upstream_root=paths.upstream, device=torch.device('cuda'))
+    payload = torch.load(checkpoint, map_location='cpu', weights_only=False)
+    verify_state(torch, payload['state_dict'], model.state_dict())
+    return model, False, False, {'fit_global_step': 2, 'selected_global_step': payload['global_step'],
+                                 'legacy_index_semantics': True,
+                                 'formal_completion_rejected_smoke': True,
+                                 'selection_score': receipt['selection_score']}
+
+
 def continuation_case(case, paths, output, torch):
     family, extra = CASES[case]
     module = importlib.import_module(PREFIX + 'train_' + family)
@@ -162,7 +203,7 @@ def continuation_case(case, paths, output, torch):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--case', choices=(*CASES, 'B1', 'B5'), required=True)
+    parser.add_argument('--case', choices=(*CASES, 'B1', 'B5', 'legacy-P00'), required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args(argv)
     if not os.environ.get('SLURM_JOB_ID'):
@@ -177,7 +218,10 @@ def main(argv=None):
     output.mkdir(parents=True, exist_ok=False)
     (output / 'QUALIFICATION_ONLY.json').write_text(json.dumps({
         'scientific_claim': False, 'case': args.case, 'slurm_job_id': os.environ['SLURM_JOB_ID']}) + '\n')
-    if args.case in {'B1', 'B5'}:
+    if args.case == 'legacy-P00':
+        model, routing, adapter, details = legacy_p00_case(paths, output, torch)
+        history = 1
+    elif args.case in {'B1', 'B5'}:
         model, routing, adapter, details = baseline_case(args.case, paths, output, torch)
         history = 5
     else:

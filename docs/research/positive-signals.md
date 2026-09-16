@@ -31,10 +31,12 @@ The [machine-readable inventory](method-inventory.json) records source commits, 
 | X2-block-signal — Feature KD, original variant | T1 block AP +0.003103 against fresh continuation although primary -0.005219; repaired distill_block primary -0.013556/block -0.001936. | docs/experiments/t1_t5_innovations.md |
 | X8+X17 — X8+X17 complete observable route | Three seeds; all six history/year cells positive; final primary mean +0.013853 vs fresh ERM. | docs/experiments/t1_t5_innovations.md |
 | X22+X17 — X22+X17 complete observable route | Three seeds 2021/22/23; primary +0.014642 vs fresh ERM, +0.034527 vs frozen B3/B5; T1 +.010386/+.006153/+.010109, T5 +.028162/+.020169/+.012873 vs ERM. | docs/experiments/t1_t5_innovations.md |
+| X17 — severity-factorized block specialists | Three seeds, all six history/year cells positive vs ERM; final primary +.008250. Closest-control heldout attribution fails, so retain as limited total-effect signal. | docs/experiments/t1_t5_innovations.md |
 | B2 — FireDrop observable B0/B2 route | M01 gains +.222704/+.124143/+.103482 vs B0. | docs/experiments/quantitative_reliability_ledger.md |
 | B3 — Additional BlockDrop | Block mean gains +.040566/+.019331/+.023566 vs B2. | docs/experiments/quantitative_reliability_ledger.md |
 | D1-KL — Predictive consistency | Primary gains +.009203/+.013146/+.004561 vs D1-ERM. | docs/experiments/quantitative_reliability_ledger.md |
 | D12 — Severity-adaptive reliability prompts | Block mean +.006875/+.008763/+.001654 vs D2-STD; primary +.028574/+.019252/+.014271 vs D1-ERM. | docs/experiments/quantitative_reliability_ledger.md |
+
 
 ## Corrected archived D-series: strict rejection does not erase gains
 
@@ -64,8 +66,8 @@ These are different implementations and must not be merged into one result. The 
 | RF-MIXED — Equal-capacity mixed shallow branch | Primary +.003981/+.001866 T1/T5 vs matched control (derived from rounded table). | docs/experiments/three_directions_results.md |
 | RF-TYPED — Static/dynamic shallow branches | T1 -.008309 vs mixed/-.004328 vs control; T5 +.005372 vs mixed/+.007238 vs control. | docs/experiments/three_directions_results.md |
 | RF-KD — Same-input routed-expert distillation | T1/T5 primary +.003262/+.005630 vs no-KD; -.003851/-.007891 vs teacher; M00 improves both. | docs/experiments/three_directions_results.md |
-| TD-W — Fixed 0.5 weight merge | Primary -.033409/-.060303 vs recalibrated X22; T1 block +.003249 but M01 -.106724. | research/three-directions:docs/experiments/three-directions-results.md |
-| TD-D — Routed-expert KD student | Primary +.001570/+.005707 vs no-KD; vs route +.000710/-.005418; T1 replacement gate passes, T5 M07 -.013862 fails. | research/three-directions:docs/experiments/three-directions-results.md |
+| TD-W — Fixed 0.5 weight merge | Primary -.033409/-.060303 vs recalibrated X22; T1 block +.003249 but M01 -.106724. | docs/experiments/three-directions-results.md |
+| TD-D — Routed-expert KD student | Primary +.001570/+.005707 vs no-KD; vs route +.000710/-.005418; T1 replacement gate passes, T5 M07 -.013862 fails. | docs/experiments/three-directions-results.md |
 
 ## Architecture transfer screens
 
@@ -127,7 +129,7 @@ B1/B5 and P09 source: archived quantitative ledger at `4b843ad`; X16 source: cur
 
 ## Complete retained-positive index
 
-All 50 inclusive positive entries are listed here; the narrative tables above group selected observations. `positive_signal` means an observed limited gain, not a passed contribution gate.
+All 51 inclusive positive entries are listed here; the narrative tables above group selected observations. `positive_signal` means an observed limited gain, not a passed contribution gate.
 
 | ID | Name | Evidence scope |
 |---|---|---|
@@ -181,3 +183,4 @@ All 50 inclusive positive entries are listed here; the narrative tables above gr
 | X11-vs-ERM | Reconstruction-supervised restoration total effect | T1 2021 seed 0; arithmetic derived from reported rounded deltas |
 | B1 | Corrected clean T5 temporal baseline | As explicitly stated; historical source contract |
 | B5 | Corrected T5 FireDrop+BlockDrop foundation | As explicitly stated; historical source contract |
+| X17 | X17 severity-factorized block specialists | seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified |

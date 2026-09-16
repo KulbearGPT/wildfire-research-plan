@@ -61,4 +61,39 @@ class MethodsTests(unittest.TestCase):
         self.assertGreater(bernoulli_kl(torch.zeros(3),teacher).item(),0.)
 
 
+class SmokeReloadTests(unittest.TestCase):
+    def test_fresh_reload_restores_students_and_all_statistics_banks(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from reproductions.three_directions.run import reload_smoke_checkpoint
+
+        def make_fixture(_payload, _history):
+            return nn.Sequential(nn.BatchNorm2d(2), nn.Conv2d(2, 1, 1))
+
+        for banks in (0, 1, 4):
+            with self.subTest(banks=banks), tempfile.TemporaryDirectory() as directory:
+                model = make_fixture(None, 1)
+                if banks:
+                    model = StatisticsModel(model, banks)
+                    for layer in model.statistic_layers():
+                        layer.running_mean.fill_(3)
+                        layer.running_var.fill_(5)
+                        layer.count.fill_(7)
+                path = Path(directory) / 'checkpoint.pt'
+                state = {key: value.clone() for key, value in model.state_dict().items()}
+                saved = dict(history=1, bn_banks=banks, smoke=True, state_dict=state)
+                torch.save(saved, path)
+                with patch('reproductions.three_directions.run.make_model', side_effect=make_fixture):
+                    reloaded = reload_smoke_checkpoint(model, {}, 1, banks, path)
+                    self.assertIsNot(reloaded, model)
+                    for key, value in model.state_dict().items():
+                        self.assertTrue(torch.equal(reloaded.state_dict()[key], value), key)
+                    first = next(iter(state))
+                    state[first].add_(1)
+                    torch.save(saved, path)
+                    with self.assertRaisesRegex(ValueError, 'smoke reload tensor differs'):
+                        reload_smoke_checkpoint(model, {}, 1, banks, path)
+
+
 if __name__=='__main__':unittest.main()

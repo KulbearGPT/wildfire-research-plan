@@ -80,7 +80,7 @@ The full pre-cleanup tree is commit `4b843add48862dcfac668b643ecd2a564cbe00df`. 
 | belief-reconstruction-t-1 — belief reconstruction T=1 | M01/M06/M07 0.206976/0.315143/0.129389; mean delta -0.031380; reject | docs/experiments/rejected_experiments.md |
 | corresponding-t-5-probes — corresponding T=5 probes | every candidate had negative corrupted mean delta; outside current scope and no rescue of the branch | docs/experiments/rejected_experiments.md |
 | natural-viirs-screen — natural VIIRS screen | attention AP +0.000287, with worse F1/Brier/loss; no forecasting-method gain | docs/experiments/rejected_experiments.md |
-| target-qa-censoring — target-QA censoring | P00 AP 0.382293 → 0.398789; 12.54% of zero-label pixels lacked reliable target-day observation; useful 24-event case study, outside the method mainline | docs/experiments/rejected_experiments.md |
+| target-qa-censoring — target-QA censoring | P00 AP 0.382293 → 0.398789; 12.54% of all pixels (12.60% of zero-label pixels) lacked reliable target-day observation; useful 24-event case study, outside the method mainline | docs/experiments/rejected_experiments.md |
 | 2016-2020-qa-cohort — 2016--2020 QA cohort | preparation failed because added-year TIFFs lack CRS/geotransform; cross-year alignment infeasible with current files | docs/experiments/rejected_experiments.md |
 | B4 — B4 equal-year sampling | 0.534606/0.252345/0.329461/0.166855; mean M06/M07 -0.009390 and M00 -0.023712 versus B3; 21094665 | docs/experiments/rejected_experiments.md |
 | D2-RNC — D2-RNC | M06 +0.000764, M07 -0.007200 versus D2-STD; primary -0.003218; M00 -0.009428; 21094930 | docs/experiments/rejected_experiments.md |
@@ -105,9 +105,9 @@ The full pre-cleanup tree is commit `4b843add48862dcfac668b643ecd2a564cbe00df`. 
 | RF-MIXED — Equal-capacity mixed shallow branch | Primary +.003981/+.001866 T1/T5 vs matched control (derived from rounded table). | docs/experiments/three_directions_results.md |
 | RF-TYPED — Static/dynamic shallow branches | T1 -.008309 vs mixed/-.004328 vs control; T5 +.005372 vs mixed/+.007238 vs control. | docs/experiments/three_directions_results.md |
 | RF-KD — Same-input routed-expert distillation | T1/T5 primary +.003262/+.005630 vs no-KD; -.003851/-.007891 vs teacher; M00 improves both. | docs/experiments/three_directions_results.md |
-| TD-N — Four-bank conditional normalization | T1/T5 primary -.240553/-.020333 vs shared BN calibration. | research/three-directions:docs/experiments/three-directions-results.md |
-| TD-W — Fixed 0.5 weight merge | Primary -.033409/-.060303 vs recalibrated X22; T1 block +.003249 but M01 -.106724. | research/three-directions:docs/experiments/three-directions-results.md |
-| TD-D — Routed-expert KD student | Primary +.001570/+.005707 vs no-KD; vs route +.000710/-.005418; T1 replacement gate passes, T5 M07 -.013862 fails. | research/three-directions:docs/experiments/three-directions-results.md |
+| TD-N — Four-bank conditional normalization | T1/T5 primary -.240553/-.020333 vs shared BN calibration. | docs/experiments/three-directions-results.md |
+| TD-W — Fixed 0.5 weight merge | Primary -.033409/-.060303 vs recalibrated X22; T1 block +.003249 but M01 -.106724. | docs/experiments/three-directions-results.md |
+| TD-D — Routed-expert KD student | Primary +.001570/+.005707 vs no-KD; vs route +.000710/-.005418; T1 replacement gate passes, T5 M07 -.013862 fails. | docs/experiments/three-directions-results.md |
 
 ## Old belief branches and natural observations
 
