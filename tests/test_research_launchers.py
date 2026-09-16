@@ -76,6 +76,55 @@ class ResearchLauncherTests(unittest.TestCase):
             self.assertIn(str(run / 'site-at-submission.env'), args)
             self.assertIn('Submitted 12345', result.stdout)
 
+    def test_modules_and_activation_cannot_restore_vendor_pip_or_python_paths(self):
+        import shlex
+        for action in ('setup', 'runtime'):
+            with self.subTest(action=action), tempfile.TemporaryDirectory(prefix='module reset ') as directory:
+                base = Path(directory)
+                snapshot = base / 'source'
+                snapshot.mkdir()
+                fake_bin = base / 'bin'
+                fake_bin.mkdir()
+                observed = base / 'observed.env'
+                fake_python = fake_bin / 'python'
+                fake_python.write_text('#!/usr/bin/env bash\nenv > "$TEST_OBSERVED"\nexit 77\n')
+                fake_python.chmod(0o755)
+                root = base / 'artifacts'
+                injection = ('export PIP_NO_INDEX=1 PIP_FIND_LINKS=/vendor/wheels '
+                             'PIP_EXTRA_INDEX_URL=https://vendor.invalid/simple '
+                             'PIP_INDEX_URL=https://vendor.invalid/index '
+                             'PIP_CONFIG_FILE=/vendor/pip.conf '
+                             'PYTHONPATH=/old/worktree PYTHONHOME=/vendor/python\n')
+                if action == 'runtime':
+                    activate = root / 'envs/train/bin/activate'
+                    activate.parent.mkdir(parents=True)
+                    activate.write_text(injection)
+                site = base / 'site.env'
+                site.write_text('WILDFIRE_REPO=/original/checkout\n' +
+                    'WILDFIRE_ROOT=' + shlex.quote(str(root)) + '\n' +
+                    'WILDFIRE_UPSTREAM=' + shlex.quote(str(root / 'upstream')) + '\n' +
+                    'WILDFIRE_DATA=/unused/data\nWILDFIRE_STATS=/unused/stats\n' +
+                    'WILDFIRE_TRAIN_MODULES=fake\n' +
+                    'WILDFIRE_TRAIN_PYTHON=' + shlex.quote(str(fake_python)) + '\n' +
+                    'scontrol() { :; }\nmodule() { ' + injection + '}\n')
+                env = dict(os.environ, SLURM_JOB_ID='boundary-test', TEST_OBSERVED=str(observed),
+                           PATH=str(fake_bin) + os.pathsep + os.environ['PATH'])
+                result = subprocess.run(['bash', str(ROOT / 'scripts/research/job.sh'),
+                    str(snapshot), str(site), 'setup' if action == 'setup' else 'true'],
+                    env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 77, result.stderr)
+                values = dict(line.split('=', 1) for line in observed.read_text().splitlines() if '=' in line)
+                self.assertEqual(values['PIP_INDEX_URL'], 'https://pypi.org/simple')
+                self.assertEqual(values['PIP_NO_INDEX'], '0')
+                self.assertEqual(values['PIP_CONFIG_FILE'], '/dev/null')
+                self.assertNotIn('PIP_FIND_LINKS', values)
+                self.assertNotIn('PIP_EXTRA_INDEX_URL', values)
+                self.assertNotIn('PYTHONHOME', values)
+                self.assertEqual(values['PYTHONPATH'],
+                                 f'{snapshot}/src:{snapshot}:{root}/upstream/src')
+                self.assertEqual(values['WILDFIRE_REPO'], str(snapshot))
+                self.assertEqual(values['TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD'], '1')
+
 
 if __name__ == '__main__':
     unittest.main()

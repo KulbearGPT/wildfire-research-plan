@@ -14,17 +14,22 @@ shift 2
 source "$research_site"
 : "${WILDFIRE_REPO:?set WILDFIRE_REPO}" "${WILDFIRE_ROOT:?set WILDFIRE_ROOT}"
 : "${WILDFIRE_UPSTREAM:?set WILDFIRE_UPSTREAM}" "${WILDFIRE_DATA:?set WILDFIRE_DATA}" "${WILDFIRE_STATS:?set WILDFIRE_STATS}"
-# Site configuration may name its checkout; execution always uses the archived commit.
-export WILDFIRE_REPO="$research_snapshot"
-export WILDFIRE_SITE_ENV="$research_site"
-export WILDFIRE_ROOT WILDFIRE_UPSTREAM WILDFIRE_DATA WILDFIRE_STATS
-export PYTHONNOUSERSITE=1
-export PYTHONPATH="$research_snapshot/src:$research_snapshot:$WILDFIRE_UPSTREAM/src"
-export TORCH_HOME="$WILDFIRE_ROOT/cache/torch" HF_HOME="$WILDFIRE_ROOT/cache/huggingface"
-export WANDB_MODE=disabled WANDB_SILENT=true HDF5_USE_FILE_LOCKING=FALSE
-export PIP_NO_INDEX=0 PIP_CONFIG_FILE=/dev/null
-export PIP_INDEX_URL="${WILDFIRE_PIP_INDEX_URL:-https://pypi.org/simple}"
-unset PIP_EXTRA_INDEX_URL PIP_FIND_LINKS PYTHONHOME
+configure_runtime_environment() {
+  # Reapply after modules and activation: sites may restore vendor pip/Python paths.
+  export WILDFIRE_REPO="$research_snapshot" WILDFIRE_SITE_ENV="$research_site"
+  export WILDFIRE_ROOT WILDFIRE_UPSTREAM WILDFIRE_DATA WILDFIRE_STATS
+  export PYTHONNOUSERSITE=1
+  export PYTHONPATH="$research_snapshot/src:$research_snapshot:$WILDFIRE_UPSTREAM/src"
+  export TORCH_HOME="$WILDFIRE_ROOT/cache/torch" HF_HOME="$WILDFIRE_ROOT/cache/huggingface"
+  export WANDB_MODE=disabled WANDB_SILENT=true HDF5_USE_FILE_LOCKING=FALSE
+  export PIP_NO_INDEX=0 PIP_CONFIG_FILE=/dev/null
+  export PIP_INDEX_URL="${WILDFIRE_PIP_INDEX_URL:-https://pypi.org/simple}"
+  unset PIP_EXTRA_INDEX_URL PIP_FIND_LINKS PYTHONHOME
+  # Lightning 2.0 resumes trusted legacy checkpoints using torch.load without
+  # weights_only; PyTorch 2.6 changed that default. Match the historical runner.
+  export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
+}
+configure_runtime_environment
 readonly research_logs="$(dirname "$research_snapshot")/allocation-${SLURM_JOB_ID}"
 mkdir -p "$research_logs"
 cd "$research_snapshot"
@@ -41,6 +46,7 @@ load_modules() {
     module load "${modules[@]}"
     module list 2> "$research_logs/modules-${2}.txt"
   fi
+  configure_runtime_environment
 }
 record_upstream() {
   git -C "$WILDFIRE_UPSTREAM" rev-parse HEAD > "$research_logs/upstream-commit.txt"
@@ -99,6 +105,7 @@ else
   load_modules "${WILDFIRE_TRAIN_MODULES:-}" train
   source "$WILDFIRE_ROOT/envs/train/bin/activate"
 fi
+configure_runtime_environment
 python -c 'from reproductions.paths import load_paths; load_paths(require_explicit=True)'
 python -m pip freeze > "$research_logs/runtime-pip-freeze.txt"
 record_upstream
