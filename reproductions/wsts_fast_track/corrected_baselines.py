@@ -23,7 +23,7 @@ class CorrectedBaselineSpec:
     """One minimal corrected-index baseline screen."""
 
     baseline_id: str
-    experiment_id: Literal["C00"]
+    experiment_id: Literal["C00", "C02"]
     training_policy: TrainingPolicy
     seed: int = 0
     max_steps: int = 3_000
@@ -31,6 +31,8 @@ class CorrectedBaselineSpec:
 
 CORRECTED_BASELINES: Final[dict[str, CorrectedBaselineSpec]] = {
     "B0": CorrectedBaselineSpec("B0", "C00", "clean"),
+    "B1": CorrectedBaselineSpec("B1", "C02", "clean"),
+    "B5": CorrectedBaselineSpec("B5", "C02", "fire-block"),
     "B2": CorrectedBaselineSpec("B2", "C00", "fire"),
     "B3": CorrectedBaselineSpec("B3", "C00", "fire-block"),
 }

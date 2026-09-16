@@ -1,5 +1,5 @@
 """Share targets and corruption semantics across existing T1 and T5 models."""
-from pathlib import Path
+from reproductions.paths import load_paths
 import hashlib
 import importlib
 import numpy as np
@@ -16,10 +16,8 @@ from reproductions.wsts_fast_track.processed_reliability import (
 from reproductions.wsts_fast_track.missingness import structured_block_mask
 from .reliability_masks import sampled_footprint_mask
 
-ROOT = Path('/project/6085198/kulbear/wildfire')
-UPSTREAM = ROOT / 'cache/WildfireSpreadTS-res18-runtime'
-DATA = ROOT / 'hdf5/wstsplus-active-fixed'
-STATS = ROOT / 'runs/nibi-wstsplus-data-20260823/train-2016-2020-stats.npz'
+_PATHS = load_paths()
+ROOT, UPSTREAM, DATA, STATS = (_PATHS.root, _PATHS.upstream, _PATHS.data, _PATHS.stats)
 MULTI_FEATURES = (0,1,2,3,4,5,6,7,8,9,11,12,13,14,16,17,18,19,20,21,
                   22,23,24,25,26,27,28,29,30,31,32,38,39)
 

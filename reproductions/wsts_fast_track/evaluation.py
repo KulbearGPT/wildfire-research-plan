@@ -335,4 +335,5 @@ def build_controlled_dataset(
         evaluation_year=evaluation_year,
         heldout_authorized=heldout_authorized,
         routing_mask_channel=routing_mask_channel,
+        allowed_histories=(spec.n_leading_observations,),
     )

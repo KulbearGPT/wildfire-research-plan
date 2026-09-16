@@ -1,21 +1,14 @@
 """Three independent changes to the existing spatial/temporal forecasters."""
 import importlib
-import json
-from pathlib import Path
 import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .data import ROOT
+from reproductions.paths import load_paths
 
 
 def initial_payload(history):
-    run = (ROOT / 'runs/corrected-B3-S0-3K-21093266' if history == 1 else
-           ROOT / 'archive/pre-t1-cleanup-2026-09-04/runs/corrected-B5-S0-3K-21144563')
-    record = json.loads((run / 'completed.json').read_text())
-    checkpoint = Path(record['checkpoint'])
-    if history == 5:
-        checkpoint = run / checkpoint.relative_to(ROOT / 'runs' / run.name)
+    checkpoint = load_paths().initial_checkpoint(history)
     payload = torch.load(checkpoint, map_location='cpu', weights_only=False)
     return payload, str(checkpoint)
 

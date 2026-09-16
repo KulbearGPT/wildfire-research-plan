@@ -1,14 +1,15 @@
 """Controlled-area masks derived from cached VIIRS observation footprints."""
 from functools import lru_cache
 from pathlib import Path
+from reproductions.paths import load_paths
 
 import numpy as np
 import torch
 from scipy.ndimage import distance_transform_edt
 
 
-DEFAULT_BANK = Path(
-    "/project/6085198/kulbear/wildfire/archive/pre-t1-cleanup-2026-09-04/"
+DEFAULT_BANK = load_paths().root / (
+    "archive/pre-t1-cleanup-2026-09-04/"
     "runs/viirs-reliability-24-20804128/output"
 )
 

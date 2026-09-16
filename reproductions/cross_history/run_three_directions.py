@@ -12,6 +12,8 @@ import numpy as np
 import torch
 from torch import nn
 
+from reproductions.paths import load_paths, resolve_teacher_records, validate_teacher_artifact
+
 from .data import setup, base_dataset, PairedDataset, evaluation_dataset, MULTI_FEATURES
 from .models import Forecaster, initial_payload, make_base
 from .architectures import checkpoint_architecture, canonical_architecture
@@ -23,7 +25,7 @@ from reproductions.wsts_fast_track.processed_reliability import PROCESSED_DYNAMI
 from reproductions.wsts_fast_track.evaluate_missingness import evaluate_batches
 
 SCENARIOS = ('M00', 'M01', 'M06', 'M07')
-DEFAULT_MANIFEST = Path('docs/experiments/three_directions_manifest.json')
+DEFAULT_MANIFEST = load_paths().teacher_manifest
 
 
 def validate_source(payload, record):
@@ -121,9 +123,7 @@ def make_forecaster(history, hparams, arm):
 
 
 def load_source(record):
-    path = Path(record['checkpoint'])
-    if path.stat().st_size != record['bytes'] or file_hash(path) != record['sha256']:
-        raise ValueError(f'teacher checkpoint changed: {path}')
+    path = validate_teacher_artifact(record)
     payload = torch.load(path, map_location='cpu', weights_only=False)
     validate_source(payload, record)
     model = make_forecaster(payload['history'], payload['hyper_parameters'], 'control')
@@ -347,7 +347,7 @@ def main():
     setup()
     seed_everything(args.seed)
     args.output.mkdir(parents=True, exist_ok=False)
-    records = json.loads(args.manifest.read_text())['sources'][str(args.history)][str(args.seed)]
+    records = resolve_teacher_records(args.manifest, args.history, args.seed)
     metadata = dict(history=args.history, architecture=canonical_architecture(args.history),
         arm=args.arm, seed=args.seed, steps=args.steps, physical_batch=args.batch_size,
         effective_batch=64, lr=.001, schedule='cosine-to-zero', teacher_kl_weight=.1,

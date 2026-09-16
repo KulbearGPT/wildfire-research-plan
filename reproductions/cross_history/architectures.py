@@ -5,6 +5,8 @@ import importlib
 from pathlib import Path
 from types import SimpleNamespace
 
+from reproductions.paths import load_paths
+
 from torch import nn
 from torch.nn import functional as F
 
@@ -36,15 +38,13 @@ class PretrainedAsset:
 
 def swin_pretrained_asset():
     return PretrainedAsset(
-        Path("/project/6085198/kulbear/wildfire/cache/swin/"
-             "swin_tiny_patch4_window7_224.pth"),
+        load_paths().root / "cache/swin/swin_tiny_patch4_window7_224.pth",
         "9f71c168d837d1b99dd1dc29e14990a7a9e8bdc5f673d46b04fe36fe15590ad3",
     )
 
 
 def segformer_pretrained_assets():
-    root = Path("/project/6085198/kulbear/wildfire/cache/huggingface/"
-                "nvidia-mit-b2-3bb39e87")
+    root = load_paths().root / "cache/huggingface/nvidia-mit-b2-3bb39e87"
     return (
         PretrainedAsset(root / "config.json",
             "d9a879499e7d73e2b33af0638cee320b1070c8f0dadb620eac8907df3d18caa9"),

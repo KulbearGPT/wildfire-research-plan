@@ -150,8 +150,10 @@ def checkpoint_init_args(
 
     init_args = dict(hyperparameters)
     init_args["encoder_weights"] = None
-    if experiment_id != "C00":
-        raise ValueError("retained checkpoint loader supports only C00")
+    if experiment_id not in {"C00", "C02"}:
+        raise ValueError("retained checkpoint loader supports C00 and C02")
+    if experiment_id == "C02":
+        init_args.pop("use_doy", None)
     return init_args
 
 
@@ -167,9 +169,10 @@ def load_checkpoint_model(
     upstream = Path(upstream_root).resolve()
     sys.path.insert(0, str(upstream))
     sys.path.insert(0, str(upstream / "src"))
-    if experiment_id != "C00":
-        raise ValueError("retained checkpoint loader supports only C00")
-    model_class = getattr(importlib.import_module("models.SMPModel"), "SMPModel")
+    if experiment_id not in {"C00", "C02"}:
+        raise ValueError("retained checkpoint loader supports C00 and C02")
+    class_name = "SMPModel" if experiment_id == "C00" else "SMPTempModel"
+    model_class = getattr(importlib.import_module("models." + class_name), class_name)
 
     payload = torch.load(
         Path(checkpoint).resolve(strict=True), map_location="cpu", weights_only=False

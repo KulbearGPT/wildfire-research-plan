@@ -69,8 +69,8 @@ def _install_runtime_contract(
     experiment_id: str,
     stats: tuple[np.ndarray, np.ndarray, np.ndarray],
 ) -> None:
-    if experiment_id != "C00":
-        raise ValueError("retained runtime supports only the T=1 C00 experiment")
+    if experiment_id not in {"C00", "C02"}:
+        raise ValueError("retained runtime supports C00 and C02 experiments")
     upstream_src = upstream_root / "src"
     sys.path.insert(0, str(upstream_root))
     sys.path.insert(0, str(upstream_src))
