@@ -10,7 +10,11 @@ import os
 from pathlib import Path
 import sys
 
+BASELINE_CASES = ('B1', 'B2', 'B3', 'B5')
 CASES = {
+    'd1-kl': ('predictive_consistency', ['--lambda-consistency', '0.1']),
+    'd1-paired0': ('predictive_consistency', ['--lambda-consistency', '0.0']),
+    'd12-sarp': ('severity_adaptive_reliability_prompting', []),
     'rnc': ('reliability_normalized', ['--variant', 'rnc']),
     'token': ('reliability_normalized', ['--variant', 'token']),
     'ciwc': ('counterfactual_impact_consistency', []),
@@ -87,7 +91,7 @@ def baseline_case(case, paths, output, torch):
     receipt_path.unlink()
     checkpoint = output / 'run' / receipt['selection']['checkpoint']
     from reproductions.wsts_fast_track.evaluate_missingness import load_checkpoint_model
-    model = load_checkpoint_model(checkpoint, experiment_id='C02',
+    model = load_checkpoint_model(checkpoint, experiment_id=original_spec(case).experiment_id,
                                   upstream_root=paths.upstream, device=torch.device('cuda'))
     payload = torch.load(checkpoint, map_location='cpu', weights_only=False)
     verify_state(torch, payload['state_dict'], model.state_dict())
@@ -162,7 +166,11 @@ def continuation_case(case, paths, output, torch):
     evaluator = importlib.import_module(PREFIX + 'evaluate_' + family)
     device = torch.device('cuda')
     adapter = case in {'cra', 'ffca'}
-    if family == 'reliability_normalized':
+    if family == 'predictive_consistency':
+        validator_name, loader_name = 'validate_d1_checkpoint', None
+    elif family == 'severity_adaptive_reliability_prompting':
+        validator_name, loader_name = 'validate_sarp_checkpoint', 'load_sarp_model'
+    elif family == 'reliability_normalized':
         validator_name, loader_name = 'validate_d2_checkpoint', 'load_d2_model'
     elif family == 'temporal_reliability_prompting':
         validator_name, loader_name = 'validate_t5_reliability_checkpoint', 'load_t5_reliability_model'
@@ -194,8 +202,10 @@ def continuation_case(case, paths, output, torch):
     else:
         core = model.model if family in {'reliability_normalized', 'temporal_reliability_prompting'} else model
         verify_state(torch, payload['state_dict'], core.state_dict())
-    return model, family not in {'counterfactual_impact_consistency', 'counterfactual_rank_consistency'}, adapter, {
+    return model, family not in {'predictive_consistency', 'counterfactual_impact_consistency', 'counterfactual_rank_consistency'}, adapter, {
         'actual_training_steps': 1, 'final_training_loss': payload['final_loss'],
+        'training_entrypoint': module.__name__, 'evaluator_module': evaluator.__name__,
+        'candidate_id': payload.get('candidate_id'),
         'formal_validator_rejected_smoke': True,
         'qualification_validator_substitutions': {'status': 'pass', 'steps': 3000},
     }
@@ -203,7 +213,7 @@ def continuation_case(case, paths, output, torch):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--case', choices=(*CASES, 'B1', 'B5', 'legacy-P00'), required=True)
+    parser.add_argument('--case', choices=(*CASES, *BASELINE_CASES, 'legacy-P00'), required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args(argv)
     if not os.environ.get('SLURM_JOB_ID'):
@@ -221,9 +231,10 @@ def main(argv=None):
     if args.case == 'legacy-P00':
         model, routing, adapter, details = legacy_p00_case(paths, output, torch)
         history = 1
-    elif args.case in {'B1', 'B5'}:
+    elif args.case in BASELINE_CASES:
         model, routing, adapter, details = baseline_case(args.case, paths, output, torch)
-        history = 5
+        from reproductions.wsts_fast_track.corrected_baselines import corrected_baseline_spec
+        history = 5 if corrected_baseline_spec(args.case).experiment_id == 'C02' else 1
     else:
         model, routing, adapter, details = continuation_case(args.case, paths, output, torch)
         history = 5 if args.case.endswith('-t5') else 1

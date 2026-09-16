@@ -34,6 +34,16 @@ D 系列正式 evaluator 要求固定训练预算。资格验证只在内存副�
 
 GPU 作业 `22102452`（`e13b9fb5db55`，`g36`）已完成两项实际 24 样本诊断；[重放结果](environment/diagnostics-replay.json)与历史记录的比较方向相同，数值最大绝对差约 `4.3e-6`。这验证迁移权重后的推理链路，不代表重新训练。
 
-截至本次记录，T1/T5 首批训练 GPU 作业已提交，运行结果待补。后续仍需检查全部保留训练执行族、完整数据审计、独立最终审查及主工作区交付；不能据此页提前声明目标完成。
+首批 6 个训练/校准 GPU 作业已成功退出，合计 19 个短预算 case 的报告见[原始记录](environment/gpu-qualification-first-batch.json)：
+
+| 作业 | 节点 | 已通过的范围 |
+|---|---|---|
+| 22102102 / 22102104 | g32 / g35 | T1 / T5：control、cosine_erm、context、transition；每项实际 1 step，strict reload，预测重载差为 0 |
+| 22102396 | g36 | B5：实际 Lightning 2 steps、最佳权重选择、strict reload、M00/M06 各 2 样本评估 |
+| 22102397 | g32 | RNC：实际 1 step、正式 validator 拒绝短权重、strict reload、M00/M06 各 2 样本评估 |
+| 22102787 | g36 | RF T1：control、mixed、typed、distill、BN batch_stats；重载差为 0 |
+| 22102798 | g35 | Routed T1：student_control、student_distill、merge、bn_shared；重载 state 严格相等后评估 |
+
+这些短预算样本不用于效果判断，AP 为 0 的小样本也不能解释为方法失效。后续仍需检查全部保留训练执行族、完整数据审计、独立最终审查及主工作区交付；不能据此页提前声明目标完成。
 
 转换作业的[原始小型报告](environment/conversion-qualification.json)保留逐年份检查结果。它使用八个合成事件，未替代全量公开下载、999 事件转换或修复阶段验证。

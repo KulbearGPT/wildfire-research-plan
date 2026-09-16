@@ -1,0 +1,1415 @@
+{
+  "scientific_claim": false,
+  "scope": "bounded real-data training/calibration, checkpoint reload and evaluation; not full-budget reproduction",
+  "cases": [
+    {
+      "job_id": "22102102",
+      "source_commit": "c617100",
+      "node": "g32",
+      "case": "cross-t1-context",
+      "result": {
+        "status": "pass",
+        "history": 1,
+        "architecture": "res18_unet",
+        "method": "context",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102102",
+      "source_commit": "c617100",
+      "node": "g32",
+      "case": "cross-t1-control",
+      "result": {
+        "status": "pass",
+        "history": 1,
+        "architecture": "res18_unet",
+        "method": "control",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102102",
+      "source_commit": "c617100",
+      "node": "g32",
+      "case": "cross-t1-cosine_erm",
+      "result": {
+        "status": "pass",
+        "history": 1,
+        "architecture": "res18_unet",
+        "method": "cosine_erm",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102102",
+      "source_commit": "c617100",
+      "node": "g32",
+      "case": "cross-t1-transition",
+      "result": {
+        "status": "pass",
+        "history": 1,
+        "architecture": "res18_unet",
+        "method": "transition",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102104",
+      "source_commit": "c617100",
+      "node": "g35",
+      "case": "cross-t5-context",
+      "result": {
+        "status": "pass",
+        "history": 5,
+        "architecture": "res18_utae",
+        "method": "context",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102104",
+      "source_commit": "c617100",
+      "node": "g35",
+      "case": "cross-t5-control",
+      "result": {
+        "status": "pass",
+        "history": 5,
+        "architecture": "res18_utae",
+        "method": "control",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102104",
+      "source_commit": "c617100",
+      "node": "g35",
+      "case": "cross-t5-cosine_erm",
+      "result": {
+        "status": "pass",
+        "history": 5,
+        "architecture": "res18_utae",
+        "method": "cosine_erm",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102104",
+      "source_commit": "c617100",
+      "node": "g35",
+      "case": "cross-t5-transition",
+      "result": {
+        "status": "pass",
+        "history": 5,
+        "architecture": "res18_utae",
+        "method": "transition",
+        "smoke": true,
+        "steps": 3000,
+        "completed_steps": 1,
+        "reload_max_difference": 0.0,
+        "reload_rtol": 1e-05,
+        "reload_atol": 1e-06,
+        "finite_output": true,
+        "strict_reload": true
+      }
+    },
+    {
+      "job_id": "22102787",
+      "source_commit": "53ddec4",
+      "node": "g36",
+      "case": "rf-t1-bn",
+      "result": {
+        "status": "pass",
+        "bank_samples": [
+          4,
+          4
+        ],
+        "bn_layers": 30,
+        "reload_max_difference": 0.0,
+        "scenarios": [
+          "M00",
+          "M01",
+          "M06",
+          "M07"
+        ],
+        "variants": [
+          "common",
+          "conditional"
+        ],
+        "bn_forward_mode": "batch_stats",
+        "calibration_seconds": 2.041683306917548
+      }
+    },
+    {
+      "job_id": "22102787",
+      "source_commit": "53ddec4",
+      "node": "g36",
+      "case": "rf-t1-control",
+      "result": {
+        "status": "pass",
+        "reload_max_difference": 0.0,
+        "loss": 0.005407883552834392,
+        "peak_gpu_bytes": 332114432
+      }
+    },
+    {
+      "job_id": "22102787",
+      "source_commit": "53ddec4",
+      "node": "g36",
+      "case": "rf-t1-distill",
+      "result": {
+        "status": "pass",
+        "reload_max_difference": 0.0,
+        "loss": 0.006408141372958198,
+        "peak_gpu_bytes": 619841536
+      }
+    },
+    {
+      "job_id": "22102787",
+      "source_commit": "53ddec4",
+      "node": "g36",
+      "case": "rf-t1-mixed",
+      "result": {
+        "status": "pass",
+        "reload_max_difference": 0.0,
+        "loss": 0.005407883552834392,
+        "peak_gpu_bytes": 382292480
+      }
+    },
+    {
+      "job_id": "22102787",
+      "source_commit": "53ddec4",
+      "node": "g36",
+      "case": "rf-t1-typed",
+      "result": {
+        "status": "pass",
+        "reload_max_difference": 0.0,
+        "loss": 0.005407883552834392,
+        "peak_gpu_bytes": 418209280
+      }
+    },
+    {
+      "job_id": "22102798",
+      "source_commit": "53ddec4",
+      "node": "g35",
+      "case": "routed-t1-bn_shared",
+      "result": {
+        "history": 1,
+        "architecture": "res18_unet",
+        "seed": 0,
+        "mode": "bn_shared",
+        "year": 2021,
+        "smoke": true,
+        "job": "22102798",
+        "source_commit": "53ddec451440edd8fc3dfd88c9ece02204627b1a",
+        "source_checkpoints": {
+          "x22": {
+            "checkpoint": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x22/checkpoint.pt",
+            "metadata": {
+              "history": 1,
+              "method": "cosine_erm",
+              "seed": 0,
+              "steps": 3000,
+              "physical_batch": 64,
+              "effective_batch": 64,
+              "learning_rate": 0.001,
+              "learning_rate_schedule": "cosine-to-zero",
+              "fire_dropout_probability": 0.3,
+              "block_dropout_probability": 0.3,
+              "block_fraction": null,
+              "reconstruction_weight": 0.0,
+              "initial_checkpoint": "/project/6085198/kulbear/wildfire/runs/corrected-B3-S0-3K-21093266/work/wildfire_progression/s9zobhnw/checkpoints/best-epoch=12-val_avg_precision=0.39.ckpt",
+              "job": "21228612",
+              "parameters": 14444241,
+              "trainable_parameters": 14444241
+            },
+            "sha256": "269b9d3cfa5d05c2b1c810760982e19a9174be89e850925ff2d6e6372d0f01bc",
+            "summary": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x22/summary.json"
+          }
+        },
+        "bn_banks": 1,
+        "parameters": 14444241,
+        "parameter_bytes": 57776964,
+        "device": "NVIDIA H100 80GB HBM3 MIG 2g.20gb",
+        "torch_version": "2.6.0+cu124",
+        "calibration": {
+          "batches": 8,
+          "samples": 128,
+          "condition_samples": [
+            70,
+            25,
+            25,
+            8
+          ],
+          "bn_layers": 30,
+          "min_layer_support": 2048
+        },
+        "fit_seconds": 3.3364323750138283,
+        "checkpoint_bytes": 57998384,
+        "smoke_reload": "strict_state_equal",
+        "results": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0001420611224602908,
+            "brier": 0.002203016309067607,
+            "evaluation_seconds": 0.17429722100496292
+          },
+          "M01": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00011707683734130114,
+            "brier": 0.0020964464638382196,
+            "evaluation_seconds": 0.12635411089286208
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00015208656259346753,
+            "brier": 0.0024209418334066868,
+            "evaluation_seconds": 0.10461009619757533
+          },
+          "M07": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0002654573181644082,
+            "brier": 0.0035941465757787228,
+            "evaluation_seconds": 0.1014024312607944
+          }
+        },
+        "total_seconds": 5.443507723044604,
+        "peak_gpu_bytes": 288339456,
+        "route_reference": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5850656354320689,
+            "f1": 0.5349356778514311,
+            "iou": 0.3651277761422304,
+            "precision": 0.6776148341617473,
+            "recall": 0.44189077921428993,
+            "loss": 0.006086267958372054,
+            "brier": 0.013184680832103153
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.32402292624730916,
+            "f1": 0.2012231281750935,
+            "iou": 0.11186664189814012,
+            "precision": 0.6495045749774807,
+            "recall": 0.11905356758788348,
+            "loss": 0.009061679235843697,
+            "brier": 0.013083702739690018
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.38991633833081885,
+            "f1": 0.3501484061836178,
+            "iou": 0.2122302439176763,
+            "precision": 0.6767496295927388,
+            "recall": 0.23617142844728511,
+            "loss": 0.008308918690913512,
+            "brier": 0.013973778486720274
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.2048361836863714,
+            "f1": 0.17873890229180578,
+            "iou": 0.09814018567503804,
+            "precision": 0.6214398427193005,
+            "recall": 0.10438043263371258,
+            "loss": 0.010538758854146055,
+            "brier": 0.016547551351086744
+          }
+        },
+        "route_checkpoint_bytes": 231564112,
+        "original_x22": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5936950362421036,
+            "f1": 0.5269252130094957,
+            "iou": 0.3577043186558133,
+            "precision": 0.6997945548027762,
+            "recall": 0.4225445744812588,
+            "loss": 0.0056786682379585144,
+            "brier": 0.011658274233388062
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.32402292624730916,
+            "f1": 0.2012231281750935,
+            "iou": 0.11186664189814012,
+            "precision": 0.6495045749774807,
+            "recall": 0.11905356758788348,
+            "loss": 0.009061679235843697,
+            "brier": 0.013083702739690018
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.37873659593983583,
+            "f1": 0.3373541839719744,
+            "iou": 0.20290201359775834,
+            "precision": 0.6902479494293334,
+            "recall": 0.22322761173763897,
+            "loss": 0.008484949392574865,
+            "brier": 0.014779251743387928
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.19805091619778314,
+            "f1": 0.15545775190216554,
+            "iou": 0.08427985429039632,
+            "precision": 0.6830031635397811,
+            "recall": 0.08771076066105145,
+            "loss": 0.010612126333165899,
+            "brier": 0.017536714625026924
+          }
+        },
+        "original_x14": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5751141281159193,
+            "f1": 0.5429665039909131,
+            "iou": 0.37265203955717896,
+            "precision": 0.6612591312593185,
+            "recall": 0.46057436828830084,
+            "loss": 0.006165301476230336,
+            "brier": 0.011320976906417113
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.1171673900146638,
+            "f1": 0.00016943556235228695,
+            "iou": 8.47249588866706e-05,
+            "precision": 0.7090909090909091,
+            "recall": 8.472790394028203e-05,
+            "loss": 0.0172108875326682,
+            "brier": 0.01074605592881048
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.3815218953785623,
+            "f1": 0.3540196232202297,
+            "iou": 0.21508131458580382,
+            "precision": 0.6537795358526338,
+            "recall": 0.2427280647060485,
+            "loss": 0.008404460060036912,
+            "brier": 0.015110984192830293
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.20561392102713932,
+            "f1": 0.16659105515859512,
+            "iou": 0.09086410079285707,
+            "precision": 0.6411972702006606,
+            "recall": 0.09573166890073148,
+            "loss": 0.010450694226349198,
+            "brier": 0.018443417641416507
+          }
+        }
+      }
+    },
+    {
+      "job_id": "22102798",
+      "source_commit": "53ddec4",
+      "node": "g35",
+      "case": "routed-t1-merge",
+      "result": {
+        "history": 1,
+        "architecture": "res18_unet",
+        "seed": 0,
+        "mode": "merge",
+        "year": 2021,
+        "smoke": true,
+        "job": "22102798",
+        "source_commit": "53ddec451440edd8fc3dfd88c9ece02204627b1a",
+        "source_checkpoints": {
+          "x22": {
+            "checkpoint": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x22/checkpoint.pt",
+            "metadata": {
+              "history": 1,
+              "method": "cosine_erm",
+              "seed": 0,
+              "steps": 3000,
+              "physical_batch": 64,
+              "effective_batch": 64,
+              "learning_rate": 0.001,
+              "learning_rate_schedule": "cosine-to-zero",
+              "fire_dropout_probability": 0.3,
+              "block_dropout_probability": 0.3,
+              "block_fraction": null,
+              "reconstruction_weight": 0.0,
+              "initial_checkpoint": "/project/6085198/kulbear/wildfire/runs/corrected-B3-S0-3K-21093266/work/wildfire_progression/s9zobhnw/checkpoints/best-epoch=12-val_avg_precision=0.39.ckpt",
+              "job": "21228612",
+              "parameters": 14444241,
+              "trainable_parameters": 14444241
+            },
+            "sha256": "269b9d3cfa5d05c2b1c810760982e19a9174be89e850925ff2d6e6372d0f01bc",
+            "summary": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x22/summary.json"
+          },
+          "x14": {
+            "checkpoint": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x14/checkpoint.pt",
+            "metadata": {
+              "history": 1,
+              "method": "block_specialist",
+              "seed": 0,
+              "steps": 3000,
+              "physical_batch": 64,
+              "effective_batch": 64,
+              "learning_rate": 0.001,
+              "fire_dropout_probability": 0.0,
+              "block_dropout_probability": 1.0,
+              "reconstruction_weight": 0.0,
+              "initial_checkpoint": "/project/6085198/kulbear/wildfire/runs/corrected-B3-S0-3K-21093266/work/wildfire_progression/s9zobhnw/checkpoints/best-epoch=12-val_avg_precision=0.39.ckpt",
+              "job": "21222548",
+              "parameters": 14444241,
+              "trainable_parameters": 14444241
+            },
+            "sha256": "8895b42e40f8cbcdce95c7ad43bb7d6b679fd33c6bc19dd3627d0a808eb95ff1",
+            "summary": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x14/summary.json"
+          }
+        },
+        "bn_banks": 1,
+        "parameters": 14444241,
+        "parameter_bytes": 57776964,
+        "device": "NVIDIA H100 80GB HBM3 MIG 2g.20gb",
+        "torch_version": "2.6.0+cu124",
+        "calibration": {
+          "batches": 8,
+          "samples": 128,
+          "condition_samples": [
+            70,
+            25,
+            25,
+            8
+          ],
+          "bn_layers": 30,
+          "min_layer_support": 2048
+        },
+        "fit_seconds": 4.418500904925168,
+        "checkpoint_bytes": 57999024,
+        "smoke_reload": "strict_state_equal",
+        "results": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00013705002493225038,
+            "brier": 0.001985194394364953,
+            "evaluation_seconds": 0.24800257105380297
+          },
+          "M01": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 9.242766100214794e-05,
+            "brier": 0.001834356808103621,
+            "evaluation_seconds": 0.1732270047068596
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0005191839300096035,
+            "brier": 0.004444180987775326,
+            "evaluation_seconds": 0.10850651701912284
+          },
+          "M07": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0006671126466244459,
+            "brier": 0.006049458868801594,
+            "evaluation_seconds": 0.1063326089642942
+          }
+        },
+        "total_seconds": 6.6065109530463815,
+        "peak_gpu_bytes": 288339456,
+        "route_reference": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5850656354320689,
+            "f1": 0.5349356778514311,
+            "iou": 0.3651277761422304,
+            "precision": 0.6776148341617473,
+            "recall": 0.44189077921428993,
+            "loss": 0.006086267958372054,
+            "brier": 0.013184680832103153
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.32402292624730916,
+            "f1": 0.2012231281750935,
+            "iou": 0.11186664189814012,
+            "precision": 0.6495045749774807,
+            "recall": 0.11905356758788348,
+            "loss": 0.009061679235843697,
+            "brier": 0.013083702739690018
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.38991633833081885,
+            "f1": 0.3501484061836178,
+            "iou": 0.2122302439176763,
+            "precision": 0.6767496295927388,
+            "recall": 0.23617142844728511,
+            "loss": 0.008308918690913512,
+            "brier": 0.013973778486720274
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.2048361836863714,
+            "f1": 0.17873890229180578,
+            "iou": 0.09814018567503804,
+            "precision": 0.6214398427193005,
+            "recall": 0.10438043263371258,
+            "loss": 0.010538758854146055,
+            "brier": 0.016547551351086744
+          }
+        },
+        "route_checkpoint_bytes": 231564112,
+        "original_x22": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5936950362421036,
+            "f1": 0.5269252130094957,
+            "iou": 0.3577043186558133,
+            "precision": 0.6997945548027762,
+            "recall": 0.4225445744812588,
+            "loss": 0.0056786682379585144,
+            "brier": 0.011658274233388062
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.32402292624730916,
+            "f1": 0.2012231281750935,
+            "iou": 0.11186664189814012,
+            "precision": 0.6495045749774807,
+            "recall": 0.11905356758788348,
+            "loss": 0.009061679235843697,
+            "brier": 0.013083702739690018
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.37873659593983583,
+            "f1": 0.3373541839719744,
+            "iou": 0.20290201359775834,
+            "precision": 0.6902479494293334,
+            "recall": 0.22322761173763897,
+            "loss": 0.008484949392574865,
+            "brier": 0.014779251743387928
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.19805091619778314,
+            "f1": 0.15545775190216554,
+            "iou": 0.08427985429039632,
+            "precision": 0.6830031635397811,
+            "recall": 0.08771076066105145,
+            "loss": 0.010612126333165899,
+            "brier": 0.017536714625026924
+          }
+        },
+        "original_x14": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5751141281159193,
+            "f1": 0.5429665039909131,
+            "iou": 0.37265203955717896,
+            "precision": 0.6612591312593185,
+            "recall": 0.46057436828830084,
+            "loss": 0.006165301476230336,
+            "brier": 0.011320976906417113
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.1171673900146638,
+            "f1": 0.00016943556235228695,
+            "iou": 8.47249588866706e-05,
+            "precision": 0.7090909090909091,
+            "recall": 8.472790394028203e-05,
+            "loss": 0.0172108875326682,
+            "brier": 0.01074605592881048
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.3815218953785623,
+            "f1": 0.3540196232202297,
+            "iou": 0.21508131458580382,
+            "precision": 0.6537795358526338,
+            "recall": 0.2427280647060485,
+            "loss": 0.008404460060036912,
+            "brier": 0.015110984192830293
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.20561392102713932,
+            "f1": 0.16659105515859512,
+            "iou": 0.09086410079285707,
+            "precision": 0.6411972702006606,
+            "recall": 0.09573166890073148,
+            "loss": 0.010450694226349198,
+            "brier": 0.018443417641416507
+          }
+        }
+      }
+    },
+    {
+      "job_id": "22102798",
+      "source_commit": "53ddec4",
+      "node": "g35",
+      "case": "routed-t1-student_control",
+      "result": {
+        "history": 1,
+        "architecture": "res18_unet",
+        "seed": 0,
+        "mode": "student_control",
+        "year": 2021,
+        "smoke": true,
+        "job": "22102798",
+        "source_commit": "53ddec451440edd8fc3dfd88c9ece02204627b1a",
+        "source_checkpoints": {
+          "x22": {
+            "checkpoint": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x22/checkpoint.pt",
+            "metadata": {
+              "history": 1,
+              "method": "cosine_erm",
+              "seed": 0,
+              "steps": 3000,
+              "physical_batch": 64,
+              "effective_batch": 64,
+              "learning_rate": 0.001,
+              "learning_rate_schedule": "cosine-to-zero",
+              "fire_dropout_probability": 0.3,
+              "block_dropout_probability": 0.3,
+              "block_fraction": null,
+              "reconstruction_weight": 0.0,
+              "initial_checkpoint": "/project/6085198/kulbear/wildfire/runs/corrected-B3-S0-3K-21093266/work/wildfire_progression/s9zobhnw/checkpoints/best-epoch=12-val_avg_precision=0.39.ckpt",
+              "job": "21228612",
+              "parameters": 14444241,
+              "trainable_parameters": 14444241
+            },
+            "sha256": "269b9d3cfa5d05c2b1c810760982e19a9174be89e850925ff2d6e6372d0f01bc",
+            "summary": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x22/summary.json"
+          }
+        },
+        "bn_banks": 0,
+        "parameters": 14444241,
+        "parameter_bytes": 57776964,
+        "device": "NVIDIA H100 80GB HBM3 MIG 2g.20gb",
+        "torch_version": "2.6.0+cu124",
+        "updates": 2,
+        "effective_batch": 64,
+        "physical_batch": 16,
+        "teacher_samples": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "training_seconds": 8.505760435946286,
+        "fit_seconds": 19.47221475886181,
+        "checkpoint_bytes": 57883316,
+        "smoke_reload": "strict_state_equal",
+        "results": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.000216801228816621,
+            "brier": 0.0030632049310952425,
+            "evaluation_seconds": 0.3562756236642599
+          },
+          "M01": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00020394983584992588,
+            "brier": 0.003012419678270817,
+            "evaluation_seconds": 0.10048058722168207
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00016522727673873305,
+            "brier": 0.002741744741797447,
+            "evaluation_seconds": 0.1070683328434825
+          },
+          "M07": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0003554333816282451,
+            "brier": 0.004288320429623127,
+            "evaluation_seconds": 0.1032692058943212
+          }
+        },
+        "total_seconds": 22.602363870013505,
+        "peak_gpu_bytes": 656781824,
+        "route_reference": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5850656354320689,
+            "f1": 0.5349356778514311,
+            "iou": 0.3651277761422304,
+            "precision": 0.6776148341617473,
+            "recall": 0.44189077921428993,
+            "loss": 0.006086267958372054,
+            "brier": 0.013184680832103153
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.32402292624730916,
+            "f1": 0.2012231281750935,
+            "iou": 0.11186664189814012,
+            "precision": 0.6495045749774807,
+            "recall": 0.11905356758788348,
+            "loss": 0.009061679235843697,
+            "brier": 0.013083702739690018
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.38991633833081885,
+            "f1": 0.3501484061836178,
+            "iou": 0.2122302439176763,
+            "precision": 0.6767496295927388,
+            "recall": 0.23617142844728511,
+            "loss": 0.008308918690913512,
+            "brier": 0.013973778486720274
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.2048361836863714,
+            "f1": 0.17873890229180578,
+            "iou": 0.09814018567503804,
+            "precision": 0.6214398427193005,
+            "recall": 0.10438043263371258,
+            "loss": 0.010538758854146055,
+            "brier": 0.016547551351086744
+          }
+        },
+        "route_checkpoint_bytes": 231564112,
+        "original_x22": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5936950362421036,
+            "f1": 0.5269252130094957,
+            "iou": 0.3577043186558133,
+            "precision": 0.6997945548027762,
+            "recall": 0.4225445744812588,
+            "loss": 0.0056786682379585144,
+            "brier": 0.011658274233388062
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.32402292624730916,
+            "f1": 0.2012231281750935,
+            "iou": 0.11186664189814012,
+            "precision": 0.6495045749774807,
+            "recall": 0.11905356758788348,
+            "loss": 0.009061679235843697,
+            "brier": 0.013083702739690018
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.37873659593983583,
+            "f1": 0.3373541839719744,
+            "iou": 0.20290201359775834,
+            "precision": 0.6902479494293334,
+            "recall": 0.22322761173763897,
+            "loss": 0.008484949392574865,
+            "brier": 0.014779251743387928
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.19805091619778314,
+            "f1": 0.15545775190216554,
+            "iou": 0.08427985429039632,
+            "precision": 0.6830031635397811,
+            "recall": 0.08771076066105145,
+            "loss": 0.010612126333165899,
+            "brier": 0.017536714625026924
+          }
+        },
+        "original_x14": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5751141281159193,
+            "f1": 0.5429665039909131,
+            "iou": 0.37265203955717896,
+            "precision": 0.6612591312593185,
+            "recall": 0.46057436828830084,
+            "loss": 0.006165301476230336,
+            "brier": 0.011320976906417113
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.1171673900146638,
+            "f1": 0.00016943556235228695,
+            "iou": 8.47249588866706e-05,
+            "precision": 0.7090909090909091,
+            "recall": 8.472790394028203e-05,
+            "loss": 0.0172108875326682,
+            "brier": 0.01074605592881048
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.3815218953785623,
+            "f1": 0.3540196232202297,
+            "iou": 0.21508131458580382,
+            "precision": 0.6537795358526338,
+            "recall": 0.2427280647060485,
+            "loss": 0.008404460060036912,
+            "brier": 0.015110984192830293
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.20561392102713932,
+            "f1": 0.16659105515859512,
+            "iou": 0.09086410079285707,
+            "precision": 0.6411972702006606,
+            "recall": 0.09573166890073148,
+            "loss": 0.010450694226349198,
+            "brier": 0.018443417641416507
+          }
+        }
+      }
+    },
+    {
+      "job_id": "22102798",
+      "source_commit": "53ddec4",
+      "node": "g35",
+      "case": "routed-t1-student_distill",
+      "result": {
+        "history": 1,
+        "architecture": "res18_unet",
+        "seed": 0,
+        "mode": "student_distill",
+        "year": 2021,
+        "smoke": true,
+        "job": "22102798",
+        "source_commit": "53ddec451440edd8fc3dfd88c9ece02204627b1a",
+        "source_checkpoints": {
+          "x22": {
+            "checkpoint": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x22/checkpoint.pt",
+            "metadata": {
+              "history": 1,
+              "method": "cosine_erm",
+              "seed": 0,
+              "steps": 3000,
+              "physical_batch": 64,
+              "effective_batch": 64,
+              "learning_rate": 0.001,
+              "learning_rate_schedule": "cosine-to-zero",
+              "fire_dropout_probability": 0.3,
+              "block_dropout_probability": 0.3,
+              "block_fraction": null,
+              "reconstruction_weight": 0.0,
+              "initial_checkpoint": "/project/6085198/kulbear/wildfire/runs/corrected-B3-S0-3K-21093266/work/wildfire_progression/s9zobhnw/checkpoints/best-epoch=12-val_avg_precision=0.39.ckpt",
+              "job": "21228612",
+              "parameters": 14444241,
+              "trainable_parameters": 14444241
+            },
+            "sha256": "269b9d3cfa5d05c2b1c810760982e19a9174be89e850925ff2d6e6372d0f01bc",
+            "summary": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/x22/summary.json"
+          },
+          "erm": {
+            "checkpoint": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/erm/checkpoint.pt",
+            "metadata": {
+              "history": 1,
+              "method": "control",
+              "seed": 0,
+              "steps": 3000,
+              "physical_batch": 64,
+              "effective_batch": 64,
+              "learning_rate": 0.001,
+              "initial_checkpoint": "/project/6085198/kulbear/wildfire/runs/corrected-B3-S0-3K-21093266/work/wildfire_progression/s9zobhnw/checkpoints/best-epoch=12-val_avg_precision=0.39.ckpt",
+              "job": "21211219",
+              "parameters": 14444241
+            },
+            "sha256": "97351133d9f99f49f0b8e16896fdd833047b951ea555f25aa855d31629baf621",
+            "summary": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/erm/summary.json"
+          },
+          "mild": {
+            "checkpoint": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/mild/checkpoint.pt",
+            "metadata": {
+              "history": 1,
+              "method": "block_specialist",
+              "seed": 0,
+              "steps": 3000,
+              "physical_batch": 64,
+              "effective_batch": 64,
+              "learning_rate": 0.001,
+              "fire_dropout_probability": 0.0,
+              "block_dropout_probability": 1.0,
+              "block_fraction": 0.25,
+              "reconstruction_weight": 0.0,
+              "initial_checkpoint": "/project/6085198/kulbear/wildfire/runs/corrected-B3-S0-3K-21093266/work/wildfire_progression/s9zobhnw/checkpoints/best-epoch=12-val_avg_precision=0.39.ckpt",
+              "job": "21224659",
+              "parameters": 14444241,
+              "trainable_parameters": 14444241
+            },
+            "sha256": "ca4b01a3068b3e12ebdfd68de55f4158451bb06d16ab52481c3de37057f05883",
+            "summary": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/mild/summary.json"
+          },
+          "severe": {
+            "checkpoint": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/severe/checkpoint.pt",
+            "metadata": {
+              "history": 1,
+              "method": "block_specialist",
+              "seed": 0,
+              "steps": 3000,
+              "physical_batch": 64,
+              "effective_batch": 64,
+              "learning_rate": 0.001,
+              "fire_dropout_probability": 0.0,
+              "block_dropout_probability": 1.0,
+              "block_fraction": 0.5,
+              "reconstruction_weight": 0.0,
+              "initial_checkpoint": "/project/6085198/kulbear/wildfire/runs/corrected-B3-S0-3K-21093266/work/wildfire_progression/s9zobhnw/checkpoints/best-epoch=12-val_avg_precision=0.39.ckpt",
+              "job": "21224660",
+              "parameters": 14444241,
+              "trainable_parameters": 14444241
+            },
+            "sha256": "5e3988ca7b0fafb887d91213cecc498735915420e8cc6988fde70c9d55eefd45",
+            "summary": "/project/6085198/kulbear/wildfire/handoff-20260916/public environment/checkpoints/routed/t1-s0/severe/summary.json"
+          }
+        },
+        "bn_banks": 0,
+        "parameters": 14444241,
+        "parameter_bytes": 57776964,
+        "device": "NVIDIA H100 80GB HBM3 MIG 2g.20gb",
+        "torch_version": "2.6.0+cu124",
+        "updates": 2,
+        "effective_batch": 64,
+        "physical_batch": 16,
+        "teacher_samples": [
+          70,
+          33,
+          12,
+          13
+        ],
+        "training_seconds": 2.136507896706462,
+        "fit_seconds": 3.6654717959463596,
+        "checkpoint_bytes": 57885300,
+        "smoke_reload": "strict_state_equal",
+        "results": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 7.208064926089719e-05,
+            "brier": 0.0015338050434365869,
+            "evaluation_seconds": 0.12730444921180606
+          },
+          "M01": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 6.473920802818611e-05,
+            "brier": 0.001489716931246221,
+            "evaluation_seconds": 0.10893899574875832
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.00011938628449570388,
+            "brier": 0.0021407308522611856,
+            "evaluation_seconds": 0.10615335125476122
+          },
+          "M07": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.0003123332862742245,
+            "brier": 0.003941114526242018,
+            "evaluation_seconds": 0.1074896682985127
+          }
+        },
+        "total_seconds": 5.62001580093056,
+        "peak_gpu_bytes": 977370624,
+        "route_reference": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5850656354320689,
+            "f1": 0.5349356778514311,
+            "iou": 0.3651277761422304,
+            "precision": 0.6776148341617473,
+            "recall": 0.44189077921428993,
+            "loss": 0.006086267958372054,
+            "brier": 0.013184680832103153
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.32402292624730916,
+            "f1": 0.2012231281750935,
+            "iou": 0.11186664189814012,
+            "precision": 0.6495045749774807,
+            "recall": 0.11905356758788348,
+            "loss": 0.009061679235843697,
+            "brier": 0.013083702739690018
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.38991633833081885,
+            "f1": 0.3501484061836178,
+            "iou": 0.2122302439176763,
+            "precision": 0.6767496295927388,
+            "recall": 0.23617142844728511,
+            "loss": 0.008308918690913512,
+            "brier": 0.013973778486720274
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.2048361836863714,
+            "f1": 0.17873890229180578,
+            "iou": 0.09814018567503804,
+            "precision": 0.6214398427193005,
+            "recall": 0.10438043263371258,
+            "loss": 0.010538758854146055,
+            "brier": 0.016547551351086744
+          }
+        },
+        "route_checkpoint_bytes": 231564112,
+        "original_x22": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5936950362421036,
+            "f1": 0.5269252130094957,
+            "iou": 0.3577043186558133,
+            "precision": 0.6997945548027762,
+            "recall": 0.4225445744812588,
+            "loss": 0.0056786682379585144,
+            "brier": 0.011658274233388062
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.32402292624730916,
+            "f1": 0.2012231281750935,
+            "iou": 0.11186664189814012,
+            "precision": 0.6495045749774807,
+            "recall": 0.11905356758788348,
+            "loss": 0.009061679235843697,
+            "brier": 0.013083702739690018
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.37873659593983583,
+            "f1": 0.3373541839719744,
+            "iou": 0.20290201359775834,
+            "precision": 0.6902479494293334,
+            "recall": 0.22322761173763897,
+            "loss": 0.008484949392574865,
+            "brier": 0.014779251743387928
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.19805091619778314,
+            "f1": 0.15545775190216554,
+            "iou": 0.08427985429039632,
+            "precision": 0.6830031635397811,
+            "recall": 0.08771076066105145,
+            "loss": 0.010612126333165899,
+            "brier": 0.017536714625026924
+          }
+        },
+        "original_x14": {
+          "M00": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.5751141281159193,
+            "f1": 0.5429665039909131,
+            "iou": 0.37265203955717896,
+            "precision": 0.6612591312593185,
+            "recall": 0.46057436828830084,
+            "loss": 0.006165301476230336,
+            "brier": 0.011320976906417113
+          },
+          "M01": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.1171673900146638,
+            "f1": 0.00016943556235228695,
+            "iou": 8.47249588866706e-05,
+            "precision": 0.7090909090909091,
+            "recall": 8.472790394028203e-05,
+            "loss": 0.0172108875326682,
+            "brier": 0.01074605592881048
+          },
+          "M06": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.3815218953785623,
+            "f1": 0.3540196232202297,
+            "iou": 0.21508131458580382,
+            "precision": 0.6537795358526338,
+            "recall": 0.2427280647060485,
+            "loss": 0.008404460060036912,
+            "brier": 0.015110984192830293
+          },
+          "M07": {
+            "sample_count": 3181,
+            "pixel_count": 52117504,
+            "avg_precision": 0.20561392102713932,
+            "f1": 0.16659105515859512,
+            "iou": 0.09086410079285707,
+            "precision": 0.6411972702006606,
+            "recall": 0.09573166890073148,
+            "loss": 0.010450694226349198,
+            "brier": 0.018443417641416507
+          }
+        }
+      }
+    },
+    {
+      "job_id": "22102396",
+      "source_commit": "19132b0",
+      "node": "g36",
+      "case": "B5",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "B5",
+        "history": 5,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.18060272932052612,
+            "brier": 0.2509440779685974
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.17369771003723145,
+            "brier": 0.24595364928245544
+          }
+        },
+        "fit_global_step": 2,
+        "selected_global_step": 2,
+        "selection_score": 0.000210799858905375
+      }
+    },
+    {
+      "job_id": "22102397",
+      "source_commit": "19132b0",
+      "node": "g32",
+      "case": "rnc",
+      "result": {
+        "status": "qualification-pass",
+        "scientific_claim": false,
+        "case": "rnc",
+        "history": 1,
+        "strict_reload_tensor_equality": true,
+        "evaluation_samples_per_scenario": 2,
+        "evaluation_year": 2021,
+        "metrics": {
+          "M00": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 3.2812775316415355e-05,
+            "brier": 0.0007195132202468812
+          },
+          "M06": {
+            "sample_count": 2,
+            "pixel_count": 32768,
+            "avg_precision": 0.0,
+            "f1": 0.0,
+            "iou": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "loss": 0.017814848572015762,
+            "brier": 0.034350696951150894
+          }
+        },
+        "actual_training_steps": 1,
+        "final_training_loss": 0.005133771803230047,
+        "formal_validator_rejected_smoke": true,
+        "qualification_validator_substitutions": {
+          "status": "pass",
+          "steps": 3000
+        }
+      }
+    }
+  ]
+}
