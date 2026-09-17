@@ -1,34 +1,34 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="野火预测科研方法教学：从研究基础、官方单 fold 复现到受控缺失方法验证。">
-<title>野火预测 · 科研方法教学与实验入门</title>
+<meta name="description" content="Learn wildfire forecasting research methods: foundations, official single-fold reproduction, and controlled-missingness experiments.">
+<title>Wildfire Forecasting · Research Methods and Practical Tutorials</title>
 <link rel="stylesheet" href="assets/course.css">
 </head>
 <body>
-<nav aria-label="主导航"><a href="./" aria-current="page">课程首页</a><a href="related-work/">研究基础</a><a href="baseline-reproduction/">基线复现</a><a href="guides/docs/START_HERE.html">新同学入门</a></nav>
+<nav aria-label="Main navigation"><a href="./" aria-current="page">Course home</a><a href="related-work/">Research foundations</a><a href="baseline-reproduction/">Baseline reproduction</a><a href="guides/docs/START_HERE.html">Start here</a></nav>
 <main>
 <p class="eyebrow">Wildfire forecasting · Research methods</p>
-<h1>从跑通一个基线，<br>到做出可信的实验。</h1>
-<p class="lead">面向刚加入项目的学生：先理解问题和数据，再完成一个官方 fold，最后学习如何公平比较方法、解释正负结果。当前研究覆盖 T=1/T=5、受控缺失、路由与蒸馏，以及跨架构验证。</p>
-<a class="button" href="guides/docs/START_HERE.html">开始入门</a><a href="guides/docs/tutorials/res18-baseline-slurm.html">直接进入 Slurm 实操 →</a>
-<section aria-labelledby="route"><h2 id="route">按这个顺序学习</h2><div class="cards">
-<article class="card"><span class="step">01 · 明确问题</span><h3><a href="related-work/">研究基础与相关工作</a></h3><p>理解卫星观测、活跃火点标签、数据集与已有方法。先知道我们能回答什么，再讨论模型创新。</p><p>完成目标：讲清输入、预测目标与证据边界。</p></article>
-<article class="card"><span class="step">02 · 学会复现</span><h3><a href="baseline-reproduction/">从论文指标到可信基线</a></h3><p>学习固定实验协议、核对数据和 fold、校准运行预算，以及区分自己训练与发布权重的结果。</p><p>完成目标：能解释一项结果如何产生、如何核验。</p></article>
-<article class="card"><span class="step">03 · 动手运行</span><h3><a href="guides/docs/tutorials/res18-baseline-slurm.html">官方 Res18 单 fold 实操</a></h3><p>从官方代码与公开数据开始，按 Slurm 命令准备环境、转换数据、完成 smoke，再训练和评估 Fold 2。</p><p>首次只跑一个 fold；完整 12-fold 为选做。</p></article>
-<article class="card"><span class="step">04 · 接入研究</span><h3><a href="guides/docs/research/reproduce.html">复现项目方法与控制组</a></h3><p>搭建可迁移的研究环境，理解 corrected baseline，再从已有证据中选一个方法和它的匹配控制。</p><p>完成目标：复现一个公平比较，并写出自己的判断。</p></article>
+<h1>From your first baseline<br>to a trustworthy experiment.</h1>
+<p class="lead">A learning path for new research students: understand the task and data, complete one official fold, then learn to compare methods fairly and interpret positive and negative results. The current project covers T=1/T=5, controlled missingness, routing, distillation and architecture transfer.</p>
+<a class="button" href="guides/docs/START_HERE.html">Start learning</a><a href="guides/docs/tutorials/res18-baseline-slurm.html">Go to the Slurm practical →</a>
+<section aria-labelledby="route"><h2 id="route">Your learning path</h2><div class="cards">
+<article class="card"><span class="step">01 · Define the question</span><h3><a href="related-work/">Research foundations and related work</a></h3><p>Understand satellite observations, active-fire labels, datasets and existing methods. Establish which questions the evidence can answer before proposing a model.</p><p>Milestone: explain the inputs, prediction target and limits of the task.</p></article>
+<article class="card"><span class="step">02 · Learn to reproduce</span><h3><a href="baseline-reproduction/">From a paper claim to a verified baseline</a></h3><p>Learn to freeze the protocol, audit data and folds, calibrate a runtime budget, and distinguish your training results from released-checkpoint evaluations.</p><p>Milestone: explain how a result was produced and verified.</p></article>
+<article class="card"><span class="step">03 · Run an experiment</span><h3><a href="guides/docs/tutorials/res18-baseline-slurm.html">Official Res18 single-fold practical</a></h3><p>Start with official code and public data. Follow the Slurm commands to prepare the environment, convert data, pass a smoke check, and train and evaluate Fold 2.</p><p>Complete one fold first. All twelve folds are optional.</p></article>
+<article class="card"><span class="step">04 · Join the research</span><h3><a href="guides/docs/research/reproduce.html">Reproduce a method and its control</a></h3><p>Set up a portable research environment, understand the corrected baselines, then select an existing method and its matched control.</p><p>Milestone: reproduce a fair comparison and explain your conclusion.</p></article>
 </div></section>
-<section><h2>先分清两种 baseline</h2><div class="table-wrap"><table><thead><tr><th>路径</th><th>数据与预算</th><th>与你的任务如何对应</th></tr></thead><tbody>
-<tr><td><a href="guides/docs/tutorials/res18-baseline-slurm.html">官方 Fold 2</a></td><td>原始 WSTS 四年；2018/2020 训练、2019 验证、2021 测试；10,000 步。</td><td>第一次上手。只依赖官方代码与公开资产，不需要本项目模块。</td></tr>
-<tr><td><a href="guides/docs/tutorials/project-b0-slurm.html">项目 corrected B0</a></td><td>八年数据；2016–2020 训练、2021 验证、2022/2023 测试；3,000 步。</td><td>接入项目研究。包含索引修正与训练统计量，不是官方 fold 的别名。</td></tr>
-</tbody></table></div><p class="note">划分、处理或预算不同，分数就不能直接解释成方法增益。下载、安装、数据处理、训练与评估均通过 Slurm；登录节点仅做编辑、Git、提交和轻量检查。</p></section>
-<section><h2>当前研究与结果入口</h2><div class="cards">
-<article class="card"><h3><a href="guides/docs/research/positive-signals.html">发现过正向信号的方向</a></h3><p>51 项收录，包括单 seed、单指标或单场景改善。每项保留代码、结果来源与复现路径；收录不等于贡献已经确认。</p></article>
-<article class="card"><h3><a href="guides/docs/research/negative-results.html">负结果与未运行档案</a></h3><p>保留实现思路、设置和结果。明确区分测得无效、比较无效、取消与未运行，避免重复试错。</p></article>
-<article class="card"><h3><a href="guides/docs/research/qualification.html">哪些链路实际验证过</a></h3><p>新环境下通过 260 项 CPU 检查、91 个 GPU 短预算 case、999 事件审计及历史诊断重放。</p><p>验证在原物理集群的新环境和迁移路径进行；不是完整重跑所有历史分数。</p></article>
-</div><p><a href="guides/docs/research-roadmap.html">研究过程与实验契约</a> · <a href="guides/docs/research/method-recipes.html">方法复现配方</a> · <a href="guides/docs/research/data-preparation.html">数据准备</a> · <a href="guides/docs/research/teachers.html">教师与蒸馏</a> · <a href="guides/docs/research/architectures.html">跨架构实验</a></p></section>
-<section><h2>读结果时记住三件事</h2><ol><li><strong>目标是下一日活跃火点代理。</strong> 它不是完整火场边界；现有数据审计支持受控缺失研究，不支持自然缺失或业务部署的整体性能声明。</li><li><strong>T=1/T=5 是跨设置比较。</strong> 两者同时改变历史长度、架构与特征，不能把差异全部归因于更多历史。</li><li><strong>测试年份已有历史评估暴露。</strong> 可以复现固定结果；设计新方法前要明确确认方案，不能把这些年份重新称为未见测试集。</li></ol></section>
-<section><h2>第一次实验交什么</h2><p>一份实验笔记：代码提交号、环境和数据版本、划分、seed、batch、训练预算、Slurm job ID 与退出状态、checkpoint 和指标路径，以及与参照结果的差异解释。</p><p>Smoke 通过后再启动正式训练。详细完成标准和问题反馈模板见 <a href="guides/docs/START_HERE.html">新同学入门页</a>。</p></section>
-</main><footer>课程与项目状态更新：2026-09-16。方法结论以链接中的原始记录为准。<a href="docs/START_HERE.md">Markdown 源文档</a> · <a href="README.md">仓库说明</a></footer>
+<section><h2>Two different baseline protocols</h2><div class="table-wrap"><table><thead><tr><th>Route</th><th>Data and budget</th><th>When to use it</th></tr></thead><tbody>
+<tr><td><a href="guides/docs/tutorials/res18-baseline-slurm.html">Official Fold 2</a></td><td>Original four-year WSTS: train on 2018/2020, validate on 2019, test on 2021; 10,000 optimizer steps.</td><td>Your first practical exercise. Uses official code and public assets without this project's modules.</td></tr>
+<tr><td><a href="guides/docs/tutorials/project-b0-slurm.html">Project corrected B0</a></td><td>Eight-year dataset: train on 2016–2020, validate on 2021, test on 2022/2023; 3,000 steps.</td><td>Joining the project experiments. Includes corrected indexing and training statistics; it is not another name for an official fold.</td></tr>
+</tbody></table></div><p class="note">When splits, preprocessing or budgets differ, a score difference is not a method gain. Run downloads, installation, data processing, training and evaluation through Slurm. Use login nodes only for editing, Git, job submission and lightweight checks.</p></section>
+<section><h2>Current research and evidence</h2><div class="cards">
+<article class="card"><h3><a href="guides/docs/research/positive-signals.html">Directions with positive signals</a></h3><p>51 entries, including single-seed, single-metric or single-scenario improvements. Each retains code, result provenance and a reproduction route. Inclusion does not establish a confirmed contribution.</p></article>
+<article class="card"><h3><a href="guides/docs/research/negative-results.html">Negative and unrun experiments</a></h3><p>Preserved mechanisms, settings and results distinguish measured failures, invalid comparisons, cancellations and unrun ideas. Learn from the evidence before repeating an exploration.</p></article>
+<article class="card"><h3><a href="guides/docs/research/qualification.html">What has actually been checked</a></h3><p>Fresh-environment qualification passed 260 CPU checks, 91 short-budget GPU cases, a 999-event data audit and historical diagnostic replays.</p><p>These checks used new environments and relocated paths on the existing physical cluster. They do not reproduce every historical score at full budget.</p></article>
+</div><p><a href="guides/docs/research-roadmap.html">Research process and protocol</a> · <a href="guides/docs/research/method-recipes.html">Method recipes</a> · <a href="guides/docs/research/data-preparation.html">Data preparation</a> · <a href="guides/docs/research/teachers.html">Teachers and distillation</a> · <a href="guides/docs/research/architectures.html">Architecture experiments</a></p></section>
+<section><h2>Three rules for reading results</h2><ol><li><strong>The target is a next-day active-fire proxy.</strong> It is not a complete fire perimeter. The data audit supports controlled-missingness studies, not general claims about natural missingness or operational performance.</li><li><strong>T=1/T=5 is a cross-setting comparison.</strong> History length, architecture and features change together. Do not attribute the entire difference to more history.</li><li><strong>Historical test years have already been evaluated.</strong> Reproducing fixed results is valid; developing new methods requires an explicit confirmation plan rather than relabelling those years as unseen tests.</li></ol></section>
+<section><h2>What to submit after your first experiment</h2><p>An experiment notebook with the code commit, environment and data versions, split, seed, batch size, training budget, Slurm job ID and exit state, checkpoint and metric paths, and an explanation of differences from the reference.</p><p>Pass the smoke check before starting formal training. See <a href="guides/docs/START_HERE.html">Start here</a> for completion criteria and a problem-reporting template.</p></section>
+</main><footer>Course and project status updated 16 September 2026. Method claims follow the linked original evidence. <a href="site-content/en/docs/START_HERE.md">English source guide</a> · <a href="guides/docs/research/reproduce.html">Research handoff</a></footer>
 </body></html>

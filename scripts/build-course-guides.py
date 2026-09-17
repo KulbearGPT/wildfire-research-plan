@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the maintained onboarding Markdown as offline-readable course pages.
+"""Render the English onboarding Markdown as offline-readable course pages.
 
 Requires pandoc (verified with 2.18). Run from any directory; no model imports.
 """
@@ -16,13 +16,13 @@ SOURCES = [ROOT / name for name in (
 )] + sorted((ROOT / 'docs/research').glob('*.md'))
 OUTPUTS = {p.resolve(): ROOT / 'guides' / p.relative_to(ROOT).with_suffix('.html') for p in SOURCES}
 TEMPLATE = '''<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>$pagetitle$ · 野火预测课程</title><link rel="stylesheet" href="$stylesheet$"></head>
-<body><nav aria-label="课程导航"><a href="$home$">课程首页</a><a href="$start$">入门路线</a><a href="$lecture$">基线复现课</a></nav>
-<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="$source$">查看源文档</a>。操作命令以所选实验协议为准。</p>
-$if(toc)$<details><summary>本页目录</summary><div id="TOC">$toc$</div></details>$endif$
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>$pagetitle$ · Wildfire Forecasting Course</title><link rel="stylesheet" href="$stylesheet$"></head>
+<body><nav aria-label="Course navigation"><a href="$home$">Course home</a><a href="$start$">Start here</a><a href="$lecture$">Baseline reproduction</a></nav>
+<main class="guide"><p class="source">Generated from the maintained English guide. <a href="$source$">View source</a>. Follow the commands for your selected experimental protocol.</p>
+$if(toc)$<details><summary>On this page</summary><div id="TOC">$toc$</div></details>$endif$
 $body$
-</main><footer>Wildfire research methods · <a href="$home$">返回课程首页</a></footer></body></html>
+</main><footer>Wildfire research methods · <a href="$home$">Back to course home</a></footer></body></html>
 '''
 
 
@@ -42,8 +42,14 @@ def main():
                 resolved = (source.parent / path).resolve()
                 return match.group(1) + relative(OUTPUTS.get(resolved, resolved)) + (sep + fragment if sep else '') + ')'
 
-            # Keep shell examples byte-for-byte; rewrite only prose links.
-            chunks = re.split(r'(^```[^\n]*\n.*?^```[^\n]*$)', source.read_text(), flags=re.M | re.S)
+            english = ROOT / 'site-content/en' / source.relative_to(ROOT)
+            if not english.is_file():
+                raise FileNotFoundError(f'Missing English website source: {english}')
+            text = english.read_text()
+            if re.search(r'[\u3400-\u9fff]', text):
+                raise ValueError(f'Untranslated text in English website source: {english}')
+            # Resolve links against the canonical document; preserve English code blocks.
+            chunks = re.split(r'(^```[^\n]*\n.*?^```[^\n]*$)', text, flags=re.M | re.S)
             content = ''.join(chunk if chunk.startswith('```') else re.sub(r'(\]\()([^\s)]+)\)', link, chunk) for chunk in chunks)
             title = next(line[2:] for line in content.splitlines() if line.startswith('# '))
             output.parent.mkdir(parents=True, exist_ok=True)
@@ -53,7 +59,7 @@ def main():
                 '--metadata', 'home=' + relative(ROOT / 'index.html'),
                 '--metadata', 'start=' + relative(OUTPUTS[(ROOT / 'docs/START_HERE.md').resolve()]),
                 '--metadata', 'lecture=' + relative(ROOT / 'baseline-reproduction/index.html'),
-                '--metadata', 'source=' + relative(source), '--output', str(output)],
+                '--metadata', 'source=' + relative(english), '--output', str(output)],
                 input=content, text=True, check=True)
     print(f'Rendered {len(OUTPUTS)} course guides.')
 

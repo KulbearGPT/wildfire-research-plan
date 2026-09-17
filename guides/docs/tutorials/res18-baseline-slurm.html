@@ -1,124 +1,164 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>在新集群从官方 codebase 跑通 Res18-U-Net：独立 Slurm
-教程 · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
-<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
-<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/tutorials/res18-baseline-slurm.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
-<details><summary>本页目录</summary><div id="TOC"><ul>
-<li><a href="#在新集群从官方-codebase-跑通-res18-u-net独立-slurm-教程"
-id="toc-在新集群从官方-codebase-跑通-res18-u-net独立-slurm-教程">在新集群从官方
-codebase 跑通 Res18-U-Net：独立 Slurm 教程</a>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Running Res18-U-Net from the Official Codebase on a New Cluster:
+A Standalone Slurm
+Tutorial · Wildfire Forecasting Course</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="Course navigation"><a href="../../../index.html">Course home</a><a href="../START_HERE.html">Start here</a><a href="../../../baseline-reproduction/index.html">Baseline reproduction</a></nav>
+<main class="guide"><p class="source">Generated from the maintained English guide. <a href="../../../site-content/en/docs/tutorials/res18-baseline-slurm.md">View source</a>. Follow the commands for your selected experimental protocol.</p>
+<details><summary>On this page</summary><div id="TOC"><ul>
+<li><a
+href="#running-res18-u-net-from-the-official-codebase-on-a-new-cluster-a-standalone-slurm-tutorial"
+id="toc-running-res18-u-net-from-the-official-codebase-on-a-new-cluster-a-standalone-slurm-tutorial">Running
+Res18-U-Net from the Official Codebase on a New Cluster: A Standalone
+Slurm Tutorial</a>
 <ul>
-<li><a href="#0-本教程到底复现哪一个-baseline"
-id="toc-0-本教程到底复现哪一个-baseline">0. 本教程到底复现哪一个
-baseline</a></li>
-<li><a href="#1-登录新集群并配置自己的目录"
-id="toc-1-登录新集群并配置自己的目录">1.
-登录新集群并配置自己的目录</a></li>
-<li><a href="#2-创建自包含的脚本文件" id="toc-2-创建自包含的脚本文件">2.
-创建自包含的脚本文件</a>
+<li><a href="#0-exactly-which-baseline-does-this-tutorial-reproduce"
+id="toc-0-exactly-which-baseline-does-this-tutorial-reproduce">0.
+Exactly Which Baseline Does This Tutorial Reproduce?</a></li>
+<li><a
+href="#1-log-in-to-the-new-cluster-and-configure-your-own-directories"
+id="toc-1-log-in-to-the-new-cluster-and-configure-your-own-directories">1.
+Log In to the New Cluster and Configure Your Own Directories</a></li>
+<li><a href="#2-create-self-contained-script-files"
+id="toc-2-create-self-contained-script-files">2. Create Self-Contained
+Script Files</a>
 <ul>
-<li><a href="#21-训练环境依赖" id="toc-21-训练环境依赖">2.1
-训练环境依赖</a></li>
-<li><a href="#22-官方权重清单固定版本"
-id="toc-22-官方权重清单固定版本">2.2 官方权重清单（固定版本）</a></li>
-<li><a href="#23-下载和验证官方权重" id="toc-23-下载和验证官方权重">2.3
-下载和验证官方权重</a></li>
-<li><a href="#24-只评价发布权重的入口"
-id="toc-24-只评价发布权重的入口">2.4 只评价发布权重的入口</a></li>
-<li><a href="#25-保存结果及检查完整-12-fold"
-id="toc-25-保存结果及检查完整-12-fold">2.5 保存结果及检查完整
-12-fold</a></li>
-<li><a href="#26-统一-slurm-作业脚本"
-id="toc-26-统一-slurm-作业脚本">2.6 统一 Slurm 作业脚本</a></li>
+<li><a href="#21-training-environment-dependencies"
+id="toc-21-training-environment-dependencies">2.1 Training Environment
+Dependencies</a></li>
+<li><a href="#22-official-weight-manifest-pinned-version"
+id="toc-22-official-weight-manifest-pinned-version">2.2 Official Weight
+Manifest (Pinned Version)</a></li>
+<li><a href="#23-download-and-verify-official-weights"
+id="toc-23-download-and-verify-official-weights">2.3 Download and Verify
+Official Weights</a></li>
+<li><a href="#24-entry-point-for-evaluating-released-weights-only"
+id="toc-24-entry-point-for-evaluating-released-weights-only">2.4 Entry
+Point for Evaluating Released Weights Only</a></li>
+<li><a href="#25-save-results-and-check-the-complete-12-fold-set"
+id="toc-25-save-results-and-check-the-complete-12-fold-set">2.5 Save
+Results and Check the Complete 12-Fold Set</a></li>
+<li><a href="#26-unified-slurm-job-script"
+id="toc-26-unified-slurm-job-script">2.6 Unified Slurm Job
+Script</a></li>
 </ul></li>
-<li><a href="#3-创建环境并取得官方代码"
-id="toc-3-创建环境并取得官方代码">3. 创建环境并取得官方代码</a></li>
-<li><a href="#4-下载原始四年-wsts" id="toc-4-下载原始四年-wsts">4.
-下载原始四年 WSTS</a></li>
-<li><a href="#5-cpu-转换geotiff--hdf5"
-id="toc-5-cpu-转换geotiff--hdf5">5. CPU 转换：GeoTIFF → HDF5</a></li>
-<li><a href="#6-一个验证-batch--一步-gpu-smoke"
-id="toc-6-一个验证-batch--一步-gpu-smoke">6. 一个验证 batch + 一步 GPU
-smoke</a></li>
-<li><a href="#7-正式训练官方-fold-2" id="toc-7-正式训练官方-fold-2">7.
-正式训练官方 Fold 2</a></li>
-<li><a href="#8-可选仅评价官方-fold-2-权重"
-id="toc-8-可选仅评价官方-fold-2-权重">8. 可选：仅评价官方 Fold 2
-权重</a></li>
-<li><a href="#9-可选完整-12-fold" id="toc-9-可选完整-12-fold">9.
-可选：完整 12-fold</a>
+<li><a href="#3-create-the-environment-and-obtain-the-official-code"
+id="toc-3-create-the-environment-and-obtain-the-official-code">3. Create
+the Environment and Obtain the Official Code</a></li>
+<li><a href="#4-download-the-original-four-year-wsts-dataset"
+id="toc-4-download-the-original-four-year-wsts-dataset">4. Download the
+Original Four-Year WSTS Dataset</a></li>
+<li><a href="#5-cpu-conversion-geotiff--hdf5"
+id="toc-5-cpu-conversion-geotiff--hdf5">5. CPU Conversion: GeoTIFF →
+HDF5</a></li>
+<li><a href="#6-one-validation-batch--one-step-gpu-smoke-test"
+id="toc-6-one-validation-batch--one-step-gpu-smoke-test">6. One
+Validation Batch + One-Step GPU Smoke Test</a></li>
+<li><a href="#7-full-training-of-official-fold-2"
+id="toc-7-full-training-of-official-fold-2">7. Full Training of Official
+Fold 2</a></li>
+<li><a href="#8-optional-evaluate-only-the-official-fold-2-weights"
+id="toc-8-optional-evaluate-only-the-official-fold-2-weights">8.
+Optional: Evaluate Only the Official Fold 2 Weights</a></li>
+<li><a href="#9-optional-complete-12-fold-runs"
+id="toc-9-optional-complete-12-fold-runs">9. Optional: Complete 12-Fold
+Runs</a>
 <ul>
-<li><a href="#91-从头训练十二个-fold"
-id="toc-91-从头训练十二个-fold">9.1 从头训练十二个 fold</a></li>
-<li><a href="#92-或者只评价十二个发布权重"
-id="toc-92-或者只评价十二个发布权重">9.2
-或者只评价十二个发布权重</a></li>
-<li><a href="#93-汇总实际完成的十二个-fold"
-id="toc-93-汇总实际完成的十二个-fold">9.3 汇总实际完成的十二个
-fold</a></li>
-<li><a href="#94-与论文数字如何比较" id="toc-94-与论文数字如何比较">9.4
-与论文数字如何比较</a></li>
+<li><a href="#91-train-all-twelve-folds-from-scratch"
+id="toc-91-train-all-twelve-folds-from-scratch">9.1 Train All Twelve
+Folds from Scratch</a></li>
+<li><a
+href="#92-alternatively-evaluate-only-the-twelve-released-weights"
+id="toc-92-alternatively-evaluate-only-the-twelve-released-weights">9.2
+Alternatively, Evaluate Only the Twelve Released Weights</a></li>
+<li><a href="#93-summarize-the-twelve-folds-actually-completed"
+id="toc-93-summarize-the-twelve-folds-actually-completed">9.3 Summarize
+the Twelve Folds Actually Completed</a></li>
+<li><a href="#94-how-to-compare-with-the-papers-numbers"
+id="toc-94-how-to-compare-with-the-papers-numbers">9.4 How to Compare
+with the Paper's Numbers</a></li>
 </ul></li>
-<li><a href="#10-常见问题与交付清单" id="toc-10-常见问题与交付清单">10.
-常见问题与交付清单</a></li>
-<li><a href="#11-本版独立性与验证边界"
-id="toc-11-本版独立性与验证边界">11. 本版独立性与验证边界</a></li>
+<li><a href="#10-troubleshooting-and-deliverables"
+id="toc-10-troubleshooting-and-deliverables">10. Troubleshooting and
+Deliverables</a></li>
+<li><a href="#11-independence-and-validation-boundaries"
+id="toc-11-independence-and-validation-boundaries">11. Independence and
+Validation Boundaries</a></li>
 </ul></li>
 </ul></div></details>
 <h1
-id="在新集群从官方-codebase-跑通-res18-u-net独立-slurm-教程">在新集群从官方
-codebase 跑通 Res18-U-Net：独立 Slurm 教程</h1>
-<p>本版只需要作者的官方仓库、公开数据和公开权重，<strong>不 clone
-<code>wildfire-research-plan</code>，不调用我们的模块，不读取老师的缓存、环境或检查点</strong>。所需的小型脚本全部在本文给出，学生复制后保存在自己的实验目录。</p>
-<p>按你的说明，新集群采用与现有服务器相同的 Alliance/Nibi 软件栈与
-Slurm。模块名沿用
-<code>StdEnv/2023 gcc/12.3 python/3.10.13 cuda/12.2</code>；账户、存储目录和可申请
-GPU
-必须使用新服务器自己的值。本文不是对任意未知集群免配置兼容的承诺。</p>
-<h2 id="0-本教程到底复现哪一个-baseline">0. 本教程到底复现哪一个
-baseline</h2>
-<p>模型是作者 WSTS+ 工作中的 <strong>ResNet18-U-Net、T=1、All
-features</strong>。ResNet18 编码器提取特征，U-Net
-解码器输出下一天活跃火点的逐像素概率。输入一天观测，原始 23
-波段经过官方特征处理后成为 40 通道。ResNet18 用 ImageNet
-初始化，不使用我们已经训练好的野火 checkpoint。</p>
-<p>学生只需训练 <strong>Fold 2</strong>：2018/2020 训练、2019 验证、2021
-测试，10000 个优化器更新。完整 12-fold
-和发布权重评价在文末作为可选步骤。</p>
-<p><strong>这里的官方 baseline 不等于项目 roadmap 的 corrected
-B0。</strong> 项目 B0 另有八年时间划分、索引修正、训练统计量及 3000
-步预算；官方原样代码不会自动产生那些行为。你的“不依赖我们仓库”要求在本教程中优先落实为官方
-baseline 复现。</p>
-<p>WSTS+ 是作者工作的名字，但这里固定的十二个官方权重使用原始四年 WSTS
-划分，所以下载原始 <code>WildfireSpreadTS.zip</code> 即可。不要改成
-<code>additional_data=true</code>：锁定代码的八年设置只有四个
-fold，既不能套用 0–11，也不能直接比较下面的十二 fold 参照。</p>
-<p>官方来源：<a
-href="https://github.com/slahrichi/WildfireSpreadTS">作者代码</a>、<a
-href="https://zenodo.org/records/8006177">原始 WSTS 数据</a>、<a
-href="https://huggingface.co/saadlahrichi/WSTSPlus">作者发布权重</a>。代码固定为
-`ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad`，权重固定为
-<code>acf70a37394849f4ec8d108a51d6f4325a554d0a</code>。</p>
-<h2 id="1-登录新集群并配置自己的目录">1. 登录新集群并配置自己的目录</h2>
-<p>在自己电脑终端执行，替换用户名和新服务器地址：</p>
+id="running-res18-u-net-from-the-official-codebase-on-a-new-cluster-a-standalone-slurm-tutorial">Running
+Res18-U-Net from the Official Codebase on a New Cluster: A Standalone
+Slurm Tutorial</h1>
+<p>This version requires only the authors' official repository, public
+data, and public weights. <strong>Do not clone
+<code>wildfire-research-plan</code>, call our modules, or read the
+instructor's caches, environments, or checkpoints.</strong> All small
+scripts needed are included here for students to copy into their own
+experiment directory.</p>
+<p>As specified, the new cluster uses the same Alliance/Nibi software
+stack and Slurm as the existing server. Module names remain
+<code>StdEnv/2023 gcc/12.3 python/3.10.13 cuda/12.2</code>; accounts,
+storage directories, and available GPUs must use the new server's own
+values. This tutorial does not promise compatibility with arbitrary
+unknown clusters without configuration.</p>
+<h2 id="0-exactly-which-baseline-does-this-tutorial-reproduce">0.
+Exactly Which Baseline Does This Tutorial Reproduce?</h2>
+<p>The model is <strong>ResNet18-U-Net, T=1, All features</strong> from
+the authors' WSTS+ work. The ResNet18 encoder extracts features, and the
+U-Net decoder outputs a per-pixel probability of active fire on the next
+day. One day of observations is supplied; official feature processing
+transforms the original 23 bands into 40 channels. ResNet18 uses
+ImageNet initialization, not our previously trained wildfire
+checkpoint.</p>
+<p>Students only need to train <strong>Fold 2</strong>: train on
+2018/2020, validate on 2019, and test on 2021, with 10000 optimizer
+updates. Full 12-fold training and released-weight evaluation are
+optional steps at the end.</p>
+<p><strong>This official baseline is different from corrected B0 in the
+project roadmap.</strong> Project B0 has its own eight-year temporal
+split, index correction, training statistics, and 3000-step budget;
+unchanged official code does not automatically implement those
+behaviors. This tutorial prioritizes the requirement to avoid depending
+on our repository by reproducing the official baseline.</p>
+<p>WSTS+ is the name of the authors' work, but the twelve official
+weights pinned here use the original four-year WSTS splits, so download
+the original <code>WildfireSpreadTS.zip</code>. Do not change to
+<code>additional_data=true</code>: the pinned code's eight-year setting
+has only four folds, cannot use 0–11, and cannot be compared directly
+with the twelve-fold references below.</p>
+<p>Official sources: <a
+href="https://github.com/slahrichi/WildfireSpreadTS">authors' code</a>,
+<a href="https://zenodo.org/records/8006177">original WSTS data</a>, and
+<a href="https://huggingface.co/saadlahrichi/WSTSPlus">authors' released
+weights</a>. Code is pinned to
+<code>ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad</code>, and weights to
+<code>acf70a37394849f4ec8d108a51d6f4325a554d0a</code>.</p>
+<h2
+id="1-log-in-to-the-new-cluster-and-configure-your-own-directories">1.
+Log In to the New Cluster and Configure Your Own Directories</h2>
+<p>Run this in a terminal on your own computer, replacing the username
+and new server address:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> YOUR_USERNAME@YOUR_NEW_CLUSTER</span></code></pre></div>
-<p>后续命令均在该集群的 Bash 终端执行。先检查站点软件和账户：</p>
+<p>Run all subsequent commands in a Bash terminal on that cluster. First
+check the site's software and accounts:</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">module</span> avail python cuda</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">sacctmgr</span> <span class="at">-nP</span> show assoc where user=<span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span> format=Account,Partition</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">sinfo</span> <span class="at">-h</span> <span class="at">-o</span> <span class="st">&#39;%P %G&#39;</span></span></code></pre></div>
-<p>从输出或管理员处取得 CPU/GPU account。不要复制教师的
-account。实验目录应位于计算节点可见、可写的共享存储，而不是教师目录。为约
-48.4GB 的 ZIP、HDF5、环境和 checkpoint 准备充足配额；建议预留约
-250GB，并在转换作业申请约 200GB
-临时磁盘。这是保守准备量，不是实测峰值。</p>
+<p>Obtain your CPU/GPU accounts from the output or an administrator. Do
+not copy the instructor's accounts. Your experiment directory should be
+on writable shared storage visible to compute nodes, not in the
+instructor's directory. Allow enough quota for the approximately 48.4GB
+ZIP, HDF5 data, environment, and checkpoints; around 250GB is
+recommended, with around 200GB of temporary disk requested for
+conversion. These are conservative allowances, not measured peaks.</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;你的实验根目录绝对路径：&#39;</span> <span class="va">WF_ROOT</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;CPU account：&#39;</span> <span class="va">WF_CPU_ACCOUNT</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;GPU account：&#39;</span> <span class="va">WF_GPU_ACCOUNT</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;GPU 类型及数量，例如 h100:1：&#39;</span> <span class="va">WF_GPU</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;Absolute path to your experiment root directory: &#39;</span> <span class="va">WF_ROOT</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;CPU account: &#39;</span> <span class="va">WF_CPU_ACCOUNT</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;GPU account: &#39;</span> <span class="va">WF_GPU_ACCOUNT</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;GPU type and count, for example h100:1: &#39;</span> <span class="va">WF_GPU</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_ROOT</span> <span class="va">WF_CPU_ACCOUNT</span> <span class="va">WF_GPU_ACCOUNT</span> <span class="va">WF_GPU</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">&quot;</span>/<span class="dt">{scripts</span><span class="op">,</span><span class="dt">downloads</span><span class="op">,</span><span class="dt">data</span><span class="op">,</span><span class="dt">runs</span><span class="op">,</span><span class="dt">logs</span><span class="op">,</span><span class="dt">cache</span><span class="op">,</span><span class="dt">weights}</span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">{</span></span>
@@ -128,33 +168,45 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_GPU=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span></span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span></span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-h</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">&quot;</span></span></code></pre></div>
-<p>如集群要求显式 partition，请在下面 CPU/GPU 的 <code>sbatch</code>
-命令中分别加上 <code>--partition=实际分区</code>。GPU 可以是整卡或至少约
-20GB 的适用分片，名称以 <code>sinfo</code> 为准。申请 1 块设备，保持正式
-batch 64；先通过 smoke 验证驱动与环境兼容。教师当前服务器的 MIG
-名称不是跨服务器通用名称。</p>
-<p>重新登录后恢复：</p>
+<p>If the cluster requires an explicit partition, add
+<code>--partition=ACTUAL_PARTITION</code> to the CPU/GPU
+<code>sbatch</code> commands below. A GPU may be a whole card or a
+suitable slice with at least approximately 20GB; use names reported by
+<code>sinfo</code>. Request 1 device and retain the full-run batch size
+of 64; first verify driver and environment compatibility with the smoke
+test. MIG names on the instructor's current server are not universal
+across servers.</p>
+<p>Restore your configuration after logging in again:</p>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;你的 config.env 绝对路径：&#39;</span> <span class="va">WF_CONFIG</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;Absolute path to your config.env: &#39;</span> <span class="va">WF_CONFIG</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WF_CONFIG</span><span class="st">&quot;</span></span></code></pre></div>
-<p><strong>Slurm 使用原则：</strong> <code>sbatch</code> 返回 job
-ID，不等于完成。查看 <code>squeue -j JOBID</code> 和
-<code>sacct -j JOBID --format=JobID,State,ExitCode,Elapsed,MaxRSS</code>，只有
-<code>COMPLETED 0:0</code> 后再检查结果。每一节都可提前提交带
-<code>afterok</code>
-的后续任务，但不要把还在排队的任务当作成功。重新登录还需要从笔记恢复后续依赖所用的
-job ID。</p>
-<p>下载、安装、数据转换和模型运行都通过
-Slurm。下面的从零安装与下载任务需要出站网络；若新集群计算节点禁止联网，应先由管理员提供可联网的
-CPU/数据传输节点或镜像渠道，不能在普通登录节点偷偷执行批量工作。</p>
-<h2 id="2-创建自包含的脚本文件">2. 创建自包含的脚本文件</h2>
-<p>下面各个 <code>cat … EOF</code> 块应整段复制，包括最后的
-<code>EOF</code>。它们只是写小文件，不训练、不下载大文件，也不需要 clone
-任何额外仓库。</p>
-<h3 id="21-训练环境依赖">2.1 训练环境依赖</h3>
-<p>保留项目以前使用过的 Python 3.10 / PyTorch 2.6 / Lightning 2.0.2
-环境输入。在这个单官方 fold 教程中<strong>不需要 Python 3.13
-的项目审计环境</strong>。</p>
+<p><strong>Slurm usage:</strong> A job ID returned by
+<code>sbatch</code> does not mean completion. Check
+<code>squeue -j JOBID</code> and
+<code>sacct -j JOBID --format=JobID,State,ExitCode,Elapsed,MaxRSS</code>,
+and inspect results only after <code>COMPLETED 0:0</code>. You may
+submit downstream jobs with <code>afterok</code> in advance at each
+section, but a queued job is not a successful job. After logging in
+again, recover the job IDs needed for downstream dependencies from your
+notes.</p>
+<p>Use Slurm for downloads, installation, data conversion, and model
+execution. The installation from scratch and download jobs below require
+outbound network access. If compute nodes on the new cluster cannot
+access the network, first ask the administrator for a network-enabled
+CPU/data-transfer node or a mirror; do not quietly perform bulk work on
+an ordinary login node.</p>
+<h2 id="2-create-self-contained-script-files">2. Create Self-Contained
+Script Files</h2>
+<p>Copy each <code>cat … EOF</code> block below in full, including the
+final <code>EOF</code>. These commands only write small files: they do
+not train models, download large files, or require cloning another
+repository.</p>
+<h3 id="21-training-environment-dependencies">2.1 Training Environment
+Dependencies</h3>
+<p>Retain the Python 3.10 / PyTorch 2.6 / Lightning 2.0.2 environment
+inputs previously used by the project. This single-official-fold
+tutorial <strong>does not require the project's Python 3.13 audit
+environment</strong>.</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/requirements.txt&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="st">h5py==3.10.0</span></span>
@@ -178,12 +230,17 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="st">psutil==7.2.2</span></span>
 <span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="st">setuptools==80.9.0</span></span>
 <span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
-<p>安装使用同类型集群的 Alliance
-wheelhouse（<code>--no-index</code>）。如果新站点没有该软件源，应停止并确认安装渠道；不能认为换个服务器仍自动存在相同
-wheel。第一次安装的 freeze 和 GPU smoke 才是新环境的实际证据。</p>
-<h3 id="22-官方权重清单固定版本">2.2 官方权重清单（固定版本）</h3>
-<p>每行依次为
-fold、文件名、SHA-256、字节数。下载脚本会核验这些值，不凭文件名认定下载正确。</p>
+<p>Installation uses the Alliance wheelhouse available on this type of
+cluster (<code>--no-index</code>). If the new site lacks that software
+source, stop and confirm an installation channel; do not assume the same
+wheels automatically exist on another server. The first installation
+freeze and GPU smoke test provide actual evidence for the new
+environment.</p>
+<h3 id="22-official-weight-manifest-pinned-version">2.2 Official Weight
+Manifest (Pinned Version)</h3>
+<p>Each row contains the fold, filename, SHA-256, and byte count, in
+that order. The download script verifies these values rather than
+assuming that a matching filename means a correct download.</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/weights.tsv&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="st">0 fold0_testAP0.528.pth be33d244916d71158dab42b3aa607395a49989f862165529f38cabd735dd69eb 57889221</span></span>
@@ -199,7 +256,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="st">10 fold10_testAP0.324.pth 2c9247afccdab53cda6bb3da00b4ba414ce963e6ad0e3e43bcf4623e431d3e96 57889405</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="st">11 fold11_testAP0.474.pth 9ecc0ee9e5908dff4f242a6b6a58060c4bfdd9ceb6857c4a12e13b633fa4c709 57889405</span></span>
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
-<h3 id="23-下载和验证官方权重">2.3 下载和验证官方权重</h3>
+<h3 id="23-download-and-verify-official-weights">2.3 Download and Verify
+Official Weights</h3>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/weights.py&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="st">import hashlib</span></span>
@@ -229,10 +287,12 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="
 <span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="st">        candidate.rename(path)</span></span>
 <span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="st">    print(&#39;VERIFIED&#39;, index, name, expected_hash)</span></span>
 <span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
-<h3 id="24-只评价发布权重的入口">2.4 只评价发布权重的入口</h3>
-<p>此小脚本使用作者 <code>train.py</code> 中的模型类、LightningCLI 和
-DataModule，严格加载作者 raw state dict，然后只调用
-<code>Trainer.test</code>。不重新实现网络、损失或数据集。</p>
+<h3 id="24-entry-point-for-evaluating-released-weights-only">2.4 Entry
+Point for Evaluating Released Weights Only</h3>
+<p>This small script uses the model classes, LightningCLI, and
+DataModule from the authors' <code>train.py</code>, strictly loads their
+raw state dict, and calls only <code>Trainer.test</code>. It does not
+reimplement the network, loss, or dataset.</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/evaluate_weight.py&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="st">import runpy</span></span>
@@ -252,10 +312,11 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="st">print(&#39;OFFICIAL_WEIGHT_STRICT_LOAD=1&#39;, flush=True)</span></span>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="st">cli.trainer.test(cli.model, cli.datamodule)</span></span>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
-<h3 id="25-保存结果及检查完整-12-fold">2.5 保存结果及检查完整
-12-fold</h3>
-<p>每项指标必须存在且为合法有限值；完整汇总要求十二个 fold
-恰好各一个，禁止混用自己训练和发布权重评价结果。</p>
+<h3 id="25-save-results-and-check-the-complete-12-fold-set">2.5 Save
+Results and Check the Complete 12-Fold Set</h3>
+<p>Every metric must exist and be a valid finite value. A complete
+summary requires exactly one result for each of the twelve folds; do not
+mix your own training results with released-weight evaluations.</p>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/results.py&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">import json</span></span>
@@ -303,12 +364,14 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="
 <span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a><span class="st">else:</span></span>
 <span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a><span class="st">    raise ValueError(&#39;Use record or aggregate&#39;)</span></span>
 <span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
-<h3 id="26-统一-slurm-作业脚本">2.6 统一 Slurm 作业脚本</h3>
-<p>这个脚本里的唯一 <code>git clone</code>
-指向作者仓库。为让锁定版本在该 PyTorch 环境可导入，setup
-只裁剪未用架构的包导入，并删除未使用的 <code>T_co</code>
-类型导入；完整差异保存为
-<code>setup-runtime.patch</code>。不修正官方样本索引、不替换数据划分、不改损失。</p>
+<h3 id="26-unified-slurm-job-script">2.6 Unified Slurm Job Script</h3>
+<p>The only <code>git clone</code> in this script points to the authors'
+repository. To make the pinned version importable in this PyTorch
+environment, setup only prunes package imports for unused architectures
+and removes the unused <code>T_co</code> type import; the complete diff
+is saved as <code>setup-runtime.patch</code>. It does not correct
+official sample indexing, replace the data split, or change the
+loss.</p>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="st">#!/usr/bin/env bash</span></span>
@@ -461,7 +524,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href=
 <span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a><span class="st">  python &quot;$run/scripts/results.py&quot; record &quot;$run&quot; &quot;$action&quot; &quot;$fold&quot;</span></span>
 <span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
 <span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
-<h2 id="3-创建环境并取得官方代码">3. 创建环境并取得官方代码</h2>
+<h2 id="3-create-the-environment-and-obtain-the-official-code">3. Create
+the Environment and Obtain the Official Code</h2>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">SETUP_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>4 <span class="at">--mem</span><span class="op">=</span>16G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
@@ -469,28 +533,35 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href=
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> setup<span class="va">)</span></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="va">SETUP_JOB</span><span class="op">=</span><span class="va">${SETUP_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;%s\n&#39;</span> <span class="st">&quot;</span><span class="va">$SETUP_JOB</span><span class="st">&quot;</span></span></code></pre></div>
-<p>成功后：</p>
+<p>After success:</p>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/SETUP_READY&quot;</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/environment-freeze.txt&quot;</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/setup-runtime.patch&quot;</span></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/official-code&quot;</span> remote <span class="at">-v</span></span></code></pre></div>
-<p>最后一条应只显示 <code>slahrichi/WildfireSpreadTS</code>。setup
-会缓存 ImageNet
-编码器，避免训练时临时联网。已存在的环境/代码目录拒绝被覆盖；安装失败先检查日志，不要直接反复覆盖或升级依赖。</p>
-<h2 id="4-下载原始四年-wsts">4. 下载原始四年 WSTS</h2>
+<p>The final command should show only
+<code>slahrichi/WildfireSpreadTS</code>. Setup caches the ImageNet
+encoder to avoid network access during training. Existing
+environment/code directories cannot be overwritten; if installation
+fails, inspect the logs before repeatedly overwriting files or upgrading
+dependencies.</p>
+<h2 id="4-download-the-original-four-year-wsts-dataset">4. Download the
+Original Four-Year WSTS Dataset</h2>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">DOWNLOAD_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>08:00:00 <span class="dt">\</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-download.out&quot;</span> <span class="dt">\</span></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> download<span class="va">)</span></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="va">DOWNLOAD_JOB</span><span class="op">=</span><span class="va">${DOWNLOAD_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
-<p>实际地址是
-<code>https://zenodo.org/api/records/8006177/files/WildfireSpreadTS.zip/content</code>。MD5
-应为 <code>dc1a04e63ccc70037b277d585b8fe761</code>；只在校验通过后把
-<code>.partial</code> 改为 <code>.zip</code>。日志应显示校验
-<code>OK</code>。网络下载可续传，训练失败不能因此被默认自动重试。</p>
-<h2 id="5-cpu-转换geotiff--hdf5">5. CPU 转换：GeoTIFF → HDF5</h2>
+<p>The actual URL is
+<code>https://zenodo.org/api/records/8006177/files/WildfireSpreadTS.zip/content</code>.
+The MD5 should be <code>dc1a04e63ccc70037b277d585b8fe761</code>; rename
+<code>.partial</code> to <code>.zip</code> only after verification
+passes. The log should show checksum status <code>OK</code>. Network
+downloads can resume, but this does not imply that failed training
+should automatically retry.</p>
+<h2 id="5-cpu-conversion-geotiff--hdf5">5. CPU Conversion: GeoTIFF →
+HDF5</h2>
 <div class="sourceCode" id="cb14"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="va">DATA_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SETUP_JOB</span><span class="st">:</span><span class="va">$DOWNLOAD_JOB</span><span class="st">&quot;</span> <span class="dt">\</span></span>
@@ -498,20 +569,25 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href=
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-convert.out&quot;</span> <span class="dt">\</span></span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> convert<span class="va">)</span></span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="va">DATA_JOB</span><span class="op">=</span><span class="va">${DATA_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
-<p>GeoTIFF 是逐日地理栅格，HDF5 将同一事件整理成
-<code>day × channel × height × width</code>，减少训练时频繁打开小文件的开销。转换直接调用作者
-<code>src/preprocess/CreateHDF5Dataset.py</code>，原始活跃火点 HHMM
-值转为小时；预测目标是次日活跃火点代理，不是完整火场边界。</p>
-<p>成功标准：2018/2019/2020/2021 分别为 <strong>176/74/201/156</strong>
-个 HDF5，共 <strong>607</strong> 个事件。脚本打印数量并写 READY：</p>
+<p>GeoTIFF contains daily geographic rasters. HDF5 organizes each event
+as <code>day × channel × height × width</code>, reducing the overhead of
+repeatedly opening small files during training. Conversion directly
+calls the authors' <code>src/preprocess/CreateHDF5Dataset.py</code> and
+converts original active-fire HHMM values to hours. The prediction
+target is a proxy for next-day active fire, not the complete fire
+perimeter.</p>
+<p>Success criteria: <strong>176/74/201/156</strong> HDF5 files for
+2018/2019/2020/2021 respectively, totaling <strong>607</strong> events.
+The script prints the counts and writes READY:</p>
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/data/hdf5/READY&quot;</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 30 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$DATA_JOB</span><span class="st">-convert.out&quot;</span></span></code></pre></div>
-<p>不要把新增四年 <code>WSTSPlus.zip</code>
-直接塞给此转换器：扩展包的日期/编码/缺失地理信息需要另做处理；这不是本次官方十二
-fold 的输入。</p>
-<h2 id="6-一个验证-batch--一步-gpu-smoke">6. 一个验证 batch + 一步 GPU
-smoke</h2>
+<p>Do not feed the additional four-year <code>WSTSPlus.zip</code>
+directly to this converter: the extension's dates, encodings, and
+missing geographic information require separate handling. It is not the
+input for these official twelve folds.</p>
+<h2 id="6-one-validation-batch--one-step-gpu-smoke-test">6. One
+Validation Batch + One-Step GPU Smoke Test</h2>
 <div class="sourceCode" id="cb16"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="va">SMOKE_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$DATA_JOB</span><span class="st">&quot;</span> <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span> <span class="dt">\</span></span>
@@ -519,15 +595,18 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href=
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-smoke.out&quot;</span> <span class="dt">\</span></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> smoke 2<span class="va">)</span></span>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="va">SMOKE_JOB</span><span class="op">=</span><span class="va">${SMOKE_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
-<p>成功后：</p>
+<p>After success:</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/smoke-fold2-</span><span class="va">$SMOKE_JOB</span><span class="st">/SMOKE_PASSED&quot;</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 40 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$SMOKE_JOB</span><span class="st">-smoke.out&quot;</span></span></code></pre></div>
-<p>smoke 只训练一步，batch 4，验证一个 batch，不测试。没有最佳验证
-checkpoint
-的提示在该一步检查中可能出现；它不代表完整训练已完成，也不能用来报告论文
-AP。正式任务恢复 batch 64 和完整验证集。</p>
-<h2 id="7-正式训练官方-fold-2">7. 正式训练官方 Fold 2</h2>
+<p>The smoke test trains for one step with batch size 4, validates one
+batch, and does not test. A message about the absence of a best
+validation checkpoint may appear in this one-step check; it neither
+indicates completed full training nor provides an AP for reporting in a
+paper. The full run restores batch size 64 and the complete validation
+set.</p>
+<h2 id="7-full-training-of-official-fold-2">7. Full Training of Official
+Fold 2</h2>
 <div class="sourceCode" id="cb18"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="va">TRAIN_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SMOKE_JOB</span><span class="st">&quot;</span> <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span> <span class="dt">\</span></span>
@@ -535,63 +614,70 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href=
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-train.out&quot;</span> <span class="dt">\</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> train 2<span class="va">)</span></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="va">TRAIN_JOB</span><span class="op">=</span><span class="va">${TRAIN_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
-<p>任务调用的训练程序是<strong>作者的
-<code>official-code/src/train.py</code></strong>。关键设置：</p>
+<p>The job runs <strong>the authors'
+<code>official-code/src/train.py</code></strong>. Key settings:</p>
 <table>
 <thead>
 <tr class="header">
-<th>参数</th>
-<th>值与含义</th>
+<th>Parameter</th>
+<th>Value and meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>fold / seed</td>
-<td>Fold 2、seed 0，是两个不同概念</td>
+<td>Fold 2 and seed 0 are different concepts</td>
 </tr>
 <tr class="even">
-<td>数据</td>
-<td><code>additional_data=false</code>；2018/2020 train、2019 val、2021
+<td>Data</td>
+<td><code>additional_data=false</code>; 2018/2020 train, 2019 val, 2021
 test</td>
 </tr>
 <tr class="odd">
-<td>模型</td>
-<td>Res18-U-Net、T=1、All、ImageNet 编码器初始化</td>
+<td>Model</td>
+<td>Res18-U-Net, T=1, All, ImageNet encoder initialization</td>
 </tr>
 <tr class="even">
-<td>更新预算</td>
-<td>10000 步、batch 64、AdamW、lr 0.001、官方 Focal loss</td>
+<td>Update budget</td>
+<td>10000 steps, batch 64, AdamW, lr 0.001, official Focal loss</td>
 </tr>
 <tr class="odd">
-<td>选择与评价</td>
-<td>用 validation AP 选最佳
-checkpoint，训练结束后官方入口自动测试它</td>
+<td>Selection and evaluation</td>
+<td>Select the best checkpoint by validation AP; the official entry
+point automatically tests it after training</td>
 </tr>
 <tr class="even">
-<td>时间对齐</td>
-<td>保留 <code>n_leading_observations_test_adjustment=5</code></td>
+<td>Temporal alignment</td>
+<td>Retain <code>n_leading_observations_test_adjustment=5</code></td>
 </tr>
 </tbody>
 </table>
-<p>有效 positive class weight 由官方入口按训练年份重算，不能因为 YAML
-中看到 236 就手动改回 236。历史 Fold 2 有效值为 608.4653828020165。</p>
-<p>成功后：</p>
+<p>The official entry point recalculates the effective positive class
+weight from the training years. Do not manually reset it to 236 just
+because that number appears in YAML. The historical effective Fold 2
+value was 608.4653828020165.</p>
+<p>After success:</p>
 <div class="sourceCode" id="cb19"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">TRAIN_RUN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/train-fold2-</span><span class="va">$TRAIN_JOB</span><span class="st">&quot;</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$TRAIN_RUN</span><span class="st">/result.json&quot;</span></span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$TRAIN_RUN</span><span class="st">/command.txt&quot;</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="ex">sacct</span> <span class="at">-j</span> <span class="st">&quot;</span><span class="va">$TRAIN_JOB</span><span class="st">&quot;</span> <span class="at">--format</span><span class="op">=</span>JobID,State,ExitCode,Elapsed,MaxRSS</span></code></pre></div>
-<p>验收要求：<code>COMPLETED 0:0</code>，日志确认 10000
-步完成，六项测试指标合法，一个最佳 checkpoint，以及
-<code>result.json</code>。最佳 checkpoint 的保存步数可以早于
-10000：训练做满预算，测试选择验证集表现最好的那个，而不是强行选最后一步。</p>
-<p><strong>历史参照：</strong> 自己训练的官方 Fold 2 测试 AP
-<strong>0.554664</strong>；作者发布权重同 fold 实测
-<strong>0.570902</strong>。这些是历史记录，不是承诺新服务器逐位复现的数值。记录自己实际测得的
-AP，不为了接近它们使用测试集调参。</p>
-<p>学生到这里就完成了一个官方 baseline fold。</p>
-<h2 id="8-可选仅评价官方-fold-2-权重">8. 可选：仅评价官方 Fold 2
-权重</h2>
+<p>Acceptance requires <code>COMPLETED 0:0</code>, a log confirming
+completion of 10000 steps, six valid test metrics, one best checkpoint,
+and <code>result.json</code>. The best checkpoint may have been saved
+before step 10000: training uses the full budget, while testing selects
+the best validation performer rather than forcing selection of the final
+step.</p>
+<p><strong>Historical references:</strong> Our own official Fold 2
+training achieved test AP <strong>0.554664</strong>; the authors'
+released weights measured <strong>0.570902</strong> on the same fold.
+These are historical records, not a promise of bitwise reproduction on
+the new server. Record your actual measured AP; do not tune on the test
+set to approach these numbers.</p>
+<p>At this point, students have completed one official baseline
+fold.</p>
+<h2 id="8-optional-evaluate-only-the-official-fold-2-weights">8.
+Optional: Evaluate Only the Official Fold 2 Weights</h2>
 <div class="sourceCode" id="cb20"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="va">FETCH_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SETUP_JOB</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
@@ -604,13 +690,16 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href=
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-weight-test.out&quot;</span> <span class="dt">\</span></span>
 <span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> test-weight 2<span class="va">)</span></span>
 <span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="va">WEIGHT_JOB</span><span class="op">=</span><span class="va">${WEIGHT_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
-<p>结束后读取
-<code>runs/test-weight-fold2-JOBID/result.json</code>。发布文件
-<code>fold2_testAP0.571.pth</code> 的 0.571
-是四舍五入标签，不是学生自己训练的成绩。此评价不进行训练；如果只想验证官方权重，可以跳过第
-7 节的 10000 步训练。</p>
-<h2 id="9-可选完整-12-fold">9. 可选：完整 12-fold</h2>
-<h3 id="91-从头训练十二个-fold">9.1 从头训练十二个 fold</h3>
+<p>After completion, read
+<code>runs/test-weight-fold2-JOBID/result.json</code>. The 0.571 in the
+released filename <code>fold2_testAP0.571.pth</code> is a rounded label,
+not the student's own training result. This evaluation does not train;
+if you only want to verify official weights, you can skip the 10000-step
+training in Section 7.</p>
+<h2 id="9-optional-complete-12-fold-runs">9. Optional: Complete 12-Fold
+Runs</h2>
+<h3 id="91-train-all-twelve-folds-from-scratch">9.1 Train All Twelve
+Folds from Scratch</h3>
 <div class="sourceCode" id="cb21"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="va">FULL_ARRAY</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SMOKE_JOB</span><span class="st">&quot;</span> <span class="at">--array</span><span class="op">=</span>0-11%2 <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU</span><span class="st">&quot;</span> <span class="dt">\</span></span>
@@ -618,10 +707,12 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href=
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%A_%a-train12.out&quot;</span> <span class="dt">\</span></span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> train<span class="va">)</span></span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="va">FULL_ARRAY</span><span class="op">=</span><span class="va">${FULL_ARRAY</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
-<p><code>%2</code> 限制同时运行两个 fold；每个 fold
-都是完整独立训练。这个独立 campaign 会包含 Fold
-2；若不想重复训练，选择单 fold 教学或全数组之一，不默认混入旧运行。</p>
-<h3 id="92-或者只评价十二个发布权重">9.2 或者只评价十二个发布权重</h3>
+<p><code>%2</code> limits execution to two concurrent folds; each fold
+is a complete independent training run. This separate campaign includes
+Fold 2. To avoid duplicate training, choose either the single-fold
+tutorial or the full array; do not implicitly mix in earlier runs.</p>
+<h3 id="92-alternatively-evaluate-only-the-twelve-released-weights">9.2
+Alternatively, Evaluate Only the Twelve Released Weights</h3>
 <div class="sourceCode" id="cb22"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="va">FETCH_ALL</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$SETUP_JOB</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
@@ -634,113 +725,140 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href=
 <span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%A_%a-weights12.out&quot;</span> <span class="dt">\</span></span>
 <span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> test-weight<span class="va">)</span></span>
 <span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="va">WEIGHT_ARRAY</span><span class="op">=</span><span class="va">${WEIGHT_ARRAY</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span></code></pre></div>
-<h3 id="93-汇总实际完成的十二个-fold">9.3 汇总实际完成的十二个 fold</h3>
-<p>选择一种已提交的数组：</p>
+<h3 id="93-summarize-the-twelve-folds-actually-completed">9.3 Summarize
+the Twelve Folds Actually Completed</h3>
+<p>Choose one submitted array:</p>
 <div class="sourceCode" id="cb23"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 发布权重评价用此行；如果做的是训练，改成 ARRAY_ID=&quot;$FULL_ARRAY&quot;。</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use this line for released-weight evaluation; for training, use ARRAY_ID=&quot;$FULL_ARRAY&quot;.</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="va">ARRAY_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WEIGHT_ARRAY</span><span class="st">&quot;</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$ARRAY_ID</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>2G <span class="at">--time</span><span class="op">=</span>00:10:00 <span class="dt">\</span></span>
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-summary.out&quot;</span> <span class="dt">\</span></span>
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/scripts/job.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/config.env&quot;</span> aggregate <span class="st">&quot;</span><span class="va">$ARRAY_ID</span><span class="st">&quot;</span></span></code></pre></div>
-<p>汇总文件为 <code>$WF_ROOT/summary-ARRAY_ID.json</code>，包含每 fold
-AP、均值、总体标准差和样本标准差。缺一个 fold、重复 fold
-或混合训练与发布权重结果都会报错。</p>
-<h3 id="94-与论文数字如何比较">9.4 与论文数字如何比较</h3>
+<p>The summary file is <code>$WF_ROOT/summary-ARRAY_ID.json</code>,
+containing per-fold AP, the mean, population standard deviation, and
+sample standard deviation. A missing fold, duplicate fold, or mixture of
+training and released-weight results causes an error.</p>
+<h3 id="94-how-to-compare-with-the-papers-numbers">9.4 How to Compare
+with the Paper's Numbers</h3>
 <table>
 <thead>
 <tr class="header">
-<th>参照</th>
+<th>Reference</th>
 <th style="text-align: right;">AP</th>
-<th>能说明什么</th>
+<th>What it supports</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>作者 WSTS+ 工作的 Res18-U-Net T=1 All 结果表</td>
+<td>Res18-U-Net T=1 All results table in the authors' WSTS+ work</td>
 <td style="text-align: right;">0.460 ± 0.084</td>
-<td>论文/作者表格参照</td>
+<td>Paper/authors' table reference</td>
 </tr>
 <tr class="even">
-<td>我们历史上重算十二个发布权重</td>
+<td>Our historical reevaluation of the twelve released weights</td>
 <td style="text-align: right;">0.452764 ± 0.088217</td>
-<td>总体标准差；支持发布权重可执行复现</td>
+<td>Population standard deviation; supports executable reproduction of
+released weights</td>
 </tr>
 <tr class="odd">
-<td>我们历史完整训练 Fold 2</td>
+<td>Our historical full Fold 2 training</td>
 <td style="text-align: right;">0.554664</td>
-<td>一个测试年份的单 fold 结果</td>
+<td>Single-fold result for one test year</td>
 </tr>
 </tbody>
 </table>
-<p>作者表格见<a
-href="https://github.com/slahrichi/WildfireSpreadTS#benchmark-results-ap--standard-deviation">官方
-README</a>。历史十二权重均值与参照相差约
--0.007236，数值接近，但不能据此证明论文表格与发布资产具有完全相同的运行来源。文件名分数统计也不能替代真实评价。单
-fold 高于跨 fold 均值很正常。</p>
-<p>新服务器的本次结果应单独报告；不要把以上历史数字直接填成自己的实验结果。</p>
-<h2 id="10-常见问题与交付清单">10. 常见问题与交付清单</h2>
+<p>See the authors' table in the <a
+href="https://github.com/slahrichi/WildfireSpreadTS#benchmark-results-ap--standard-deviation">official
+README</a>. The historical twelve-weight mean differs from the reference
+by about -0.007236. The values are close, but this does not prove that
+the paper's table and released assets have exactly the same run
+provenance. Statistics from filename scores cannot replace actual
+evaluation either. A single fold exceeding the cross-fold mean is
+normal.</p>
+<p>Report the new server's current results separately; do not copy the
+historical numbers above into your own experiment results.</p>
+<h2 id="10-troubleshooting-and-deliverables">10. Troubleshooting and
+Deliverables</h2>
 <table>
 <thead>
 <tr class="header">
-<th>问题</th>
-<th>处理</th>
+<th>Issue</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>module、GPU 名称或 account 不存在</td>
-<td>对照新集群的 <code>module avail</code>、<code>sinfo</code>
-和账户；不能直接复制旧服务器值</td>
+<td>Module, GPU name, or account does not exist</td>
+<td>Check the new cluster's <code>module avail</code>,
+<code>sinfo</code>, and accounts; do not copy values from the old
+server</td>
 </tr>
 <tr class="even">
-<td><code>--no-index</code> 找不到依赖</td>
-<td>确认同类型集群的软件源和固定 wheel 可用性；不要盲目升级全部依赖</td>
+<td><code>--no-index</code> cannot find a dependency</td>
+<td>Confirm the cluster's software source and availability of the pinned
+wheels; do not blindly upgrade all dependencies</td>
 </tr>
 <tr class="odd">
-<td>下载/安装连接失败</td>
-<td>确认计算节点出站网络；申请允许联网的节点/镜像渠道</td>
+<td>Download/installation connection failure</td>
+<td>Confirm outbound connectivity on compute nodes; request an allowed
+network-enabled node or mirror</td>
 </tr>
 <tr class="even">
-<td><code>SLURM_TMPDIR</code> 未定义、临时空间不足</td>
-<td>转换需要管理员提供节点临时目录；按本集群约定设置，不使用教师目录</td>
+<td><code>SLURM_TMPDIR</code> is undefined or temporary space is
+insufficient</td>
+<td>Conversion requires node-local temporary storage provided by the
+administrator; follow this cluster's conventions, not the instructor's
+directory</td>
 </tr>
 <tr class="odd">
 <td><code>DependencyNeverSatisfied</code></td>
-<td>检查前置任务失败原因；修复后用新的 job ID 重新提交下游</td>
+<td>Diagnose the failed prerequisite; after fixing it, resubmit
+downstream jobs with the new job ID</td>
 </tr>
 <tr class="even">
-<td>目录已存在</td>
-<td>脚本拒绝覆盖已有环境和科学运行，先保留日志并定位失败阶段</td>
+<td>Directory already exists</td>
+<td>The script refuses to overwrite existing environments and scientific
+runs; preserve logs and identify the failed stage first</td>
 </tr>
 <tr class="odd">
 <td>CUDA/CPU OOM</td>
-<td>根据 <code>nvidia-smi</code>、MaxRSS 增加显存/内存；不擅改正式
-batch、特征或精度</td>
+<td>Increase GPU/host memory based on <code>nvidia-smi</code> and
+MaxRSS; do not arbitrarily change the full-run batch size, features, or
+precision</td>
 </tr>
 <tr class="even">
-<td>已有 checkpoint 却没有 result.json</td>
-<td>检查训练是否做满、测试是否结束、指标是否完整；不能手写成功文件</td>
+<td>Checkpoint exists but result.json is missing</td>
+<td>Check whether training finished its budget, testing ended, and all
+metrics exist; do not handwrite a success file</td>
 </tr>
 <tr class="odd">
-<td>分数不同</td>
-<td>先核对数据、fold、参数、软件版本和测试口径，不使用测试 AP
-挑配置</td>
+<td>Scores differ</td>
+<td>First check data, fold, parameters, software versions, and
+evaluation protocol; do not select configurations using test AP</td>
 </tr>
 </tbody>
 </table>
-<p>交付：config、官方 commit 和补丁、环境
-freeze、下载校验、转换数量、job ID、真实命令、日志、checkpoint
-路径和结果
-JSON。大数据和模型留在个人实验存储中；同目录内不要并行改动上游代码或安装环境。</p>
-<h2 id="11-本版独立性与验证边界">11. 本版独立性与验证边界</h2>
-<p>本文所有脚本都由第 2
-节现场创建。运行时只依赖学生自己的目录、作者仓库、官方数据与权重，以及同类型集群提供的软件环境。全文没有要求取得
-<code>wildfire-research-plan</code> 代码，也不调用其 Python 包。</p>
-<p>上一版依赖本项目的 corrected B0 路线另存为
-<code>project-b0-slurm.md</code>，不属于本独立教程的执行步骤。</p>
-<p>新服务器尚未连接验证。文档中的历史成绩与此前 Nibi smoke
-不能冒充此独立版本在新服务器的完整训练结果；本版新增脚本的具体本地检查范围记录在同目录
-<code>official-standalone-validation.md</code>
-中，该记录不是学生执行依赖。</p>
-</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>
+<p>Deliver: configuration, official commit and patch, environment
+freeze, download checksums, conversion counts, job IDs, actual commands,
+logs, checkpoint paths, and result JSON. Keep large data and models in
+your personal experiment storage; do not concurrently change upstream
+code or install into the environment in the same directory.</p>
+<h2 id="11-independence-and-validation-boundaries">11. Independence and
+Validation Boundaries</h2>
+<p>All scripts in this tutorial are created in Section 2. Runtime
+dependencies are limited to the student's own directories, the authors'
+repository, official data and weights, and the software environment
+supplied by this type of cluster. Nothing here requires obtaining
+<code>wildfire-research-plan</code> code or calls its Python
+package.</p>
+<p>The previous corrected B0 route, which depends on this project, is
+saved separately as <code>project-b0-slurm.md</code> and is not part of
+this standalone tutorial's execution steps.</p>
+<p>The new server has not yet been connected to or validated. Historical
+scores and the earlier Nibi smoke test cannot be presented as full
+training results from this standalone version on the new server. The
+exact scope of local checks for the newly added scripts is recorded in
+<code>official-standalone-validation.md</code> in the same directory;
+that record is not a dependency for student execution.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">Back to course home</a></footer></body></html>

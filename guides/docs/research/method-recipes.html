@@ -1,37 +1,49 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>正向信号的具体方法入口 · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
-<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
-<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/method-recipes.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
-<details><summary>本页目录</summary><div id="TOC"><ul>
-<li><a href="#正向信号的具体方法入口"
-id="toc-正向信号的具体方法入口">正向信号的具体方法入口</a>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Concrete method entrypoints for positive
+signals · Wildfire Forecasting Course</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="Course navigation"><a href="../../../index.html">Course home</a><a href="../START_HERE.html">Start here</a><a href="../../../baseline-reproduction/index.html">Baseline reproduction</a></nav>
+<main class="guide"><p class="source">Generated from the maintained English guide. <a href="../../../site-content/en/docs/research/method-recipes.md">View source</a>. Follow the commands for your selected experimental protocol.</p>
+<details><summary>On this page</summary><div id="TOC"><ul>
+<li><a href="#concrete-method-entrypoints-for-positive-signals"
+id="toc-concrete-method-entrypoints-for-positive-signals">Concrete
+method entrypoints for positive signals</a>
 <ul>
-<li><a href="#x-系列同一入口保留各自机制"
-id="toc-x-系列同一入口保留各自机制">X 系列：同一入口，保留各自机制</a>
+<li><a href="#x-series-one-entrypoint-with-each-mechanism-preserved"
+id="toc-x-series-one-entrypoint-with-each-mechanism-preserved">X-series:
+one entrypoint, with each mechanism preserved</a>
 <ul>
-<li><a href="#从场景结果重建routed指标"
-id="toc-从场景结果重建routed指标">从场景结果重建“routed”指标</a></li>
+<li><a href="#reconstructing-routed-metrics-from-scenario-results"
+id="toc-reconstructing-routed-metrics-from-scenario-results">Reconstructing
+“routed” metrics from scenario results</a></li>
 </ul></li>
-<li><a href="#d-系列历史独立实现" id="toc-d-系列历史独立实现">D
-系列：历史独立实现</a></li>
-<li><a href="#组合教师和两套-september-实验"
-id="toc-组合教师和两套-september-实验">组合、教师和两套 September
-实验</a></li>
+<li><a href="#d-series-historical-standalone-implementations"
+id="toc-d-series-historical-standalone-implementations">D-series:
+historical standalone implementations</a></li>
+<li><a href="#compositions-teachers-and-the-two-september-campaigns"
+id="toc-compositions-teachers-and-the-two-september-campaigns">Compositions,
+teachers, and the two September campaigns</a></li>
 </ul></li>
 </ul></div></details>
-<h1 id="正向信号的具体方法入口">正向信号的具体方法入口</h1>
-<p>先完成 <a href="reproduce.html">环境和数据</a>、<a
-href="baselines.html">B3/B5
-基础模型</a>。这里的命令只提交作业，不等待完成；有依赖时先检查上一步退出状态。每次使用新输出目录。完整结果、对照和哪些设置真正跑过见
-<a
-href="positive-signals.html">正向信号清单</a>，不能把可运行的设置写成已有实验结果。</p>
-<h2 id="x-系列同一入口保留各自机制">X 系列：同一入口，保留各自机制</h2>
-<p>以下函数在登录 shell 中仅提交 Slurm 作业。<code>history=1</code> 和
-<code>seed=0</code> 是首次复现的选择；改为 T5 或其他 seed
-前先检查该方向是否有对应历史证据。<code>physical_batch=64</code>
-对应后期主干的记录；较早实验应采用其原始结果里的 batch，effective batch
-都是 64。</p>
+<h1 id="concrete-method-entrypoints-for-positive-signals">Concrete
+method entrypoints for positive signals</h1>
+<p>First complete <a href="reproduce.html">environment and data</a> and
+<a href="baselines.html">B3/B5 base models</a>. These commands only
+submit jobs; they do not wait for completion. When dependencies exist,
+check the preceding step's exit status first. Use a new output directory
+each time. See the <a href="positive-signals.html">positive-signal
+inventory</a> for complete results, controls, and settings actually run;
+runnable settings must not be presented as existing experimental
+results.</p>
+<h2 id="x-series-one-entrypoint-with-each-mechanism-preserved">X-series:
+one entrypoint, with each mechanism preserved</h2>
+<p>The following function only submits Slurm jobs from the login shell.
+<code>history=1</code> and <code>seed=0</code> are the choices for an
+initial reproduction; before switching to T5 or another seed, check
+whether the direction has corresponding historical evidence.
+<code>physical_batch=64</code> matches the later mainline records;
+earlier experiments should use the batch from their original results.
+The effective batch is 64 throughout.</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_SITE_ENV</span><span class="st">&quot;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_REPO</span><span class="st">&quot;</span></span>
@@ -46,20 +58,21 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--batch-size</span> <span class="st">&quot;</span><span class="va">$physical_batch</span><span class="st">&quot;</span> <span class="at">--workers</span> 3 <span class="at">--method</span> <span class="st">&quot;</span><span class="va">$method</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t</span><span class="va">${history}</span><span class="st">-s</span><span class="va">${seed}</span><span class="st">-</span><span class="va">${method}</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$@</span><span class="st">&quot;</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
-<p>按需选择一项及其最近对照，不必把下表全部训练：</p>
+<p>Choose a method and its nearest control as needed; there is no need
+to train every row below:</p>
 <table>
 <thead>
 <tr class="header">
-<th>方向</th>
-<th>提交命令</th>
-<th>需要同时保留的最近对照</th>
+<th>Direction</th>
+<th>Submission command</th>
+<th>Nearest control to retain alongside it</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>公共 continuation</td>
+<td>Common continuation</td>
 <td><code>ch control</code></td>
-<td>冻结 B3/B5，另与新训练 control 区分</td>
+<td>Frozen B3/B5, distinguished from a newly trained control</td>
 </tr>
 <tr class="even">
 <td>X1</td>
@@ -69,7 +82,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="
 <tr class="odd">
 <td>X1 adapter</td>
 <td><code>ch context_adapter</code></td>
-<td>冻结基础模型和 control</td>
+<td>Frozen base model and control</td>
 </tr>
 <tr class="even">
 <td>X3</td>
@@ -94,7 +107,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="
 <tr class="even">
 <td>X8</td>
 <td><code>ch impact_consistency</code></td>
-<td>global_consistency、control</td>
+<td>global_consistency, control</td>
 </tr>
 <tr class="odd">
 <td>X10</td>
@@ -102,14 +115,14 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="
 <td>control</td>
 </tr>
 <tr class="even">
-<td>X11 对 ERM 的局部信号</td>
+<td>X11 limited signal against ERM</td>
 <td><code>ch dynamic_inpaint_reconstruct</code></td>
-<td>dynamic_inpaint、control</td>
+<td>dynamic_inpaint, control</td>
 </tr>
 <tr class="odd">
 <td>X12</td>
 <td><code>ch fire_specialist_impact</code></td>
-<td>fire_specialist、control</td>
+<td>fire_specialist, control</td>
 </tr>
 <tr class="even">
 <td>X14</td>
@@ -119,17 +132,17 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="
 <tr class="odd">
 <td>X16</td>
 <td><code>ch block_specialist_dynamic</code></td>
-<td>block_specialist、control</td>
+<td>block_specialist, control</td>
 </tr>
 <tr class="even">
 <td>X18</td>
 <td><code>ch block_specialist_context</code></td>
-<td>block_specialist、control</td>
+<td>block_specialist, control</td>
 </tr>
 <tr class="odd">
 <td>X19</td>
 <td><code>ch block_specialist_severity_adapter</code></td>
-<td>block_specialist、control</td>
+<td>block_specialist, control</td>
 </tr>
 <tr class="even">
 <td>X22</td>
@@ -139,67 +152,79 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="
 <tr class="odd">
 <td>X23</td>
 <td><code>ch block_specialist_impact</code></td>
-<td>block_specialist、control</td>
+<td>block_specialist, control</td>
 </tr>
 <tr class="even">
 <td>X25</td>
 <td><code>ch block_specialist_reliability_prompt</code></td>
-<td>block_specialist、control</td>
+<td>block_specialist, control</td>
 </tr>
 <tr class="odd">
 <td>X26</td>
 <td><code>ch cosine_fire_impact</code></td>
-<td>cosine_fire_global、cosine_erm</td>
+<td>cosine_fire_global, cosine_erm</td>
 </tr>
 <tr class="even">
 <td>X27</td>
 <td><code>ch cosine_block_hard</code></td>
-<td>cosine_block_specialist、cosine_erm</td>
+<td>cosine_block_specialist, cosine_erm</td>
 </tr>
 <tr class="odd">
 <td>X29</td>
 <td><code>ch cosine_block_memory</code></td>
-<td>cosine_block_specialist、cosine_erm</td>
+<td>cosine_block_specialist, cosine_erm</td>
 </tr>
 <tr class="even">
 <td>X1+X3</td>
 <td><code>ch context_transition</code></td>
-<td>context、transition、control</td>
+<td>context, transition, control</td>
 </tr>
 <tr class="odd">
-<td>X2 block 局部信号</td>
+<td>X2 limited block signal</td>
 <td><code>ch distill</code></td>
-<td>control；不要替换成修订的 distill_block</td>
+<td>control; do not substitute the revised distill_block</td>
 </tr>
 </tbody>
 </table>
-<p>对照名称同样可传给 <code>ch</code>，例如
-<code>ch cosine_fire_global</code>。这些是原实现的开关，不是用某个“类似模块”替代被恢复的旧方法。</p>
-<h3 id="从场景结果重建routed指标">从场景结果重建“routed”指标</h3>
-<p>单个模型的 <code>summary.json</code> 是四个场景的原始指标。清单里标注
-routed 的结果需要再组合：spatial 路由在 M00/M01 使用对照，在 M06/M07
-使用候选；fire 路由只在 M01
-使用候选，其他场景使用对照。它们与直接对四场景取平均不同。例如 X10 相对
-ERM 的 spatial 路由：</p>
+<p>Control names can also be passed to <code>ch</code>, for example
+<code>ch cosine_fire_global</code>. These are switches in the original
+implementations, not replacements of recovered historical methods with a
+“similar module.”</p>
+<h3
+id="reconstructing-routed-metrics-from-scenario-results">Reconstructing
+“routed” metrics from scenario results</h3>
+<p>A single model's <code>summary.json</code> contains the raw metrics
+for four scenarios. Results marked routed in the inventory require
+composition: the spatial route uses the control in M00/M01 and the
+candidate in M06/M07; the fire route uses the candidate only in M01 and
+the control in all other scenarios. These differ from directly averaging
+all four scenarios. For example, the X10 spatial route against ERM:</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.cross_history.compare <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--control</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-control/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--candidate</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-dynamic_inpaint/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--routed-spatial</span> <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-X10-routed.json&quot;</span></span></code></pre></div>
-<p>X1/X4/X10/X11/X14 及 BlockDrop 专家的 routed-spatial
-总收益采用这个方式；X12 的 FireDrop specialist 比较使用
-<code>--routed-fire</code>。不带路由参数得到候选模型本身的四场景比较。对
-X16/X18/X19/X23/X25 等最近对照归因，将 <code>--control</code> 换成
-<code>block_specialist/summary.json</code>，并使用记录规定的 block
-指标，不能用相对 ERM 的总收益替代模块收益。</p>
-<p>三 seed 或多年份汇总时，依次重复 <code>--control</code> 和
-<code>--candidate</code>，同一位置必须对应相同 history/seed/year。T5
-和保留年份使用它们自己的评估输出。一个 seed 的汇总不会满足三 seed
-确认门槛。</p>
-<h2 id="d-系列历史独立实现">D 系列：历史独立实现</h2>
-<p>D 系列和 X 系列不是相同训练配方。D 的基础完成记录由 <a
-href="baselines.html">基础模型导出</a> 生成；不能只传
-checkpoint。以下辅助函数显式传入新环境路径：</p>
+<p>This procedure gives the routed-spatial total gains for
+X1/X4/X10/X11/X14 and BlockDrop specialists; X12 FireDrop specialist
+comparisons use <code>--routed-fire</code>. Omitting routing arguments
+gives the four-scenario comparison of the candidate model itself. For
+nearest-control attribution of X16/X18/X19/X23/X25 and similar methods,
+change <code>--control</code> to
+<code>block_specialist/summary.json</code> and use the block metric
+specified in the record. Total gains against ERM cannot replace module
+gains.</p>
+<p>For three-seed or multi-year aggregation, repeat
+<code>--control</code> and <code>--candidate</code> in order; matching
+positions must refer to the same history/seed/year. T5 and heldout years
+use their own evaluation outputs. A one-seed aggregate does not satisfy
+the three-seed confirmation gate.</p>
+<h2 id="d-series-historical-standalone-implementations">D-series:
+historical standalone implementations</h2>
+<p>The D-series and X-series use different training recipes. D-series
+base completion records are generated by <a
+href="baselines.html">base-model export</a>; passing only a checkpoint
+is insufficient. The following helper explicitly passes the new
+environment paths:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dtrain()</span> <span class="kw">{</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">label</span><span class="op">=</span><span class="va">$1</span> <span class="va">module</span><span class="op">=</span><span class="va">$2</span> <span class="va">batch</span><span class="op">=</span><span class="va">$3</span></span>
@@ -213,13 +238,13 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="
 <table>
 <thead>
 <tr class="header">
-<th>方向</th>
-<th>提交命令</th>
+<th>Direction</th>
+<th>Submission command</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>D1 ERM 对照</td>
+<td>D1 ERM control</td>
 <td><code>dtrain D1-ERM train_predictive_consistency 32 --lambda-consistency 0.0</code></td>
 </tr>
 <tr class="even">
@@ -227,7 +252,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="
 <td><code>dtrain D1-KL train_predictive_consistency 32 --lambda-consistency 0.1</code></td>
 </tr>
 <tr class="odd">
-<td>D2 STD 对照</td>
+<td>D2 STD control</td>
 <td><code>dtrain D2-STD train_reliability_normalized 64 --variant standard</code></td>
 </tr>
 <tr class="even">
@@ -268,17 +293,20 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="
 </tr>
 </tbody>
 </table>
-<p>这些训练器固定 seed 0、3,000 steps。历史 D1-ERM/KL 使用 batch 32；原
-launcher 未覆盖训练器的这个默认值。D5/D6 保留相同的 paired clean/corrupt
-配方，paired ERM 对照就是上表 batch 32 的 D1-ERM；D5 的最近一致性对照为
-D1-KL，D6 还需与 D5 比较。不要改用 batch 64
-再当作原结果的匹配对照，因为这会改变采样曝光量和 BatchNorm
-行为。其他匹配对照和门槛以原 <a
-href="../../../docs/experiments/quantitative_reliability_ledger.md">量化记录</a>
-与 <a
-href="../../../docs/experiments/rejected_experiments.md">弃用记录</a>
-为准。</p>
-<p>D13 使用 T5 基础模型，standard 和 sarp 两个版本分别提交：</p>
+<p>These trainers fix seed 0 and 3,000 steps. Historical D1-ERM/KL use
+batch 32; the original launcher did not override this trainer default.
+D5/D6 retain the same paired clean/corrupt recipe, whose paired ERM
+control is D1-ERM with batch 32 in the table above. D5's nearest
+consistency control is D1-KL, and D6 must also be compared with D5. Do
+not switch to batch 64 and treat it as a matched control for the
+original results: this changes sampling exposure and BatchNorm behavior.
+Other matched controls and gates follow the original <a
+href="../../../docs/experiments/quantitative_reliability_ledger.md">quantitative
+ledger</a> and <a
+href="../../../docs/experiments/rejected_experiments.md">rejection
+records</a>.</p>
+<p>D13 uses the T5 base model; submit the standard and sarp variants
+separately:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> variant <span class="kw">in</span> standard sarp<span class="kw">;</span> <span class="cf">do</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.wsts_fast_track.train_temporal_reliability_prompting <span class="dt">\</span></span>
@@ -288,7 +316,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--batch-size</span> 64 <span class="at">--num-workers</span> 8 <span class="at">--device</span> cuda <span class="dt">\</span></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output-path</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/D13-</span><span class="va">$variant</span><span class="st">/model.ckpt&quot;</span></span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
-<p>训练结束后，用对应 evaluator 评估 2021；例如 D4：</p>
+<p>After training, evaluate 2021 with the corresponding evaluator; for
+example, D4:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.wsts_fast_track.evaluate_reliability_normalized <span class="dt">\</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--checkpoint</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/D4/model.ckpt&quot;</span> <span class="dt">\</span></span>
@@ -298,9 +327,9 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="
 <table>
 <thead>
 <tr class="header">
-<th>模型</th>
-<th>evaluator 后缀（前缀都是
-<code>reproductions.wsts_fast_track.</code>）</th>
+<th>Model</th>
+<th>Evaluator suffix (all use prefix
+<code>reproductions.wsts_fast_track.</code>)</th>
 </tr>
 </thead>
 <tbody>
@@ -338,17 +367,20 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="
 </tr>
 </tbody>
 </table>
-<p>评估保留年份时同时更改 <code>--year 2022</code> 或
-<code>2023</code>、输出目录，并加
-<code>--heldout-authorized</code>。不要为未通过 screen 的方向新增
-heldout 结论。</p>
-<h2 id="组合教师和两套-september-实验">组合、教师和两套 September
-实验</h2>
-<p>教师训练及 RF/TD 命令见 <a
-href="teachers.html">教师与蒸馏</a>。X8+X17 与 X22+X17 使用同一
-complete-route 汇总器，区别是 FireDrop 分支来自 impact_consistency 或
-cosine_erm。先训练并评估匹配的 control、fire、固定 25% 和 50% BlockDrop
-专家，再汇总。例如 X22+X17 的 seed 0、T1、2021：</p>
+<p>When evaluating heldout years, change both <code>--year 2022</code>
+or <code>2023</code> and the output directory, and add
+<code>--heldout-authorized</code>. Do not add heldout conclusions for
+directions that failed the screen.</p>
+<h2
+id="compositions-teachers-and-the-two-september-campaigns">Compositions,
+teachers, and the two September campaigns</h2>
+<p>See <a href="teachers.html">teachers and distillation</a> for teacher
+training and RF/TD commands. X8+X17 and X22+X17 use the same
+complete-route aggregator; their FireDrop branches come from
+impact_consistency and cosine_erm, respectively. First train and
+evaluate the matched control, fire, and fixed 25% and 50% BlockDrop
+specialists, then aggregate. For example, X22+X17 at seed 0, T1,
+2021:</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.cross_history.compose_complete_routes <span class="dt">\</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--control</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-control/summary.json&quot;</span> <span class="dt">\</span></span>
@@ -356,8 +388,9 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mild</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-block025/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--severe</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-block050/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-X22-X17.json&quot;</span></span></code></pre></div>
-<p>X17 单独对 ERM 的正向信号，以及相对 X14
-的机制归因，使用以下命令同时输出两种比较：</p>
+<p>For X17's standalone positive signal against ERM and mechanism
+attribution against X14, the following command outputs both
+comparisons:</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.cross_history.compose_severity_routes <span class="dt">\</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--control</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-control/summary.json&quot;</span> <span class="dt">\</span></span>
@@ -365,18 +398,25 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mild</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-block025/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--severe</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-block050/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-X17.json&quot;</span></span></code></pre></div>
-<p>RF-BN 的清单信号来自修正后的
-<code>--bn-forward-mode batch_stats</code>，必须显式指定；默认 fixed
-是旧诊断，不能拿来复现修正后的数字。RF-MIXED/ RF-TYPED 分别使用
-<code>--arm mixed</code> / <code>--arm typed</code>，二者都需与
-<code>--arm control</code> 比较，typed 另需与 mixed 作等容量比较。</p>
-<p>X8+X10 使用
-<code>compose_routes --control ... --fire ... --spatial ...</code>，其中
-fire 是 impact_consistency，spatial 是
-dynamic_inpaint。汇总器读取已有场景结果，不会训练新网络；输出的路由结果适用于约定的可观测缺失场景，不是额外训练出来的单模型。</p>
-<p>自然 VIIRS 和 target-QA 两个诊断性正向信号见 <a
-href="diagnostics-reproduction.html">诊断复现</a>。它们依赖历史
-P00，不作为 corrected baseline 的科学贡献。架构迁移的公开权重下载与
-bootstrap 命令见 <a href="architectures.html">架构复现</a>，不能把 Res18
-的 B3/B5 权重载入 Swin/SegFormer。</p>
-</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>
+<p>The inventory signal for RF-BN comes from the corrected
+<code>--bn-forward-mode batch_stats</code>, which must be specified
+explicitly. The default fixed mode is the old diagnostic and cannot
+reproduce the corrected numbers. RF-MIXED/ RF-TYPED use
+<code>--arm mixed</code> / <code>--arm typed</code>, respectively. Both
+require comparison with <code>--arm control</code>, and typed
+additionally requires an equal-capacity comparison with mixed.</p>
+<p>X8+X10 uses
+<code>compose_routes --control ... --fire ... --spatial ...</code>, with
+impact_consistency for fire and dynamic_inpaint for spatial. The
+aggregator reads existing scenario results and does not train a new
+network. Its routed outputs apply to the specified
+observable-missingness scenarios; they are not an additionally trained
+single model.</p>
+<p>See <a href="diagnostics-reproduction.html">diagnostic
+reproduction</a> for the natural VIIRS and target-QA diagnostic positive
+signals. They depend on historical P00 and are not scientific
+contributions of the corrected baseline. Public-weight downloads and
+bootstrap commands for architecture transfer are in <a
+href="architectures.html">architecture reproduction</a>; Res18 B3/B5
+weights cannot be loaded into Swin/SegFormer.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">Back to course home</a></footer></body></html>

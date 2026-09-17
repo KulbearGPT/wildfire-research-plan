@@ -1,110 +1,141 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>在新 Slurm
-集群复现现有研究 · 野火预测课程</title><link rel="stylesheet" href="../../../assets/course.css"></head>
-<body><nav aria-label="课程导航"><a href="../../../index.html">课程首页</a><a href="../START_HERE.html">入门路线</a><a href="../../../baseline-reproduction/index.html">基线复现课</a></nav>
-<main class="guide"><p class="source">本页由维护中的 Markdown 生成。<a href="../../../docs/research/reproduce.md">查看源文档</a>。操作命令以所选实验协议为准。</p>
-<details><summary>本页目录</summary><div id="TOC"><ul>
-<li><a href="#在新-slurm-集群复现现有研究"
-id="toc-在新-slurm-集群复现现有研究">在新 Slurm 集群复现现有研究</a>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reproduce the existing research on a new Slurm
+cluster · Wildfire Forecasting Course</title><link rel="stylesheet" href="../../../assets/course.css"></head>
+<body><nav aria-label="Course navigation"><a href="../../../index.html">Course home</a><a href="../START_HERE.html">Start here</a><a href="../../../baseline-reproduction/index.html">Baseline reproduction</a></nav>
+<main class="guide"><p class="source">Generated from the maintained English guide. <a href="../../../site-content/en/docs/research/reproduce.md">View source</a>. Follow the commands for your selected experimental protocol.</p>
+<details><summary>On this page</summary><div id="TOC"><ul>
+<li><a href="#reproduce-the-existing-research-on-a-new-slurm-cluster"
+id="toc-reproduce-the-existing-research-on-a-new-slurm-cluster">Reproduce
+the existing research on a new Slurm cluster</a>
 <ul>
-<li><a href="#1-准备代码和集群配置" id="toc-1-准备代码和集群配置">1.
-准备代码和集群配置</a></li>
-<li><a href="#2-数据与权重" id="toc-2-数据与权重">2. 数据与权重</a></li>
-<li><a href="#3-重新训练公共基础-b0b1b2b3b5"
-id="toc-3-重新训练公共基础-b0b1b2b3b5">3. 重新训练公共基础
-B0/B1/B2/B3/B5</a></li>
-<li><a href="#4-cross-history-方法" id="toc-4-cross-history-方法">4.
-Cross-history 方法</a></li>
-<li><a href="#5-如何理解复现结果" id="toc-5-如何理解复现结果">5.
-如何理解复现结果</a></li>
+<li><a href="#1-prepare-the-code-and-cluster-configuration"
+id="toc-1-prepare-the-code-and-cluster-configuration">1. Prepare the
+code and cluster configuration</a></li>
+<li><a href="#2-data-and-weights" id="toc-2-data-and-weights">2. Data
+and weights</a></li>
+<li><a href="#3-retrain-the-shared-b0b1b2b3b5-baselines"
+id="toc-3-retrain-the-shared-b0b1b2b3b5-baselines">3. Retrain the shared
+B0/B1/B2/B3/B5 baselines</a></li>
+<li><a href="#4-cross-history-methods"
+id="toc-4-cross-history-methods">4. Cross-history methods</a></li>
+<li><a href="#5-interpreting-reproduction-results"
+id="toc-5-interpreting-reproduction-results">5. Interpreting
+reproduction results</a></li>
 </ul></li>
 </ul></div></details>
-<h1 id="在新-slurm-集群复现现有研究">在新 Slurm 集群复现现有研究</h1>
-<p>交付分成两部分：<a
-href="positive-signals.html">发现过正向信号的方向</a>保留代码、结果和运行方法；<a
-href="negative-results.html">负结果档案</a>记录实现思路、设置及结果。单
-seed、单场景的改善也收录，但不会写成已确认的贡献。完整清单见 <a
-href="../../../docs/research/method-inventory.json">method-inventory.json</a>。未运行、取消、比较无效三种状态不算负结果。</p>
-<p><strong>已完成新环境运行资格验证。</strong>
-新建训练/审计环境、独立官方源码、迁移数据与权重路径下，260 项 CPU 检查和
-91 个 GPU 短预算 case 通过；详见<a
-href="qualification.html">资格验证记录</a>。验证在本集群计算节点执行，没有声称在另一套物理集群运行过，也没有把短训练当作所有历史分数的全预算复现。</p>
-<h2 id="1-准备代码和集群配置">1. 准备代码和集群配置</h2>
-<p>这里复现的是我们的研究改动，因此需要本交付版本的源码和 Git
-提交记录。可以通过本地 Git bundle
-交付，不要求新服务器访问我们的远程仓库或原工作目录。提交器使用 Git
-保存每个作业的精确源码快照，所以单独解压 <code>git archive</code>
-不足以运行下面的提交命令。官方模型代码由安装作业从官方仓库获取；只跑官方
-Res18 基线的独立教程仍见 <a
-href="../tutorials/res18-baseline-slurm.html">原教程</a>。</p>
-<p>在交付版本已提交的源仓库目录生成 bundle 和提交号：</p>
+<h1
+id="reproduce-the-existing-research-on-a-new-slurm-cluster">Reproduce
+the existing research on a new Slurm cluster</h1>
+<p>The handoff has two parts: <a href="positive-signals.html">directions
+with positive signals</a> retain code, results, and run instructions;
+the <a href="negative-results.html">negative-results archive</a> records
+implementation ideas, settings, and results. Improvements from a single
+seed or setting are included, but are not presented as confirmed
+contributions. See <a
+href="../../../docs/research/method-inventory.json">method-inventory.json</a>
+for the complete inventory. Not run, canceled, and invalid comparison
+are three statuses that do not count as negative results.</p>
+<p><strong>Execution qualification in fresh environments is
+complete.</strong> With newly created training/audit environments, an
+independent copy of the official source, and relocated data and weight
+paths, 260 CPU checks and 91 short-budget GPU cases passed; see the <a
+href="qualification.html">qualification record</a>. Qualification ran on
+this cluster's compute nodes. It does not claim execution on a different
+physical cluster or treat short training runs as full-budget
+reproductions of every historical score.</p>
+<h2 id="1-prepare-the-code-and-cluster-configuration">1. Prepare the
+code and cluster configuration</h2>
+<p>This procedure reproduces our research changes, so it requires the
+source and Git history of this handoff version. A local Git bundle can
+deliver them without requiring the new server to access our remote
+repository or original working directory. The submitter uses Git to
+preserve each job's exact source snapshot, so extracting a
+<code>git archive</code> alone is insufficient to run the submission
+commands below. The setup job fetches the official model code from its
+official repository; the standalone instructions for running only the
+official Res18 baseline remain in the <a
+href="../tutorials/res18-baseline-slurm.html">original tutorial</a>.</p>
+<p>In the source repository with the handoff version committed, generate
+the bundle and commit ID:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> bundle create ../handoff.bundle HEAD</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rev-parse HEAD <span class="op">&gt;</span> ../handoff-commit.txt</span></code></pre></div>
-<p>把这两个文件传到新服务器，然后从本地 bundle
-建立工作仓库并固定交付提交：</p>
+<p>Transfer these two files to the new server, then create a working
+repository from the local bundle and pin the handoff commit:</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone /path/to/transfer/handoff.bundle wildfire-research-plan</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> wildfire-research-plan</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">--detach</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">cat</span> /path/to/transfer/handoff-commit.txt<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
-<p>bundle 携带该提交及其祖先历史；这里的 clone
-读取本地文件，不连接我们的远程仓库。把后面的 <code>WILDFIRE_REPO</code>
-配置为这个新工作仓库的绝对路径。</p>
-<p>需要 Linux、Slurm、NVIDIA GPU，以及 Python 3.10（训练）和 Python
-3.13（数据审计）。两套 Python
-分开是因为原模型依赖与数据审计包的版本要求不同。训练环境不安装要求
-Python 3.13 的根项目包，而从归档源码导入研究模块。</p>
-<p>在上述新工作仓库目录执行：</p>
+<p>The bundle contains that commit and its ancestor history; this clone
+reads a local file and does not connect to our remote repository. Set
+<code>WILDFIRE_REPO</code> below to the absolute path of this new
+working repository.</p>
+<p>Requirements are Linux, Slurm, an NVIDIA GPU, Python 3.10 for
+training, and Python 3.13 for data auditing. The two Python environments
+are separate because the original model dependencies and data-audit
+packages have different version requirements. The training environment
+does not install the root project package, which requires Python 3.13;
+it imports the research modules from the archived source instead.</p>
+<p>Run the following in the new working repository:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/wildfire-config&quot;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> configs/research/site.example.env <span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/wildfire-config/site.env&quot;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WILDFIRE_SITE_ENV</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/wildfire-config/site.env&quot;</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="va">${EDITOR</span><span class="op">:-</span>vi<span class="va">}</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_SITE_ENV</span><span class="st">&quot;</span></span></code></pre></div>
-<p>按新服务器修改
-<code>WILDFIRE_REPO</code>、<code>WILDFIRE_ROOT</code>、Python
-命令、module 列表及 CPU/GPU 的 Slurm 数组。<code>WILDFIRE_ROOT</code>
-必须是计算节点可访问、有足够空间的数据盘目录。路径可以包含空格。没有
-module 的服务器把两个 module 变量留空；账户、分区、GPU
-型号由本站配置决定。</p>
+<p>Adapt <code>WILDFIRE_REPO</code>, <code>WILDFIRE_ROOT</code>, Python
+commands, module lists, and CPU/GPU Slurm arrays to the new server.
+<code>WILDFIRE_ROOT</code> must be a data-storage directory accessible
+to compute nodes with sufficient space. Paths may contain spaces. On
+servers without modules, leave both module variables empty; the local
+site configuration determines the account, partitions, and GPU
+model.</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_SITE_ENV</span><span class="st">&quot;</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_REPO</span><span class="st">&quot;</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu setup</span></code></pre></div>
-<p>提交器会打印 job ID 与归档目录。用 <code>squeue -u "$USER"</code>
-看队列，用
-<code>sacct -j JOB_ID --format=JobID,State,ExitCode,NodeList</code>
-检查退出状态（把 <code>JOB_ID</code> 换成输出的数字）。日志保存在
-<code>$WILDFIRE_ROOT/jobs/</code>；成功必须同时有 Slurm 状态
-<code>COMPLETED</code>、退出码 <code>0:0</code> 和
-<code>allocation-作业号/setup-completed.txt</code>。</p>
-<p>安装固定版本的官方
-WildfireSpreadTS，应用仓库内保留的兼容性补丁，创建全新的两个虚拟环境，并在
-CPU 作业内下载 ResNet18 预训练权重。依赖输入见 <a
-href="../../../environments/research-training.txt">训练环境</a> 和 <a
-href="../../../environments/research-audit.txt">审计环境</a>，作业同时保存实际
-<code>pip freeze</code>。</p>
-<p>安装失败后先保留日志；符合 <a href="setup-recovery.html">恢复条件</a>
-时可以用 <code>setup-finish</code> 继续，不能删除环境后盲目重试。</p>
-<p>所有训练、张量测试、数据下载和转换都通过 <code>submit.sh</code>
-提交。<code>job.sh</code> 在缺少 <code>SLURM_JOB_ID</code>
-时拒绝执行。提交器归档的是 <strong>HEAD
-提交</strong>，不是未提交的工作区，因此修改后需要先 commit
-再提交实验。</p>
-<h2 id="2-数据与权重">2. 数据与权重</h2>
-<p>从公开数据重建的步骤见 <a
-href="data-preparation.html">数据准备</a>。最终目录直接包含 2016–2023
-八个年份，共 999 个 HDF5 事件；归一化统计只使用
-2016–2020。训练固定使用这些年份，2021 用于验证，2022/2023
-是保留测试年份。</p>
-<p>已有模型的迁移见 <a
-href="artifacts.html">权重与结果打包</a>。权重不放入
-Git；需要检查摘要并携带对应结果，不能只把旧服务器绝对路径抄进配置。历史
-checkpoint 内的初始化路径是来源标识，迁移文件时不能随意改写该标识。</p>
-<h2 id="3-重新训练公共基础-b0b1b2b3b5">3. 重新训练公共基础
-B0/B1/B2/B3/B5</h2>
-<p>环境与数据准备成功后，以下命令提交一个完整 B3（T1
-FireDrop+BlockDrop）训练作业：</p>
+<p>The submitter prints the job ID and archive directory. Use
+<code>squeue -u "$USER"</code> to view the queue and
+<code>sacct -j JOB_ID --format=JobID,State,ExitCode,NodeList</code> to
+check the exit status (replace <code>JOB_ID</code> with the printed
+number). Logs are stored in <code>$WILDFIRE_ROOT/jobs/</code>; success
+requires all three: Slurm state <code>COMPLETED</code>, exit code
+<code>0:0</code>, and
+<code>allocation-JOB_ID/setup-completed.txt</code>.</p>
+<p>Setup installs the pinned official WildfireSpreadTS version, applies
+the compatibility patches retained in the repository, creates two fresh
+virtual environments, and downloads pretrained ResNet18 weights within a
+CPU job. Dependency inputs are listed in the <a
+href="../../../environments/research-training.txt">training
+environment</a> and <a
+href="../../../environments/research-audit.txt">audit environment</a>;
+the job also saves the actual <code>pip freeze</code>.</p>
+<p>After a setup failure, preserve the logs first. If the <a
+href="setup-recovery.html">recovery conditions</a> hold, resume with
+<code>setup-finish</code>; do not delete the environments and retry
+blindly.</p>
+<p>Submit all training, tensor tests, data downloads, and conversions
+through <code>submit.sh</code>. <code>job.sh</code> refuses execution
+without <code>SLURM_JOB_ID</code>. The submitter archives the
+<strong>HEAD commit</strong>, not the uncommitted working tree, so
+commit changes before submitting experiments.</p>
+<h2 id="2-data-and-weights">2. Data and weights</h2>
+<p>See <a href="data-preparation.html">data preparation</a> for
+reconstruction from public data. The final directory directly contains
+the eight years 2016–2023, totaling 999 HDF5 events; normalization
+statistics use only 2016–2020. Training is fixed to those years, 2021 is
+used for validation, and 2022/2023 are held-out test years.</p>
+<p>See <a href="artifacts.html">weight and result bundles</a> for
+transferring existing models. Weights are not stored in Git; verify
+their digests and include the corresponding results, rather than merely
+copying the old server's absolute paths into the configuration.
+Initialization paths within historical checkpoints identify their
+provenance; do not arbitrarily rewrite those identities when relocating
+files.</p>
+<h2 id="3-retrain-the-shared-b0b1b2b3b5-baselines">3. Retrain the shared
+B0/B1/B2/B3/B5 baselines</h2>
+<p>After environment and data preparation succeed, the following command
+submits a full B3 (T1 FireDrop+BlockDrop) training job:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_SITE_ENV</span><span class="st">&quot;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_REPO</span><span class="st">&quot;</span></span>
@@ -112,26 +143,31 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--baseline-id</span> B3 <span class="at">--upstream-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_UPSTREAM</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--data-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_DATA</span><span class="st">&quot;</span> <span class="at">--stats-path</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_STATS</span><span class="st">&quot;</span> <span class="dt">\</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--run-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/B3&quot;</span></span></code></pre></div>
-<p>将 <code>B3</code> 和输出目录同时改成
-<code>B0</code>、<code>B1</code>、<code>B2</code> 或 <code>B5</code>
-可运行对应基础模型。B0 是 T1 clean，B2 是 T1 FireDrop，B1 是 T5
-clean，B5 是 T5 FireDrop+BlockDrop。每项都是 seed 0、3,000 个 optimizer
-steps；<code>from_scratch</code>
-指没有从已训练任务模型继续，并不表示禁用 ImageNet 编码器初始化。</p>
-<p>成功后按照 <a href="baselines.html">基础模型导出</a> 生成经过检查的
-checkpoint 和完成记录。不能手工把未完成的训练标记为完成。</p>
-<p>基础训练和后续 continuation 是不同阶段。T1 continuation 从 B3
-开始；T5 continuation 从 B5 开始。配置中的两个 checkpoint 必须是正确的
-Lightning 基础模型文件，不能用 continuation 的包装 checkpoint 冒充。</p>
-<h2 id="4-cross-history-方法">4. Cross-history 方法</h2>
-<p>设置好 B3/B5 权重后，先跑一个 T1
-smoke；它检查计算链路，不提供论文效果证据：</p>
+<p>Change both <code>B3</code> and the output directory to
+<code>B0</code>, <code>B1</code>, <code>B2</code>, or <code>B5</code> to
+run the corresponding baseline. B0 is T1 clean, B2 is T1 FireDrop, B1 is
+T5 clean, and B5 is T5 FireDrop+BlockDrop. Each uses seed 0 and 3,000
+optimizer steps; <code>from_scratch</code> means no continuation from an
+already trained task model, not that ImageNet encoder initialization is
+disabled.</p>
+<p>After success, follow <a href="baselines.html">baseline export</a> to
+generate a verified checkpoint and completion record. Do not manually
+mark unfinished training as complete.</p>
+<p>Baseline training and subsequent continuation are separate stages. T1
+continuations start from B3; T5 continuations start from B5. The two
+configured checkpoints must be the correct Lightning baseline files;
+wrapped continuation checkpoints cannot substitute for them.</p>
+<h2 id="4-cross-history-methods">4. Cross-history methods</h2>
+<p>After configuring the B3/B5 weights, first run a T1 smoke test; it
+checks the computation pipeline and does not provide evidence of
+paper-level effectiveness:</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="at">--batch-size</span> 16 <span class="at">--workers</span> 3 <span class="dt">\</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--smoke</span> <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/smoke-t1-cosine&quot;</span></span></code></pre></div>
-<p>完整运行移除 <code>--smoke</code>，改用新输出目录，保留
-<code>--steps 3000</code>。下面是 seed 0、T1 的 X22 及其最近对照：</p>
+<p>For a full run, remove <code>--smoke</code>, use a new output
+directory, and retain <code>--steps 3000</code>. Below are X22 and its
+closest control for seed 0, T1:</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> control <span class="at">--seed</span> 0 <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> 64 <span class="dt">\</span></span>
@@ -139,31 +175,42 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> 64 <span class="dt">\</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workers</span> 3 <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-cosine_erm&quot;</span></span></code></pre></div>
-<p>不同实验批次的 physical batch 可能不同；effective batch 64 并不保证
-BatchNorm 行为相同。比较时使用原结果记录的 physical batch，不能把 16 和
-64 当作相同复现设置。T5 必须使用
-<code>--history 5</code>，它同时更换时间长度、特征集合和模型，不能把
-T1/T5 差异全部归因于时间长度。</p>
-<p>先在 2021 完成选择并固定模型，再评估保留年份：</p>
+<p>Physical batch sizes may differ across experimental campaigns; an
+effective batch size of 64 does not guarantee identical BatchNorm
+behavior. Use the physical batch recorded in the original results for
+comparisons; 16 and 64 are not equivalent reproduction settings. T5
+requires <code>--history 5</code>, which changes the history length,
+feature set, and model together; differences between T1/T5 cannot be
+attributed entirely to history length.</p>
+<p>Complete selection on 2021 and freeze the model before evaluating
+held-out years:</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="at">--batch-size</span> 64 <span class="at">--workers</span> 3 <span class="dt">\</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--evaluate-only</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-cosine_erm/checkpoint.pt&quot;</span> <span class="dt">\</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--year</span> 2022 <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-cosine_erm-2022&quot;</span></span></code></pre></div>
-<p>各 X/D 方法、最近对照、评估器和组合命令见 <a
-href="method-recipes.html">方法配方</a>，教师重建及 RF/TD 命令见 <a
-href="teachers.html">教师与蒸馏</a>。</p>
-<h2 id="5-如何理解复现结果">5. 如何理解复现结果</h2>
-<p>M00 为完整输入；主指标是 M01/M06/M07 的 AP 均值，block 指 M06/M07
-的均值。AP 差值是绝对值，例如 <code>+0.005</code> 是增加 0.5
-个百分点。先对最近对照比较，再讨论相对公共基础模型的总收益。</p>
-<p>保留两套不同的 September three-directions
-实现：<code>cross_history.run_three_directions</code> 是 RF
-系列；<code>three_directions.run</code> 是 TD 系列。它们的初始化、batch
-和目标不同，不可混用 checkpoint、命令或结果表。</p>
-<p>已核对全部 21 份原始 retained 结果：2021/2022/2023 样本数均为
-3,181/2,856/2,102；旧量化记录中的 2,312 是文档笔误，84 个 AP
-数值不变，见 <a href="evaluation-population.html">样本量核对</a>。GPU
-smoke、单 seed screen、三 seed 确认和 heldout
-结果分别记录，不能互相替代。</p>
-</main><footer>Wildfire research methods · <a href="../../../index.html">返回课程首页</a></footer></body></html>
+<p>See <a href="method-recipes.html">method recipes</a> for the X/D
+methods, closest controls, evaluators, and combination commands; see <a
+href="teachers.html">teachers and distillation</a> for teacher
+reconstruction and RF/TD commands.</p>
+<h2 id="5-interpreting-reproduction-results">5. Interpreting
+reproduction results</h2>
+<p>M00 denotes complete inputs; the primary metric is mean AP over
+M01/M06/M07, and block denotes the mean over M06/M07. AP differences are
+absolute: for example, <code>+0.005</code> is an increase of 0.5
+percentage points. Compare against the closest control first, then
+discuss the total gain over the shared baseline.</p>
+<p>Two distinct September three-directions implementations are retained:
+<code>cross_history.run_three_directions</code> is the RF family;
+<code>three_directions.run</code> is the TD family. Their
+initialization, batches, and objectives differ; do not interchange their
+checkpoints, commands, or result tables.</p>
+<p>All 21 original retained result files have been checked: the sample
+counts for 2021/2022/2023 are consistently 3,181/2,856/2,102. The 2,312
+in older quantitative records is a documentation typo; all 84 AP values
+remain unchanged. See the <a
+href="evaluation-population.html">sample-count audit</a>. GPU smoke
+tests, single-seed screens, three-seed confirmations, and held-out
+results are recorded separately and cannot substitute for one
+another.</p>
+</main><footer>Wildfire research methods · <a href="../../../index.html">Back to course home</a></footer></body></html>
