@@ -1,0 +1,10 @@
+# Project defaults; users can override the model/effort for a particular task.
+# Loaded by supported Codex clients only when this repository is trusted.
+model = "gpt-6-astra"
+model_reasoning_effort = "low"
+
+# Avoid the generic mandatory workflow in local-marketplace installations.
+# This does not disable a workspace-managed or host-injected remote plugin.
+# See docs/ai-workflow-migration.md for activation and scope.
+[plugins."superpowers@openai-curated-remote"]
+enabled = false
