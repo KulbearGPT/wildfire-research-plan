@@ -60,10 +60,30 @@ These are small workflow checks, not scientific experiments or model benchmarks.
 | Diagnose a pending/failed job from supplied evidence | Use the diagnosis skill, distinguish queue/exit/artifact state, preserve evidence; no unrequested cancellation or resubmission |
 | Prepare one matched method/control pilot without running it | Use the experiment skill, identify protocol and missing budget/input facts, produce a reviewable command/config; no job submission |
 
-Static validation and acceptance review are recorded below as they are completed.
-No improvement in token cost, latency, or scientific performance is claimed from
-writing these instructions. A future real task is the appropriate place to check
-whether the new defaults reduce unnecessary reading and interruptions.
+Validation performed during this migration:
+
+- Both skills passed the bundled `skill-creator/scripts/quick_validate.py` check.
+- The five workflow Markdown files passed local link and code-fence checks;
+  project TOML parsed successfully. The root agreement has 101 lines.
+- CLI 0.147.0 `debug prompt-input`, with trust supplied as a temporary command-line
+  override, discovered the project agreement and both repository skills without
+  requesting a model turn. Its rendered prompt contained no Superpowers skill.
+  Because its local plugin list was already empty, this does **not** demonstrate
+  disabling the remote plugin exposed in the current hosted conversation.
+- An independent read-only agent worked through the three cases above. It chose
+  no research skill for the website edit; treated a failed dependency job with a
+  missing artifact as execution evidence, not a scientific negative; and prepared
+  X22/control commands while leaving missing budget and uncommitted code explicit.
+  The job IDs and states in that exercise were synthetic, not live observations.
+- The English onboarding source was updated and all 18 course guides rebuilt
+  successfully. Only the onboarding HTML changed. This is an actual documentation
+  build, not a deployment or a scientific test.
+
+No training, numerical tests, scheduler queries, submissions, or cancellations
+were needed. No improvement in token cost, latency, or scientific performance is
+claimed. A future real task is the appropriate place to check whether the new
+defaults reduce unnecessary reading and interruptions. Remote-session activation
+and live experiment recovery have not been behaviorally tested here.
 
 ## Sources
 

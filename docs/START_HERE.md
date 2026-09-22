@@ -78,5 +78,6 @@ Slurm job ID、最终状态与退出码：
 | 权重从哪里来，如何迁移或重新生成 | [外部资产说明](research/artifacts.md)、[基线](research/baselines.md)、[教师](research/teachers.md) |
 | 哪些运行检查确实做过，有什么边界 | [资格验证记录](research/qualification.md) |
 | 历史评估样本数为何曾出现不同写法 | [评估总体核对](research/evaluation-population.md) |
+| 如何用 AI 修改代码、准备实验或诊断作业 | [开发与 AI 工作流](DEVELOPMENT.md)、[项目约定](../AGENTS.md) |
 
 报告运行问题时，附上提交命令、代码提交号、job ID、退出状态和日志中的第一处错误。优先保留失败现场，不覆盖原结果，也不要在登录节点重跑模型来排查。

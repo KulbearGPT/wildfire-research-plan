@@ -78,5 +78,6 @@ Before every experiment, write down the hypothesis, comparator, fixed conditions
 | Obtaining, transferring or regenerating weights | [External artifacts](research/artifacts.md), [baselines](research/baselines.md), [teachers](research/teachers.md) |
 | Which execution checks actually ran, and what they establish | [Qualification record](research/qualification.md) |
 | Why historical evaluation sample counts had inconsistent wording | [Evaluation-population audit](research/evaluation-population.md) |
+| Using AI to edit code, prepare experiments or diagnose jobs | [Development and AI workflow](DEVELOPMENT.md), [project agreement](../AGENTS.md) |
 
 When reporting a problem, include the submitted command, code commit, job ID, exit state and first error in the log. Preserve failed-run artifacts instead of overwriting them. Do not rerun a model on a login node to debug it.
