@@ -38,7 +38,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -59,7 +60,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -80,7 +82,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -101,7 +104,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -122,7 +126,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -143,7 +148,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -164,7 +170,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -185,7 +192,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -206,7 +214,8 @@
         "state": "archived",
         "reason": "Previously studied or retained result, now inactive by scope selection; not reclassified as scientifically negative.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -227,7 +236,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -248,7 +258,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -269,7 +280,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -290,7 +302,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -311,7 +324,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -332,7 +346,8 @@
         "state": "active_control",
         "reason": "Mixed-severity closest attribution control for X17.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified",
+        "recipe_ref": "docs/research/method-recipes.md"
       }
     },
     {
@@ -353,7 +368,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -374,7 +390,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -395,7 +412,8 @@
         "state": "active_component",
         "reason": "Fixed-severity components of the selected system; independent attribution failure remains disclosed.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified",
+        "recipe_ref": "docs/research/method-recipes.md"
       }
     },
     {
@@ -416,7 +434,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -437,7 +456,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021 confirmation; no heldout success established"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021 confirmation; no heldout success established",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -458,7 +478,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -479,7 +500,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -500,7 +522,8 @@
         "state": "active_component",
         "reason": "Cosine-schedule component of the selected route; optimizer contribution.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified",
+        "recipe_ref": "docs/research/method-recipes.md"
       }
     },
     {
@@ -521,7 +544,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -542,7 +566,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -563,7 +588,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -584,7 +610,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -605,7 +632,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -626,7 +654,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -647,7 +676,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -668,7 +698,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -689,7 +720,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -710,7 +742,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -731,7 +764,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -752,7 +786,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -773,7 +808,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -794,7 +830,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0 unless explicitly stated"
+        "setting_scope": "2021; seed 0 unless explicitly stated",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -815,7 +852,8 @@
         "state": "archived",
         "reason": "Previously studied or retained result, now inactive by scope selection; not reclassified as scientifically negative.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -836,7 +874,8 @@
         "state": "active_system",
         "reason": "Sole active system selected by the project owner on 2026-09-22.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023",
+        "recipe_ref": "docs/research/method-recipes.md"
       }
     },
     {
@@ -857,7 +896,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -878,7 +918,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -899,7 +940,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -920,7 +962,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -941,7 +984,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -962,7 +1006,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -983,7 +1028,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1004,7 +1050,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1025,7 +1072,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1046,7 +1094,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1067,7 +1116,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1088,7 +1138,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1109,7 +1160,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1130,7 +1182,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1151,7 +1204,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1172,7 +1226,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1193,7 +1248,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1214,7 +1270,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1235,7 +1292,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1256,7 +1314,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1277,7 +1336,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1298,7 +1358,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1319,7 +1380,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1340,7 +1402,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1361,7 +1424,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1382,7 +1446,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1403,7 +1468,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1424,7 +1490,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1445,7 +1512,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1466,7 +1534,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1487,7 +1556,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1508,7 +1578,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1529,7 +1600,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1550,7 +1622,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1571,7 +1644,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/rejected_experiments.md",
-        "setting_scope": "T5; 2021; one screen"
+        "setting_scope": "T5; 2021; one screen",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1592,7 +1666,8 @@
         "state": "reference_only",
         "reason": "Preserved baseline/teaching reference; outside the selected contribution route.",
         "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1613,7 +1688,8 @@
         "state": "reference_only",
         "reason": "Preserved baseline/teaching reference; outside the selected contribution route.",
         "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1634,7 +1710,8 @@
         "state": "active_foundation",
         "reason": "Shared corrected T1 initialization and separate frozen reference.",
         "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain",
+        "recipe_ref": "docs/research/method-recipes.md"
       }
     },
     {
@@ -1655,7 +1732,8 @@
         "state": "archived",
         "reason": "Previously studied or retained result, now inactive by scope selection; not reclassified as scientifically negative.",
         "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1676,7 +1754,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1697,7 +1776,8 @@
         "state": "archived",
         "reason": "Previously studied or retained result, now inactive by scope selection; not reclassified as scientifically negative.",
         "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1718,7 +1798,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/three_directions_results.md",
-        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1739,7 +1820,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/three_directions_results.md",
-        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1760,7 +1842,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/three_directions_results.md",
-        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1781,7 +1864,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/three_directions_results.md",
-        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1802,7 +1886,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/three_directions_results.md",
-        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1823,7 +1908,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/three-directions-results.md",
-        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3"
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1844,7 +1930,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/three-directions-results.md",
-        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3"
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1865,7 +1952,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/three-directions-results.md",
-        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3"
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1886,7 +1974,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established"
+        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1907,7 +1996,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established"
+        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1928,7 +2018,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established"
+        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1949,7 +2040,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/p00_p06_rapid_reliability.md",
-        "setting_scope": "2021; legacy P00/P02 initialization; no corrected-chain efficacy claim"
+        "setting_scope": "2021; legacy P00/P02 initialization; no corrected-chain efficacy claim",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1970,7 +2062,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -1991,7 +2084,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -2012,7 +2106,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "docs/experiments/t1_t5_innovations.md",
-        "setting_scope": "T1 2021 seed 0; arithmetic derived from reported rounded deltas"
+        "setting_scope": "T1 2021 seed 0; arithmetic derived from reported rounded deltas",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -2033,7 +2128,8 @@
         "state": "reference_only",
         "reason": "Preserved baseline/teaching reference; outside the selected contribution route.",
         "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "As explicitly stated; historical source contract"
+        "setting_scope": "As explicitly stated; historical source contract",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -2054,7 +2150,8 @@
         "state": "active_foundation",
         "reason": "Shared corrected T5 initialization and separate frozen reference.",
         "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "As explicitly stated; historical source contract"
+        "setting_scope": "As explicitly stated; historical source contract",
+        "recipe_ref": "docs/research/method-recipes.md"
       }
     },
     {
@@ -2075,7 +2172,8 @@
         "state": "archived",
         "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
         "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "As explicitly stated; historical source contract"
+        "setting_scope": "As explicitly stated; historical source contract",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     },
     {
@@ -2096,7 +2194,8 @@
         "state": "active_support",
         "reason": "Data audit, contract and simple-reference support.",
         "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "As explicitly stated; historical source contract"
+        "setting_scope": "As explicitly stated; historical source contract",
+        "recipe_ref": "docs/research/method-recipes.md"
       }
     },
     {
@@ -2117,7 +2216,8 @@
         "state": "reference_only",
         "reason": "Preserved baseline/teaching reference; outside the selected contribution route.",
         "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
-        "setting_scope": "As explicitly stated; historical source contract"
+        "setting_scope": "As explicitly stated; historical source contract",
+        "recipe_ref": "docs/archive/method-recipes.md"
       }
     }
   ],
@@ -2143,7 +2243,10 @@
       ]
     },
     "fresh_control": "cross_history.run --method control; matched B3/B5 continuation, not a frozen baseline",
-    "status_semantics": "status records historical evidence; lifecycle.state records current maintenance. Neither implies independent novelty."
+    "status_semantics": "status records historical evidence; lifecycle.state records current maintenance. Neither implies independent novelty.",
+    "entrypoint": "python -m reproductions.cross_history.mainline",
+    "recipe": "docs/research/method-recipes.md",
+    "archive_recipes": "docs/archive/method-recipes.md"
   },
   "code_lifecycle": [
     {
@@ -2215,6 +2318,11 @@
       "path": "reproductions/cross_history/data.py",
       "state": "active_shared",
       "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/mainline.py",
+      "state": "active_support",
+      "settings_ref": "docs/research/method-recipes.md"
     },
     {
       "path": "reproductions/cross_history/models.py",

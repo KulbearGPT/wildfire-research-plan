@@ -1,169 +1,117 @@
-# 正向信号的具体方法入口
+# X22 + X17: active method recipe
 
-**Current scope (2026-09-22): X22+X17 and necessary controls only.** See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+Only this route and its necessary controls are active. The [archived recipe
+collection](../archive/method-recipes.md) preserves all other methods and original
+commands; [Chinese archive](../archive/method-recipes-zh.md). Their experimental
+settings and outcomes remain in the [inventory](method-inventory.json).
 
-先完成 [环境和数据](reproduce.md)、[B3/B5 基础模型](baselines.md)。这里的命令只提交作业，不等待完成；有依赖时先检查上一步退出状态。每次使用新输出目录。完整结果、对照和哪些设置真正跑过见 [正向信号清单](positive-signals.md)，不能把可运行的设置写成已有实验结果。
+Complete [setup and data](reproduce.md) and [B3/B5 preparation](baselines.md) first.
+Use a committed checkout and a trusted `WILDFIRE_SITE_ENV`. These examples are
+submission instructions, not evidence of new runs or authorization for a sweep.
+Choose the history, seed and run set within the agreed compute budget.
 
-## X 系列：同一入口，保留各自机制
+## 1. Check the intended command
 
-以下函数在登录 shell 中仅提交 Slurm 作业。`history=1` 和 `seed=0` 是首次复现的选择；改为 T5 或其他 seed 前先检查该方向是否有对应历史证据。`physical_batch=64` 对应后期主干的记录；较早实验应采用其原始结果里的 batch，effective batch 都是 64。
+The narrow `mainline` entrypoint accepts only canonical T1/T5, `control`,
+`cosine_erm`, and `block_specialist`. It fixes 3000 optimizer steps and physical
+batch 64, allows the recorded seeds 0/1/2, and rejects archived methods and
+architecture overrides. It delegates training unchanged to the shared runner.
+B3/B5 initialization comes from the configured site paths. Do not pass the old
+runner's `--steps`, `--batch-size`, `--architecture`, or `--bootstrap` switches.
+
+This preview is safe on a login node: it prints text without importing a model,
+creating an output directory, querying Slurm, or submitting anything:
+
+```bash
+python3 -m reproductions.cross_history.mainline \
+  --history 1 --method cosine_erm --seed 0 \
+  --output /path/to/new/run --print-command
+```
+
+Use `--help` for options. A real invocation requires a Slurm allocation before
+loading the trainer. For a changed execution path, `--smoke` checks one training
+step and save/reload; it retains batch 64 and does not reproduce scientific scores.
+Use a separate smoke directory. Do not replace a formal run with its checkpoint.
+
+## 2. Train one matched set
+
+Set a new group name for every attempt. These commands show the five distinct
+roles; submit only the roles needed for the approved comparison. Reuse a control
+only when its initialization, protocol and seed match.
 
 ```bash
 source "$WILDFIRE_SITE_ENV"
 cd "$WILDFIRE_REPO"
 history=1
 seed=0
-physical_batch=64
-ch() {
-  local method=$1
-  shift
-  bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-    --history "$history" --seed "$seed" --steps 3000 \
-    --batch-size "$physical_batch" --workers 3 --method "$method" \
-    --output "$WILDFIRE_ROOT/runs/t${history}-s${seed}-${method}" "$@"
-}
+run_group="$WILDFIRE_ROOT/runs/x22-x17-t${history}-s${seed}-attempt1"
+
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method control \
+  --output "$run_group/control"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method cosine_erm \
+  --output "$run_group/x22"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method block_specialist \
+  --output "$run_group/mixed"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method block_specialist --block-fraction 0.25 \
+  --output "$run_group/mild"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method block_specialist --block-fraction 0.5 \
+  --output "$run_group/severe"
 ```
 
-按需选择一项及其最近对照，不必把下表全部训练：
+The mixed expert is X14's attribution control. Fixed mild/severe experts are X17.
+Fresh `control` supplies M00, X22 supplies M01, mild supplies M06, severe supplies
+M07 in the final route. Frozen B3/B5 are separate references, not fresh controls.
 
-| 方向 | 提交命令 | 需要同时保留的最近对照 |
-|---|---|---|
-| 公共 continuation | `ch control` | 冻结 B3/B5，另与新训练 control 区分 |
-| X1 | `ch context` | control |
-| X1 adapter | `ch context_adapter` | 冻结基础模型和 control |
-| X3 | `ch transition` | control |
-| X4 | `ch risk` | control |
-| X6 | `ch balanced_corruption` | control |
-| GLOBAL-D1 | `ch global_consistency` | control |
-| X8 | `ch impact_consistency` | global_consistency、control |
-| X10 | `ch dynamic_inpaint` | control |
-| X11 对 ERM 的局部信号 | `ch dynamic_inpaint_reconstruct` | dynamic_inpaint、control |
-| X12 | `ch fire_specialist_impact` | fire_specialist、control |
-| X14 | `ch block_specialist` | control |
-| X16 | `ch block_specialist_dynamic` | block_specialist、control |
-| X18 | `ch block_specialist_context` | block_specialist、control |
-| X19 | `ch block_specialist_severity_adapter` | block_specialist、control |
-| X22 | `ch cosine_erm` | control |
-| X23 | `ch block_specialist_impact` | block_specialist、control |
-| X25 | `ch block_specialist_reliability_prompt` | block_specialist、control |
-| X26 | `ch cosine_fire_impact` | cosine_fire_global、cosine_erm |
-| X27 | `ch cosine_block_hard` | cosine_block_specialist、cosine_erm |
-| X29 | `ch cosine_block_memory` | cosine_block_specialist、cosine_erm |
-| X1+X3 | `ch context_transition` | context、transition、control |
-| X2 block 局部信号 | `ch distill` | control；不要替换成修订的 distill_block |
+Check each job's exit status and actual `checkpoint.pt`/`summary.json` before
+submitting dependent work. Outputs must be new; do not restart into an old result
+directory. Log the source commit and job ID printed by the submitter.
 
-对照名称同样可传给 `ch`，例如 `ch cosine_fire_global`。这些是原实现的开关，不是用某个“类似模块”替代被恢复的旧方法。
+## 3. Evaluate the same checkpoints
 
-### 从场景结果重建“routed”指标
-
-单个模型的 `summary.json` 是四个场景的原始指标。清单里标注 routed 的结果需要再组合：spatial 路由在 M00/M01 使用对照，在 M06/M07 使用候选；fire 路由只在 M01 使用候选，其他场景使用对照。它们与直接对四场景取平均不同。例如 X10 相对 ERM 的 spatial 路由：
+Training validates on 2021. To reproduce historical 2022/2023 reporting, evaluate
+fixed checkpoints; do not train on those years or select new methods with them.
+For example, after the mild expert completes:
 
 ```bash
-bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compare \
-  --control "$WILDFIRE_ROOT/runs/t1-s0-control/summary.json" \
-  --candidate "$WILDFIRE_ROOT/runs/t1-s0-dynamic_inpaint/summary.json" \
-  --routed-spatial --output "$WILDFIRE_ROOT/runs/t1-s0-X10-routed.json"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method block_specialist --block-fraction 0.25 \
+  --evaluate-only "$run_group/mild/checkpoint.pt" --year 2022 \
+  --output "$run_group/mild-2022"
 ```
 
-X1/X4/X10/X11/X14 及 BlockDrop 专家的 routed-spatial 总收益采用这个方式；X12 的 FireDrop specialist 比较使用 `--routed-fire`。不带路由参数得到候选模型本身的四场景比较。对 X16/X18/X19/X23/X25 等最近对照归因，将 `--control` 换成 `block_specialist/summary.json`，并使用记录规定的 block 指标，不能用相对 ERM 的总收益替代模块收益。
+Repeat only as authorized, with each role's original method and block fraction,
+checkpoint, history and seed, and new year-specific output paths. Historical test
+years are already exposed; this is reproduction, not untouched confirmation.
 
-三 seed 或多年份汇总时，依次重复 `--control` 和 `--candidate`，同一位置必须对应相同 history/seed/year。T5 和保留年份使用它们自己的评估输出。一个 seed 的汇总不会满足三 seed 确认门槛。
+## 4. Compose and interpret
 
-## D 系列：历史独立实现
-
-D 系列和 X 系列不是相同训练配方。D 的基础完成记录由 [基础模型导出](baselines.md) 生成；不能只传 checkpoint。以下辅助函数显式传入新环境路径：
-
-```bash
-dtrain() {
-  local label=$1 module=$2 batch=$3
-  shift 3
-  bash scripts/research/submit.sh gpu python -m "reproductions.wsts_fast_track.$module" \
-    --b3-record "$WILDFIRE_ROOT/checkpoints/B3-completed.json" \
-    --upstream-root "$WILDFIRE_UPSTREAM" --data-root "$WILDFIRE_DATA" \
-    --stats-path "$WILDFIRE_STATS" --batch-size "$batch" --num-workers 8 \
-    --device cuda --output-path "$WILDFIRE_ROOT/runs/$label/model.ckpt" "$@"
-}
-```
-
-| 方向 | 提交命令 |
-|---|---|
-| D1 ERM 对照 | `dtrain D1-ERM train_predictive_consistency 32 --lambda-consistency 0.0` |
-| D1 KL | `dtrain D1-KL train_predictive_consistency 32 --lambda-consistency 0.1` |
-| D2 STD 对照 | `dtrain D2-STD train_reliability_normalized 64 --variant standard` |
-| D2 RNC | `dtrain D2-RNC train_reliability_normalized 64 --variant rnc` |
-| D4 token | `dtrain D4 train_reliability_normalized 64 --variant token` |
-| D5 CIWC | `dtrain D5 train_counterfactual_impact_consistency 32` |
-| D6 CIWC+rank | `dtrain D6 train_counterfactual_rank_consistency 32` |
-| D7 adapter | `dtrain D7 train_counterfactual_reliability_adapter 32 --adapter-scope all` |
-| D8 factorized adapter | `dtrain D8 train_counterfactual_reliability_adapter 32 --adapter-scope block` |
-| D10 prompt pyramid | `dtrain D10 train_reliability_prompt_pyramid 64 --variant prompt-pyramid` |
-| D11 complete prompts | `dtrain D11 train_reliability_prompt_pyramid 64 --variant complete-prompt-pyramid` |
-| D12 SARP | `dtrain D12 train_severity_adaptive_reliability_prompting 64` |
-
-这些训练器固定 seed 0、3,000 steps。历史 D1-ERM/KL 使用 batch 32；原 launcher 未覆盖训练器的这个默认值。D5/D6 保留相同的 paired clean/corrupt 配方，paired ERM 对照就是上表 batch 32 的 D1-ERM；D5 的最近一致性对照为 D1-KL，D6 还需与 D5 比较。不要改用 batch 64 再当作原结果的匹配对照，因为这会改变采样曝光量和 BatchNorm 行为。其他匹配对照和门槛以原 [量化记录](../experiments/quantitative_reliability_ledger.md) 与 [弃用记录](../experiments/rejected_experiments.md) 为准。
-
-D13 使用 T5 基础模型，standard 和 sarp 两个版本分别提交：
-
-```bash
-for variant in standard sarp; do
-  bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.train_temporal_reliability_prompting \
-    --b5-record "$WILDFIRE_ROOT/checkpoints/B5-completed.json" \
-    --upstream-root "$WILDFIRE_UPSTREAM" --data-root "$WILDFIRE_DATA" \
-    --stats-path "$WILDFIRE_STATS" --variant "$variant" \
-    --batch-size 64 --num-workers 8 --device cuda \
-    --output-path "$WILDFIRE_ROOT/runs/D13-$variant/model.ckpt"
-done
-```
-
-训练结束后，用对应 evaluator 评估 2021；例如 D4：
-
-```bash
-bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.evaluate_reliability_normalized \
-  --checkpoint "$WILDFIRE_ROOT/runs/D4/model.ckpt" \
-  --output-root "$WILDFIRE_ROOT/runs/D4/eval-2021" \
-  --upstream-root "$WILDFIRE_UPSTREAM" --data-root "$WILDFIRE_DATA" \
-  --stats-path "$WILDFIRE_STATS" --year 2021 --device cuda
-```
-
-| 模型 | evaluator 后缀（前缀都是 `reproductions.wsts_fast_track.`） |
-|---|---|
-| D1 | `evaluate_predictive_consistency` |
-| D2 / D4 | `evaluate_reliability_normalized` |
-| D5 | `evaluate_counterfactual_impact_consistency` |
-| D6 | `evaluate_counterfactual_rank_consistency` |
-| D7 / D8 | `evaluate_counterfactual_reliability_adapter` |
-| D10 / D11 | `evaluate_reliability_prompt_pyramid` |
-| D12 | `evaluate_severity_adaptive_reliability_prompting` |
-| D13 | `evaluate_temporal_reliability_prompting` |
-
-评估保留年份时同时更改 `--year 2022` 或 `2023`、输出目录，并加 `--heldout-authorized`。不要为未通过 screen 的方向新增 heldout 结论。
-
-## 组合、教师和两套 September 实验
-
-教师训练及 RF/TD 命令见 [教师与蒸馏](teachers.md)。X8+X17 与 X22+X17 使用同一 complete-route 汇总器，区别是 FireDrop 分支来自 impact_consistency 或 cosine_erm。先训练并评估匹配的 control、fire、固定 25% 和 50% BlockDrop 专家，再汇总。例如 X22+X17 的 seed 0、T1、2021：
+After matching 2021 summaries exist, these CPU Slurm jobs produce the system
+report and the necessary attribution comparison:
 
 ```bash
 bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_complete_routes \
-  --control "$WILDFIRE_ROOT/runs/t1-s0-control/summary.json" \
-  --fire "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm/summary.json" \
-  --mild "$WILDFIRE_ROOT/runs/t1-s0-block025/summary.json" \
-  --severe "$WILDFIRE_ROOT/runs/t1-s0-block050/summary.json" \
-  --output "$WILDFIRE_ROOT/runs/t1-s0-X22-X17.json"
-```
-
-X17 单独对 ERM 的正向信号，以及相对 X14 的机制归因，使用以下命令同时输出两种比较：
-
-```bash
+  --control "$run_group/control/summary.json" --fire "$run_group/x22/summary.json" \
+  --mild "$run_group/mild/summary.json" --severe "$run_group/severe/summary.json" \
+  --output "$run_group/x22-x17-2021.json"
 bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_severity_routes \
-  --control "$WILDFIRE_ROOT/runs/t1-s0-control/summary.json" \
-  --mixed "$WILDFIRE_ROOT/runs/t1-s0-block_specialist/summary.json" \
-  --mild "$WILDFIRE_ROOT/runs/t1-s0-block025/summary.json" \
-  --severe "$WILDFIRE_ROOT/runs/t1-s0-block050/summary.json" \
-  --output "$WILDFIRE_ROOT/runs/t1-s0-X17.json"
+  --control "$run_group/control/summary.json" --mixed "$run_group/mixed/summary.json" \
+  --mild "$run_group/mild/summary.json" --severe "$run_group/severe/summary.json" \
+  --output "$run_group/x17-attribution-2021.json"
 ```
 
-RF-BN 的清单信号来自修正后的 `--bn-forward-mode batch_stats`，必须显式指定；默认 fixed 是旧诊断，不能拿来复现修正后的数字。RF-MIXED/ RF-TYPED 分别使用 `--arm mixed` / `--arm typed`，二者都需与 `--arm control` 比较，typed 另需与 mixed 作等容量比较。
+The composer also supports archived routes. Verify `component_methods.fire` is
+`cosine_erm` for the active system. This is summary composition, not deployment
+of a single fused model. Pass repeated matching groups of arguments to aggregate
+additional histories/seeds/years, keeping their order aligned. One group cannot
+establish three-seed cross-history confirmation or fixed-year generalization.
+Do not overwrite an earlier report when adding rows.
 
-X8+X10 使用 `compose_routes --control ... --fire ... --spatial ...`，其中 fire 是 impact_consistency，spatial 是 dynamic_inpaint。汇总器读取已有场景结果，不会训练新网络；输出的路由结果适用于约定的可观测缺失场景，不是额外训练出来的单模型。
-
-自然 VIIRS 和 target-QA 两个诊断性正向信号见 [诊断复现](diagnostics-reproduction.md)。它们依赖历史 P00，不作为 corrected baseline 的科学贡献。架构迁移的公开权重下载与 bootstrap 命令见 [架构复现](architectures.md)，不能把 Res18 的 B3/B5 权重载入 Swin/SegFormer。
+Report primary AP, clean AP, block AP and comparator identity. Preserve X17's
+failed held-out attribution cells even when the complete system improves over
+ERM. See [scope and evidence limits](../CODE_LIFECYCLE.md). Current selection does
+not promote X17 to an independently confirmed mechanism or reactivate any archive.

@@ -82,10 +82,11 @@ CLI switch still exists; reopening it requires a new research decision.
 
 Start at [the reproduction guide](research/reproduce.md) for environment/data and
 [baseline regeneration](research/baselines.md) for B3/B5. The
-[method recipes](research/method-recipes.md) retain historical commands; select
-only `control`, `cosine_erm`, and `block_specialist` for this mainline.
-Use distinct output paths for mixed, 25%, and 50% specialists, and preserve the
-recorded physical batch explicitly. Prepare one matched comparison before any
+[method recipes](research/method-recipes.md) now show only the mainline;
+[archived recipes](archive/method-recipes.md) preserve other methods.
+Use the narrow `cross_history.mainline` entrypoint, which fixes the recorded
+3000 steps and physical batch 64. Use distinct output paths for mixed, 25%, and
+50% specialists. Prepare one matched comparison before any
 larger reproduction; this scope selection does not authorize a new compute budget.
 
 When modifying shared code, inspect both the active dependency and affected
@@ -112,3 +113,25 @@ navigation documents passed local-link and code-fence checks. No model imports,
 numerical tests, training, evaluation or Slurm jobs ran for this cleanup.
 These checks establish source/metadata preservation and retirement behavior,
 not a fresh scientific reproduction or a new website deployment.
+
+## Follow-up cleanup: executable entry and recipe separation
+
+`reproductions.cross_history.mainline` is the active command interface. It exposes
+only control, cosine ERM and mixed/fixed BlockDrop specialists, canonical T1/T5,
+the recorded seeds, 3000 steps and physical batch 64. Its help and command preview
+use only the standard library; actual execution checks for Slurm before loading
+the unchanged training implementation. The broad `run.py` remains compatible
+with archived experiments and deliberately keeps its original defaults.
+
+The active method recipe now contains only X22+X17 preparation, controls,
+checkpoint evaluation and composition. Full historical recipes moved to
+[the archive](archive/README.md), preserving both English and Chinese command
+blocks. The lifecycle map now includes the new entrypoint (139 source files).
+
+Four standard-library control-plane tests cover all five role configurations in
+both histories, archived/invalid option rejection, preview/no-allocation behavior,
+and mocked evaluation dispatch with argument restoration after failure. No trainer
+is loaded by these tests. Shared training, model, data and composition source
+files remain byte-identical to the previous cleanup, and all 100 scientific
+inventory records retain their original fields. These checks validate the CLI
+boundary; no new end-to-end GPU run is claimed for this entrypoint.

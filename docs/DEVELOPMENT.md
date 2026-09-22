@@ -9,6 +9,9 @@ remains the starting point for learning the scientific workflow.
 The active research scope is [X22+X17 and necessary controls](CODE_LIFECYCLE.md).
 The inclusive method inventory also contains inactive historical explorations;
 check its `lifecycle` field before treating an entry as a development target.
+Use `reproductions.cross_history.mainline` and the [active recipe](research/method-recipes.md)
+for current submissions. The broad runner and [archived recipes](archive/README.md)
+remain available for intentional historical recovery.
 
 | Task | Source or entry point |
 |---|---|

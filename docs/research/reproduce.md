@@ -84,19 +84,19 @@ bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.trai
 设置好 B3/B5 权重后，先跑一个 T1 smoke；它检查计算链路，不提供论文效果证据：
 
 ```bash
-bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-  --history 1 --method cosine_erm --seed 0 --batch-size 16 --workers 3 \
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history 1 --method cosine_erm --seed 0 --workers 3 \
   --smoke --output "$WILDFIRE_ROOT/runs/smoke-t1-cosine"
 ```
 
-完整运行移除 `--smoke`，改用新输出目录，保留 `--steps 3000`。下面是 seed 0、T1 的 X22 及其最近对照：
+完整运行移除 `--smoke`，改用新输出目录，由主线入口固定 3,000 steps 和 physical batch 64。下面是 seed 0、T1 的 X22 及其最近对照：
 
 ```bash
-bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-  --history 1 --method control --seed 0 --steps 3000 --batch-size 64 \
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history 1 --method control --seed 0 \
   --workers 3 --output "$WILDFIRE_ROOT/runs/t1-s0-control"
-bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-  --history 1 --method cosine_erm --seed 0 --steps 3000 --batch-size 64 \
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history 1 --method cosine_erm --seed 0 \
   --workers 3 --output "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm"
 ```
 
@@ -105,13 +105,13 @@ bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
 先在 2021 完成选择并固定模型，再评估保留年份：
 
 ```bash
-bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-  --history 1 --method cosine_erm --seed 0 --batch-size 64 --workers 3 \
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history 1 --method cosine_erm --seed 0 --workers 3 \
   --evaluate-only "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm/checkpoint.pt" \
   --year 2022 --output "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm-2022"
 ```
 
-各 X/D 方法、最近对照、评估器和组合命令见 [方法配方](method-recipes.md)，教师重建及 RF/TD 命令见 [教师与蒸馏](teachers.md)。
+X22+X17、必要对照和完整组合命令见 [主线配方](method-recipes.md)。其他 X/D、RF/TD 方法的旧命令保留在 [归档配方](../archive/method-recipes-zh.md)，不属于当前执行顺序。
 
 ## 5. 如何理解复现结果
 

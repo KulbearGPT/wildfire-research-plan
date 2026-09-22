@@ -167,18 +167,19 @@ wrapped continuation checkpoints cannot substitute for them.</p>
 checks the computation pipeline and does not provide evidence of
 paper-level effectiveness:</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="at">--batch-size</span> 16 <span class="at">--workers</span> 3 <span class="dt">\</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.mainline <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="at">--workers</span> 3 <span class="dt">\</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--smoke</span> <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/smoke-t1-cosine&quot;</span></span></code></pre></div>
 <p>For a full run, remove <code>--smoke</code>, use a new output
-directory, and retain <code>--steps 3000</code>. Below are X22 and its
-closest control for seed 0, T1:</p>
+directory, and use the mainline entrypoint’s fixed 3,000 steps and
+physical batch 64. Below are X22 and its closest control for seed 0,
+T1:</p>
 <div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> control <span class="at">--seed</span> 0 <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> 64 <span class="dt">\</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.mainline <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> control <span class="at">--seed</span> 0 <span class="dt">\</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workers</span> 3 <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-control&quot;</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="at">--steps</span> 3000 <span class="at">--batch-size</span> 64 <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.mainline <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="dt">\</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workers</span> 3 <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-cosine_erm&quot;</span></span></code></pre></div>
 <p>Physical batch sizes may differ across experimental campaigns; an
 effective batch size of 64 does not guarantee identical BatchNorm
@@ -190,14 +191,14 @@ attributed entirely to history length.</p>
 <p>Complete selection on 2021 and freeze the model before evaluating
 held-out years:</p>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.run <span class="dt">\</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="at">--batch-size</span> 64 <span class="at">--workers</span> 3 <span class="dt">\</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.mainline <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> 1 <span class="at">--method</span> cosine_erm <span class="at">--seed</span> 0 <span class="at">--workers</span> 3 <span class="dt">\</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--evaluate-only</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-cosine_erm/checkpoint.pt&quot;</span> <span class="dt">\</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--year</span> 2022 <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/t1-s0-cosine_erm-2022&quot;</span></span></code></pre></div>
-<p>See <a href="method-recipes.html">method recipes</a> for the X/D
-methods, closest controls, evaluators, and combination commands; see <a
-href="teachers.html">teachers and distillation</a> for teacher
-reconstruction and RF/TD commands.</p>
+<p>See <a href="method-recipes.html">mainline recipes</a> for X22+X17,
+required controls and composition. Other X/D and RF/TD commands remain
+in the <a href="../../../docs/archive/method-recipes.md">archived
+recipes</a>, outside the current execution sequence.</p>
 <h2 id="5-interpreting-reproduction-results">5. Interpreting
 reproduction results</h2>
 <p>M00 denotes complete inputs; the primary metric is mean AP over

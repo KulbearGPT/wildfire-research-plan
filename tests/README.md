@@ -13,3 +13,11 @@ behavior or shared dependencies change, not automatically for every cleanup.
 Model imports, tensor tests and numerical evaluation require Slurm. Pure source
 inspection, JSON metadata checks and shell syntax checks do not require a training
 job. A successful archive smoke check establishes execution, not scientific benefit.
+
+`test_mainline_cli.py` checks only command construction and mocked dispatch using
+the standard library. It imports no trainer, numerical package or dataset and
+does not call the scheduler. Run this control-plane check with:
+
+```bash
+python3 -m unittest discover -s tests -p test_mainline_cli.py -v
+```

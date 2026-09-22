@@ -84,19 +84,19 @@ Baseline training and subsequent continuation are separate stages. T1 continuati
 After configuring the B3/B5 weights, first run a T1 smoke test; it checks the computation pipeline and does not provide evidence of paper-level effectiveness:
 
 ```bash
-bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-  --history 1 --method cosine_erm --seed 0 --batch-size 16 --workers 3 \
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history 1 --method cosine_erm --seed 0 --workers 3 \
   --smoke --output "$WILDFIRE_ROOT/runs/smoke-t1-cosine"
 ```
 
-For a full run, remove `--smoke`, use a new output directory, and retain `--steps 3000`. Below are X22 and its closest control for seed 0, T1:
+For a full run, remove `--smoke`, use a new output directory, and use the mainline entrypoint’s fixed 3,000 steps and physical batch 64. Below are X22 and its closest control for seed 0, T1:
 
 ```bash
-bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-  --history 1 --method control --seed 0 --steps 3000 --batch-size 64 \
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history 1 --method control --seed 0 \
   --workers 3 --output "$WILDFIRE_ROOT/runs/t1-s0-control"
-bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-  --history 1 --method cosine_erm --seed 0 --steps 3000 --batch-size 64 \
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history 1 --method cosine_erm --seed 0 \
   --workers 3 --output "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm"
 ```
 
@@ -105,13 +105,13 @@ Physical batch sizes may differ across experimental campaigns; an effective batc
 Complete selection on 2021 and freeze the model before evaluating held-out years:
 
 ```bash
-bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-  --history 1 --method cosine_erm --seed 0 --batch-size 64 --workers 3 \
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history 1 --method cosine_erm --seed 0 --workers 3 \
   --evaluate-only "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm/checkpoint.pt" \
   --year 2022 --output "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm-2022"
 ```
 
-See [method recipes](method-recipes.md) for the X/D methods, closest controls, evaluators, and combination commands; see [teachers and distillation](teachers.md) for teacher reconstruction and RF/TD commands.
+See [mainline recipes](method-recipes.md) for X22+X17, required controls and composition. Other X/D and RF/TD commands remain in the [archived recipes](../archive/method-recipes.md), outside the current execution sequence.
 
 ## 5. Interpreting reproduction results
 

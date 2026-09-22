@@ -37,6 +37,11 @@ archive](docs/research/positive-signals.md) includes isolated gains; the
 failures without conflating their causes. X8, D12, RF/TD, belief-state methods,
 restoration variants and alternative architectures are outside the active route.
 
+Use the [mainline recipe](docs/research/method-recipes.md) and the narrow
+`reproductions.cross_history.mainline` command for new work. The complete
+[archive index](docs/archive/README.md) preserves the other directions and their
+original recipes without mixing them into the active execution sequence.
+
 Shared modules stay at their original import paths. Source comments and the
 inventory's file map identify active support, mixed modules, references, and
 archived implementations. Two one-off confirmation bundles with historical job

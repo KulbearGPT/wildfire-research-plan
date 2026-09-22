@@ -1,169 +1,117 @@
-# Concrete method entrypoints for positive signals
+# X22 + X17: active method recipe
 
-**Current scope (2026-09-22): X22+X17 and necessary controls only.** See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+Only this route and its necessary controls are active. The [archived recipe
+collection](../archive/method-recipes.md) preserves all other methods and original
+commands; [Chinese archive](../archive/method-recipes-zh.md). Their experimental
+settings and outcomes remain in the [inventory](method-inventory.json).
 
-First complete [environment and data](reproduce.md) and [B3/B5 base models](baselines.md). These commands only submit jobs; they do not wait for completion. When dependencies exist, check the preceding step's exit status first. Use a new output directory each time. See the [positive-signal inventory](positive-signals.md) for complete results, controls, and settings actually run; runnable settings must not be presented as existing experimental results.
+Complete [setup and data](reproduce.md) and [B3/B5 preparation](baselines.md) first.
+Use a committed checkout and a trusted `WILDFIRE_SITE_ENV`. These examples are
+submission instructions, not evidence of new runs or authorization for a sweep.
+Choose the history, seed and run set within the agreed compute budget.
 
-## X-series: one entrypoint, with each mechanism preserved
+## 1. Check the intended command
 
-The following function only submits Slurm jobs from the login shell. `history=1` and `seed=0` are the choices for an initial reproduction; before switching to T5 or another seed, check whether the direction has corresponding historical evidence. `physical_batch=64` matches the later mainline records; earlier experiments should use the batch from their original results. The effective batch is 64 throughout.
+The narrow `mainline` entrypoint accepts only canonical T1/T5, `control`,
+`cosine_erm`, and `block_specialist`. It fixes 3000 optimizer steps and physical
+batch 64, allows the recorded seeds 0/1/2, and rejects archived methods and
+architecture overrides. It delegates training unchanged to the shared runner.
+B3/B5 initialization comes from the configured site paths. Do not pass the old
+runner's `--steps`, `--batch-size`, `--architecture`, or `--bootstrap` switches.
+
+This preview is safe on a login node: it prints text without importing a model,
+creating an output directory, querying Slurm, or submitting anything:
+
+```bash
+python3 -m reproductions.cross_history.mainline \
+  --history 1 --method cosine_erm --seed 0 \
+  --output /path/to/new/run --print-command
+```
+
+Use `--help` for options. A real invocation requires a Slurm allocation before
+loading the trainer. For a changed execution path, `--smoke` checks one training
+step and save/reload; it retains batch 64 and does not reproduce scientific scores.
+Use a separate smoke directory. Do not replace a formal run with its checkpoint.
+
+## 2. Train one matched set
+
+Set a new group name for every attempt. These commands show the five distinct
+roles; submit only the roles needed for the approved comparison. Reuse a control
+only when its initialization, protocol and seed match.
 
 ```bash
 source "$WILDFIRE_SITE_ENV"
 cd "$WILDFIRE_REPO"
 history=1
 seed=0
-physical_batch=64
-ch() {
-  local method=$1
-  shift
-  bash scripts/research/submit.sh gpu python -m reproductions.cross_history.run \
-    --history "$history" --seed "$seed" --steps 3000 \
-    --batch-size "$physical_batch" --workers 3 --method "$method" \
-    --output "$WILDFIRE_ROOT/runs/t${history}-s${seed}-${method}" "$@"
-}
+run_group="$WILDFIRE_ROOT/runs/x22-x17-t${history}-s${seed}-attempt1"
+
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method control \
+  --output "$run_group/control"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method cosine_erm \
+  --output "$run_group/x22"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method block_specialist \
+  --output "$run_group/mixed"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method block_specialist --block-fraction 0.25 \
+  --output "$run_group/mild"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method block_specialist --block-fraction 0.5 \
+  --output "$run_group/severe"
 ```
 
-Choose a method and its nearest control as needed; there is no need to train every row below:
+The mixed expert is X14's attribution control. Fixed mild/severe experts are X17.
+Fresh `control` supplies M00, X22 supplies M01, mild supplies M06, severe supplies
+M07 in the final route. Frozen B3/B5 are separate references, not fresh controls.
 
-| Direction | Submission command | Nearest control to retain alongside it |
-|---|---|---|
-| Common continuation | `ch control` | Frozen B3/B5, distinguished from a newly trained control |
-| X1 | `ch context` | control |
-| X1 adapter | `ch context_adapter` | Frozen base model and control |
-| X3 | `ch transition` | control |
-| X4 | `ch risk` | control |
-| X6 | `ch balanced_corruption` | control |
-| GLOBAL-D1 | `ch global_consistency` | control |
-| X8 | `ch impact_consistency` | global_consistency, control |
-| X10 | `ch dynamic_inpaint` | control |
-| X11 limited signal against ERM | `ch dynamic_inpaint_reconstruct` | dynamic_inpaint, control |
-| X12 | `ch fire_specialist_impact` | fire_specialist, control |
-| X14 | `ch block_specialist` | control |
-| X16 | `ch block_specialist_dynamic` | block_specialist, control |
-| X18 | `ch block_specialist_context` | block_specialist, control |
-| X19 | `ch block_specialist_severity_adapter` | block_specialist, control |
-| X22 | `ch cosine_erm` | control |
-| X23 | `ch block_specialist_impact` | block_specialist, control |
-| X25 | `ch block_specialist_reliability_prompt` | block_specialist, control |
-| X26 | `ch cosine_fire_impact` | cosine_fire_global, cosine_erm |
-| X27 | `ch cosine_block_hard` | cosine_block_specialist, cosine_erm |
-| X29 | `ch cosine_block_memory` | cosine_block_specialist, cosine_erm |
-| X1+X3 | `ch context_transition` | context, transition, control |
-| X2 limited block signal | `ch distill` | control; do not substitute the revised distill_block |
+Check each job's exit status and actual `checkpoint.pt`/`summary.json` before
+submitting dependent work. Outputs must be new; do not restart into an old result
+directory. Log the source commit and job ID printed by the submitter.
 
-Control names can also be passed to `ch`, for example `ch cosine_fire_global`. These are switches in the original implementations, not replacements of recovered historical methods with a “similar module.”
+## 3. Evaluate the same checkpoints
 
-### Reconstructing “routed” metrics from scenario results
-
-A single model's `summary.json` contains the raw metrics for four scenarios. Results marked routed in the inventory require composition: the spatial route uses the control in M00/M01 and the candidate in M06/M07; the fire route uses the candidate only in M01 and the control in all other scenarios. These differ from directly averaging all four scenarios. For example, the X10 spatial route against ERM:
+Training validates on 2021. To reproduce historical 2022/2023 reporting, evaluate
+fixed checkpoints; do not train on those years or select new methods with them.
+For example, after the mild expert completes:
 
 ```bash
-bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compare \
-  --control "$WILDFIRE_ROOT/runs/t1-s0-control/summary.json" \
-  --candidate "$WILDFIRE_ROOT/runs/t1-s0-dynamic_inpaint/summary.json" \
-  --routed-spatial --output "$WILDFIRE_ROOT/runs/t1-s0-X10-routed.json"
+bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainline \
+  --history "$history" --seed "$seed" --method block_specialist --block-fraction 0.25 \
+  --evaluate-only "$run_group/mild/checkpoint.pt" --year 2022 \
+  --output "$run_group/mild-2022"
 ```
 
-This procedure gives the routed-spatial total gains for X1/X4/X10/X11/X14 and BlockDrop specialists; X12 FireDrop specialist comparisons use `--routed-fire`. Omitting routing arguments gives the four-scenario comparison of the candidate model itself. For nearest-control attribution of X16/X18/X19/X23/X25 and similar methods, change `--control` to `block_specialist/summary.json` and use the block metric specified in the record. Total gains against ERM cannot replace module gains.
+Repeat only as authorized, with each role's original method and block fraction,
+checkpoint, history and seed, and new year-specific output paths. Historical test
+years are already exposed; this is reproduction, not untouched confirmation.
 
-For three-seed or multi-year aggregation, repeat `--control` and `--candidate` in order; matching positions must refer to the same history/seed/year. T5 and heldout years use their own evaluation outputs. A one-seed aggregate does not satisfy the three-seed confirmation gate.
+## 4. Compose and interpret
 
-## D-series: historical standalone implementations
-
-The D-series and X-series use different training recipes. D-series base completion records are generated by [base-model export](baselines.md); passing only a checkpoint is insufficient. The following helper explicitly passes the new environment paths:
-
-```bash
-dtrain() {
-  local label=$1 module=$2 batch=$3
-  shift 3
-  bash scripts/research/submit.sh gpu python -m "reproductions.wsts_fast_track.$module" \
-    --b3-record "$WILDFIRE_ROOT/checkpoints/B3-completed.json" \
-    --upstream-root "$WILDFIRE_UPSTREAM" --data-root "$WILDFIRE_DATA" \
-    --stats-path "$WILDFIRE_STATS" --batch-size "$batch" --num-workers 8 \
-    --device cuda --output-path "$WILDFIRE_ROOT/runs/$label/model.ckpt" "$@"
-}
-```
-
-| Direction | Submission command |
-|---|---|
-| D1 ERM control | `dtrain D1-ERM train_predictive_consistency 32 --lambda-consistency 0.0` |
-| D1 KL | `dtrain D1-KL train_predictive_consistency 32 --lambda-consistency 0.1` |
-| D2 STD control | `dtrain D2-STD train_reliability_normalized 64 --variant standard` |
-| D2 RNC | `dtrain D2-RNC train_reliability_normalized 64 --variant rnc` |
-| D4 token | `dtrain D4 train_reliability_normalized 64 --variant token` |
-| D5 CIWC | `dtrain D5 train_counterfactual_impact_consistency 32` |
-| D6 CIWC+rank | `dtrain D6 train_counterfactual_rank_consistency 32` |
-| D7 adapter | `dtrain D7 train_counterfactual_reliability_adapter 32 --adapter-scope all` |
-| D8 factorized adapter | `dtrain D8 train_counterfactual_reliability_adapter 32 --adapter-scope block` |
-| D10 prompt pyramid | `dtrain D10 train_reliability_prompt_pyramid 64 --variant prompt-pyramid` |
-| D11 complete prompts | `dtrain D11 train_reliability_prompt_pyramid 64 --variant complete-prompt-pyramid` |
-| D12 SARP | `dtrain D12 train_severity_adaptive_reliability_prompting 64` |
-
-These trainers fix seed 0 and 3,000 steps. Historical D1-ERM/KL use batch 32; the original launcher did not override this trainer default. D5/D6 retain the same paired clean/corrupt recipe, whose paired ERM control is D1-ERM with batch 32 in the table above. D5's nearest consistency control is D1-KL, and D6 must also be compared with D5. Do not switch to batch 64 and treat it as a matched control for the original results: this changes sampling exposure and BatchNorm behavior. Other matched controls and gates follow the original [quantitative ledger](../experiments/quantitative_reliability_ledger.md) and [rejection records](../experiments/rejected_experiments.md).
-
-D13 uses the T5 base model; submit the standard and sarp variants separately:
-
-```bash
-for variant in standard sarp; do
-  bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.train_temporal_reliability_prompting \
-    --b5-record "$WILDFIRE_ROOT/checkpoints/B5-completed.json" \
-    --upstream-root "$WILDFIRE_UPSTREAM" --data-root "$WILDFIRE_DATA" \
-    --stats-path "$WILDFIRE_STATS" --variant "$variant" \
-    --batch-size 64 --num-workers 8 --device cuda \
-    --output-path "$WILDFIRE_ROOT/runs/D13-$variant/model.ckpt"
-done
-```
-
-After training, evaluate 2021 with the corresponding evaluator; for example, D4:
-
-```bash
-bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.evaluate_reliability_normalized \
-  --checkpoint "$WILDFIRE_ROOT/runs/D4/model.ckpt" \
-  --output-root "$WILDFIRE_ROOT/runs/D4/eval-2021" \
-  --upstream-root "$WILDFIRE_UPSTREAM" --data-root "$WILDFIRE_DATA" \
-  --stats-path "$WILDFIRE_STATS" --year 2021 --device cuda
-```
-
-| Model | Evaluator suffix (all use prefix `reproductions.wsts_fast_track.`) |
-|---|---|
-| D1 | `evaluate_predictive_consistency` |
-| D2 / D4 | `evaluate_reliability_normalized` |
-| D5 | `evaluate_counterfactual_impact_consistency` |
-| D6 | `evaluate_counterfactual_rank_consistency` |
-| D7 / D8 | `evaluate_counterfactual_reliability_adapter` |
-| D10 / D11 | `evaluate_reliability_prompt_pyramid` |
-| D12 | `evaluate_severity_adaptive_reliability_prompting` |
-| D13 | `evaluate_temporal_reliability_prompting` |
-
-When evaluating heldout years, change both `--year 2022` or `2023` and the output directory, and add `--heldout-authorized`. Do not add heldout conclusions for directions that failed the screen.
-
-## Compositions, teachers, and the two September campaigns
-
-See [teachers and distillation](teachers.md) for teacher training and RF/TD commands. X8+X17 and X22+X17 use the same complete-route aggregator; their FireDrop branches come from impact_consistency and cosine_erm, respectively. First train and evaluate the matched control, fire, and fixed 25% and 50% BlockDrop specialists, then aggregate. For example, X22+X17 at seed 0, T1, 2021:
+After matching 2021 summaries exist, these CPU Slurm jobs produce the system
+report and the necessary attribution comparison:
 
 ```bash
 bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_complete_routes \
-  --control "$WILDFIRE_ROOT/runs/t1-s0-control/summary.json" \
-  --fire "$WILDFIRE_ROOT/runs/t1-s0-cosine_erm/summary.json" \
-  --mild "$WILDFIRE_ROOT/runs/t1-s0-block025/summary.json" \
-  --severe "$WILDFIRE_ROOT/runs/t1-s0-block050/summary.json" \
-  --output "$WILDFIRE_ROOT/runs/t1-s0-X22-X17.json"
-```
-
-For X17's standalone positive signal against ERM and mechanism attribution against X14, the following command outputs both comparisons:
-
-```bash
+  --control "$run_group/control/summary.json" --fire "$run_group/x22/summary.json" \
+  --mild "$run_group/mild/summary.json" --severe "$run_group/severe/summary.json" \
+  --output "$run_group/x22-x17-2021.json"
 bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_severity_routes \
-  --control "$WILDFIRE_ROOT/runs/t1-s0-control/summary.json" \
-  --mixed "$WILDFIRE_ROOT/runs/t1-s0-block_specialist/summary.json" \
-  --mild "$WILDFIRE_ROOT/runs/t1-s0-block025/summary.json" \
-  --severe "$WILDFIRE_ROOT/runs/t1-s0-block050/summary.json" \
-  --output "$WILDFIRE_ROOT/runs/t1-s0-X17.json"
+  --control "$run_group/control/summary.json" --mixed "$run_group/mixed/summary.json" \
+  --mild "$run_group/mild/summary.json" --severe "$run_group/severe/summary.json" \
+  --output "$run_group/x17-attribution-2021.json"
 ```
 
-The inventory signal for RF-BN comes from the corrected `--bn-forward-mode batch_stats`, which must be specified explicitly. The default fixed mode is the old diagnostic and cannot reproduce the corrected numbers. RF-MIXED/ RF-TYPED use `--arm mixed` / `--arm typed`, respectively. Both require comparison with `--arm control`, and typed additionally requires an equal-capacity comparison with mixed.
+The composer also supports archived routes. Verify `component_methods.fire` is
+`cosine_erm` for the active system. This is summary composition, not deployment
+of a single fused model. Pass repeated matching groups of arguments to aggregate
+additional histories/seeds/years, keeping their order aligned. One group cannot
+establish three-seed cross-history confirmation or fixed-year generalization.
+Do not overwrite an earlier report when adding rows.
 
-X8+X10 uses `compose_routes --control ... --fire ... --spatial ...`, with impact_consistency for fire and dynamic_inpaint for spatial. The aggregator reads existing scenario results and does not train a new network. Its routed outputs apply to the specified observable-missingness scenarios; they are not an additionally trained single model.
-
-See [diagnostic reproduction](diagnostics-reproduction.md) for the natural VIIRS and target-QA diagnostic positive signals. They depend on historical P00 and are not scientific contributions of the corrected baseline. Public-weight downloads and bootstrap commands for architecture transfer are in [architecture reproduction](architectures.md); Res18 B3/B5 weights cannot be loaded into Swin/SegFormer.
+Report primary AP, clean AP, block AP and comparator identity. Preserve X17's
+failed held-out attribution cells even when the complete system improves over
+ERM. See [scope and evidence limits](../CODE_LIFECYCLE.md). Current selection does
+not promote X17 to an independently confirmed mechanism or reactivate any archive.
