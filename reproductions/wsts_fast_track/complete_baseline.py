@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Seal a portable baseline from a successful trainer completion receipt."""
 from __future__ import annotations
 

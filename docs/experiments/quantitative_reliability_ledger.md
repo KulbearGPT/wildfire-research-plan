@@ -1,5 +1,7 @@
 # T=1 Quantitative Reliability Results
 
+> Historical experiment ledger. Current maintenance scope is [X22+X17 and its controls](../CODE_LIFECYCLE.md). Earlier live status, next-experiment instructions and campaign authorizations below are historical records, not current execution instructions. Original measurements and decisions are preserved.
+
 This is the source of truth for the active research line. All learned methods
 use Res18-U-Net with `T=1`, the corrected pooled-year resolver, 2016--2020
 training, 2021 validation, and fixed 2022--2023 tests. AP is computed on the

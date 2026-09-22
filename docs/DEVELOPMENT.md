@@ -6,6 +6,10 @@ remains the starting point for learning the scientific workflow.
 
 ## Start from the appropriate source
 
+The active research scope is [X22+X17 and necessary controls](CODE_LIFECYCLE.md).
+The inclusive method inventory also contains inactive historical explorations;
+check its `lifecycle` field before treating an entry as a development target.
+
 | Task | Source or entry point |
 |---|---|
 | Reproduce or extend a current method | [Research handoff](research/reproduce.md), [method recipes](research/method-recipes.md), [inventory](research/method-inventory.json) |

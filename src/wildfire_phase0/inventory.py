@@ -1,3 +1,5 @@
+# Code lifecycle: active_support. Data audit and reference infrastructure.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Read-only inventory adapter for official WSTS/WSTS+ HDF5 event files."""
 
 from pathlib import Path

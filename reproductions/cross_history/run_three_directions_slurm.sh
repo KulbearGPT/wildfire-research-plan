@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: archived. Preserved historical exploration; not an active contribution direction.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 set -euo pipefail
 : "${SLURM_JOB_ID:?Slurm required}"
 : "${WILDFIRE_SOURCE_COMMIT:?Pin a committed source revision}"

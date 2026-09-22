@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Deterministic 2021-only dataset path for M00--M07 engineering evaluation."""
 
 from __future__ import annotations

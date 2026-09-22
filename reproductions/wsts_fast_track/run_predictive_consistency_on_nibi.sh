@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: legacy_runner. Original site-specific runner; current portable route uses scripts/research/submit.sh.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then

@@ -1,3 +1,7 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
+# Shared Forecaster is active; optional restoration/adapter/auxiliary branches
+# are archived. The historical module description below is not a contribution claim.
 """Three independent changes to the existing spatial/temporal forecasters."""
 import importlib
 import torch

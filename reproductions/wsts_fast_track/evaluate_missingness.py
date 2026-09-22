@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Shared checkpoint loading and metrics for retained T=1 evaluations."""
 
 from __future__ import annotations

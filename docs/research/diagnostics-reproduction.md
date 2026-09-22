@@ -1,5 +1,7 @@
 # Reproduce the two positive diagnostic observations
 
+**Archived workflow:** this page preserves an inactive exploration or diagnostic. See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 These are historical **24-event, 2021, T1 diagnostics**, not adopted forecasting methods. Recovered source is `4b843add48862dcfac668b643ecd2a564cbe00df`. The original compact results are preserved in [diagnostics-results.json](diagnostics-results.json), copied from completed archived jobs without recomputation.
 
 | Diagnostic | Exact recorded observation | Limitation |

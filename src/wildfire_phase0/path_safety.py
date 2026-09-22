@@ -1,3 +1,5 @@
+# Code lifecycle: active_support. Data audit and reference infrastructure.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Canonical filesystem-root and containment checks for mutating workflows."""
 
 from collections.abc import Mapping

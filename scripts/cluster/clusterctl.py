@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Code lifecycle: reference_only. Official-baseline teaching or legacy cluster tooling; not the contribution route.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Small, site-profiled helpers for Slurm research jobs."""
 
 from __future__ import annotations

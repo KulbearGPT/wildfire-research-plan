@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: active_support. Portable execution/data support.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 set -euo pipefail
 if (( $# < 2 )) || [[ $1 != cpu && $1 != gpu ]]; then
   echo 'usage: WILDFIRE_SITE_ENV=/absolute/site.env submit.sh cpu|gpu ACTION [ARGS...]' >&2

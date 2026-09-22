@@ -1,3 +1,5 @@
+# Code lifecycle: reference_only. Official-baseline teaching or legacy cluster tooling; not the contribution route.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Run the pinned twelve-fold official-weight evaluation exactly once, sequentially."""
 
 from __future__ import annotations

@@ -1,5 +1,7 @@
 # Regenerate teacher checkpoints and manifests
 
+**Archived workflow:** this page preserves an inactive exploration or diagnostic. See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 Teacher manifests describe newly trained source runs. Generate them from actual checkpoints and completed 2021 evaluation summaries; do not copy historical SHA-256 values onto regenerated artifacts. This procedure prepares sources shared by the reliability-fusion driver (`reproductions.cross_history.run_three_directions`) and the separate routed-teacher driver (`reproductions.three_directions.run`). It is a regeneration recipe, not a claim that these full training jobs were rerun during handoff qualification.
 
 First finish [environment and B3/B5 setup](reproduce.md) and [corrected dataset preparation](data-preparation.md). Set `WILDFIRE_B3_CHECKPOINT` and `WILDFIRE_B5_CHECKPOINT` in your site configuration to the corresponding regenerated Lightning baseline checkpoints. Each history uses its same baseline checkpoint for all source methods and seeds. Keep those paths fixed throughout source training: `initial_checkpoint` is an embedded provenance identity, and the builder checks literal equality across all sources for each history.

@@ -1,3 +1,5 @@
+# Code lifecycle: active_support. Checkpoint/artifact transfer infrastructure.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Copy verified teacher artifacts into a relocatable manifest inside Slurm."""
 from __future__ import annotations
 

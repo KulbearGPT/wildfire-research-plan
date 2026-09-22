@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Compose clean, FireDrop, mild-block, and severe-block predictions."""
 from __future__ import annotations
 

@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Runtime contract shared by retained corrected T=1 experiments."""
 
 from __future__ import annotations

@@ -1,5 +1,7 @@
 # Start here: a guide for new students
 
+**The active research route is X22+X17 and its necessary controls.** Other methods remain historical explorations or teaching references; see [code lifecycle](CODE_LIFECYCLE.md). The official single-fold tutorial remains the first onboarding exercise.
+
 Course website: [Home](../index.html) · [Research foundations](../related-work/index.html) · [Baseline reproduction](../baseline-reproduction/index.html).
 
 Welcome to the wildfire forecasting project. This page takes you from understanding the task to your first experiment and then to the existing research. **For your first practical exercise, complete one official fold. You do not need to rerun every experiment.**
@@ -65,7 +67,7 @@ For the project B0 route, replace Fold 2 above with that tutorial's B0 training 
 
 Read the [positive-signal catalog](research/positive-signals.md), followed by the [negative and unrun archive](research/negative-results.md). The positive catalog includes improvements on a single seed, metric or scenario. **Inclusion is not confirmation of a contribution.** An unrun experiment or invalid comparison is not evidence that a method fails.
 
-After selecting a direction with your supervisor, find its nearest control in the [method recipes](research/method-recipes.md). Reproduce the existing comparison before discussing changes. For base weights, see [baseline training and export](research/baselines.md); for teacher models or distillation, see [teacher generation and use](research/teachers.md).
+Follow the selected X22+X17 route: reproduce X22 against fresh ERM, then inspect the fixed-severity X17 experts and mixed-severity X14 control. See [code lifecycle](CODE_LIFECYCLE.md) and the [method recipes](research/method-recipes.md). Other directions retain their historical implementations; reopening one requires a new research decision. For base weights, see [baseline training and export](research/baselines.md). The [teacher and distillation recipes](research/teachers.md) are archived references.
 
 Before every experiment, write down the hypothesis, comparator, fixed conditions, and observations that would support or contradict the hypothesis. The project's historical test years have already been evaluated; agree on a confirmation plan before designing new methods.
 

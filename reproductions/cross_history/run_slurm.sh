@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: legacy_runner. Original site-specific runner; use scripts/research/submit.sh for the mainline.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 set -euo pipefail
 : "${SLURM_JOB_ID:?Slurm required}"
 history=$1

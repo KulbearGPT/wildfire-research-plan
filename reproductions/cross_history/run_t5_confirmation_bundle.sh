@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# Code lifecycle: retired. One-off historical job replacement; execution disabled.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
+printf '%s\n' 'Retired one-off campaign bundle: historical job IDs must not be reused. See docs/CODE_LIFECYCLE.md.' >&2
+exit 2
+
+# Historical implementation below is intentionally unreachable.
 set -euo pipefail
 : "${SLURM_JOB_ID:?Slurm required}"
 

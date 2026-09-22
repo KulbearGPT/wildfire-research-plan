@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Evaluate one corrected B0--B3 baseline on the frozen rapid screen."""
 
 from __future__ import annotations

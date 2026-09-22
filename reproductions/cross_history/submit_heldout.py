@@ -1,3 +1,5 @@
+# Code lifecycle: legacy_runner. Original site-specific runner; use scripts/research/submit.sh for the mainline.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Submit fixed-year evaluation only after a comparison passes confirmation."""
 from __future__ import annotations
 

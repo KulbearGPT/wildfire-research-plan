@@ -1,3 +1,5 @@
+# Code lifecycle: archived. Preserved historical exploration; not an active contribution direction.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Execute one fixed three-direction variant inside a GPU Slurm allocation."""
 import argparse
 import gc

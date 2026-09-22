@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Code lifecycle: archive_support. Optional qualification or archive recovery; not a mainline experiment.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """One actual attention optimizer update; artifacts are qualification only."""
 import argparse
 from contextlib import contextmanager

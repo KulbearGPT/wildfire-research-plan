@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Compose fixed-25% and fixed-50% BlockDrop specialists by observed severity."""
 from __future__ import annotations
 

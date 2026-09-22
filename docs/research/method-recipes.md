@@ -1,5 +1,7 @@
 # 正向信号的具体方法入口
 
+**Current scope (2026-09-22): X22+X17 and necessary controls only.** See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 先完成 [环境和数据](reproduce.md)、[B3/B5 基础模型](baselines.md)。这里的命令只提交作业，不等待完成；有依赖时先检查上一步退出状态。每次使用新输出目录。完整结果、对照和哪些设置真正跑过见 [正向信号清单](positive-signals.md)，不能把可运行的设置写成已有实验结果。
 
 ## X 系列：同一入口，保留各自机制

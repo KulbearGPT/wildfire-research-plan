@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """FireDrop and BlockDrop augmentations retained by the B2/B3 baselines."""
 
 from __future__ import annotations

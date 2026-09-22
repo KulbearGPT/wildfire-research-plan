@@ -1,3 +1,5 @@
+# Code lifecycle: reference_only. Official-baseline teaching or legacy cluster tooling; not the contribution route.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Externally observe the one authorized WSTS fold-2 timing calibration."""
 
 from __future__ import annotations

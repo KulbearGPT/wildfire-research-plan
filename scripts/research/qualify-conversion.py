@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Code lifecycle: archive_support. Optional qualification or archive recovery; not a mainline experiment.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Qualify both real GeoTIFF-to-HDF5 paths on a tiny synthetic fixture in Slurm."""
 import importlib.util
 import json

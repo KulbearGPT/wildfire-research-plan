@@ -1,3 +1,5 @@
+# Code lifecycle: active_support. Train-only statistics required by mainline data preparation.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Compute train-only WSTS+ normalization statistics from event HDF5 files."""
 
 from __future__ import annotations

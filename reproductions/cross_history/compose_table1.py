@@ -1,3 +1,5 @@
+# Code lifecycle: archived. Preserved historical exploration; not an active contribution direction.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Compose matched test-only Table 1 statistics from summary JSON files."""
 import argparse
 import json

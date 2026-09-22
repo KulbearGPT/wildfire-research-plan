@@ -1,5 +1,7 @@
 # 在新 Slurm 集群复现现有研究
 
+**Current scope (2026-09-22): X22+X17 and necessary controls only.** See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 交付分成两部分：[发现过正向信号的方向](positive-signals.md)保留代码、结果和运行方法；[负结果档案](negative-results.md)记录实现思路、设置及结果。单 seed、单场景的改善也收录，但不会写成已确认的贡献。完整清单见 [method-inventory.json](method-inventory.json)。未运行、取消、比较无效三种状态不算负结果。
 
 **已完成新环境运行资格验证。** 新建训练/审计环境、独立官方源码、迁移数据与权重路径下，260 项 CPU 检查和 91 个 GPU 短预算 case 通过；详见[资格验证记录](qualification.md)。验证在本集群计算节点执行，没有声称在另一套物理集群运行过，也没有把短训练当作所有历史分数的全预算复现。

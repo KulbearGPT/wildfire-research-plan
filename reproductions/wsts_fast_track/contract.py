@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Literal contract for the retained Nibi WSTS+ T=1 and T=5 experiments."""
 
 from __future__ import annotations

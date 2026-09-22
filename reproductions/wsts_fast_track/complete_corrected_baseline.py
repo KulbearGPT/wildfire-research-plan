@@ -1,3 +1,5 @@
+# Code lifecycle: legacy_runner. Original corrected-baseline sealing protocol; portable handoff uses complete_baseline.py.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Seal one corrected-index 3K baseline after checking local evidence."""
 
 from __future__ import annotations

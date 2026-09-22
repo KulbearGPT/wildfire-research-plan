@@ -1,5 +1,7 @@
 # 三个方法方向：固定方案验证结果
 
+> Historical experiment ledger. Current maintenance scope is [X22+X17 and its controls](../CODE_LIFECYCLE.md). Earlier live status, next-experiment instructions and campaign authorizations below are historical records, not current execution instructions. Original measurements and decisions are preserved.
+
 2026-09-12。三个方向均完成 T1/T5、seed 0、2021 年四场景配对验证；12 个正式作业全部正常结束。四个学生训练均完成 3000 步，每个评估场景包含 3181 个样本。**三个固定方案均未通过预先登记的跨历史筛选标准，暂不纳入主方法。**
 
 ## 结果与已有贡献的关系

@@ -33,7 +33,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method context",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X1-adapter",
@@ -48,7 +54,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method context_adapter",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X2",
@@ -63,7 +75,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method distill",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X3",
@@ -78,7 +96,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method transition",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X4",
@@ -93,7 +117,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method risk",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X5",
@@ -108,7 +138,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method local_consistency",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X6",
@@ -123,7 +159,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method balanced_corruption",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X7",
@@ -138,7 +180,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method missingness_experts",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X8",
@@ -153,7 +201,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method impact_consistency",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Previously studied or retained result, now inactive by scope selection; not reclassified as scientifically negative.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+      }
     },
     {
       "id": "X9",
@@ -168,7 +222,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method spatial_impact_film",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X10",
@@ -183,7 +243,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method dynamic_inpaint",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+      }
     },
     {
       "id": "X11",
@@ -198,7 +264,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method dynamic_inpaint_reconstruct",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X12",
@@ -213,7 +285,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method fire_specialist_impact",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X13",
@@ -228,7 +306,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method normalized_inpaint",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X14",
@@ -243,7 +327,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method block_specialist",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "active_control",
+        "reason": "Mixed-severity closest attribution control for X17.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+      }
     },
     {
       "id": "X15",
@@ -258,7 +348,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method distance_prompt",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X16",
@@ -273,7 +369,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method block_specialist_dynamic",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X17",
@@ -288,7 +390,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.compose_severity_routes (requires matched control/mixed/mild/severe summaries; see method-recipes.md)",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "active_component",
+        "reason": "Fixed-severity components of the selected system; independent attribution failure remains disclosed.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+      }
     },
     {
       "id": "X18",
@@ -303,7 +411,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method block_specialist_context",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X19",
@@ -318,7 +432,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method block_specialist_severity_adapter",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021 confirmation; no heldout success established"
+      }
     },
     {
       "id": "X20",
@@ -333,7 +453,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method erm_impact_consistency",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X21",
@@ -348,7 +474,13 @@
       "entrypoint_or_recipe": null,
       "availability": "no implemented/runnable recipe established",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X22",
@@ -363,7 +495,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method cosine_erm",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "active_component",
+        "reason": "Cosine-schedule component of the selected route; optimizer contribution.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+      }
     },
     {
       "id": "X23",
@@ -378,7 +516,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method block_specialist_impact",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X24",
@@ -393,7 +537,13 @@
       "entrypoint_or_recipe": null,
       "availability": "no implemented/runnable recipe established",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X25",
@@ -408,7 +558,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method block_specialist_reliability_prompt",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X26",
@@ -423,7 +579,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method cosine_fire_impact",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X27",
@@ -438,7 +600,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method cosine_block_hard",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X28",
@@ -453,7 +621,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method cosine_reliability_block",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X29",
@@ -468,7 +642,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method cosine_block_memory",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X30",
@@ -483,7 +663,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method cosine_change_aux",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X31",
@@ -498,7 +684,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method cosine_deep_supervision",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X1+X3",
@@ -513,7 +705,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method context_transition",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X2-block-signal",
@@ -528,7 +726,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method distill",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X3-decoupled",
@@ -543,7 +747,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method transition_decoupled",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X4-strong",
@@ -558,7 +768,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method risk_strong",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X2-block-repair",
@@ -573,7 +789,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method distill_block",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0 unless explicitly stated"
+      }
     },
     {
       "id": "X8+X17",
@@ -588,7 +810,13 @@
       "entrypoint_or_recipe": "reproductions/cross_history/compose_complete_routes.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Previously studied or retained result, now inactive by scope selection; not reclassified as scientifically negative.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023"
+      }
     },
     {
       "id": "X22+X17",
@@ -603,7 +831,13 @@
       "entrypoint_or_recipe": "reproductions/cross_history/compose_complete_routes.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "active_system",
+        "reason": "Sole active system selected by the project owner on 2026-09-22.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023"
+      }
     },
     {
       "id": "legacy-c00-c02-3k",
@@ -618,7 +852,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "legacy-c00-c02-six-10k-runs",
@@ -633,7 +873,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P00",
@@ -648,7 +894,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P02",
@@ -663,7 +915,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P09",
@@ -678,7 +936,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P10",
@@ -693,7 +957,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P01",
@@ -708,7 +978,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P03",
@@ -723,7 +999,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P04",
@@ -738,7 +1020,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P05",
@@ -753,7 +1041,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P06",
@@ -768,7 +1062,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P07",
@@ -783,7 +1083,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P08",
@@ -798,7 +1104,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P11",
@@ -813,7 +1125,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P12",
@@ -828,7 +1146,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "P13",
@@ -843,7 +1167,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "belief-filter-t-1",
@@ -858,7 +1188,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "belief-attention-t-1",
@@ -873,7 +1209,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "belief-reconstruction-t-1",
@@ -888,7 +1230,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "corresponding-t-5-probes",
@@ -903,7 +1251,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "natural-viirs-screen",
@@ -918,7 +1272,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.evaluate_viirs_reliability",
       "availability": "restored current source, verified artifact-map relocation; GPU replay pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "target-qa-censoring",
@@ -933,7 +1293,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.evaluate_viirs_target_quality",
       "availability": "restored current source, verified artifact-map relocation; GPU replay pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "2016-2020-qa-cohort",
@@ -948,7 +1314,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "B4",
@@ -963,7 +1335,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/ (see archived source ledger)",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D2-RNC",
@@ -978,7 +1356,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_reliability_normalized --variant rnc",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D3",
@@ -993,7 +1377,13 @@
       "entrypoint_or_recipe": null,
       "availability": "no implemented/runnable recipe established",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D4",
@@ -1008,7 +1398,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_reliability_normalized --variant token",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D5",
@@ -1023,7 +1419,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_counterfactual_impact_consistency",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D6",
@@ -1038,7 +1440,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_counterfactual_rank_consistency",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D7",
@@ -1053,7 +1461,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_counterfactual_reliability_adapter --adapter-scope all",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D8",
@@ -1068,7 +1482,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_counterfactual_reliability_adapter --adapter-scope block",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D9",
@@ -1083,7 +1503,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/train_counterfactual_error_pair_ranking.py",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D10",
@@ -1098,7 +1524,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_reliability_prompt_pyramid --variant prompt-pyramid",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D11",
@@ -1113,7 +1545,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_reliability_prompt_pyramid --variant complete-prompt-pyramid",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T1 unless explicitly T5; 2021 screen unless years stated; inherited legacy P initialization is not a corrected baseline"
+      }
     },
     {
       "id": "D13",
@@ -1128,7 +1566,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_temporal_reliability_prompting --variant sarp",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/rejected_experiments.md",
+        "setting_scope": "T5; 2021; one screen"
+      }
     },
     {
       "id": "B0",
@@ -1143,7 +1587,13 @@
       "entrypoint_or_recipe": "reproductions/wsts_fast_track/train_corrected_baseline.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "reference_only",
+        "reason": "Preserved baseline/teaching reference; outside the selected contribution route.",
+        "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+      }
     },
     {
       "id": "B2",
@@ -1158,7 +1608,13 @@
       "entrypoint_or_recipe": "reproductions/wsts_fast_track/train_corrected_baseline.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "reference_only",
+        "reason": "Preserved baseline/teaching reference; outside the selected contribution route.",
+        "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+      }
     },
     {
       "id": "B3",
@@ -1173,7 +1629,13 @@
       "entrypoint_or_recipe": "reproductions/wsts_fast_track/train_corrected_baseline.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "active_foundation",
+        "reason": "Shared corrected T1 initialization and separate frozen reference.",
+        "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+      }
     },
     {
       "id": "D1-KL",
@@ -1188,7 +1650,13 @@
       "entrypoint_or_recipe": "reproductions/wsts_fast_track/train_predictive_consistency.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Previously studied or retained result, now inactive by scope selection; not reclassified as scientifically negative.",
+        "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+      }
     },
     {
       "id": "D2-STD",
@@ -1203,7 +1671,13 @@
       "entrypoint_or_recipe": "reproductions/wsts_fast_track/train_standard_reliability_control.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+      }
     },
     {
       "id": "D12",
@@ -1218,7 +1692,13 @@
       "entrypoint_or_recipe": "reproductions/wsts_fast_track/train_severity_adaptive_reliability_prompting.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Previously studied or retained result, now inactive by scope selection; not reclassified as scientifically negative.",
+        "settings_ref": "docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "T1; 2021/2022/2023; 3181/2856/2102 samples; historical one-run chain"
+      }
     },
     {
       "id": "RF-BN",
@@ -1233,7 +1713,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run_three_directions --history {1,5} --arm bn --bn-forward-mode batch_stats",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/three_directions_results.md",
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+      }
     },
     {
       "id": "RF-BN-fixed",
@@ -1248,7 +1734,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run_three_directions --history {1,5} --arm bn --bn-forward-mode fixed",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/three_directions_results.md",
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+      }
     },
     {
       "id": "RF-MIXED",
@@ -1263,7 +1755,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run_three_directions --history {1,5} --arm mixed",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/three_directions_results.md",
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+      }
     },
     {
       "id": "RF-TYPED",
@@ -1278,7 +1776,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run_three_directions --history {1,5} --arm typed",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/three_directions_results.md",
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+      }
     },
     {
       "id": "RF-KD",
@@ -1293,7 +1797,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run_three_directions --history {1,5} --arm distill",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/three_directions_results.md",
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; source e7db913 learning or 7a58b38 revised BN"
+      }
     },
     {
       "id": "TD-N",
@@ -1308,7 +1818,13 @@
       "entrypoint_or_recipe": "branch:3761e8b:python -m reproductions.three_directions.run --history {1,5} --mode bn_conditional",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/three-directions"
+      "source_branch": "research/three-directions",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/three-directions-results.md",
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3"
+      }
     },
     {
       "id": "TD-W",
@@ -1323,7 +1839,13 @@
       "entrypoint_or_recipe": "python -m reproductions.three_directions.run --history {1,5} --mode merge",
       "availability": "restored in current handoff source; configurable --sources with relative artifact paths; qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/three-directions"
+      "source_branch": "research/three-directions",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/three-directions-results.md",
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3"
+      }
     },
     {
       "id": "TD-D",
@@ -1338,7 +1860,13 @@
       "entrypoint_or_recipe": "python -m reproductions.three_directions.run --history {1,5} --mode student_distill",
       "availability": "restored in current handoff source; configurable --sources with relative artifact paths; qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/three-directions"
+      "source_branch": "research/three-directions",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/three-directions-results.md",
+        "setting_scope": "2021; seed 0; 3181 samples/scenario; formal source e5593d3"
+      }
     },
     {
       "id": "ARCH-SegFormer-B2",
@@ -1353,7 +1881,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --architecture segformer_b2 --history {supported setting} --method {control,cosine_erm,block_specialist}",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established"
+      }
     },
     {
       "id": "ARCH-SwinUnet",
@@ -1368,7 +1902,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --architecture swin_unet --history {supported setting} --method {control,cosine_erm,block_specialist}",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established"
+      }
     },
     {
       "id": "ARCH-ConvLSTM",
@@ -1383,7 +1923,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --architecture convlstm --history {supported setting} --method {control,cosine_erm,block_specialist}",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "2021; seed 0; no seed confirmation or heldout transfer established"
+      }
     },
     {
       "id": "P04-P07-block",
@@ -1398,7 +1944,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/train_residual_gate.py",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/p00_p06_rapid_reliability.md",
+        "setting_scope": "2021; legacy P00/P02 initialization; no corrected-chain efficacy claim"
+      }
     },
     {
       "id": "GLOBAL-D1",
@@ -1413,7 +1965,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method global_consistency",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+      }
     },
     {
       "id": "X8+X10",
@@ -1428,7 +1986,13 @@
       "entrypoint_or_recipe": "reproductions/cross_history/compose_routes.py",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "seeds 0/1/2; T1/T5; 2021/2022/2023; register mixes initial and final findings; final values explicitly identified"
+      }
     },
     {
       "id": "X11-vs-ERM",
@@ -1443,7 +2007,13 @@
       "entrypoint_or_recipe": "python -m reproductions.cross_history.run --history {1,5} --method dynamic_inpaint_reconstruct",
       "availability": "current source; runtime qualification separate",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "research/reliability-fusion-20260912"
+      "source_branch": "research/reliability-fusion-20260912",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "docs/experiments/t1_t5_innovations.md",
+        "setting_scope": "T1 2021 seed 0; arithmetic derived from reported rounded deltas"
+      }
     },
     {
       "id": "B1",
@@ -1458,7 +2028,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_corrected_baseline --baseline-id B1",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "reference_only",
+        "reason": "Preserved baseline/teaching reference; outside the selected contribution route.",
+        "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "As explicitly stated; historical source contract"
+      }
     },
     {
       "id": "B5",
@@ -1473,7 +2049,13 @@
       "entrypoint_or_recipe": "python -m reproductions.wsts_fast_track.train_corrected_baseline --baseline-id B5",
       "availability": "restored in current handoff source; fresh-runtime qualification pending",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "active_foundation",
+        "reason": "Shared corrected T5 initialization and separate frozen reference.",
+        "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "As explicitly stated; historical source contract"
+      }
     },
     {
       "id": "P09-total",
@@ -1488,7 +2070,13 @@
       "entrypoint_or_recipe": "archive:4b843ad:reproductions/wsts_fast_track/train_environment_dro.py",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "archived",
+        "reason": "Outside the owner-selected X22+X17 route; preserve the original evidence outcome and experimental setting.",
+        "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "As explicitly stated; historical source contract"
+      }
     },
     {
       "id": "FOUNDATION-RULES",
@@ -1503,7 +2091,13 @@
       "entrypoint_or_recipe": "src/wildfire_phase0/",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "active_support",
+        "reason": "Data audit, contract and simple-reference support.",
+        "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "As explicitly stated; historical source contract"
+      }
     },
     {
       "id": "FOUNDATION-OFFICIAL",
@@ -1518,7 +2112,729 @@
       "entrypoint_or_recipe": "reproductions/wsts_res18_unet_t1/",
       "availability": "Git recovery required at inventory time",
       "artifacts": "External data, statistics and source/final checkpoints required; original paths are provenance, not portable acquisition instructions.",
-      "source_branch": "archive/pre-t1-cleanup-2026-09-04"
+      "source_branch": "archive/pre-t1-cleanup-2026-09-04",
+      "lifecycle": {
+        "state": "reference_only",
+        "reason": "Preserved baseline/teaching reference; outside the selected contribution route.",
+        "settings_ref": "archive/pre-t1-cleanup-2026-09-04:docs/experiments/quantitative_reliability_ledger.md",
+        "setting_scope": "As explicitly stated; historical source contract"
+      }
+    }
+  ],
+  "lifecycle_revision": "2026-09-22",
+  "active_selection": {
+    "system": "X22+X17",
+    "basis": "Project owner selected only X22+X17 and necessary controls on 2026-09-22.",
+    "document": "docs/CODE_LIFECYCLE.md",
+    "run_methods": [
+      "control",
+      "cosine_erm",
+      "block_specialist"
+    ],
+    "canonical_architectures": {
+      "1": "res18_unet",
+      "5": "res18_utae"
+    },
+    "required_variants": {
+      "block_specialist": [
+        "mixed (no block_fraction)",
+        "fixed 0.25",
+        "fixed 0.50"
+      ]
+    },
+    "fresh_control": "cross_history.run --method control; matched B3/B5 continuation, not a frozen baseline",
+    "status_semantics": "status records historical evidence; lifecycle.state records current maintenance. Neither implies independent novelty."
+  },
+  "code_lifecycle": [
+    {
+      "path": "reproductions/artifact_bundle.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/build_teacher_manifest.py",
+      "state": "archived",
+      "settings_ref": "docs/research/teachers.md"
+    },
+    {
+      "path": "reproductions/cross_history/__init__.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/architectures.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/assess_three_directions.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "path": "reproductions/cross_history/audit_bn_activations.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "path": "reproductions/cross_history/audit_bn_statistics.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "path": "reproductions/cross_history/checkpoint_contract.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/compare.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/compose_complete_routes.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/compose_routes.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "path": "reproductions/cross_history/compose_severity_routes.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/compose_table1.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "path": "reproductions/cross_history/data.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/models.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/reliability_masks.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/run.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/cross_history/run_confirmation_bundle.sh",
+      "state": "retired",
+      "settings_ref": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "path": "reproductions/cross_history/run_slurm.sh",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "path": "reproductions/cross_history/run_t5_confirmation_bundle.sh",
+      "state": "retired",
+      "settings_ref": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "path": "reproductions/cross_history/run_three_directions.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "path": "reproductions/cross_history/run_three_directions_slurm.sh",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "path": "reproductions/cross_history/submit_heldout.py",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "path": "reproductions/cross_history/three_directions.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "path": "reproductions/paths.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/three_directions/methods.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three-directions-results.md"
+    },
+    {
+      "path": "reproductions/three_directions/report.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three-directions-results.md"
+    },
+    {
+      "path": "reproductions/three_directions/run.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three-directions-results.md"
+    },
+    {
+      "path": "reproductions/three_directions/sources.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/three-directions-results.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/__init__.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/censored_training.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/complete_baseline.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/complete_corrected_baseline.py",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/compute_stats.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/contract.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/corrected_baselines.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/corruption_training.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/counterfactual_impact_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/counterfactual_rank_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/counterfactual_reliability_adapter.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/diagnostic_artifacts.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/diagnostic_support.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_belief_state.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_corrected_baseline.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_counterfactual_impact_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_counterfactual_rank_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_counterfactual_reliability_adapter.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_missingness.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_predictive_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_reliability_normalized.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_reliability_prompt_pyramid.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_severity_adaptive_reliability_prompting.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_standard_reliability_control.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_temporal_reliability_prompting.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_viirs_reliability.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluate_viirs_target_quality.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/evaluation.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/latent_state_common.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/legacy_p00.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/legacy_p00_completion.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/matrix.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/missingness.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/predictive_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/processed_reliability.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/reconstruction_baseline.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/reliability_normalized_conv.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/reliability_prompt_pyramid.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/reliability_token_conv.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/run_corrected_baseline_on_nibi.sh",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/run_d12_heldout_on_nibi.sh",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/run_predictive_consistency_on_nibi.sh",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/run_reliability_evaluation_on_nibi.sh",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/run_severity_adaptive_reliability_prompting_on_nibi.sh",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/run_standard_reliability_control_on_nibi.sh",
+      "state": "legacy_runner",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/runtime.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/severity_adaptive_reliability_prompting.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/state_attention.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/state_filter.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/temporal_reliability_prompting.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_belief_state.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_corrected_baseline.py",
+      "state": "active_shared",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_counterfactual_impact_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_counterfactual_rank_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_counterfactual_reliability_adapter.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_predictive_consistency.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_reliability_normalized.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_reliability_prompt_pyramid.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_severity_adaptive_reliability_prompting.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_standard_reliability_control.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/train_temporal_reliability_prompting.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_fast_track/viirs_reliability.py",
+      "state": "archived",
+      "settings_ref": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/bootstrap.ps1",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/control.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/evaluate_released_weight.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/official_entrypoint.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/official_weight_entrypoint.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/released_weight_contract.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/released_weight_path_security.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/run_calibration.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/run_full_fold.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/run_weight_campaign.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/smoke_fold2.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/verify_calibration.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/verify_full_fold.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/verify_released_weight.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "reproductions/wsts_res18_unet_t1/scripts/verify_weight_campaign.py",
+      "state": "reference_only",
+      "settings_ref": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "path": "scripts/build-course-guides.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "scripts/cluster/bootstrap.sh",
+      "state": "reference_only",
+      "settings_ref": "docs/cluster-migration.md"
+    },
+    {
+      "path": "scripts/cluster/clusterctl.py",
+      "state": "reference_only",
+      "settings_ref": "docs/cluster-migration.md"
+    },
+    {
+      "path": "scripts/cluster/collect.sh",
+      "state": "reference_only",
+      "settings_ref": "docs/cluster-migration.md"
+    },
+    {
+      "path": "scripts/cluster/job.sh",
+      "state": "reference_only",
+      "settings_ref": "docs/cluster-migration.md"
+    },
+    {
+      "path": "scripts/cluster/preflight.sh",
+      "state": "reference_only",
+      "settings_ref": "docs/cluster-migration.md"
+    },
+    {
+      "path": "scripts/cluster/submit.sh",
+      "state": "reference_only",
+      "settings_ref": "docs/cluster-migration.md"
+    },
+    {
+      "path": "scripts/research/fetch-architectures.sh",
+      "state": "archive_support",
+      "settings_ref": "docs/research/qualification.md"
+    },
+    {
+      "path": "scripts/research/job.sh",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "scripts/research/prepare-data.sh",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "scripts/research/prepare-upstream.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "scripts/research/qualify-attention.py",
+      "state": "archive_support",
+      "settings_ref": "docs/research/qualification.md"
+    },
+    {
+      "path": "scripts/research/qualify-conversion.py",
+      "state": "archive_support",
+      "settings_ref": "docs/research/qualification.md"
+    },
+    {
+      "path": "scripts/research/qualify-cpu.sh",
+      "state": "archive_support",
+      "settings_ref": "docs/research/qualification.md"
+    },
+    {
+      "path": "scripts/research/qualify-legacy.py",
+      "state": "archive_support",
+      "settings_ref": "docs/research/qualification.md"
+    },
+    {
+      "path": "scripts/research/qualify-models.sh",
+      "state": "archive_support",
+      "settings_ref": "docs/research/qualification.md"
+    },
+    {
+      "path": "scripts/research/replay-diagnostics.sh",
+      "state": "archive_support",
+      "settings_ref": "docs/research/qualification.md"
+    },
+    {
+      "path": "scripts/research/submit.sh",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/__init__.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/baselines.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/cli.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/contract.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/inventory.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/metrics.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/path_safety.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/repair.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/report.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/rule_eval.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/schema.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/splits.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/target_gate.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
+    },
+    {
+      "path": "src/wildfire_phase0/verify_repair.py",
+      "state": "active_support",
+      "settings_ref": "docs/CODE_LIFECYCLE.md"
     }
   ]
 }

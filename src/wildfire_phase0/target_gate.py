@@ -1,3 +1,5 @@
+# Code lifecycle: active_support. Data audit and reference infrastructure.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Target-evidence integrity checks for the Phase 0 data gate."""
 
 from collections import defaultdict

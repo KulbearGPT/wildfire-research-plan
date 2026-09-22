@@ -1,5 +1,7 @@
 # Negative, mixed, invalid and unrun experiment archive
 
+**Current scope (2026-09-22): X22+X17 and necessary controls only.** See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 This archive records what failed and what was never tested. A failed strict gate does **not** imply absence of a positive signal: see [positive-signals.md](positive-signals.md). Retained mechanism details, controls and original numeric outcomes remain in the linked ledgers and source commits. Reproduction/qualification status is separate from scientific result status.
 
 ## Status distinctions

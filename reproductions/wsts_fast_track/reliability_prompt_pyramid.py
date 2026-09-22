@@ -1,3 +1,5 @@
+# Code lifecycle: archived. Preserved historical exploration; not an active contribution direction.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Scale-matched spatial reliability prompts for a U-Net encoder pyramid."""
 
 from __future__ import annotations

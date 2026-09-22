@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: archive_support. Optional qualification or archive recovery; not a mainline experiment.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 set -euo pipefail
 if [[ -z ${SLURM_JOB_ID:-} ]]; then
   echo 'Architecture asset downloads require a Slurm allocation.' >&2

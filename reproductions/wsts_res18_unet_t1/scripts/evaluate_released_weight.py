@@ -1,3 +1,5 @@
+# Code lifecycle: reference_only. Official-baseline teaching or legacy cluster tooling; not the contribution route.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Freeze or evaluate the pinned official Res18-U-Net T=1 weight release."""
 
 from __future__ import annotations

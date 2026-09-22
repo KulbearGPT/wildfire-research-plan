@@ -1,3 +1,5 @@
+# Code lifecycle: archived. Preserved historical exploration; not an active contribution direction.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Build fresh relative teacher manifests from completed matched source runs.
 
 Only main loads torch, after the Slurm guard, and every checkpoint is loaded on

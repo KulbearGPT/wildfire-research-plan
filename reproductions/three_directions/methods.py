@@ -1,3 +1,5 @@
+# Code lifecycle: archived. Preserved historical exploration; not an active contribution direction.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Fixed mechanisms for the three-direction experiment; no dataset dependencies."""
 import torch
 from torch import nn

@@ -1,5 +1,7 @@
 # Positive signals, including limited and historical findings
 
+**Current scope (2026-09-22): X22+X17 and necessary controls only.** See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 This collection uses the user’s inclusive criterion: retain a measured positive change even when it is confined to one seed, history, year, scenario, or weak comparator. **A positive signal is not a confirmed contribution or a passed adoption gate.** Mixed results also appear in the negative archive. No new efficacy experiment was performed for this inventory.
 
 AP differences are absolute, not percentages. Primary is mean AP over M01/M06/M07; block is mean AP over M06/M07. M00 is clean. T1/T5 differ in architecture and features as well as history. The corrected retained T1 and paired campaigns use 3,181/2,856/2,102 samples in 2021/2022/2023. The old ledger's 2,312 was a documentation typo, corrected against all original result summaries; see [population audit](evaluation-population.md). Unless stated otherwise, a screen is seed 0 on 2021; later confirmation/heldout detail is in the source ledger, not implied by a positive sign.

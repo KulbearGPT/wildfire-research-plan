@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Code lifecycle: active_support. Portable execution/data support.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Apply only the two approved compatibility changes to the pinned checkout."""
 import argparse
 from pathlib import Path

@@ -1,3 +1,5 @@
+# Code lifecycle: archived. Preserved historical exploration; not an active contribution direction.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Exact archived diagnostic helpers without unrelated P-series dependencies.
 
 Functions originate at 4b843ad; only checkpoint path relocation is additive.

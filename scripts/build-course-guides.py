@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Code lifecycle: active_support. English teaching website renderer.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Render the English onboarding Markdown as offline-readable course pages.
 
 Requires pandoc (verified with 2.18). Run from any directory; no model imports.

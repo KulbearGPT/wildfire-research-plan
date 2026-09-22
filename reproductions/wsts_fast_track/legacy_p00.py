@@ -1,3 +1,5 @@
+# Code lifecycle: archived. Preserved historical exploration; not an active contribution direction.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Replay archived P00 (invalid pooled-index foundation), not a corrected baseline."""
 
 from __future__ import annotations

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Code lifecycle: archive_support. Optional qualification or archive recovery; not a mainline experiment.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """One real-data GPU qualification case; never a scientific experiment."""
 import argparse
 from contextlib import contextmanager

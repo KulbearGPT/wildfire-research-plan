@@ -20,6 +20,8 @@ instructions. Higher-priority host instructions and enforced policies still appl
 
 ## Read by task
 
+- Active scope: [X22+X17 code lifecycle](docs/CODE_LIFECYCLE.md), including necessary
+  controls. Other implementations are preserved archives or teaching references.
 - Student onboarding: [START_HERE](docs/START_HERE.md).
 - Current methods, execution, and evidence: [research handoff](docs/research/reproduce.md),
   then the relevant entry in [method inventory](docs/research/method-inventory.json).

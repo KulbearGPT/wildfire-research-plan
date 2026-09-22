@@ -1,5 +1,7 @@
 # Concrete method entrypoints for positive signals
 
+**Current scope (2026-09-22): X22+X17 and necessary controls only.** See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 First complete [environment and data](reproduce.md) and [B3/B5 base models](baselines.md). These commands only submit jobs; they do not wait for completion. When dependencies exist, check the preceding step's exit status first. Use a new output directory each time. See the [positive-signal inventory](positive-signals.md) for complete results, controls, and settings actually run; runnable settings must not be presented as existing experimental results.
 
 ## X-series: one entrypoint, with each mechanism preserved

@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Minimal backbone boundary for matched cross-history experiments."""
 from dataclasses import dataclass
 import hashlib

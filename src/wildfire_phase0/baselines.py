@@ -1,3 +1,5 @@
+# Code lifecycle: active_support. Data audit and reference infrastructure.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Deterministic reference predictors for wildfire targets."""
 
 from numbers import Integral

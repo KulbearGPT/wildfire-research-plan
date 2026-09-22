@@ -17,6 +17,9 @@ repository root. Reuse the current task's authorization and experiment note.
 Find the method and closest control in the
 [inventory](../../../docs/research/method-inventory.json) and
 [recipes](../../../docs/research/method-recipes.md).
+Check `lifecycle` separately from historical evidence `status`: only X22+X17
+and its necessary controls are active. Reopening an archive needs an explicit
+research decision; an old positive signal alone does not reactivate it.
 For an existing direction, inspect its linked result and limitations before
 designing another trial. For a new direction, state one falsifiable prediction
 and the cheapest valid comparison that could change the next decision.

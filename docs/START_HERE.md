@@ -1,5 +1,7 @@
 # 新同学从这里开始
 
+**当前研究主线仅保留 X22+X17 及必要对照。** 其他方向保留为历史探索或教学参考，详见 [代码生命周期](CODE_LIFECYCLE.md)。首次入门仍按官方单 fold 教程进行。
+
 配套网站：[课程首页](../index.html) · [研究基础课](../related-work/index.html) · [基线复现课](../baseline-reproduction/index.html)。
 
 欢迎加入野火预测研究项目。这一页帮助你了解项目、完成第一次实验，再接上已有研究。**第一次上手只需跑通一个官方 fold，不要求重跑全部实验。**
@@ -65,7 +67,7 @@ Slurm job ID、最终状态与退出码：
 
 先看 [正向信号清单](research/positive-signals.md)，再读 [负结果与未运行档案](research/negative-results.md)。正向清单也收录单 seed、单指标或单场景的改善，**收录不等于已经确认贡献**；未运行或比较无效也不等于方法无效。
 
-与导师选定一个方向后，按 [方法复现配方](research/method-recipes.md) 找到它的最近控制组，先复现已有比较，再讨论新改动。需要基础权重时看 [基线训练与导出](research/baselines.md)；涉及教师或蒸馏时看 [教师生成与使用](research/teachers.md)。
+当前按 X22+X17 主线推进：先复现 X22 与 fresh ERM，再核对 X17 固定严重度专家及 X14 混合严重度对照。具体入口见 [代码生命周期](CODE_LIFECYCLE.md) 和 [方法复现配方](research/method-recipes.md)。其他方向仅保留历史实现，重新开展前先明确研究决策。需要基础权重时看 [基线训练与导出](research/baselines.md)；涉及教师或蒸馏时看 [教师生成与使用](research/teachers.md)。
 
 每次实验开始前写清：要检验什么、与谁比较、哪些条件保持相同、什么结果支持或否定判断。项目历史测试年已有评估暴露，继续设计新方法时应先与导师确定确认方案。
 

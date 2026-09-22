@@ -1,3 +1,5 @@
+# Code lifecycle: reference_only. Official-baseline teaching or legacy cluster tooling; not the contribution route.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Frozen metadata for the official twelve Res18-U-Net T=1 weights."""
 
 from __future__ import annotations

@@ -1,3 +1,7 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
+# Active dispatch: control, cosine_erm, block_specialist on canonical T1/T5.
+# Other method/architecture choices below are preserved archived experiments.
 """Small matched experiment driver; execute only inside a Slurm allocation."""
 import argparse
 import copy

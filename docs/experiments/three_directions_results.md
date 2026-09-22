@@ -1,5 +1,7 @@
 # 三个后续方向：完整筛选结果
 
+> Historical experiment ledger. Current maintenance scope is [X22+X17 and its controls](../CODE_LIFECYCLE.md). Earlier live status, next-experiment instructions and campaign authorizations below are historical records, not current execution instructions. Original measurements and decisions are preserved.
+
 状态：T1/T5 的预定筛选均已完成，三个方向均未通过双设置采纳门槛；最终独立审计已完成。此报告覆盖条件归一化、静态/动态浅层分支、同缺失输入多专家蒸馏。
 
 ## 结论与停止决定

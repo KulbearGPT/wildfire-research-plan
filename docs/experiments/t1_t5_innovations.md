@@ -1,5 +1,7 @@
 # Cross-history innovation campaign — 2026-09-06
 
+> Historical experiment ledger. Current maintenance scope is [X22+X17 and its controls](../CODE_LIFECYCLE.md). Earlier live status, next-experiment instructions and campaign authorizations below are historical records, not current execution instructions. Original measurements and decisions are preserved.
+
 Origin: main `8c9c072`. User authorizes autonomous design, implementation,
 cluster submission, repair, and iteration until three supported directions
 are found. This document is the design, execution plan, and live evidence log.

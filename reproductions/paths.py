@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Standard-library artifact paths shared by portable research entrypoints.
 
 Environment paths are expanded relative to the launch working directory. A

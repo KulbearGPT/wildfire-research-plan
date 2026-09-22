@@ -1,5 +1,7 @@
 # Wildfire forecasting: a research-methods teaching roadmap
 
+> Current scope: [X22+X17 and its necessary controls](CODE_LIFECYCLE.md). This roadmap preserves the teaching history; other experimental directions are inactive archives or references.
+
 This page preserves the teaching narrative as of 2026-09-11. For the two September campaigns and the full retained-method collection, see the [current research handoff](research/reproduce.md) and [positive-signal catalog](research/positive-signals.md).
 
 Compiled on 2026-09-11 from committed records through research commit `6111d9e` (2026-09-08). The historical snapshot below is not a live Slurm query or a recomputation of remote metrics.

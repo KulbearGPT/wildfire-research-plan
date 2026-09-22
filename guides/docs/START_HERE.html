@@ -30,6 +30,11 @@ Where to find help</a></li>
 </ul></div></details>
 <h1 id="start-here-a-guide-for-new-students">Start here: a guide for new
 students</h1>
+<p><strong>The active research route is X22+X17 and its necessary
+controls.</strong> Other methods remain historical explorations or
+teaching references; see <a href="../../docs/CODE_LIFECYCLE.md">code
+lifecycle</a>. The official single-fold tutorial remains the first
+onboarding exercise.</p>
 <p>Course website: <a href="../../index.html">Home</a> · <a
 href="../../related-work/index.html">Research foundations</a> · <a
 href="../../baseline-reproduction/index.html">Baseline
@@ -165,13 +170,15 @@ The positive catalog includes improvements on a single seed, metric or
 scenario. <strong>Inclusion is not confirmation of a
 contribution.</strong> An unrun experiment or invalid comparison is not
 evidence that a method fails.</p>
-<p>After selecting a direction with your supervisor, find its nearest
-control in the <a href="research/method-recipes.html">method
-recipes</a>. Reproduce the existing comparison before discussing
-changes. For base weights, see <a
-href="research/baselines.html">baseline training and export</a>; for
-teacher models or distillation, see <a
-href="research/teachers.html">teacher generation and use</a>.</p>
+<p>Follow the selected X22+X17 route: reproduce X22 against fresh ERM,
+then inspect the fixed-severity X17 experts and mixed-severity X14
+control. See <a href="../../docs/CODE_LIFECYCLE.md">code lifecycle</a>
+and the <a href="research/method-recipes.html">method recipes</a>. Other
+directions retain their historical implementations; reopening one
+requires a new research decision. For base weights, see <a
+href="research/baselines.html">baseline training and export</a>. The <a
+href="research/teachers.html">teacher and distillation recipes</a> are
+archived references.</p>
 <p>Before every experiment, write down the hypothesis, comparator, fixed
 conditions, and observations that would support or contradict the
 hypothesis. The project's historical test years have already been

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: active_support. Portable execution/data support.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 set -euo pipefail
 if [[ -z ${SLURM_JOB_ID:-} ]]; then
   echo 'Slurm allocation required before setup or runtime commands' >&2

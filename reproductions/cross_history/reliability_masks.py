@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Controlled-area masks derived from cached VIIRS observation footprints."""
 from functools import lru_cache
 from pathlib import Path

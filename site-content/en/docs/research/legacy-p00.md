@@ -1,5 +1,7 @@
 # Legacy P00 initialization for historical diagnostics
 
+**Archived workflow:** this page preserves an inactive exploration or diagnostic. See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 This is the **historical invalid-foundation replay**, needed only by the two [VIIRS/target-QA diagnostic observations](diagnostics-reproduction.md). It does not replace corrected B2/B3 or establish a new forecasting result.
 
 `reproductions.wsts_fast_track.legacy_p00` recovers the P00 entrypoint from `4b843ad:reproductions/wsts_fast_track/prototype_entrypoint.py`. It uses that archive's C00 argument contract, seed0, 10,000 updates, batch64, ImageNet ResNet18 initialization and training-only FireDrop probability .3. The retained `apply_training_fire_dropout` and `install_training_fire_dropout` functions are AST-identical to that archive. Shared runtime split/statistics code is equivalent for C00. Crucially it **does not install corrected dataset indexing**: it leaves the pinned upstream pooled-year index loop leak intact, preserving the invalid exposure that was later diagnosed. A contaminated process with an already replaced resolver is rejected. Run it as a separate process.

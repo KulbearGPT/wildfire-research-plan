@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: archive_support. Optional qualification or archive recovery; not a mainline experiment.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 # Bounded real-data smoke cases; outputs are never formal experiment results.
 set -euo pipefail
 : "${SLURM_JOB_ID:?GPU qualification requires Slurm}"

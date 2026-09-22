@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: archive_support. Optional qualification or archive recovery; not a mainline experiment.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 set -euo pipefail
 : "${SLURM_JOB_ID:?qualification requires Slurm}"
 : "${WILDFIRE_UPSTREAM:?}"

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Code lifecycle: active_support. Portable execution/data support.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 # Run through submit.sh; conversion uses train, repair/assembly use audit.
 set -euo pipefail
 if [[ -z ${SLURM_JOB_ID:-} ]]; then

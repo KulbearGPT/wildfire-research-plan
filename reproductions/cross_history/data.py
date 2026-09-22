@@ -1,3 +1,5 @@
+# Code lifecycle: active_shared. Required by the mainline; optional historical branches remain archived.
+# Scope and settings: docs/CODE_LIFECYCLE.md; docs/research/method-inventory.json.
 """Share targets and corruption semantics across existing T1 and T5 models."""
 from reproductions.paths import load_paths
 import hashlib

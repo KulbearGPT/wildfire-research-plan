@@ -1,5 +1,7 @@
 # Swin and SegFormer reproduction
 
+**Archived workflow:** this page preserves an inactive exploration or diagnostic. See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 The cross-history runner retains Swin-Unet and SegFormer-B2 for both T1 and T5, including single-setting positive signals that did not pass the cross-history gate. Their historical campaign uses a 10,000-step seed-zero architecture bootstrap, then independently initialized 3,000-step matched continuations from that same bootstrap. Do not replace those initializations with B3/B5.
 
 The public Swin-T ImageNet-1K asset is linked by the [official Swin model hub](https://github.com/microsoft/Swin-Transformer/blob/main/MODELHUB.md). SegFormer uses NVIDIA's [pinned MiT-B2 revision](https://huggingface.co/nvidia/mit-b2/tree/3bb39e8739149c3777d0325349b2a6c32c6413db). The fetch script pins all three SHA256 values already enforced by `reproductions/cross_history/architectures.py`:

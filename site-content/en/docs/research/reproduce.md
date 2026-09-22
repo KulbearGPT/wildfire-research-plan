@@ -1,5 +1,7 @@
 # Reproduce the existing research on a new Slurm cluster
 
+**Current scope (2026-09-22): X22+X17 and necessary controls only.** See [code lifecycle](../CODE_LIFECYCLE.md). Other methods and recipes below are retained for historical reproduction; their evidence status does not imply active use.
+
 The handoff has two parts: [directions with positive signals](positive-signals.md) retain code, results, and run instructions; the [negative-results archive](negative-results.md) records implementation ideas, settings, and results. Improvements from a single seed or setting are included, but are not presented as confirmed contributions. See [method-inventory.json](method-inventory.json) for the complete inventory. Not run, canceled, and invalid comparison are three statuses that do not count as negative results.
 
 **Execution qualification in fresh environments is complete.** With newly created training/audit environments, an independent copy of the official source, and relocated data and weight paths, 260 CPU checks and 91 short-budget GPU cases passed; see the [qualification record](qualification.md). Qualification ran on this cluster's compute nodes. It does not claim execution on a different physical cluster or treat short training runs as full-budget reproductions of every historical score.
