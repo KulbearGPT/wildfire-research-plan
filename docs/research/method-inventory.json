@@ -2825,6 +2825,21 @@
       "settings_ref": "docs/cluster-migration.md"
     },
     {
+      "path": "scripts/paper/build_materials.py",
+      "state": "active_support",
+      "settings_ref": "paper/materials/README.md"
+    },
+    {
+      "path": "scripts/paper/collect_evidence.py",
+      "state": "active_support",
+      "settings_ref": "paper/materials/README.md"
+    },
+    {
+      "path": "scripts/paper/render_figures.py",
+      "state": "active_support",
+      "settings_ref": "paper/materials/README.md"
+    },
+    {
       "path": "scripts/research/fetch-architectures.sh",
       "state": "archive_support",
       "settings_ref": "docs/research/qualification.md"

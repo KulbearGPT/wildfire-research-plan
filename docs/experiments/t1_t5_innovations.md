@@ -1902,6 +1902,14 @@ mean rises to `+.014642` (block `+.012376`), but still misses `+.020` and
 cannot establish an additional mechanism. Artifact:
 `cross-history-analysis/x22-x17-complete-route-final.json`.
 
+Paper-material source audit, 2026-09-26: the preserved JSON above selects X22
+for M00, despite the earlier fresh-ERM M00 description and the current composer's
+ERM-clean definition. For example, T1/2021/seed 0 has M00 delta
+`+0.008629400810034715`, equal to X22 minus ERM. The material package keeps that
+historical variant and separately derives the current ERM-clean composition from
+the same scenario scores. Missingness primary and block metrics are unchanged;
+clean AP and retained model counts differ. No historical JSON is overwritten.
+
 The final frozen-reference audit measures the complete route against the
 original reproduced B3/B5 checkpoints rather than the stronger freshly
 continued ERM controls. The primary AP gains for 2021/2022/2023 are T1

@@ -29,6 +29,15 @@ attribution comparisons against X14; system retention does not turn it into an
 independently confirmed mechanism. Evidence and exact cells remain in
 [the campaign ledger](experiments/t1_t5_innovations.md).
 
+**Paper-material source audit (2026-09-26):** the original external
+`x22-x17-complete-route-final.json` uses X22 for M00, whereas the current
+mainline composer uses fresh ERM for M00 as specified above. The paper materials
+preserve the historical X22-clean variant and derive the ERM-clean variant
+separately from the same recorded component scores. Their primary/block gains
+are identical because M00 is excluded; their clean scores and model counts differ.
+The reported +0.014642 and +0.034527 primary gains therefore remain unchanged.
+This source correction does not establish a new trained system or router replay.
+
 ## Fixed settings and claim limits
 
 The active paired protocol uses training years 2016–2020, validation year 2021,

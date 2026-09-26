@@ -23,6 +23,7 @@ artifacts/rule-baselines/
 /tmp/
 /envs/
 /weights/
+/deliverables/
 /scratch/
 *.ckpt
 slurm-*.out
