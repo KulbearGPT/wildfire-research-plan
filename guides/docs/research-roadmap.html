@@ -26,15 +26,16 @@ experiment chain and conclusions</a>
 id="toc-41-baselines-and-t1-teaching-modules">4.1 Baselines and T=1
 teaching modules</a></li>
 <li><a
-href="#42-two-supported-cross-setting-improvements-in-this-snapshot"
-id="toc-42-two-supported-cross-setting-improvements-in-this-snapshot">4.2
-Two supported cross-setting improvements in this snapshot</a></li>
+href="#42-historical-cross-setting-evidence-x22-and-the-necessary-x14-control"
+id="toc-42-historical-cross-setting-evidence-x22-and-the-necessary-x14-control">4.2
+Historical cross-setting evidence: X22 and the necessary X14
+control</a></li>
 <li><a href="#43-retained-system-result"
 id="toc-43-retained-system-result">4.3 Retained system result</a></li>
 </ul></li>
-<li><a href="#5-historical-stopping-points-and-follow-up-rules"
-id="toc-5-historical-stopping-points-and-follow-up-rules">5. Historical
-stopping points and follow-up rules</a></li>
+<li><a href="#5-current-task-close-the-x22x17-evidence-and-comparisons"
+id="toc-5-current-task-close-the-x22x17-evidence-and-comparisons">5.
+Current task: close the X22+X17 evidence and comparisons</a></li>
 <li><a href="#6-student-route-and-acceptance-criteria"
 id="toc-6-student-route-and-acceptance-criteria">6. Student route and
 acceptance criteria</a></li>
@@ -51,10 +52,12 @@ forecasting: a research-methods teaching roadmap</h1>
 necessary controls</a>. This roadmap preserves the teaching history;
 other experimental directions are inactive archives or references.</p>
 </blockquote>
-<p>This page preserves the teaching narrative as of 2026-09-11. For the
-two September campaigns and the full retained-method collection, see the
-<a href="research/reproduce.html">current research handoff</a> and <a
-href="research/positive-signals.html">positive-signal catalog</a>.</p>
+<p>This page preserves the teaching narrative as of 2026-09-11. The
+scope selected on 2026-09-22 is X22+X17 and necessary controls only. The
+September campaigns and other directions remain historical evidence; see
+the <a href="research/reproduce.html">current research handoff</a>, <a
+href="research/positive-signals.html">positive-signal catalog</a> and <a
+href="../../docs/archive/README.md">archive index</a>.</p>
 <p>Compiled on 2026-09-11 from committed records through research commit
 <code>6111d9e</code> (2026-09-08). The historical snapshot below is not
 a live Slurm query or a recomputation of remote metrics.</p>
@@ -173,14 +176,14 @@ history-length effect.</li>
 count of 2312 was a ledger typo; the verified original results use 2102.
 See the <a href="research/evaluation-population.html">population
 audit</a>.</li>
-<li>Original cross-setting continuation uses the same B3/B5
-initialization and seed, 3000 AdamW updates, initial LR 0.001, effective
-batch 64, and the final-step checkpoint. Match other settings between
-candidate and control. New architectures use their own public
-initializations and recipes, not an assumed universal learning
-rate.</li>
-<li>Decision order: 2021 seed-0 screen → prespecified seeds 1/2
-confirmation → recipe freeze → fixed 2022/2023 evaluation. Screening
+<li>Current mainline continuation uses the same B3/B5 initialization and
+seed, 3000 AdamW updates, initial LR 0.001, physical/effective batch 64,
+and the final-step checkpoint. Match other settings between candidate
+and control. Earlier batch settings and alternative-architecture recipes
+remain in their original records and do not belong in this paired
+comparison.</li>
+<li>Historical decision order: 2021 seed-0 screen → prespecified seeds
+1/2 confirmation → recipe freeze → fixed 2022/2023 evaluation. Screening
 requires primary gain of at least 0.005 in both settings and no M00 loss
 greater than 0.010. Confirmation uses prespecified seed means, not the
 best seed. Added modules must also pass their nearest attribution
@@ -234,12 +237,13 @@ comparison</td>
 </tbody>
 </table>
 <p>These early conclusions come from the historical ledger, not
-cross-setting three-seed confirmation. D1 and D12 are optional advanced
-teaching modules; rescreening them is not a prerequisite for the main
-route.</p>
+cross-setting three-seed confirmation. D1 and D12 are now archived
+teaching references; their historical signals do not make them active or
+require rescreening.</p>
 <h3
-id="42-two-supported-cross-setting-improvements-in-this-snapshot">4.2
-Two supported cross-setting improvements in this snapshot</h3>
+id="42-historical-cross-setting-evidence-x22-and-the-necessary-x14-control">4.2
+Historical cross-setting evidence: X22 and the necessary X14
+control</h3>
 <p>Each cell is a three-seed mean primary-metric AP gain for a matched
 year and setting, compared with fresh ERM continuation at the same
 budget.</p>
@@ -279,86 +283,98 @@ budget.</p>
 </tr>
 </tbody>
 </table>
-<p>X14 uses its specialist only for block-missing scenarios and matched
-ERM for M00/M01; its clean preservation follows from routing. X22
-improves the training recipe through standard cosine learning-rate
-decay; it is not a new architecture. Both have three-seed and
-fixed-test-year support. This snapshot does not establish three
-independent innovations.</p>
+<p>X14 is currently retained only as the mixed-severity attribution
+control for X17. The historical X14 route uses its specialist only for
+block-missing scenarios and matched ERM for M00/M01; its clean
+preservation follows from routing. X22 improves the training recipe
+through standard cosine learning-rate decay; it is not a new
+architecture. Both have three-seed and fixed-test-year support. This
+snapshot does not establish three independent innovations.</p>
 <h3 id="43-retained-system-result">4.3 Retained system result</h3>
-<p>The X22 + fixed-severity block-specialist combination is retained as
-a system result: fresh ERM for M00, X22 for M01, and 25%/50% specialists
-for M06/M07. Its mean primary gain over 18 paired rows is
+<p>The X22 + X17 fixed-severity block-specialist combination is the
+active retained system: fresh ERM for M00, X22 for M01, and 25%/50%
+specialists for M06/M07. Its mean primary gain over 18 paired rows is
 <strong>+0.014642</strong> versus same-budget ERM. Against the original
 frozen B3/B5 reproduction checkpoints, its mean gain over six
 setting/year cells is <strong>+0.034527</strong>.</p>
 <p>These answer different questions: gain beyond ordinary continuation
-versus gain of the complete system over the original baseline. Severity
-decomposition is not an independent contribution, and the combination
-does not increase the method count. The architecture-transfer design
-separately uses X22 for M00/M01; label that distinct system definition
-explicitly.</p>
-<h2 id="5-historical-stopping-points-and-follow-up-rules">5. Historical
-stopping points and follow-up rules</h2>
-<p>Architecture status here is the snapshot at <code>6111d9e</code>, not
-the current queue or an instruction to launch new experiments. Consult
-the current handoff before taking action.</p>
+versus gain of the complete system over the original baseline. The gain
+over fresh ERM does not meet the historical +0.020 magnitude target, and
+X17 failed some held-out attribution comparisons against mixed X14.
+Severity decomposition is not an independently confirmed contribution,
+and the combination does not increase the method count. The <a
+href="../../docs/archive/architecture-followup.md">archived
+architecture-transfer design</a> separately uses X22 for M00/M01 and is
+a distinct system definition.</p>
+<h2 id="5-current-task-close-the-x22x17-evidence-and-comparisons">5.
+Current task: close the X22+X17 evidence and comparisons</h2>
+<p>Current work reviews X22+X17 and necessary controls. Historical
+SwinUnet, SegFormer-B2 and ConvLSTM status and follow-up rules are
+preserved in the <a
+href="../../docs/archive/architecture-followup.md">architecture
+archive</a>; they are not the next execution steps.</p>
 <table>
 <thead>
 <tr class="header">
-<th>Setting</th>
-<th>Evidence in the snapshot</th>
-<th>Follow-up and stopping rule</th>
+<th>Object</th>
+<th>Evidence to review</th>
+<th>Completion criterion</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Res18-U-Net T1 / Res18-UTAE T5</td>
-<td>X14/X22 three-seed and fixed 2022/2023 evaluation completed</td>
-<td>Assemble auditable main tables, seed variation and costs; do not
-rescreen established results</td>
+<td>B3/B5 and shared data</td>
+<td>Source checkpoints, checksums, data and training-only normalization
+identity, frozen-reference evaluations</td>
+<td>Establish shared initialization within each setting; keep frozen
+references separate from fresh ERM</td>
 </tr>
 <tr class="even">
-<td>SwinUnet T1/T5</td>
-<td>Both bootstraps completed; T5 seed-0 mixed BlockDrop passed the
-screen; T1 results missing from that record</td>
-<td>Inspect original jobs and artifacts first; only directions passing
-both settings proceed to additional seeds and fixed tests</td>
+<td>Fresh ERM and X22</td>
+<td>Matched T1/T5, seeds 0/1/2, 2021/2022/2023 results and training
+provenance</td>
+<td>Match data, initialization, physical batch, updates and checkpoint
+selection; identify the cosine schedule difference</td>
 </tr>
 <tr class="odd">
-<td>SegFormer-B2 T1/T5</td>
-<td>Paired seed-0 results complete; no transfer evidence passing both
-settings</td>
-<td>Screen closed; no additional seeds/tests or required student
-rerun</td>
+<td>X14 mixed and X17 mild/severe</td>
+<td>Matched mixed, fixed-25% and fixed-50% specialist results</td>
+<td>Retain every attribution cell, including failed held-out
+comparisons</td>
 </tr>
 <tr class="even">
-<td>ConvLSTM T5</td>
-<td>Bootstrap checkpoint/evaluation saved; five continuation jobs
-recorded</td>
-<td>Inspect complete paired 2021 results and apply the existing
-protocol; a T5-only result cannot support a cross-T claim</td>
+<td>Complete X22+X17 system</td>
+<td>M00=ERM, M01=X22, M06=mild, M07=severe composition and source
+results</td>
+<td>Explicit route, no duplicate or missing pairs; separate gains over
+fresh ERM and frozen B3/B5</td>
 </tr>
 </tbody>
 </table>
-<p>The follow-up sequence specified in that snapshot was:</p>
+<p>Follow this sequence:</p>
 <ol type="1">
-<li><strong>Close the evidence record:</strong> inspect existing Swin T1
-and ConvLSTM jobs/artifacts and update the ledger. Determine what
-already exists before allocating computation.</li>
-<li><strong>Confirm the gates:</strong> for architecture/method pairs
-passing the original protocol, complete seeds 1/2 and evaluate 2022/2023
-only after freezing the recipe. Do not change routing or select extra
-seeds because one scenario looks favorable.</li>
-<li><strong>Build the main table:</strong> use
-<code>reproductions/cross_history/compose_table1.py</code> and its tests
-to check matched dates, seed completeness, controls and routes. Report
-2022/2023 per-scenario AP, primary metric, gain over matched ERM and
-seed standard deviation; keep the 2021 screen in the appendix.</li>
+<li><strong>Inventory existing assets:</strong> check weights, yearly
+results, configurations, source commits and job records against the <a
+href="research/artifacts.html">active artifact checklist</a>. Record
+unavailable files as gaps; a historical path does not prove
+availability.</li>
+<li><strong>Review the paired contract:</strong> align history, seed,
+year, target dates, sample counts and training provenance.
+<code>summary.json</code> alone does not establish initialization, batch
+or training budget; review checkpoint metadata, source and
+configuration.</li>
+<li><strong>Build traceable comparisons:</strong> follow the <a
+href="research/method-recipes.html">active recipe</a> using
+<code>compare.py</code>, <code>compose_severity_routes.py</code> and
+<code>compose_complete_routes.py</code>. Retain scenario AP, primary
+missingness AP, block mean, seed variation and cost records. Separate
+2021 selection from historical 2022/2023 reporting. A single seed's
+composition cannot establish full confirmation.</li>
 <li><strong>Produce teaching deliverables:</strong> data audit, baseline
-reproduction report, single-variable comparison, three-seed table and
-claim-boundary statement. Preserve code/config versions, data/weight
-manifests, Slurm job IDs and artifact paths.</li>
+reproduction, paired X22 comparison, X17 attribution against X14,
+complete-system comparison, and evidence limits and gaps. Fill a real
+gap only within authorized compute scope using the active recipe; do not
+automatically add seeds, architectures or screens.</li>
 </ol>
 <h2 id="6-student-route-and-acceptance-criteria">6. Student route and
 acceptance criteria</h2>
@@ -396,29 +412,33 @@ save traceable configuration</td>
 </tr>
 <tr class="even">
 <td>4: Make a fair comparison</td>
-<td>Reproduce fixed ERM/X22 seed-0 pairing, then learn X14 routing</td>
-<td>Same initialization, budget, data and evaluation; change only the
-intended factor and report all four scenarios</td>
+<td>Review fixed ERM/X22 pairs and X17 attribution against mixed X14;
+reproduce required items within scope</td>
+<td>Same initialization, budget, physical batch, data and evaluation;
+report all four scenarios</td>
 </tr>
 <tr class="odd">
 <td>5: Learn reliable conclusions</td>
-<td>Summarize existing three-seed/year results and reproduce
-confirmation as needed</td>
+<td>Summarize existing three-seed/year results; record gaps and
+reproduction scope</td>
 <td>Do not cherry-pick seeds; separate validation selection, fixed tests
 and module attribution</td>
 </tr>
 <tr class="even">
 <td>6: Write the report</td>
-<td>Audit the main table and evidence chain; explain
-architecture-transfer coverage</td>
+<td>Audit the X22+X17 table, attribution and evidence chain; distinguish
+active work from archives</td>
 <td>Trace every claim to configuration, commit, run and result; do not
 call pending experiments successful</td>
 </tr>
 </tbody>
 </table>
-<p>Run training and model evaluation through Nibi Slurm. Use login nodes
-only for source work, small metadata, result aggregation and submission.
-Environment entry points include <code>environments/README.md</code> and
+<p>Run training and model evaluation through Slurm on the selected
+cluster. Use CPU Slurm jobs for numerical checks and result aggregation.
+Login nodes are for source editing, Git, small metadata checks,
+documentation and submission. Environment entry points include the <a
+href="research/reproduce.html">current handoff</a>,
+<code>environments/README.md</code> and
 <code>docs/cluster-migration.md</code>. Keep data, environments,
 weights, checkpoints and large logs outside Git, with manifests and
 artifact paths for recovery. Check available environments and artifacts
@@ -441,11 +461,12 @@ context.</li>
 <code>docs/project-handoff-git-audit.md</code>. Exploration remains in
 Git and original ledgers; students are not required to rerun it.</li>
 </ul>
-<p>Suggested reading: this page →
-<code>docs/experiments/phase0.md</code> →
-<code>docs/experiments/res18_unet_t1_reproduction.md</code> →
-<code>docs/experiments/quantitative_reliability_ledger.md</code> →
-retained directions and architecture results in
-<code>docs/experiments/t1_t5_innovations.md</code>, with the current
-handoff for execution.</p>
+<p>Suggested reading: this page → <a
+href="research/reproduce.html">current handoff</a> → <a
+href="research/method-recipes.html">active recipe</a> and <a
+href="research/artifacts.html">artifact checklist</a> → X22/X17 and
+necessary-control evidence in
+<code>docs/experiments/t1_t5_innovations.md</code>. Consult phase0,
+official reproduction and the earlier quantitative ledger for
+foundations and teaching history as needed.</p>
 </main><footer>Wildfire research methods · <a href="../../index.html">Back to course home</a></footer></body></html>

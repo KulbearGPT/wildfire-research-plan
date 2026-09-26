@@ -2,7 +2,7 @@
 
 > Current scope: [X22+X17 and its necessary controls](CODE_LIFECYCLE.md). This roadmap preserves the teaching history; other experimental directions are inactive archives or references.
 
-This page preserves the teaching narrative as of 2026-09-11. For the two September campaigns and the full retained-method collection, see the [current research handoff](research/reproduce.md) and [positive-signal catalog](research/positive-signals.md).
+This page preserves the teaching narrative as of 2026-09-11. The scope selected on 2026-09-22 is X22+X17 and necessary controls only. The September campaigns and other directions remain historical evidence; see the [current research handoff](research/reproduce.md), [positive-signal catalog](research/positive-signals.md) and [archive index](archive/README.md).
 
 Compiled on 2026-09-11 from committed records through research commit `6111d9e` (2026-09-08). The historical snapshot below is not a live Slurm query or a recomputation of remote metrics.
 
@@ -34,8 +34,8 @@ Necessary data and evaluation corrections remain in the teaching chain because t
 - Cross-setting primary metric: `(AP_M01 + AP_M06 + AP_M07) / 3`. Also report block mean, M00, individual scenario AP, runtime and parameter count. AP gains are absolute differences, not relative percentages.
 - T=1 uses Res18-U-Net with 40 channels; T=5 uses Res18-UTAE with 33 selected channels per day. History, architecture and features all change, so this is cross-setting validation rather than an isolated history-length effect.
 - Matched event/target dates use `target_index = in_fire_index + 6`. Sample counts for 2021/2022/2023 are 3181/2856/2102 in both settings. The earlier 2023 count of 2312 was a ledger typo; the verified original results use 2102. See the [population audit](research/evaluation-population.md).
-- Original cross-setting continuation uses the same B3/B5 initialization and seed, 3000 AdamW updates, initial LR 0.001, effective batch 64, and the final-step checkpoint. Match other settings between candidate and control. New architectures use their own public initializations and recipes, not an assumed universal learning rate.
-- Decision order: 2021 seed-0 screen → prespecified seeds 1/2 confirmation → recipe freeze → fixed 2022/2023 evaluation. Screening requires primary gain of at least 0.005 in both settings and no M00 loss greater than 0.010. Confirmation uses prespecified seed means, not the best seed. Added modules must also pass their nearest attribution comparison.
+- Current mainline continuation uses the same B3/B5 initialization and seed, 3000 AdamW updates, initial LR 0.001, physical/effective batch 64, and the final-step checkpoint. Match other settings between candidate and control. Earlier batch settings and alternative-architecture recipes remain in their original records and do not belong in this paired comparison.
+- Historical decision order: 2021 seed-0 screen → prespecified seeds 1/2 confirmation → recipe freeze → fixed 2022/2023 evaluation. Screening requires primary gain of at least 0.005 in both settings and no M00 loss greater than 0.010. Confirmation uses prespecified seed means, not the best seed. Added modules must also pass their nearest attribution comparison.
 - Historical test years have already been evaluated. Students may reproduce fixed results. New method development must disclose this exposure and define an independent confirmation plan before starting; those years cannot be relabelled as unseen tests.
 
 ## 4. Retained experiment chain and conclusions
@@ -50,9 +50,9 @@ Necessary data and evaluation corrections remain in the teaching chain because t
 | D1-KL | Matched paired-supervision continuation D1-ERM | Historical three-year primary missingness gain +0.008970; retained as T=1 evidence |
 | D12-SARP | D2-STD for module attribution; D1-ERM for total comparison | Module block mean +0.005764; total missingness primary +0.020699; retained T=1 evidence, with a 2022 M00 limitation in the total comparison |
 
-These early conclusions come from the historical ledger, not cross-setting three-seed confirmation. D1 and D12 are optional advanced teaching modules; rescreening them is not a prerequisite for the main route.
+These early conclusions come from the historical ledger, not cross-setting three-seed confirmation. D1 and D12 are now archived teaching references; their historical signals do not make them active or require rescreening.
 
-### 4.2 Two supported cross-setting improvements in this snapshot
+### 4.2 Historical cross-setting evidence: X22 and the necessary X14 control
 
 Each cell is a three-seed mean primary-metric AP gain for a matched year and setting, compared with fresh ERM continuation at the same budget.
 
@@ -61,31 +61,46 @@ Each cell is a three-seed mean primary-metric AP gain for a matched year and set
 | X14 BlockDrop specialist continuation | +0.005467 | +0.001416 | +0.006792 | +0.016685 | +0.011528 | +0.005485 | +0.007895 |
 | X22 cosine ERM | +0.006035 | +0.008133 | +0.003442 | +0.021346 | +0.019504 | +0.013596 | +0.012009 |
 
-X14 uses its specialist only for block-missing scenarios and matched ERM for M00/M01; its clean preservation follows from routing. X22 improves the training recipe through standard cosine learning-rate decay; it is not a new architecture. Both have three-seed and fixed-test-year support. This snapshot does not establish three independent innovations.
+X14 is currently retained only as the mixed-severity attribution control for X17. The historical X14 route uses its specialist only for block-missing scenarios and matched ERM for M00/M01; its clean preservation follows from routing. X22 improves the training recipe through standard cosine learning-rate decay; it is not a new architecture. Both have three-seed and fixed-test-year support. This snapshot does not establish three independent innovations.
 
 ### 4.3 Retained system result
 
-The X22 + fixed-severity block-specialist combination is retained as a system result: fresh ERM for M00, X22 for M01, and 25%/50% specialists for M06/M07. Its mean primary gain over 18 paired rows is **+0.014642** versus same-budget ERM. Against the original frozen B3/B5 reproduction checkpoints, its mean gain over six setting/year cells is **+0.034527**.
+The X22 + X17 fixed-severity block-specialist combination is the active retained system: fresh ERM for M00, X22 for M01, and 25%/50% specialists for M06/M07. Its mean primary gain over 18 paired rows is **+0.014642** versus same-budget ERM. Against the original frozen B3/B5 reproduction checkpoints, its mean gain over six setting/year cells is **+0.034527**.
 
-These answer different questions: gain beyond ordinary continuation versus gain of the complete system over the original baseline. Severity decomposition is not an independent contribution, and the combination does not increase the method count. The architecture-transfer design separately uses X22 for M00/M01; label that distinct system definition explicitly.
+These answer different questions: gain beyond ordinary continuation versus gain of the complete system over the original baseline. The gain over fresh ERM does not meet the historical +0.020 magnitude target, and X17 failed some held-out attribution comparisons against mixed X14. Severity decomposition is not an independently confirmed contribution, and the combination does not increase the method count. The [archived architecture-transfer design](archive/architecture-followup.md) separately uses X22 for M00/M01 and is a distinct system definition.
 
-## 5. Historical stopping points and follow-up rules
+## 5. Current task: close the X22+X17 evidence and comparisons
 
-Architecture status here is the snapshot at `6111d9e`, not the current queue or an instruction to launch new experiments. Consult the current handoff before taking action.
+Current work reviews X22+X17 and necessary controls. Historical SwinUnet,
+SegFormer-B2 and ConvLSTM status and follow-up rules are preserved in the
+[architecture archive](archive/architecture-followup.md); they are not the next
+execution steps.
 
-| Setting | Evidence in the snapshot | Follow-up and stopping rule |
-| --- | --- | --- |
-| Res18-U-Net T1 / Res18-UTAE T5 | X14/X22 three-seed and fixed 2022/2023 evaluation completed | Assemble auditable main tables, seed variation and costs; do not rescreen established results |
-| SwinUnet T1/T5 | Both bootstraps completed; T5 seed-0 mixed BlockDrop passed the screen; T1 results missing from that record | Inspect original jobs and artifacts first; only directions passing both settings proceed to additional seeds and fixed tests |
-| SegFormer-B2 T1/T5 | Paired seed-0 results complete; no transfer evidence passing both settings | Screen closed; no additional seeds/tests or required student rerun |
-| ConvLSTM T5 | Bootstrap checkpoint/evaluation saved; five continuation jobs recorded | Inspect complete paired 2021 results and apply the existing protocol; a T5-only result cannot support a cross-T claim |
+| Object | Evidence to review | Completion criterion |
+|---|---|---|
+| B3/B5 and shared data | Source checkpoints, checksums, data and training-only normalization identity, frozen-reference evaluations | Establish shared initialization within each setting; keep frozen references separate from fresh ERM |
+| Fresh ERM and X22 | Matched T1/T5, seeds 0/1/2, 2021/2022/2023 results and training provenance | Match data, initialization, physical batch, updates and checkpoint selection; identify the cosine schedule difference |
+| X14 mixed and X17 mild/severe | Matched mixed, fixed-25% and fixed-50% specialist results | Retain every attribution cell, including failed held-out comparisons |
+| Complete X22+X17 system | M00=ERM, M01=X22, M06=mild, M07=severe composition and source results | Explicit route, no duplicate or missing pairs; separate gains over fresh ERM and frozen B3/B5 |
 
-The follow-up sequence specified in that snapshot was:
+Follow this sequence:
 
-1. **Close the evidence record:** inspect existing Swin T1 and ConvLSTM jobs/artifacts and update the ledger. Determine what already exists before allocating computation.
-2. **Confirm the gates:** for architecture/method pairs passing the original protocol, complete seeds 1/2 and evaluate 2022/2023 only after freezing the recipe. Do not change routing or select extra seeds because one scenario looks favorable.
-3. **Build the main table:** use `reproductions/cross_history/compose_table1.py` and its tests to check matched dates, seed completeness, controls and routes. Report 2022/2023 per-scenario AP, primary metric, gain over matched ERM and seed standard deviation; keep the 2021 screen in the appendix.
-4. **Produce teaching deliverables:** data audit, baseline reproduction report, single-variable comparison, three-seed table and claim-boundary statement. Preserve code/config versions, data/weight manifests, Slurm job IDs and artifact paths.
+1. **Inventory existing assets:** check weights, yearly results, configurations,
+   source commits and job records against the [active artifact checklist](research/artifacts.md).
+   Record unavailable files as gaps; a historical path does not prove availability.
+2. **Review the paired contract:** align history, seed, year, target dates,
+   sample counts and training provenance. `summary.json` alone does not establish
+   initialization, batch or training budget; review checkpoint metadata, source
+   and configuration.
+3. **Build traceable comparisons:** follow the [active recipe](research/method-recipes.md)
+   using `compare.py`, `compose_severity_routes.py` and `compose_complete_routes.py`.
+   Retain scenario AP, primary missingness AP, block mean, seed variation and cost
+   records. Separate 2021 selection from historical 2022/2023 reporting. A single
+   seed's composition cannot establish full confirmation.
+4. **Produce teaching deliverables:** data audit, baseline reproduction, paired
+   X22 comparison, X17 attribution against X14, complete-system comparison, and
+   evidence limits and gaps. Fill a real gap only within authorized compute scope
+   using the active recipe; do not automatically add seeds, architectures or screens.
 
 ## 6. Student route and acceptance criteria
 
@@ -96,11 +111,11 @@ For one fold without this repository, use the [official-codebase tutorial](tutor
 | 1: Understand the problem | Read this page, related-work courseware and phase0 report | Explain proxy labels, controlled missingness and chronological splits; distinguish fire detections from perimeters |
 | 2: Understand the data | Reproduce the audit and rule baselines at configured paths | Match event counts, splits and label integrity; explain why sampling protocols produce different counts |
 | 3: Reproduce a model | Verify a released checkpoint, then learn corrected B0/B3 | Distinguish released-weight scores, own training and paper means; save traceable configuration |
-| 4: Make a fair comparison | Reproduce fixed ERM/X22 seed-0 pairing, then learn X14 routing | Same initialization, budget, data and evaluation; change only the intended factor and report all four scenarios |
-| 5: Learn reliable conclusions | Summarize existing three-seed/year results and reproduce confirmation as needed | Do not cherry-pick seeds; separate validation selection, fixed tests and module attribution |
-| 6: Write the report | Audit the main table and evidence chain; explain architecture-transfer coverage | Trace every claim to configuration, commit, run and result; do not call pending experiments successful |
+| 4: Make a fair comparison | Review fixed ERM/X22 pairs and X17 attribution against mixed X14; reproduce required items within scope | Same initialization, budget, physical batch, data and evaluation; report all four scenarios |
+| 5: Learn reliable conclusions | Summarize existing three-seed/year results; record gaps and reproduction scope | Do not cherry-pick seeds; separate validation selection, fixed tests and module attribution |
+| 6: Write the report | Audit the X22+X17 table, attribution and evidence chain; distinguish active work from archives | Trace every claim to configuration, commit, run and result; do not call pending experiments successful |
 
-Run training and model evaluation through Nibi Slurm. Use login nodes only for source work, small metadata, result aggregation and submission. Environment entry points include `environments/README.md` and `docs/cluster-migration.md`. Keep data, environments, weights, checkpoints and large logs outside Git, with manifests and artifact paths for recovery. Check available environments and artifacts before starting training to avoid unnecessary full reruns.
+Run training and model evaluation through Slurm on the selected cluster. Use CPU Slurm jobs for numerical checks and result aggregation. Login nodes are for source editing, Git, small metadata checks, documentation and submission. Environment entry points include the [current handoff](research/reproduce.md), `environments/README.md` and `docs/cluster-migration.md`. Keep data, environments, weights, checkpoints and large logs outside Git, with manifests and artifact paths for recovery. Check available environments and artifacts before starting training to avoid unnecessary full reruns.
 
 ## 7. Code and evidence entry points
 
@@ -109,4 +124,4 @@ Run training and model evaluation through Nibi Slurm. Use login nodes only for s
 - The earlier T=1 roadmap is retained at `docs/experiments/t1-stage-roadmap.md` as historical context.
 - The historical project-wide Git audit is `docs/project-handoff-git-audit.md`. Exploration remains in Git and original ledgers; students are not required to rerun it.
 
-Suggested reading: this page → `docs/experiments/phase0.md` → `docs/experiments/res18_unet_t1_reproduction.md` → `docs/experiments/quantitative_reliability_ledger.md` → retained directions and architecture results in `docs/experiments/t1_t5_innovations.md`, with the current handoff for execution.
+Suggested reading: this page → [current handoff](research/reproduce.md) → [active recipe](research/method-recipes.md) and [artifact checklist](research/artifacts.md) → X22/X17 and necessary-control evidence in `docs/experiments/t1_t5_innovations.md`. Consult phase0, official reproduction and the earlier quantitative ledger for foundations and teaching history as needed.

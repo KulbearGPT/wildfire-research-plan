@@ -9,6 +9,7 @@ from pathlib import Path
 from statistics import mean, pstdev
 
 from .compare import BLOCK, PRIMARY, SCENARIOS, aggregate, load
+from .route_validation import has_recorded_seeds, validate_group
 
 
 def main():
@@ -20,12 +21,15 @@ def main():
                         help='summary from the fixed-0.25 specialist')
     parser.add_argument('--severe', type=Path, action='append', required=True,
                         help='summary from the fixed-0.50 specialist')
+    parser.add_argument('--mainline', action='store_true',
+                        help='Require X22+X17 roles, canonical architectures and population counts.')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     if len({len(args.control), len(args.mixed), len(args.mild), len(args.severe)}) != 1:
         raise ValueError('control, mixed, mild, and severe summary counts differ')
 
     rows = []
+    seen = set()
     for control_path, mixed_path, mild_path, severe_path in zip(
             args.control, args.mixed, args.mild, args.severe):
         cmeta, control = load(control_path)
@@ -37,6 +41,8 @@ def main():
                or cmeta.get(k) != smeta.get(k)
                for k in keys):
             raise ValueError('matched history/seed/year differ')
+        validate_group(dict(control=cmeta, mixed=xmeta, mild=mmeta, severe=smeta),
+                       seen, mainline=args.mainline)
         if xmeta.get('method') != 'block_specialist' or xmeta.get('block_fraction') is not None:
             raise ValueError('mixed input must be the mixed-severity X14 block_specialist')
         if mmeta.get('method') != 'block_specialist' or mmeta.get('block_fraction') != .25:
@@ -65,7 +71,7 @@ def main():
         if any(r['history'] == history and r['year'] == year for r in rows)]
     screen = [r for r in rows if r['year'] == 2021 and r['seed'] == 0]
     confirmation = [g for g in grouped
-        if g['year'] == 2021 and {0, 1, 2}.issubset(g['seeds'])]
+        if g['year'] == 2021 and has_recorded_seeds(g)]
     heldout = [g for g in grouped if g['year'] in (2022, 2023)]
     mechanism_grouped = [dict(history=history, year=year,
         seeds=sorted(r['seed'] for r in selected),
@@ -75,7 +81,7 @@ def main():
         if (selected := [r for r in rows
                          if r['history'] == history and r['year'] == year])]
     mechanism_confirmation = [g for g in mechanism_grouped
-        if g['year'] == 2021 and {0, 1, 2}.issubset(g['seeds'])]
+        if g['year'] == 2021 and has_recorded_seeds(g)]
     mechanism_heldout = [g for g in mechanism_grouped if g['year'] in (2022, 2023)]
     result = dict(
         method='severity_factorized_block_specialist',
@@ -101,21 +107,25 @@ def main():
         mechanism_heldout_pass=(len(mechanism_heldout) == 4
             and {(g['history'], g['year']) for g in mechanism_heldout}
                 == {(1, 2022), (1, 2023), (5, 2022), (5, 2023)}
-            and all(g['block_delta'] > 0 for g in mechanism_heldout)),
+            and all(has_recorded_seeds(g) and g['block_delta'] > 0
+                    for g in mechanism_heldout)),
         heldout_pass=(len(heldout) == 4
             and {(g['history'], g['year']) for g in heldout}
                 == {(1, 2022), (1, 2023), (5, 2022), (5, 2023)}
-            and all(g['primary_delta'] > 0 and g['clean_delta'] >= -.01
-                    for g in heldout)),
+            and all(has_recorded_seeds(g) and g['primary_delta'] > 0
+                    and g['clean_delta'] >= -.01 for g in heldout)),
     )
     result['goal_evidence_pass'] = (result['confirmation_pass']
         and result['heldout_pass'] and result['mechanism_confirmation_pass']
         and result['mechanism_heldout_pass'])
+    result['summary_contract'] = 'mainline' if args.mainline else 'archive-compatible'
+    result['training_provenance_verified'] = False
     rendered = json.dumps(result, indent=2, sort_keys=True)
     print(rendered)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(rendered + '\n')
+        with args.output.open('x' if args.mainline else 'w') as output:
+            output.write(rendered + '\n')
 
 
 if __name__ == '__main__':

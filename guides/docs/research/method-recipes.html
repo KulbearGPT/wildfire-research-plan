@@ -108,26 +108,46 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="
 <p>Repeat only as authorized, with each role's original method and block
 fraction, checkpoint, history and seed, and new year-specific output
 paths. Historical test years are already exposed; this is reproduction,
-not untouched confirmation.</p>
+not untouched confirmation. The runner rejects a checkpoint whose
+recorded history, method, seed or block fraction differs from the
+evaluation request. Do not relabel a different expert or seed by
+changing command-line arguments. This guard applies to new evaluations;
+old summary files still need their provenance checked.</p>
 <h2 id="4-compose-and-interpret">4. Compose and interpret</h2>
 <p>After matching 2021 summaries exist, these CPU Slurm jobs produce the
 system report and the necessary attribution comparison:</p>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.cross_history.compose_complete_routes <span class="dt">\</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.cross_history.compose_complete_routes <span class="at">--mainline</span> <span class="dt">\</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--control</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/control/summary.json&quot;</span> <span class="at">--fire</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/x22/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mild</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/mild/summary.json&quot;</span> <span class="at">--severe</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/severe/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/x22-x17-2021.json&quot;</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.cross_history.compose_severity_routes <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.cross_history.compose_severity_routes <span class="at">--mainline</span> <span class="dt">\</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--control</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/control/summary.json&quot;</span> <span class="at">--mixed</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/mixed/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mild</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/mild/summary.json&quot;</span> <span class="at">--severe</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/severe/summary.json&quot;</span> <span class="dt">\</span></span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/x17-attribution-2021.json&quot;</span></span></code></pre></div>
-<p>The composer also supports archived routes. Verify
-<code>component_methods.fire</code> is <code>cosine_erm</code> for the
-active system. This is summary composition, not deployment of a single
-fused model. Pass repeated matching groups of arguments to aggregate
-additional histories/seeds/years, keeping their order aligned. One group
-cannot establish three-seed cross-history confirmation or fixed-year
-generalization. Do not overwrite an earlier report when adding rows.</p>
+<p>Use <code>--mainline</code> for the active route: it requires the
+correct method in each role, explicit canonical architecture, finite AP,
+the recorded sample count for each year, and equal pixel counts across
+matched inputs. Both composers reject duplicate history/seed/year cells.
+Their three-seed and historical-test gates require seeds 0/1/2 in every
+relevant cell; partial reports remain useful, but cannot pass those
+gates. Mainline mode refuses to overwrite an existing report. Without
+this flag, the broad composer remains available for archived routes.</p>
+<p>These checks validate summary fields, not the full experimental
+provenance. <code>training_provenance_verified</code> remains
+<code>false</code>: the historical summary format does not contain
+training steps, physical batch, initialization or normalization
+identity. Review checkpoint metadata and the source/configuration/data
+preparation records before treating runs as matched. An evaluation-only
+<code>started.json</code> records that invocation, not proof of the
+checkpoint's training settings. Equal sample counts do not establish
+identical samples or labels.</p>
+<p>This is summary composition, not deployment of a single fused model.
+Pass repeated matching groups of arguments to aggregate additional
+histories/seeds/years, keeping their order aligned. A
+<code>goal_evidence_pass</code> flag describes the historical numerical
+gates only; it does not establish independent confirmation or imply that
+the separate <code>magnitude_target_met</code> flag is true.</p>
 <p>Report primary AP, clean AP, block AP and comparator identity.
 Preserve X17's failed held-out attribution cells even when the complete
 system improves over ERM. See <a

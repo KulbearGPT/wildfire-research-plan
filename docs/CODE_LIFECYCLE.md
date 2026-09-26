@@ -135,3 +135,53 @@ is loaded by these tests. Shared training, model, data and composition source
 files remain byte-identical to the previous cleanup, and all 100 scientific
 inventory records retain their original fields. These checks validate the CLI
 boundary; no new end-to-end GPU run is claimed for this entrypoint.
+
+## Follow-up cleanup: documentation and summary checks (2026-09-26)
+
+The roadmap's current steps now follow only X22+X17 and necessary controls.
+Architecture follow-up proposals and RF/TD teacher transfer commands moved to
+the archive; the active artifact page lists B3/B5, the five continuation roles,
+yearly evaluations and their provenance. Historical evidence is retained.
+
+Use `--mainline` with both route composers. It validates the available summary
+fields: role/method, canonical architecture, history/seed/year, finite AP and
+sample/pixel counts. Mainline reports refuse an existing output path. Both modes
+reject duplicate cells, and all confirmation/historical-test gates now require
+the recorded three seeds per history/year. Partial historical-test matrices can
+no longer pass those gates. This changes validation, not AP/routing formulas;
+existing result files have not been regenerated or edited.
+
+The summary format does not establish initialization, training budget/batch or
+normalization identity. Reports explicitly leave `training_provenance_verified`
+false. Use checkpoint metadata and source/configuration/data records for those
+checks; `started.json` from evaluation alone is not training proof. Historical
+gate names do not establish independent confirmation or meeting the separate
+magnitude target. See the [active recipe](research/method-recipes.md).
+
+New checkpoint evaluations reject mismatched history, method, seed or block
+fraction before model construction. This prevents CLI arguments from relabelling
+a checkpoint in a newly written summary. Missing historical block fractions
+remain the mixed setting, and normalized-inpaint evaluation of a control model
+remains an explicit archived exception. Previously written summaries still require
+provenance review. The training branch's parsed syntax tree is unchanged.
+
+The two archived BN audits now have explicit path arguments, stdlib-only
+import/help paths and an allocation guard before numerical imports or data reads.
+Their diagnostic calculations remain unchanged; no numerical BN rerun is claimed.
+
+CPU Slurm job **22705342** completed with exit `0:0` on `c132`: eight synthetic
+composition tests, four mainline command tests and five archived-BN boundary
+tests passed. It ran an isolated source snapshot of `6756188` plus the pending
+cleanup patch and new test/helper files. Local test records are under
+`tmp/cleanup-validation-20260926/` (outside Git). No dataset or GPU was used.
+The lifecycle map includes the new validation helper, for 140 source files;
+all 100 scientific method records retain their original fields and evidence.
+
+CPU Slurm job **22705433** completed with exit `0:0` on `c93`: four additional
+checkpoint-identity tests passed against an isolated copy of the final helper.
+Together the two jobs ran 21 targeted tests. The 18 English guides rebuilt;
+the homepage and guides passed English-text and 255 local-link-target checks.
+Historical teacher shell commands remain verbatim in the archive. Independent
+source review covered routing/gates, BN behavior, evaluation identity and archive
+compatibility. These checks do not constitute a fresh GPU reproduction, artifact
+availability audit or confirmation of scientific gains.

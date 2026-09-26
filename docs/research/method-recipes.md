@@ -87,6 +87,10 @@ bash scripts/research/submit.sh gpu python -m reproductions.cross_history.mainli
 Repeat only as authorized, with each role's original method and block fraction,
 checkpoint, history and seed, and new year-specific output paths. Historical test
 years are already exposed; this is reproduction, not untouched confirmation.
+The runner rejects a checkpoint whose recorded history, method, seed or block
+fraction differs from the evaluation request. Do not relabel a different expert
+or seed by changing command-line arguments. This guard applies to new evaluations;
+old summary files still need their provenance checked.
 
 ## 4. Compose and interpret
 
@@ -94,22 +98,37 @@ After matching 2021 summaries exist, these CPU Slurm jobs produce the system
 report and the necessary attribution comparison:
 
 ```bash
-bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_complete_routes \
+bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_complete_routes --mainline \
   --control "$run_group/control/summary.json" --fire "$run_group/x22/summary.json" \
   --mild "$run_group/mild/summary.json" --severe "$run_group/severe/summary.json" \
   --output "$run_group/x22-x17-2021.json"
-bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_severity_routes \
+bash scripts/research/submit.sh cpu python -m reproductions.cross_history.compose_severity_routes --mainline \
   --control "$run_group/control/summary.json" --mixed "$run_group/mixed/summary.json" \
   --mild "$run_group/mild/summary.json" --severe "$run_group/severe/summary.json" \
   --output "$run_group/x17-attribution-2021.json"
 ```
 
-The composer also supports archived routes. Verify `component_methods.fire` is
-`cosine_erm` for the active system. This is summary composition, not deployment
-of a single fused model. Pass repeated matching groups of arguments to aggregate
-additional histories/seeds/years, keeping their order aligned. One group cannot
-establish three-seed cross-history confirmation or fixed-year generalization.
-Do not overwrite an earlier report when adding rows.
+Use `--mainline` for the active route: it requires the correct method in each
+role, explicit canonical architecture, finite AP, the recorded sample count for
+each year, and equal pixel counts across matched inputs. Both composers reject
+duplicate history/seed/year cells. Their three-seed and historical-test gates
+require seeds 0/1/2 in every relevant cell; partial reports remain useful, but
+cannot pass those gates. Mainline mode refuses to overwrite an existing report.
+Without this flag, the broad composer remains available for archived routes.
+
+These checks validate summary fields, not the full experimental provenance.
+`training_provenance_verified` remains `false`: the historical summary format
+does not contain training steps, physical batch, initialization or normalization
+identity. Review checkpoint metadata and the source/configuration/data preparation
+records before treating runs as matched. An evaluation-only `started.json`
+records that invocation, not proof of the checkpoint's training settings.
+Equal sample counts do not establish identical samples or labels.
+
+This is summary composition, not deployment of a single fused model. Pass repeated
+matching groups of arguments to aggregate additional histories/seeds/years,
+keeping their order aligned. A `goal_evidence_pass` flag describes the historical
+numerical gates only; it does not establish independent confirmation or imply
+that the separate `magnitude_target_met` flag is true.
 
 Report primary AP, clean AP, block AP and comparator identity. Preserve X17's
 failed held-out attribution cells even when the complete system improves over

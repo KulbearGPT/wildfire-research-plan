@@ -28,6 +28,11 @@ and [Chinese](method-recipes-zh.md). Commands retain their original switches,
 including the broad `cross_history.run` interface. Some directions need recovered
 checkpoints or Git history; an available command is not proof that all assets exist.
 
+The old roadmap's architecture status and proposed follow-up are retained in
+[architecture follow-up](architecture-followup.md). RF/TD teacher bundling commands
+are retained in [teacher artifact transfer](teacher-artifacts.md). Neither is a
+prerequisite or a next step for the active X22+X17 route.
+
 ## Reopening an archived direction
 
 Specify the hypothesis and original setting being revisited. Use its actual
@@ -36,7 +41,9 @@ do not force every historical experiment into the current mainline protocol.
 Record any changed setting as a new experiment. Obtain the relevant execution
 scope and budget before compute, and keep old artifacts and outcomes intact.
 
-Imports and checkpoint interfaces were preserved to support historical recovery.
-The two retired confirmation bundles are the exception to runnable compatibility:
+Shared model imports and checkpoint interfaces were preserved for historical
+recovery. The archived BN diagnostics now require explicit `--run-root` input and
+a Slurm allocation; their numerical calculations and historical directory defaults
+remain intact. The two retired confirmation bundles refuse execution entirely:
 their hardcoded job replacement actions stay disabled. Reconstruct a new submission
 from an approved experiment instead of reusing historical job IDs.

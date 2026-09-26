@@ -21,3 +21,17 @@ does not call the scheduler. Run this control-plane check with:
 ```bash
 python3 -m unittest discover -s tests -p test_mainline_cli.py -v
 ```
+
+`test_archived_bn_entrypoints.py` is also a standard-library control-plane check.
+It blocks numerical imports and tests only CLI paths and allocation refusal.
+`test_evaluation_identity.py` checks checkpoint metadata identity with plain
+dictionaries, including the archived normalized-inpaint exception.
+
+`test_route_composition.py` uses small synthetic summaries to exercise routing,
+mainline input validation, duplicate rejection, three-seed coverage and output
+preservation. Run this numerical check in a CPU Slurm allocation (no GPU or
+dataset is needed):
+
+```bash
+python3 -m unittest discover -s tests -p test_route_composition.py -v
+```

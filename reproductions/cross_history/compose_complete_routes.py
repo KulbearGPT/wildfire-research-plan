@@ -9,6 +9,7 @@ from pathlib import Path
 from statistics import mean, pstdev
 
 from .compare import BLOCK, PRIMARY, SCENARIOS, aggregate, load
+from .route_validation import has_recorded_seeds, validate_group
 
 
 def main():
@@ -17,12 +18,15 @@ def main():
     parser.add_argument('--fire', type=Path, action='append', required=True)
     parser.add_argument('--mild', type=Path, action='append', required=True)
     parser.add_argument('--severe', type=Path, action='append', required=True)
+    parser.add_argument('--mainline', action='store_true',
+                        help='Require X22+X17 roles, canonical architectures and population counts.')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     if len({len(args.control), len(args.fire), len(args.mild), len(args.severe)}) != 1:
         raise ValueError('control, fire, mild, and severe summary counts differ')
 
     rows = []
+    seen = set()
     component_methods = None
     for control_path, fire_path, mild_path, severe_path in zip(
             args.control, args.fire, args.mild, args.severe):
@@ -34,6 +38,8 @@ def main():
         if any(cmeta.get(key) != meta.get(key)
                for key in keys for meta in (fmeta, mmeta, smeta)):
             raise ValueError('matched history/seed/year differ')
+        validate_group(dict(control=cmeta, fire=fmeta, mild=mmeta, severe=smeta),
+                       seen, mainline=args.mainline)
         if mmeta.get('method') != 'block_specialist' or mmeta.get('block_fraction') != .25:
             raise ValueError('mild input must be a fixed-0.25 block specialist')
         if smeta.get('method') != 'block_specialist' or smeta.get('block_fraction') != .5:
@@ -58,7 +64,7 @@ def main():
         for year in sorted({row['year'] for row in rows})
         if any(row['history'] == history and row['year'] == year for row in rows)]
     confirmation = [group for group in grouped
-        if group['year'] == 2021 and {0, 1, 2}.issubset(group['seeds'])]
+        if group['year'] == 2021 and has_recorded_seeds(group)]
     heldout = [group for group in grouped if group['year'] in (2022, 2023)]
     mean_primary = mean(row['primary_delta'] for row in rows)
     result = dict(method='complete_observable_route',
@@ -75,14 +81,17 @@ def main():
         heldout_pass=(len(heldout) == 4
             and {(group['history'], group['year']) for group in heldout}
                 == {(1, 2022), (1, 2023), (5, 2022), (5, 2023)}
-            and all(group['primary_delta'] > 0 and group['clean_delta'] >= -.01
-                    for group in heldout)))
+            and all(has_recorded_seeds(group) and group['primary_delta'] > 0
+                    and group['clean_delta'] >= -.01 for group in heldout)))
     result['goal_evidence_pass'] = result['confirmation_pass'] and result['heldout_pass']
+    result['summary_contract'] = 'mainline' if args.mainline else 'archive-compatible'
+    result['training_provenance_verified'] = False
     rendered = json.dumps(result, indent=2, sort_keys=True)
     print(rendered)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(rendered + '\n')
+        with args.output.open('x' if args.mainline else 'w') as output:
+            output.write(rendered + '\n')
 
 
 if __name__ == '__main__':

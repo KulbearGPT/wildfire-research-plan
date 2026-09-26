@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from torchvision.ops import sigmoid_focal_loss
-from .checkpoint_contract import require_formal_checkpoint
+from .checkpoint_contract import require_evaluation_identity, require_formal_checkpoint
 from .data import setup, base_dataset, PairedDataset, evaluation_dataset
 from .models import initial_payload, make_base, Forecaster, feature_loss, transition_loss
 from .architectures import (
@@ -70,9 +70,9 @@ def main():
     if a.evaluate_only is not None:
         saved = torch.load(a.evaluate_only,map_location='cpu',weights_only=False)
         require_formal_checkpoint(saved)
+        require_evaluation_identity(saved, history=a.history, method=a.method,
+                                    seed=a.seed, block_fraction=a.block_fraction)
         checkpoint_architecture(saved,expected=a.architecture)
-        if saved['history'] != a.history:
-            raise ValueError('checkpoint history mismatch')
         initial = str(a.evaluate_only)
     elif a.initial_checkpoint is not None:
         saved = torch.load(a.initial_checkpoint,map_location='cpu',weights_only=False)
@@ -132,11 +132,7 @@ def main():
                     parameters=sum(x.numel() for x in model.parameters()),
                     trainable_parameters=sum(x.numel() for x in model.parameters() if x.requires_grad))
     (a.output/'started.json').write_text(json.dumps(metadata,indent=2))
-    if a.evaluate_only:
-        compatible_transform = (a.method == 'normalized_inpaint' and saved['method'] == 'control')
-        if saved['history'] != a.history or (saved['method'] != a.method and not compatible_transform):
-            raise ValueError('checkpoint method/history mismatch')
-    else:
+    if not a.evaluate_only:
         dataset = PairedDataset(base_dataset(a.history),a.history,
             fire_probability=fire_probability,block_probability=block_probability,
             block_fraction=a.block_fraction,
