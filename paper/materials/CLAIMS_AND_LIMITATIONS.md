@@ -49,6 +49,14 @@ the completed X17 and X22 sections and the complete-route/frozen-reference audit
 Original result files and per-row provenance in this package take precedence over
 rounded narrative values when constructing plots.
 
+The material build adds the previously unreported complete-system X22+X14
+control by composing existing evaluations. Its mean primary gain over ERM is
+0.014287 AP. X22+X17 adds only 0.000355 AP over this control across all years:
+0.001516 on selection data and -0.000226 on the historical test years. It uses
+four retained models versus three for X22+X14. These values are derived from
+`tables/overall_effects.csv` and `tables/system_attribution.csv`; they further
+limit the evidence for a distinct fixed-severity specialization contribution.
+
 ## A discrepancy that must remain visible
 
 The original `x22-x17-complete-route-final.json` contains X22 clean-scenario

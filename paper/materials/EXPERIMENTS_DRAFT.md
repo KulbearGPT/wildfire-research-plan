@@ -86,9 +86,15 @@ a more limited conclusion. The three-seed block effect of severity
 factorization is negative for T1/2023 (-0.000649), T5/2022 (-0.000898), and
 T5/2023 (-0.001614). Consequently, gains over ERM do not establish that two
 fixed-severity experts are consistently better than a mixed-severity expert.
-We retain these failed attribution cells in the main analysis. The X22+X14
-composition permits the same question to be examined at the complete-system
-level using existing observations without additional training.
+We retain these failed attribution cells in the main analysis. Composing the
+existing X22 and X14 scores gives a mean primary gain of 0.014287 AP over ERM.
+X22+X17 exceeds this closer system control by only 0.000355 AP across all years.
+The difference is 0.001516 AP on 2021 selection data and -0.000226 AP across
+the historical 2022/2023 years. X22+X17 also exceeds X22 alone by 0.002633 AP
+on the all-year average. Thus the current evidence supports a useful composed
+system, but not a robust advantage of the extra fixed-severity expert over the
+mixed specialist. These comparisons use recorded evaluations and introduce no
+new training or inference.
 
 ## Resource accounting and scope
 

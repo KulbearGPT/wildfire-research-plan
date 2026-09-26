@@ -19,6 +19,11 @@ against fresh ERM, and **0.034527 AP** against frozen B3/B5. These are different
 comparisons. The former remains below the campaign's historical 0.020 magnitude
 target. All differences are absolute AP units; 0.01 AP is one percentage point.
 
+The newly composed X22+mixed-X14 control gains **0.014287 AP** over fresh ERM.
+X22+X17 exceeds it by only **0.000355 AP** overall and falls behind by
+**0.000226 AP** on the historical 2022/2023 average, despite retaining one more
+model. The contribution discussion must preserve this closest-control result.
+
 **The material audit found a clean-scenario discrepancy.** The original complete
 route JSON uses X22 for M00, whereas the current documented mainline uses fresh
 ERM for M00. The package preserves the original as

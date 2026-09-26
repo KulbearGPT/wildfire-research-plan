@@ -40,7 +40,8 @@ Placement: main quantitative results, beside the complete scenario table.
 ## Figure 3 — The value and limits of severity factorization
 
 **Fixed-severity X17 versus mixed-severity X14.** Paired block-AP differences
-isolate the extra severity split within the specialist training recipe; block
+measure the effect of replacing the mixed-severity expert with two fixed-severity
+experts; this also increases the total specialist training budget. Block
 AP averages M06 and M07. Points show the three matched seeds in each
 setting/year cell and the summary marks show their means. Positive total
 effects over ERM do not imply positive attribution against X14. The mean

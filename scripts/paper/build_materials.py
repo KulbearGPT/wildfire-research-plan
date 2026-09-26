@@ -206,6 +206,15 @@ def build(args):
         if hashlib.sha256(content).hexdigest()!=source['sha256']:
             raise ValueError(f"Evidence hash mismatch: {source['source_rel']}")
     rows,index=add_routes([dict(r) for r in evidence['rows']])
+    payloads={s['source_id']:json.loads((root/s['source_rel']).read_text()) for s in evidence['sources']}
+    original_ap_matches=0
+    for row in rows:
+        for source_id in row['original_summary_source_ids']:
+            result=payloads[source_id]['results'][row['scenario']]
+            expected=result.get('metrics',result)['avg_precision']
+            if not math.isclose(row['ap'],expected,rel_tol=0,abs_tol=1e-12):
+                raise ValueError(f"Original summary AP mismatch: {row['method']} {row['scenario']} {source_id}")
+            original_ap_matches+=1
     write_csv(root/'data/scenario_rows.csv',rows)
     metrics=seed_metrics(rows,index)
     write_csv(root/'data/metrics_by_seed.csv',metrics)
@@ -312,10 +321,11 @@ def build(args):
                 scientific_scope='Existing evaluations only; no retraining or inference',
                 normalized_scenario_rows=len(rows),catalogue_methods=len(evidence['inventory']),
                 original_source_records=len(evidence['sources']),figures=len(figures),
+                original_ap_matches=original_ap_matches,
                 mainline_seed_coverage='2 histories x 3 seeds x 3 years x 4 scenarios for each main method',
                 standard_deviation='Sample SD (ddof=1) over three seeds within each setting/year',
                 route_discrepancy='Historical M00=X22; derived current-route M00=ERM. Preserved separately.',
-                anonymous_submission_ready=False,checks=['source hashes','unique cells','full mainline grid','historical route identity','ledger primary gains','frozen reference gain'])
+                anonymous_submission_ready=False,checks=['source hashes','original summary AP matches','unique cells','full mainline grid','historical route identity','ledger primary gains','frozen reference gain'])
     (root/'BUILD_REPORT.json').write_text(json.dumps(result,indent=2)+'\n')
     (root/'REPRODUCE.md').write_text('''# Regenerate these materials
 
@@ -349,6 +359,9 @@ The HTML and PDF previews are author material, not an anonymized submission.
 
 def build_preview(root,figures,overall,evidence):
     # Compile the review PDF from the vector figures, preserving text and lines.
+    lookup={(r['method'],r['scope']):r for r in overall}
+    attribution={scope:lookup['X22_X17_ERM_CLEAN',scope]['primary_delta']-lookup['X22_X14_ERM_CLEAN',scope]['primary_delta']
+                 for scope in ('all_years','historical_test')}
     text = [r'\documentclass[10pt,letterpaper]{article}',
             r'\usepackage[margin=0.65in]{geometry}',
             r'\usepackage{graphicx,booktabs,mathptmx,hyperref}',
@@ -370,6 +383,8 @@ def build_preview(root,figures,overall,evidence):
             r'\section*{Interpretation}',
             'The mainline supports a system result. Cosine decay is an established schedule; fixed-severity factorization '
             'has failed closest-control cells. Use the mixed X14 control and preserve those failures.',
+            f"X22+X17 minus X22+mixed-X14 is {attribution['all_years']:+.6f} AP overall and "
+            f"{attribution['historical_test']:+.6f} AP across historical 2022/2023 data, with four retained models versus three.",
             'Analytical continuation counts exclude shared foundation training and evaluation. '
             'This package does not measure inference latency or certify operational robustness.',
             r'\section*{Included material}',
