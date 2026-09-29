@@ -1,5 +1,10 @@
 # Repository organization, reproducibility, and commit-history audit
 
+Local integration follow-up: the five previously unmerged branch tips have been
+incorporated with their original ancestry preserved. See the
+[merge decisions and checks](local-merge-20260929.md). The audit snapshot and
+remaining reproduction/history-regrouping plan below retain their original scope.
+
 Date: 2026-09-29. This is a static audit and an execution plan, not a new
 reproduction report. Scope: this repository, its registered worktrees, and
 selected external artifact metadata. Neighboring research repositories are

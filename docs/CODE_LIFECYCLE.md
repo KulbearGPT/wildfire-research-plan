@@ -194,3 +194,13 @@ Historical teacher shell commands remain verbatim in the archive. Independent
 source review covered routing/gates, BN behavior, evaluation identity and archive
 compatibility. These checks do not constitute a fresh GPU reproduction, artifact
 availability audit or confirmation of scientific gains.
+
+## Local branch integration (2026-09-29)
+
+The [local integration record](local-merge-20260929.md) preserves the original
+belief, tutorial and TD branch ancestry. Existing runtime implementations and
+scientific outcomes remain unchanged. Three original TD audit/execution helpers
+were recovered with `archive_support`/`legacy_runner` labels, bringing the source
+map to 146 files. They retain historical assumptions and require Slurm even for
+Python imports/help; no new runtime qualification is claimed. The active method
+selection remains X22+X17 and its necessary controls.
