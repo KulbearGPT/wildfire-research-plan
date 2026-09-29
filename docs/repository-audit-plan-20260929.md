@@ -4,6 +4,9 @@ Local integration follow-up: the five previously unmerged branch tips have been
 incorporated with their original ancestry preserved. See the
 [merge decisions and checks](local-merge-20260929.md). The audit snapshot and
 remaining reproduction/history-regrouping plan below retain their original scope.
+The [post-integration commit-history plan](commit-history-audit-plan-20260929.md)
+supersedes section 6's grouping and branch-status proposal with current counts,
+explicit commit boundaries, merge preservation and execution gates.
 
 Date: 2026-09-29. This is a static audit and an execution plan, not a new
 reproduction report. Scope: this repository, its registered worktrees, and
@@ -222,6 +225,11 @@ per-role timing are known. An evidence gap stops the dependent stage, not the
 independent source/documentation audit.
 
 ## 6. Commit-history audit and proposed grouping
+
+**Historical proposal, before local integration.** Use the
+[updated history plan](commit-history-audit-plan-20260929.md) for current actions.
+In particular, all branch tips in the table below are now ancestors of main;
+the nonzero counts record this audit's earlier snapshot, not outstanding merges.
 
 The following recommendations are based on the inspected commit file lists,
 relevant diffs/source, current dependencies and recorded provenance. They are

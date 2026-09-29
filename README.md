@@ -10,7 +10,7 @@ inactive experiments, diagnostics, or teaching references.
 - **Start learning:** [student onboarding](docs/START_HERE.md), [English course website](index.html), [independent official baseline tutorial](docs/tutorials/res18-baseline-slurm.md).
 - **Develop with AI:** [project agreement](AGENTS.md), [development guide](docs/DEVELOPMENT.md).
 - **Write the paper:** [materials, figures and build record](paper/README.md).
-- **Audit and organize:** [reproducibility and commit-history audit plan](docs/repository-audit-plan-20260929.md).
+- **Audit and organize:** [reproducibility audit](docs/repository-audit-plan-20260929.md), [current commit-history review plan](docs/commit-history-audit-plan-20260929.md).
 
 ## Retained comparison
 
