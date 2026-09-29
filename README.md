@@ -9,6 +9,8 @@ inactive experiments, diagnostics, or teaching references.
 - **Run the mainline:** [environment/data setup](docs/research/reproduce.md), [B3/B5 foundations](docs/research/baselines.md), [method recipes](docs/research/method-recipes.md).
 - **Start learning:** [student onboarding](docs/START_HERE.md), [English course website](index.html), [independent official baseline tutorial](docs/tutorials/res18-baseline-slurm.md).
 - **Develop with AI:** [project agreement](AGENTS.md), [development guide](docs/DEVELOPMENT.md).
+- **Write the paper:** [materials, figures and build record](paper/README.md).
+- **Audit and organize:** [reproducibility and commit-history audit plan](docs/repository-audit-plan-20260929.md).
 
 ## Retained comparison
 
