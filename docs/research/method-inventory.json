@@ -2385,6 +2385,16 @@
       "settings_ref": "docs/CODE_LIFECYCLE.md"
     },
     {
+      "path": "reproductions/three_directions/audit_checkpoints.py",
+      "state": "archive_support",
+      "settings_ref": "reproductions/three_directions/README.md"
+    },
+    {
+      "path": "reproductions/three_directions/audit_statistics.py",
+      "state": "archive_support",
+      "settings_ref": "reproductions/three_directions/README.md"
+    },
+    {
       "path": "reproductions/three_directions/methods.py",
       "state": "archived",
       "settings_ref": "docs/experiments/three-directions-results.md"
@@ -2398,6 +2408,11 @@
       "path": "reproductions/three_directions/run.py",
       "state": "archived",
       "settings_ref": "docs/experiments/three-directions-results.md"
+    },
+    {
+      "path": "reproductions/three_directions/run_slurm.sh",
+      "state": "legacy_runner",
+      "settings_ref": "reproductions/three_directions/README.md"
     },
     {
       "path": "reproductions/three_directions/sources.py",

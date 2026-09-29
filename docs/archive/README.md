@@ -33,6 +33,14 @@ The old roadmap's architecture status and proposed follow-up are retained in
 are retained in [teacher artifact transfer](teacher-artifacts.md). Neither is a
 prerequisite or a next step for the active X22+X17 route.
 
+The [original TD implementation plan](three-directions-td-plan-20260912.md)
+was recovered when its branch ancestry was merged on 2026-09-29. Its original
+pathname collided with the distinct RF plan. Original TD checkpoint/statistics
+audits and the Nibi runner are retained in
+[`reproductions/three_directions/`](../../reproductions/three_directions/README.md)
+with their original behavior and explicit archive/legacy labels. They are not
+covered by the portable RF diagnostic entrypoint checks.
+
 ## Reopening an archived direction
 
 Specify the hypothesis and original setting being revisited. Use its actual
@@ -42,7 +50,7 @@ Record any changed setting as a new experiment. Obtain the relevant execution
 scope and budget before compute, and keep old artifacts and outcomes intact.
 
 Shared model imports and checkpoint interfaces were preserved for historical
-recovery. The archived BN diagnostics now require explicit `--run-root` input and
+recovery. The RF BN diagnostics in `cross_history/` require explicit `--run-root` input and
 a Slurm allocation; their numerical calculations and historical directory defaults
 remain intact. The two retired confirmation bundles refuse execution entirely:
 their hardcoded job replacement actions stay disabled. Reconstruct a new submission
