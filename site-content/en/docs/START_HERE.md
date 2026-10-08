@@ -26,6 +26,8 @@ After reading, explain in your own words: what goes into the model, which day it
 
 The first route does not require cloning this project, using your supervisor's environment or accessing their wildfire checkpoints. All twelve folds are an optional extension; do not launch them all for your first exercise.
 
+After completing official Fold 2, read [Designing your first fair comparison](tutorials/matched-erm-experiment-design.md). The lesson explains how to move to the project protocol and establish a matched ERM continuation control before trying X22 and X14.
+
 ## 3. Prepare before running commands
 
 - Your own cluster login, CPU/GPU accounts, and the GPU types and partitions available at your site.

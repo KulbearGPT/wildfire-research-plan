@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCES = [ROOT / name for name in (
     'docs/START_HERE.md', 'docs/research-roadmap.md',
     'docs/tutorials/res18-baseline-slurm.md', 'docs/tutorials/project-b0-slurm.md',
+    'docs/tutorials/matched-erm-experiment-design.md',
 )] + sorted((ROOT / 'docs/research').glob('*.md'))
 OUTPUTS = {p.resolve(): ROOT / 'guides' / p.relative_to(ROOT).with_suffix('.html') for p in SOURCES}
 TEMPLATE = '''<!doctype html>

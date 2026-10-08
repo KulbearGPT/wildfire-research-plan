@@ -26,6 +26,8 @@
 
 第一条路线不需要 clone 本项目，也不依赖老师的环境或野火检查点。完整 12-fold 是后续选做项；首次入门不要直接批量启动所有 fold。
 
+完成官方 Fold 2 后，继续阅读[如何设计匹配 ERM 对照](tutorials/matched-erm-experiment-design.md)。这节课从比较设计出发，解释如何接入项目协议、建立继续训练对照，再逐步开展 X22 和 X14 实验。
+
 ## 3. 开始敲命令前准备好什么
 
 - 自己的集群账号、CPU/GPU account，以及站点实际可用的 GPU/partition。
