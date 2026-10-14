@@ -2,17 +2,17 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Regenerating
 corrected T1 missingness-trained foundation (B3) and T5 missingness-trained foundation (B5) baselines · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
 <body data-page="guide-baselines" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
-<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Regenerating
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Regenerating
 corrected T1 missingness-trained foundation (B3) and T5 missingness-trained foundation (B5) baselines</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · T1 classroom path</a><a href="#chapter-3">3 · Optional
 paired T1 and T5 foundation preparation</a></nav></details>
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 3</p><h2>Before you begin</h2><span id="regenerating-corrected-b3-and-b5-baselines"></span>
 <p>Use the generic submitter from the committed checkout after
 environment/data setup. The historical
@@ -20,10 +20,10 @@ environment/data setup. The historical
 checkpoint; the encoder starts from ImageNet weights.</p>
 <div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
 <section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 3</p><h2 id="t1-classroom-path">T1 classroom path</h2>
-<p>For lessons 5–7, prepare <strong><a class="experiment-name" href="../../experiments/index.html#B3">T1 missingness-trained foundation <small>(B3)</small></a> only</strong>. If the instructor
+<p>For lessons 5–7, prepare <strong><span class="experiment-name">T1 missingness-trained foundation <small>(B3)</small></span> only</strong>. If the instructor
 has supplied a verified B3 checkpoint and completion record, inspect
 those identities and go directly to its 2021 evaluation. Do not launch a
-replacement training job merely to follow this page. <a class="experiment-name" href="../../experiments/index.html#B5">T5 missingness-trained foundation <small>(B5)</small></a> belongs to the
+replacement training job merely to follow this page. <span class="experiment-name">T5 missingness-trained foundation <small>(B5)</small></span> belongs to the
 separate T5 extension.</p>
 <p>Start after project setup and corrected data/statistics preparation
 are complete. Record the agreed resource limits and use fresh output
@@ -55,7 +55,7 @@ relocated weights, use the actual verified record and configured paths;
 do not overwrite existing runs. Bring back the completion record,
 exported checkpoint/checksum, and four-condition 2021 summary. Read AP
 from <code>results.M00.metrics.avg_precision</code> and the equivalent
-<a class="experiment-name" href="../../experiments/index.html#M01">Fire-history-missing scenario <small>(M01)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M07">Half-block-missing scenario <small>(M07)</small></a> fields. Then return to the <a
+<span class="experiment-name">Fire-history-missing scenario <small>(M01)</small></span>/<span class="experiment-name">Quarter-block-missing scenario <small>(M06)</small></span>/<span class="experiment-name">Half-block-missing scenario <small>(M07)</small></span> fields. Then return to the <a
 href="../../lessons/erm/index.html#step5">ERM practical</a>.</p>
 <div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
 <section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 3</p><h2 id="optional-paired-t1-and-t5-foundation-preparation">Optional
@@ -84,7 +84,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
 <p>These checkpoint destinations match the example site configuration;
 if you customized them, use your configured destinations instead.
-<a class="experiment-name" href="../../experiments/index.html#B0">Corrected T1 clean-input baseline <small>(B0)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B1">Corrected T5 clean-input baseline <small>(B1)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B2">Corrected T1 FireDrop-trained baseline <small>(B2)</small></a> use the same two commands with their own baseline ID and new
+<span class="experiment-name">Corrected T1 clean-input baseline <small>(B0)</small></span>/<span class="experiment-name">Corrected T5 clean-input baseline <small>(B1)</small></span>/<span class="experiment-name">Corrected T1 FireDrop-trained baseline <small>(B2)</small></span> use the same two commands with their own baseline ID and new
 output paths. After export succeeds, evaluate the completed baseline,
 for example B3:</p>
 <div class="sourceCode" id="cb6"><pre
@@ -121,5 +121,5 @@ point to absolute external checkpoint paths; after moving artifacts,
 update only the record's <code>checkpoint</code> field to the
 transferred file and verify its recorded SHA256. Keep the scientific
 provenance fields intact.</p>
-<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/research/baselines.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/baselines.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

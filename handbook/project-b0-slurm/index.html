@@ -3,14 +3,14 @@
 <title>From
 Data Download to a Complete ResNet18-U-Net Run: A Step-by-Step Nibi
 Slurm Tutorial · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
 <body data-page="guide-project-b0-slurm" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
-<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>From
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>From
 Data Download to a Complete ResNet18-U-Net Run: A Step-by-Step Nibi
 Slurm Tutorial</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 0. First Choose What
 You Want to Complete</a><a href="#chapter-3">3 · 1. Log In and Create
@@ -31,7 +31,7 @@ Evaluation Summarized Separately</a><a href="#chapter-15">15 · 13. Common
 Failures: Where to Look and What to Do</a><a href="#chapter-16">16 · 14. What Students Should
 Submit</a><a href="#chapter-17">17 · 15. Validation Scope of
 This Tutorial</a></nav></details>
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 17</p><h2>Before you begin</h2><span id="from-data-download-to-a-complete-resnet18-u-net-run-a-step-by-step-nibi-slurm-tutorial"></span>
 <p>For students encountering this project for the first time. Commands
 use <strong>Bash + Alliance Nibi</strong>, starting from an empty
@@ -40,7 +40,7 @@ personal experiment directory. Prepared: 2026-09-11.</p>
 (including the <a href="../../docs/tutorials/res18/official.sh">official
 runner</a>) and are already included in the repository; there is no need
 to search the instructor's personal cache directories. They call the
-project's existing official reproduction and <a class="experiment-name" href="../../experiments/index.html#B0">Corrected T1 clean-input baseline <small>(B0)</small></a> entry points rather than
+project's existing official reproduction and <span class="experiment-name">Corrected T1 clean-input baseline <small>(B0)</small></span> entry points rather than
 implementing another model-training pipeline.</p>
 <div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
 <section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 17</p><h2 id="0-first-choose-what-you-want-to-complete">0. First Choose What
@@ -583,8 +583,8 @@ fixes seed 0, 3000 steps, batch 64, AdamW 0.001, and 2016–2020 train /
 implement the split by changing <code>fold_id</code>, so B0's fold 0
 must not be interpreted as official Fold 0.</p>
 <p>After training, the job automatically generates a completion record
-and evaluates four scenarios on 2021. <a class="experiment-name" href="../../experiments/index.html#M00">Complete-input scenario <small>(M00)</small></a> is the main clean-baseline
-reference; <a class="experiment-name" href="../../experiments/index.html#M01">Fire-history-missing scenario <small>(M01)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M07">Half-block-missing scenario <small>(M07)</small></a> diagnose robustness without retraining the
+and evaluates four scenarios on 2021. <span class="experiment-name">Complete-input scenario <small>(M00)</small></span> is the main clean-baseline
+reference; <span class="experiment-name">Fire-history-missing scenario <small>(M01)</small></span>/<span class="experiment-name">Quarter-block-missing scenario <small>(M06)</small></span>/<span class="experiment-name">Half-block-missing scenario <small>(M07)</small></span> diagnose robustness without retraining the
 model.</p>
 <div class="sourceCode" id="cb25"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_B0_RUN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/B0-</span><span class="va">$WF_B0_JOB</span><span class="st">&quot;</span></span>
@@ -931,5 +931,5 @@ complete 12-fold campaign. The historical numbers above are recorded
 separately from tutorial validation. On their first run with their own
 account and new environment, students must still verify each step
 against its success criteria.</p>
-<div class="reference-pager"><a href="#chapter-16">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/tutorials/project-b0-slurm.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+<div class="reference-pager"><a href="#chapter-16">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/tutorials/project-b0-slurm.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

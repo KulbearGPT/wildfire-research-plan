@@ -3,14 +3,14 @@
 <title>Running
 Res18-U-Net from the Official Codebase on a New Cluster: A Standalone
 Slurm Tutorial · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
 <body data-page="guide-res18-baseline-slurm" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html" aria-current="page">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
-<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Running
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Running
 Res18-U-Net from the Official Codebase on a New Cluster: A Standalone
 Slurm Tutorial</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 0.
 Exactly Which Baseline Does This Tutorial Reproduce?</a><a href="#chapter-3">3 · 1.
@@ -25,7 +25,7 @@ Optional: Evaluate Only the Official Fold 2 Weights</a><a href="#chapter-11">11 
 Runs</a><a href="#chapter-12">12 · 10. Troubleshooting and
 Deliverables</a><a href="#chapter-13">13 · 11. Independence and
 Validation Boundaries</a></nav></details>
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 13</p><h2>Before you begin</h2><span id="running-res18-u-net-from-the-official-codebase-on-a-new-cluster-a-standalone-slurm-tutorial"></span>
 <p>This version requires only the authors' official repository, public
 data, and public weights. <strong>Do not clone
@@ -53,7 +53,7 @@ checkpoint.</p>
 2018/2020, validate on 2019, and test on 2021, with 10000 optimizer
 updates. Full 12-fold training and released-weight evaluation are
 optional steps at the end.</p>
-<p><strong>This official baseline is different from corrected <a class="experiment-name" href="../../experiments/index.html#B0">Corrected T1 clean-input baseline <small>(B0)</small></a> in the
+<p><strong>This official baseline is different from corrected <span class="experiment-name">Corrected T1 clean-input baseline <small>(B0)</small></span> in the
 project roadmap.</strong> Project B0 has its own eight-year temporal
 split, index correction, training statistics, and 3000-step budget;
 unchanged official code does not automatically implement those
@@ -810,5 +810,5 @@ training results from this standalone version on the new server. The
 exact scope of local checks for the newly added scripts is recorded in
 <code>official-standalone-validation.md</code> in the same directory;
 that record is not a dependency for student execution.</p>
-<div class="reference-pager"><a href="#chapter-12">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/tutorials/res18-baseline-slurm.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+<div class="reference-pager"><a href="#chapter-12">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/tutorials/res18-baseline-slurm.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

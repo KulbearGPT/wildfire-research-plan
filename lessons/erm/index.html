@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The score improved. Did the method help? · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
 <body data-page="erm" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="index.html" aria-current="page">06 &nbsp; The ERM control</a></li><li><a href="../schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
+<div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="index.html" aria-current="page">06 &nbsp; The ERM control</a></li><li><a href="../schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../../handbook/student-start/index.html">Practical readiness</a><br><a href="../../handbook/student-real-data/index.html">Real-data examples</a><br><a href="../../handbook/student-report/index.html">Output → report</a><br><a href="../../handbook/student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
-<main class="content" id="main"><header class="lesson-header"><p class="eyebrow">Lesson 06 · Learn by doing</p><h1>The score improved. Did the method help?</h1><p class="lead">Separate ordinary continuation from a new training choice.</p><div class="meta"><span>45–60 min + optional cluster work</span><span>7 steps</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>Before this lesson: <a href="../missingness/index.html">Missing observations</a>.</p><p><strong>Your deliverable:</strong> A matched foundation / ERM plan and an A/B result report.</p><p>Browser activities use teaching examples. Practical work uses the linked official or project runner.</p></details></header><nav class="step-nav" aria-label="Lesson steps"><a href="#step1">1 · Predict</a><a href="#step2">2 · Compare</a><a href="#step3">3 · Understand</a><a href="#step4">4 · Repair</a><a href="#step5">5 · Plan &amp; run</a><a href="#step6">6 · Interpret</a><a href="#step7">7 · Submit</a></nav>
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header"><p class="eyebrow">Lesson 06 · Learn by doing</p><h1>The score improved. Did the method help?</h1><p class="lead">Separate ordinary continuation from a new training choice.</p><div class="meta"><span>45–60 min + optional cluster work</span><span>7 steps</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>Before this lesson: <a href="../missingness/index.html">Missing observations</a>.</p><p><strong>Your deliverable:</strong> A matched foundation / ERM plan and an A/B result report.</p><p>Follow the next-step button. Extra reading is grouped at the end of each step; practical instructions remain available there. Browser activities use teaching examples and labelled real exports.</p></details></header><details class="lesson-contents"><summary id="section-label">Contents · choose a step</summary><nav class="step-nav" aria-label="Lesson steps"><a href="#step1">1 · Predict</a><a href="#step2">2 · Compare</a><a href="#step3">3 · Understand</a><a href="#step4">4 · Repair</a><a href="#step5">5 · Plan &amp; run</a><a href="#step6">6 · Interpret</a><a href="#step7">7 · Submit</a></nav></details>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <section class="step-panel" data-title="Predict" id="step1" aria-labelledby="title1">
 <p class="step-kicker">Step 1 / 7 · Make a prediction</p>
 <h2 id="title1" tabindex="-1">A better number. An unanswered question.</h2>
@@ -218,7 +218,7 @@ optimizer.step()</code>
 <div class="pager"><a href="#step3">← Previous step</a><a class="button" href="#step5">Next step →</a></div></section>
 <section class="step-panel" data-title="Plan & run" id="step5" aria-labelledby="title5">
 <p class="step-kicker">Step 5 / 7 · Plan first, then run</p>
-<h2 id="title5" tabindex="-1">Your first practical compares A with B.</h2><p class="note">Bring your completed <a href="../../handbook/student-bridge/index.html#handover">project asset sheet</a>. Use the <a href="../../handbook/student-report/index.html#files">output-field guide</a> to establish rows A and B; missing assets mean the practical is not ready.</p>
+<h2 id="title5" tabindex="-1">Your first practical compares A with B.</h2><p class="note">Bring your completed <span class="reading-label">project asset sheet</span>. Use the <span class="reading-label">output-field guide</span> to establish rows A and B; missing assets mean the practical is not ready.</p>
 <p>
 <strong>Question:</strong> under a fixed project protocol, what changes after the specified 3,000-update ERM continuation?</p>
 <p>Save a prediction before running. Include an outcome that would contradict it. X22 is the next experiment; it is not required to finish this A/B exercise.</p>
@@ -262,9 +262,7 @@ optimizer.step()</code>
 <strong>Do:</strong> prepare corrected data and training-only statistics; record the B3 checksum and provenance. Use instructor-provided B3 or regenerate it through the foundation guide.</p>
 <p>
 <strong>Bring back:</strong> data/statistics identities, B3 path and checksum, and the approved resource budget.</p>
-<p>
-<a href="../../handbook/reproduce/index.html">Set up the project</a> · <a href="../../handbook/data-preparation/index.html">Prepare data</a> · <a href="../../handbook/baselines/index.html">Prepare B3</a>
-</p>
+
 </article>
 <article class="task">
 <h3>2 · Establish row A before continuing</h3>
@@ -272,9 +270,7 @@ optimizer.step()</code>
 <strong>Do:</strong> evaluate frozen B3 on the same 2021 samples and four masks planned for B. Evaluation must not update weights or normalization state.</p>
 <p>
 <strong>Bring back:</strong> four AP values and their original evaluation records. A training-time validation score or a clean-only score is not a substitute.</p>
-<p>
-<a href="../../handbook/baselines/index.html">Foundation and evaluation reference</a> · <a href="../../handbook/evaluation-population/index.html">Check the evaluation population</a>
-</p>
+
 </article>
 <article class="task">
 <h3>3 · Smoke-check, then start formal ERM from B3</h3>
@@ -302,15 +298,13 @@ optimizer.step()</code>
 <strong>Do:</strong> check the job’s terminal state, exit code, actual 3,000 updates and final checkpoint. Evaluate on the matching 2021 contract, or retain an already matching evaluation from the training output.</p>
 <p>
 <strong>Bring back:</strong> final checkpoint, four AP values and original metric paths. Check sample identities and preprocessing, not just equal counts.</p>
-<p>
-<a href="../../handbook/matched-erm-experiment-design/index.html#4-running-the-comparison">Detailed execution checklist</a> · <a href="../../handbook/setup-recovery/index.html">If setup or a job fails</a>
-</p>
+
 </article>
 <p class="note warning">Submit installation, data processing, model checks, training and evaluation through Slurm. A job ID only confirms submission. Preserve failed attempts; do not overwrite their outputs or extend the training budget after inspecting results.</p>
 <p class="done">
 <strong>Done when:</strong> your A/B plan is fixed. For the practical, also retain completion evidence and matching A/B evaluations. You can continue to the worked example while a job is queued.</p>
 
-<div class="pager"><a href="#step4">← Previous step</a><a class="button" href="#step6">Next step →</a></div></section>
+<details class="step-readings" id="readings-step5"><summary>Practical instructions and references · 8</summary><p>Open a resource when needed. Its return button brings you back to this exact lesson step.</p><ul><li><a data-course-reading href="../../handbook/student-bridge/index.html#handover">project asset sheet</a></li><li><a data-course-reading href="../../handbook/student-report/index.html#files">output-field guide</a></li><li><a data-course-reading href="../../handbook/reproduce/index.html">Set up the project</a></li><li><a data-course-reading href="../../handbook/data-preparation/index.html">Prepare data</a></li><li><a data-course-reading href="../../handbook/baselines/index.html">Prepare B3</a></li><li><a data-course-reading href="../../handbook/evaluation-population/index.html">Check the evaluation population</a></li><li><a data-course-reading href="../../handbook/matched-erm-experiment-design/index.html#4-running-the-comparison">Detailed execution checklist</a></li><li><a data-course-reading href="../../handbook/setup-recovery/index.html">If setup or a job fails</a></li></ul></details><div class="pager"><a href="#step4">← Previous step</a><a class="button" href="#step6">Next step →</a></div></section>
 <section class="step-panel" data-title="Interpret" id="step6" aria-labelledby="title6">
 <p class="step-kicker">Step 6 / 7 · Interpret all conditions</p>
 <h2 id="title6" tabindex="-1">An average can hide a trade-off.</h2>
@@ -457,6 +451,6 @@ optimizer.step()</code>
 
 
 
-<p><a href="../../handbook/student-report/index.html#review">Check your deliverable</a> · <a href="../../handbook/student-help/index.html">If you are stuck</a></p><div class="actions"><a class="button secondary" href="report-template.md" download>Download your worksheet</a><button class="secondary js-only" type="button" id="print-lesson">Print all steps</button></div>
-<label class="completion js-only"><input type="checkbox" id="lesson-complete"> I have reviewed the concepts. Save this reminder locally.</label><p class="source">This is a personal reminder, not a grade or proof that a cluster experiment finished.</p><div class="pager"><a href="#step6">← Previous step</a><a class="button" href="../schedule/index.html">Next: Does the schedule help? →</a></div></section><footer class="footer"><a href="../../site-content/en/lessons/erm.html">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+<details class="step-readings" id="readings-step7"><summary>Help and further reading · 2</summary><p>Open a resource when needed. Its return button brings you back to this exact lesson step.</p><ul><li><a data-course-reading href="../../handbook/student-report/index.html#review">Check your deliverable</a></li><li><a data-course-reading href="../../handbook/student-help/index.html">If you are stuck</a></li></ul></details><div class="actions"><a class="button secondary" href="report-template.md" download>Download your worksheet</a><button class="secondary js-only" type="button" id="print-lesson">Print all steps</button></div>
+<label class="completion js-only"><input type="checkbox" id="lesson-complete"> I have reviewed the concepts. Save this reminder locally.</label><p class="source">This is a personal reminder, not a grade or proof that a cluster experiment finished.</p><div class="pager"><a href="#step6">← Previous step</a><a class="button" href="../schedule/index.html">Next: Does the schedule help? →</a></div></section><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/lessons/erm.html">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

@@ -2,14 +2,14 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Positive
 signals, including limited and historical findings · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
 <body data-page="guide-positive-signals" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
-<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Positive
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Positive
 signals, including limited and historical findings</h1><p class="lead">Historical evidence and context. These records support interpretation; they are not a required sequence of new experiments.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · Corrected T1 and
 cross-history observations</a><a href="#chapter-3">3 · Corrected
 archived D-series: strict rejection does not erase gains</a><a href="#chapter-4">4 · Two distinct
@@ -19,9 +19,9 @@ signals with invalid or confounded baseline ancestry</a><a href="#chapter-7">7 �
 positive controls and compositions</a><a href="#chapter-9">9 · Baseline and
 attribution audit additions</a><a href="#chapter-10">10 · Complete retained-positive
 index</a></nav></details>
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 10</p><h2>Before you begin</h2><span id="positive-signals-including-limited-and-historical-findings"></span>
-<p><strong>Current scope (2026-09-22): <a class="experiment-name" href="../../experiments/index.html#X22+X17">Condition-specific specialist route <small>(X22+X17)</small></a> and necessary controls
+<p><strong>Current scope (2026-09-22): <span class="experiment-name">Condition-specific specialist route <small>(X22+X17)</small></span> and necessary controls
 only.</strong> See <a href="../../docs/CODE_LIFECYCLE.md">code
 lifecycle</a>. Other methods and recipes below are retained for
 historical reproduction; their evidence status does not imply active
@@ -33,7 +33,7 @@ confirmed contribution or a passed adoption gate.</strong> Mixed results
 also appear in the negative archive. No new efficacy experiment was
 performed for this inventory.</p>
 <p>AP differences are absolute, not percentages. Primary is mean AP over
-<a class="experiment-name" href="../../experiments/index.html#M01">Fire-history-missing scenario <small>(M01)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M07">Half-block-missing scenario <small>(M07)</small></a>; block is mean AP over M06/M07. <a class="experiment-name" href="../../experiments/index.html#M00">Complete-input scenario <small>(M00)</small></a> is clean. T1/T5 differ
+<span class="experiment-name">Fire-history-missing scenario <small>(M01)</small></span>/<span class="experiment-name">Quarter-block-missing scenario <small>(M06)</small></span>/<span class="experiment-name">Half-block-missing scenario <small>(M07)</small></span>; block is mean AP over M06/M07. <span class="experiment-name">Complete-input scenario <small>(M00)</small></span> is clean. T1/T5 differ
 in architecture and features as well as history. The corrected retained
 T1 and paired campaigns use 3,181/2,856/2,102 samples in 2021/2022/2023.
 The old ledger's 2,312 was a documentation typo, corrected against all
@@ -64,136 +64,136 @@ cross-history observations</h2>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X1">Valid-context feature transport <small>(X1)</small></a> — X1 context transport</td>
+<td><span class="experiment-name">Valid-context feature transport <small>(X1)</small></span> — X1 context transport</td>
 <td>fresh continuation; observable spatial route; yes; routed +.005954;
 routed +.000874; cross-T reject</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X1-adapter">Frozen-backbone context adapter <small>(X1-adapter)</small></a> — X1 frozen adapter</td>
-<td>frozen initial <a class="experiment-name" href="../../experiments/index.html#B3">T1 missingness-trained foundation <small>(B3)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B5">T5 missingness-trained foundation <small>(B5)</small></a> plus fresh continuation; alternative X1
+<td><span class="experiment-name">Frozen-backbone context adapter <small>(X1-adapter)</small></span> — X1 frozen adapter</td>
+<td>frozen initial <span class="experiment-name">T1 missingness-trained foundation <small>(B3)</small></span>/<span class="experiment-name">T5 missingness-trained foundation <small>(B5)</small></span> plus fresh continuation; alternative X1
 implementation; +.012151 vs frozen, -.013537 vs fresh; reject; cancelled
 after T1 adoption failure</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X3">Latent fire-transition head <small>(X3)</small></a> — X3 latent transition</td>
+<td><span class="experiment-name">Latent fire-transition head <small>(X3)</small></span> — X3 latent transition</td>
 <td>fresh continuation; yes; original +.011831; decoupled -.045065;
 original -.009413; repair cancelled</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X4">Spatial-risk loss weighting <small>(X4)</small></a> — X4 spatial risk weighting</td>
+<td><span class="experiment-name">Spatial-risk loss weighting <small>(X4)</small></span> — X4 spatial risk weighting</td>
 <td>fresh continuation; one training-objective contribution; routed
 +.003463; routed -.001659; reject</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X6">Balanced corruption sampling <small>(X6)</small></a> — X6 balanced corruption coverage</td>
+<td><span class="experiment-name">Balanced corruption sampling <small>(X6)</small></span> — X6 balanced corruption coverage</td>
 <td>fresh continuation; sole corruption-rate tuning contribution;
 +.005203; +.002426 with M00 -.017601; reject</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X8">Impact-weighted predictive consistency <small>(X8)</small></a> — X8 counterfactual-impact consistency</td>
+<td><span class="experiment-name">Impact-weighted predictive consistency <small>(X8)</small></span> — X8 counterfactual-impact consistency</td>
 <td>unchanged global D1 consistency; fresh ERM adoption; incremental
 FireDrop specialist; incrementally reliable; ERM adoption fails 2022;
 incrementally reliable and ERM-positive</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X10">Forecast-trained dynamic inpainting <small>(X10)</small></a> — X10 forecast-aware dynamic inpainting</td>
+<td><span class="experiment-name">Forecast-trained dynamic inpainting <small>(X10)</small></span> — X10 forecast-aware dynamic inpainting</td>
 <td>fresh continuation with spatial route; yes; typed input restoration
 optimized by forecast loss; 2022/23 -.001356/-.000347; reject
 cross-history; 2022/23 +.004783/+.002139; T5-only positive</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X12">Counterfactual FireDrop specialist <small>(X12)</small></a> — X12 counterfactual FireDrop specialist</td>
+<td><span class="experiment-name">Counterfactual FireDrop specialist <small>(X12)</small></span> — X12 counterfactual FireDrop specialist</td>
 <td>fresh continuation; plain specialist ablation if screen passes; one
 specialist-training contribution; routed +.001589; reject; cancelled
 after T1 failure</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X14">Mixed-severity block specialist <small>(X14)</small></a> — X14 BlockDrop specialist continuation</td>
+<td><span class="experiment-name">Mixed-severity block specialist <small>(X14)</small></span> — X14 BlockDrop specialist continuation</td>
 <td>fresh continuation with spatial route; one block-specialization
 training contribution; reliable: +.005467/+.001416/+.006792 in
 2021/22/23; reliable: +.016685/+.011528/+.005485 in 2021/22/23</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X18">Block-trained context transport <small>(X18)</small></a> — X18 block-specialized context transport</td>
+<td><span class="experiment-name">Block-trained context transport <small>(X18)</small></span> — X18 block-specialized context transport</td>
 <td>X14 specialist plus fresh ERM; yes only if positive vs X14; +.013205
 vs ERM; +.004405 vs X14; +.006524 vs ERM but -.000922 vs X14;
 reject</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X19">Severity-conditioned latent adapters <small>(X19)</small></a> — X19 severity-conditioned latent adapters</td>
-<td>X14 specialist; <a class="experiment-name" href="../../experiments/index.html#X17">Fixed-severity block specialists <small>(X17)</small></a> two-checkpoint upper bound; fresh ERM; no; T5
+<td><span class="experiment-name">Severity-conditioned latent adapters <small>(X19)</small></span> — X19 severity-conditioned latent adapters</td>
+<td>X14 specialist; <span class="experiment-name">Fixed-severity block specialists <small>(X17)</small></span> two-checkpoint upper bound; fresh ERM; no; T5
 closest-control confirmation fails; primary +.007772 vs ERM; block
 +.003458 vs X14; primary +.015795 vs ERM but block -.001335 vs X14;
 reject</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X22">Cosine-schedule continuation <small>(X22)</small></a> — X22 cosine-decayed ERM</td>
+<td><span class="experiment-name">Cosine-schedule continuation <small>(X22)</small></span> — X22 cosine-decayed ERM</td>
 <td>fresh constant-LR ERM; sole optimizer/tuning contribution; reliable:
 +.006035/+.008133/+.003442 in 2021/22/23; reliable:
 +.021346/+.019504/+.013596 in 2021/22/23</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X23">Impact-consistent block specialist <small>(X23)</small></a> — X23 impact-consistent BlockDrop specialist</td>
+<td><span class="experiment-name">Impact-consistent block specialist <small>(X23)</small></span> — X23 impact-consistent BlockDrop specialist</td>
 <td>X14 BlockDrop specialist plus fresh ERM; no; closest-control gate
 fails; +.011199 vs ERM but only +.002400 vs X14; reject; cancelled after
 T1 attribution failure</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X25">Block-specialist reliability prompts <small>(X25)</small></a> — X25 block-specialized severity reliability prompts</td>
-<td>X14 specialist plus fresh ERM; inherited <a class="experiment-name" href="../../experiments/index.html#D12">T1 severity-adaptive reliability prompts <small>(D12)</small></a> mechanism disclosed;
+<td><span class="experiment-name">Block-specialist reliability prompts <small>(X25)</small></span> — X25 block-specialized severity reliability prompts</td>
+<td>X14 specialist plus fresh ERM; inherited <span class="experiment-name">T1 severity-adaptive reliability prompts <small>(D12)</small></span> mechanism disclosed;
 no; closest-control gate fails; +.010081 vs ERM but only +.001282 vs
 X14; reject; smoke host-OOM; formal cancelled after T1 failure</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X26">Cosine-scheduled impact consistency <small>(X26)</small></a> — X26 cosine-anchored impact consistency</td>
+<td><span class="experiment-name">Cosine-scheduled impact consistency <small>(X26)</small></span> — X26 cosine-anchored impact consistency</td>
 <td>cosine FireDrop global-consistency control; X22 cosine ERM adoption;
 no; frozen closest-control screen fails; +.001555 vs global, +.004877 vs
 X22; reject; +.003225 vs global, +.002167 vs X22; reject</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X27">Forecast-guided block selection <small>(X27)</small></a> — X27 forecast-guided hard BlockDrop</td>
+<td><span class="experiment-name">Forecast-guided block selection <small>(X27)</small></span> — X27 forecast-guided hard BlockDrop</td>
 <td>cosine random-BlockDrop specialist; X22 cosine ERM adoption; no;
 closest-control screen fails; +.000465 vs random, +.007683 vs X22;
 reject; cancelled before start after T1 attribution failure</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X29">Valid-context memory attention <small>(X29)</small></a> — X29 valid-context memory attention</td>
+<td><span class="experiment-name">Valid-context memory attention <small>(X29)</small></span> — X29 valid-context memory attention</td>
 <td>cosine rectangular BlockDrop specialist; X22 cosine ERM adoption;
 no; T5 attention interference; +.000661 vs specialist, +.007878 vs X22;
 reject; -.007990 vs specialist, -.000656 vs X22; reject</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X1+X3">Context-and-transition composition <small>(X1+X3)</small></a> — X1+X3 composition</td>
+<td><span class="experiment-name">Context-and-transition composition <small>(X1+X3)</small></span> — X1+X3 composition</td>
 <td>fresh continuation / component ablations; no; interaction only;
 +.008200, below X3; reject; cancelled</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X2-block-signal">Original feature-distillation block analysis <small>(X2-block-signal)</small></a> — Feature KD, original variant</td>
+<td><span class="experiment-name">Original feature-distillation block analysis <small>(X2-block-signal)</small></span> — Feature KD, original variant</td>
 <td>T1 block AP +0.003103 against fresh continuation although primary
 -0.005219; repaired distill_block primary -0.013556/block
 -0.001936.</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X8+X17">Impact-and-block specialist route <small>(X8+X17)</small></a> — X8+X17 complete observable route</td>
+<td><span class="experiment-name">Impact-and-block specialist route <small>(X8+X17)</small></span> — X8+X17 complete observable route</td>
 <td>Three seeds; all six history/year cells positive; final primary mean
 +0.013853 vs fresh ERM.</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
@@ -213,7 +213,7 @@ as limited total-effect signal.</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#B2">Corrected T1 FireDrop-trained baseline <small>(B2)</small></a> — FireDrop observable <a class="experiment-name" href="../../experiments/index.html#B0">Corrected T1 clean-input baseline <small>(B0)</small></a>/B2 route</td>
+<td><span class="experiment-name">Corrected T1 FireDrop-trained baseline <small>(B2)</small></span> — FireDrop observable <span class="experiment-name">Corrected T1 clean-input baseline <small>(B0)</small></span>/B2 route</td>
 <td>M01 gains +.222704/+.124143/+.103482 vs B0.</td>
 <td>docs/experiments/quantitative_reliability_ledger.md</td>
 </tr>
@@ -223,13 +223,13 @@ as limited total-effect signal.</td>
 <td>docs/experiments/quantitative_reliability_ledger.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#D1-KL">T1 global predictive consistency <small>(D1-KL)</small></a> — Predictive consistency</td>
-<td>Primary gains +.009203/+.013146/+.004561 vs <a class="experiment-name" href="../../experiments/index.html#D1-ERM">Corrected T1 consistency control <small>(D1-ERM)</small></a>.</td>
+<td><span class="experiment-name">T1 global predictive consistency <small>(D1-KL)</small></span> — Predictive consistency</td>
+<td>Primary gains +.009203/+.013146/+.004561 vs <span class="experiment-name">Corrected T1 consistency control <small>(D1-ERM)</small></span>.</td>
 <td>docs/experiments/quantitative_reliability_ledger.md</td>
 </tr>
 <tr class="even">
 <td>D12 — Severity-adaptive reliability prompts</td>
-<td>Block mean +.006875/+.008763/+.001654 vs <a class="experiment-name" href="../../experiments/index.html#D2-STD">Standard reliability control <small>(D2-STD)</small></a>; primary
+<td>Block mean +.006875/+.008763/+.001654 vs <span class="experiment-name">Standard reliability control <small>(D2-STD)</small></span>; primary
 +.028574/+.019252/+.014271 vs D1-ERM.</td>
 <td>docs/experiments/quantitative_reliability_ledger.md</td>
 </tr>
@@ -239,7 +239,7 @@ as limited total-effect signal.</td>
 <section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 10</p><h2
 id="corrected-archived-d-series-strict-rejection-does-not-erase-gains">Corrected
 archived D-series: strict rejection does not erase gains</h2>
-<p><a class="experiment-name" href="../../experiments/index.html#D4">Input reliability token <small>(D4)</small></a>–<a class="experiment-name" href="../../experiments/index.html#D8">Factorized reliability adapter <small>(D8)</small></a>, <a class="experiment-name" href="../../experiments/index.html#D10">Reliability prompt pyramid <small>(D10)</small></a>–<a class="experiment-name" href="../../experiments/index.html#D11">Complete-variant reliability prompt pyramid <small>(D11)</small></a> and <a class="experiment-name" href="../../experiments/index.html#D13">T5 severity-adaptive reliability prompts <small>(D13)</small></a> are retained as limited positive signals.
+<p><span class="experiment-name">Input reliability token <small>(D4)</small></span>–<span class="experiment-name">Factorized reliability adapter <small>(D8)</small></span>, <span class="experiment-name">Reliability prompt pyramid <small>(D10)</small></span>–<span class="experiment-name">Complete-variant reliability prompt pyramid <small>(D11)</small></span> and <span class="experiment-name">T5 severity-adaptive reliability prompts <small>(D13)</small></span> are retained as limited positive signals.
 Their standalone historical interfaces were removed during cleanup;
 current D12/X implementations are not exact substitutes for every old
 recipe. Source recovery is from <code>4b843ad</code>, preserving the old
@@ -254,20 +254,20 @@ dependency chain in a namespace.</p>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#natural-viirs-screen">Natural VIIRS observation screen <small>(natural-viirs-screen)</small></a> — natural VIIRS screen</td>
+<td><span class="experiment-name">Natural VIIRS observation screen <small>(natural-viirs-screen)</small></span> — natural VIIRS screen</td>
 <td>attention AP +0.000287, with worse F1/Brier/loss; no
 forecasting-method gain</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#target-qa-censoring">Target-observation quality censoring <small>(target-qa-censoring)</small></a> — target-QA censoring</td>
-<td><a class="experiment-name" href="../../experiments/index.html#P00">Legacy FireDrop training <small>(P00)</small></a> AP 0.382293 → 0.398789; 12.54% of all pixels (12.60% of
+<td><span class="experiment-name">Target-observation quality censoring <small>(target-qa-censoring)</small></span> — target-QA censoring</td>
+<td><span class="experiment-name">Legacy FireDrop training <small>(P00)</small></span> AP 0.382293 → 0.398789; 12.54% of all pixels (12.60% of
 zero-label pixels) lacked reliable target-day observation; useful
 24-event case study, outside the method mainline</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#D2-RNC">Reliability-normalized convolution <small>(D2-RNC)</small></a> — D2-RNC</td>
+<td><span class="experiment-name">Reliability-normalized convolution <small>(D2-RNC)</small></span> — D2-RNC</td>
 <td>M06 +0.000764, M07 -0.007200 versus D2-STD; primary -0.003218; M00
 -0.009428; 21094930</td>
 <td>docs/experiments/rejected_experiments.md</td>
@@ -279,19 +279,19 @@ by 0.000040; 21103691</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#D5">T1 counterfactual-impact consistency <small>(D5)</small></a> — D5 CIWC</td>
+<td><span class="experiment-name">T1 counterfactual-impact consistency <small>(D5)</small></span> — D5 CIWC</td>
 <td>0.584364/0.294861/0.361160/0.179137; primary +0.015468 versus
 D1-ERM, below +0.020; 21111043</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#D6">T1 impact-and-rank consistency <small>(D6)</small></a> — D6 CIWC+rank</td>
+<td><span class="experiment-name">T1 impact-and-rank consistency <small>(D6)</small></span> — D6 CIWC+rank</td>
 <td>0.570395/0.280630/0.355114/0.179208; primary +0.008733; M00 and M06
 guardrails failed; 21112470</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#D7">Counterfactual reliability adapter <small>(D7)</small></a> — D7 reliability adapter</td>
+<td><span class="experiment-name">Counterfactual reliability adapter <small>(D7)</small></span> — D7 reliability adapter</td>
 <td>0.579199/0.281434/0.366924/0.185442; primary +0.015015, below
 +0.020; 21114921</td>
 <td>docs/experiments/rejected_experiments.md</td>
@@ -343,38 +343,38 @@ gates.</p>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#RF-BN">Batch-stat missingness normalization <small>(RF-BN)</small></a> — Missingness-conditional BN</td>
+<td><span class="experiment-name">Batch-stat missingness normalization <small>(RF-BN)</small></span> — Missingness-conditional BN</td>
 <td>Conditional minus common primary -.008551/-.013704 in T1/T5. T1 M00
 +.000452 and M01 +.000973 versus common are isolated metric positives,
 not robustness gain.</td>
 <td>docs/experiments/three_directions_results.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#RF-MIXED">Mixed-input shallow residual branch <small>(RF-MIXED)</small></a> — Equal-capacity mixed shallow branch</td>
+<td><span class="experiment-name">Mixed-input shallow residual branch <small>(RF-MIXED)</small></span> — Equal-capacity mixed shallow branch</td>
 <td>Primary +.003981/+.001866 T1/T5 vs matched control (derived from
 rounded table).</td>
 <td>docs/experiments/three_directions_results.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#RF-TYPED">Separate static-and-dynamic residual branches <small>(RF-TYPED)</small></a> — Static/dynamic shallow branches</td>
+<td><span class="experiment-name">Separate static-and-dynamic residual branches <small>(RF-TYPED)</small></span> — Static/dynamic shallow branches</td>
 <td>T1 -.008309 vs mixed/-.004328 vs control; T5 +.005372 vs
 mixed/+.007238 vs control.</td>
 <td>docs/experiments/three_directions_results.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#RF-KD">Reliability-fusion same-input expert distillation <small>(RF-KD)</small></a> — Same-input routed-expert distillation</td>
+<td><span class="experiment-name">Reliability-fusion same-input expert distillation <small>(RF-KD)</small></span> — Same-input routed-expert distillation</td>
 <td>T1/T5 primary +.003262/+.005630 vs no-KD; -.003851/-.007891 vs
 teacher; M00 improves both.</td>
 <td>docs/experiments/three_directions_results.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#TD-W">Half-and-half expert weight merge <small>(TD-W)</small></a> — Fixed 0.5 weight merge</td>
+<td><span class="experiment-name">Half-and-half expert weight merge <small>(TD-W)</small></span> — Fixed 0.5 weight merge</td>
 <td>Primary -.033409/-.060303 vs recalibrated X22; T1 block +.003249 but
 M01 -.106724.</td>
 <td>docs/experiments/three-directions-results.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#TD-D">Legacy routed-expert distillation <small>(TD-D)</small></a> — Routed-expert KD student</td>
+<td><span class="experiment-name">Legacy routed-expert distillation <small>(TD-D)</small></span> — Routed-expert KD student</td>
 <td>Primary +.001570/+.005707 vs no-KD; vs route +.000710/-.005418; T1
 replacement gate passes, T5 M07 -.013862 fails.</td>
 <td>docs/experiments/three-directions-results.md</td>
@@ -394,21 +394,21 @@ screens</h2>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#ARCH-SegFormer-B2">SegFormer-B2 recipe transfer <small>(ARCH-SegFormer-B2)</small></a> — SegFormer-B2</td>
+<td><span class="experiment-name">SegFormer-B2 recipe transfer <small>(ARCH-SegFormer-B2)</small></span> — SegFormer-B2</td>
 <td>T1 cosine +.007702; T5 +.003001 vs matched ERM. Routed mixed/25%/50%
 BlockDrop T1 +.001955/-.001070/-.001525, T5 +.004720/+.005466/-.000420.
 All cross-T gates fail.</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#ARCH-SwinUnet">Swin-Unet recipe transfer <small>(ARCH-SwinUnet)</small></a> — SwinUnet</td>
+<td><span class="experiment-name">Swin-Unet recipe transfer <small>(ARCH-SwinUnet)</small></span> — SwinUnet</td>
 <td>T5 cosine +.003831; mixed/25%/50% BlockDrop
 +.006723/+.002831/+.003828 vs matched ERM. T1 not resolved in committed
 ledger; do not infer a negative.</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#ARCH-ConvLSTM">ConvLSTM recipe transfer <small>(ARCH-ConvLSTM)</small></a> — ConvLSTM</td>
+<td><span class="experiment-name">ConvLSTM recipe transfer <small>(ARCH-ConvLSTM)</small></span> — ConvLSTM</td>
 <td>Bootstrap saved, continuation replacement jobs 21362024–21362028
 submitted; committed ledger has no final screen values.</td>
 <td>docs/experiments/t1_t5_innovations.md</td>
@@ -420,7 +420,7 @@ submitted; committed ledger has no final screen values.</td>
 id="historical-signals-with-invalid-or-confounded-baseline-ancestry">Historical
 signals with invalid or confounded baseline ancestry</h2>
 <p>These observations are archived so weak or diagnostic positives are
-not lost. P00/<a class="experiment-name" href="../../experiments/index.html#P02">Legacy FireDrop-and-BlockDrop training <small>(P02)</small></a> inherited invalid pooled-year exposure; <a class="experiment-name" href="../../experiments/index.html#P09">Legacy group-robust optimization <small>(P09)</small></a> onward
+not lost. P00/<span class="experiment-name">Legacy FireDrop-and-BlockDrop training <small>(P02)</small></span> inherited invalid pooled-year exposure; <span class="experiment-name">Legacy group-robust optimization <small>(P09)</small></span> onward
 repaired continuation indexing but retained old initialization and
 comparators. Their gains cannot establish a corrected-data causal claim.
 Rebuilt B2/B3 are the corrected replacements.</p>
@@ -445,32 +445,32 @@ useful signal rebuilt correctly as B3</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#P10">Legacy matched ERM continuation <small>(P10)</small></a> — P10 matched ERM</td>
+<td><span class="experiment-name">Legacy matched ERM continuation <small>(P10)</small></span> — P10 matched ERM</td>
 <td>mean M06/M07 delta versus P00 +0.052345/+0.023389/+0.020189 in
 2021/2022/2023; motivation only; rebuilt from scratch in corrected
 baselines</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#P01">Legacy validity-channel input <small>(P01)</small></a> — P01 validity channel</td>
+<td><span class="experiment-name">Legacy validity-channel input <small>(P01)</small></span> — P01 validity channel</td>
 <td>M00/M01/M02 decreased; M07 +0.0002; no useful gain</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#P03">Legacy hard expert router <small>(P03)</small></a> — P03 hard router</td>
+<td><span class="experiment-name">Legacy hard expert router <small>(P03)</small></span> — P03 hard router</td>
 <td>M06/M07 improved in 2021 and 2023 but changed -0.0231/-0.0261 in
 2022; temporally unstable</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#P13">Legacy FireDrop specialist <small>(P13)</small></a> — P13 FireDrop expert</td>
+<td><span class="experiment-name">Legacy FireDrop specialist <small>(P13)</small></span> — P13 FireDrop expert</td>
 <td>M01 delta +0.004771/-0.002058/+0.019928 in 2021/2022/2023; mixed
 temporal result</td>
 <td>docs/experiments/rejected_experiments.md</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#P04-P07-block">Legacy residual-correction block comparison <small>(P04-P07-block)</small></a> — Residual corrections over legacy P00</td>
-<td><a class="experiment-name" href="../../experiments/index.html#P04">Legacy pointwise residual correction <small>(P04)</small></a>/<a class="experiment-name" href="../../experiments/index.html#P05">Legacy spatial residual correction <small>(P05)</small></a>/<a class="experiment-name" href="../../experiments/index.html#P06">Legacy decoder adaptation <small>(P06)</small></a>/<a class="experiment-name" href="../../experiments/index.html#P07">Legacy stochastic residual correction <small>(P07)</small></a> 2021 M06/M07 AP .332083/.139913, .327723/.138767,
+<td><span class="experiment-name">Legacy residual-correction block comparison <small>(P04-P07-block)</small></span> — Residual corrections over legacy P00</td>
+<td><span class="experiment-name">Legacy pointwise residual correction <small>(P04)</small></span>/<span class="experiment-name">Legacy spatial residual correction <small>(P05)</small></span>/<span class="experiment-name">Legacy decoder adaptation <small>(P06)</small></span>/<span class="experiment-name">Legacy stochastic residual correction <small>(P07)</small></span> 2021 M06/M07 AP .332083/.139913, .327723/.138767,
 .330240/.141035, .331009/.140771 vs P00 .317005/.129176. All improve
 this weak reference; P03 remains stronger and P07 variance ~1e-8.</td>
 <td>archive/pre-t1-cleanup-2026-09-04:docs/experiments/p00_p06_rapid_reliability.md</td>
@@ -549,19 +549,19 @@ block -.000649; ERM-positive all years; X14 2022/23 block
 2021/22/23.</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#GLOBAL-D1">Cross-history global predictive consistency <small>(GLOBAL-D1)</small></a></td>
+<td><span class="experiment-name">Cross-history global predictive consistency <small>(GLOBAL-D1)</small></span></td>
 <td>T5 three-seed primary +.011147/+.011758/+.005600 versus ERM in
 2021/22/23; T1 -.000138/-.006647/-.002129; overall +.003265.</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X8+X10">Impact-and-inpainting route <small>(X8+X10)</small></a></td>
+<td><span class="experiment-name">Impact-and-inpainting route <small>(X8+X10)</small></span></td>
 <td>Overall primary +.008279 versus fresh ERM; T1 2022 -.003212; mixed
 secondary system evidence.</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#X11-vs-ERM">Reconstruction-inpainting total-effect comparison <small>(X11-vs-ERM)</small></a></td>
+<td><span class="experiment-name">Reconstruction-inpainting total-effect comparison <small>(X11-vs-ERM)</small></span></td>
 <td>T1 seed-0 routed primary +.002519 versus fresh ERM, derived from X10
-+.007381 and <a class="experiment-name" href="../../experiments/index.html#X11">Reconstruction-supervised dynamic inpainting <small>(X11)</small></a> minus X10 -.004862. Incremental reconstruction itself
++.007381 and <span class="experiment-name">Reconstruction-supervised dynamic inpainting <small>(X11)</small></span> minus X10 -.004862. Incremental reconstruction itself
 fails.</td>
 </tr>
 </tbody>
@@ -582,14 +582,14 @@ attribution audit additions</h2>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#X16">Block-trained dynamic inpainting <small>(X16)</small></a></td>
+<td><span class="experiment-name">Block-trained dynamic inpainting <small>(X16)</small></span></td>
 <td>X14 specialist plus fresh-control total check; no; restoration loses
 to X14; -.000452 vs X14; reject; cancelled after T1 attribution failure
 T1 routed primary +.008348 vs fresh ERM; M06 +.001764 versus X14 even
 though block mean -.000678.</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#B1">Corrected T5 clean-input baseline <small>(B1)</small></a></td>
+<td><span class="experiment-name">Corrected T5 clean-input baseline <small>(B1)</small></span></td>
 <td>B1 minus B0 M00/M01/M06/M07: 2021
 +.014277/+.054310/+.005778/+.006518; 2022
 +.039479/+.041762/+.016716/+.013413; 2023
@@ -603,18 +603,18 @@ with B1 .595265/.093697/.329582/.140190, M01/block improve and M00
 regresses; not clean dominance.</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#P09-total">Legacy group-robust total-effect comparison <small>(P09-total)</small></a></td>
+<td><span class="experiment-name">Legacy group-robust total-effect comparison <small>(P09-total)</small></span></td>
 <td>Block gain vs P00 +.052243/+.018699/+.022378 in 2021/22/23; matched
 P10 is +.000102/+.004690/-.002189 relative to P09, so no stable GroupDRO
 attribution.</td>
 </tr>
 <tr class="odd">
-<td><a class="experiment-name" href="../../experiments/index.html#FOUNDATION-RULES">No-fire and persistence references <small>(FOUNDATION-RULES)</small></a></td>
+<td><span class="experiment-name">No-fire and persistence references <small>(FOUNDATION-RULES)</small></span></td>
 <td>Test event-macro AP .000531 and .070538; deterministic reference,
 not learned contribution.</td>
 </tr>
 <tr class="even">
-<td><a class="experiment-name" href="../../experiments/index.html#FOUNDATION-OFFICIAL">Official WSTS reproduction reference <small>(FOUNDATION-OFFICIAL)</small></a></td>
+<td><span class="experiment-name">Official WSTS reproduction reference <small>(FOUNDATION-OFFICIAL)</small></span></td>
 <td>Fold-2 trained AP .554664; twelve released folds .452764 ± .088217;
 original WSTS contract.</td>
 </tr>
@@ -924,5 +924,5 @@ findings; final values explicitly identified</td>
 </tr>
 </tbody>
 </table>
-<div class="reference-pager"><a href="#chapter-9">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/research/positive-signals.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+<div class="reference-pager"><a href="#chapter-9">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/positive-signals.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

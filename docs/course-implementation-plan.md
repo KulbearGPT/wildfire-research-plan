@@ -162,3 +162,30 @@ checker; tracked whitespace checks pass. All ten imported PNG checksums match
 the individually inspected exports, and maintained Python files parse. Images
 were inspected directly; rendered desktop/mobile browser layouts remain untested.
 The source preparation commit is local; final page/asset changes are not pushed.
+
+## Linear navigation and interactive concepts
+
+Requested: reduce competing links, keep a reliable return to the originating
+lesson step, and add more visual interaction without new compute. Implemented
+per-step reading disclosures, collapsed lesson/directory navigation, text-only
+experiment-name definitions and an inherited, validated lesson-return URL.
+Supporting pages carry the route even when storage is blocked or a new tab is
+opened. Raw documents and external sources open separately.
+
+Added four in-place real-image explorers (two records × five views, guided
+questions, revealable explanations and 1–4× magnification), a live comparison
+contract builder in the schedule lesson, and specialist selection/cost visuals.
+Existing quizzes and demos remain. No new images, data processing or jobs.
+
+229 V8 DOM-harness assertions passed for lesson/hash state, exact and nested
+return paths, invalid-route rejection, blocked storage, all image/view choices,
+zoom, all eight contract combinations, specialist routes/costs and print restore.
+The URL API was represented by a minimal test stand-in; this is not a rendered
+browser test. Final structural checks are recorded after rebuilding.
+
+Final rebuild: 144 pages and 8,095 local links/assets pass; whitespace checks pass.
+Exposed HTML links within lesson steps, excluding the main next buttons, fell
+from 63 to 9; supporting targets remain available in disclosures.
+Real image legends and scaling caveats remain explicit. Browser rendering and
+actual keyboard traversal were not available on this host. No commit or push
+was performed for this follow-up.

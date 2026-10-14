@@ -5,6 +5,8 @@ from html import escape
 import json
 import re
 from course_shell import ROOT, Sections, lessons, shell, migrate_links
+from course_flow import lesson_readings
+from course_visuals import explorer, contract_lab, route_lab
 from importlib.util import spec_from_file_location, module_from_spec
 
 
@@ -17,11 +19,23 @@ def main():
         sections = Sections(text, lambda a: 'step-panel' in a.get('class', '').split()).items
         if not sections:
             raise ValueError(f'No steps in {path}')
-        nav = '<nav class="step-nav" aria-label="Lesson steps">' + ''.join(
+        nav = '<details class="lesson-contents"><summary id="section-label">Contents · choose a step</summary><nav class="step-nav" aria-label="Lesson steps">' + ''.join(
             f'<a href="#{a["id"]}">{i} · {escape(a["data-title"])}</a>'
-            for i, (a, _, _, _) in enumerate(sections, 1)) + '</nav>'
+            for i, (a, _, _, _) in enumerate(sections, 1)) + '</nav></details>'
         content = []
         for i, (attrs, body, _, _) in enumerate(sections):
+            # Replace the static lesson figure with an in-place guided explorer.
+            views = {'forecast':'timeline','prediction':'channels','evaluation':'persistence','missingness':'missingness'}
+            if slug in views and '<!-- real-data-start -->' in body:
+                body = re.sub(r'<!-- real-data-start -->.*?<!-- real-data-end -->',
+                              lambda _: explorer(slug, views[slug]), body, flags=re.S)
+            # The explorer already provides the binary-mask view.
+            body = re.sub(r'<!-- real-mask-start -->.*?<!-- real-mask-end -->', '', body, flags=re.S)
+            if (slug, attrs['id']) == ('schedule','step3'):
+                body = body[:-len('</section>')] + contract_lab() + '</section>'
+            if (slug, attrs['id']) == ('specialists','step2'):
+                body = body[:-len('</section>')] + route_lab() + '</section>'
+            body = lesson_readings(body, slug, attrs['id'])
             prev = ('../../index.html#course', '← Course directory') if i == 0 else (f'#{sections[i-1][0]["id"]}', '← Previous step')
             if i + 1 < len(sections):
                 next_link = (f'#{sections[i+1][0]["id"]}', 'Next step →')
@@ -38,7 +52,7 @@ def main():
             pager = f'<div class="pager"><a href="{prev[0]}">{escape(prev[1])}</a><a class="button" href="{next_link[0]}">{escape(next_link[1])}</a></div>'
             content.append(body[:-len('</section>')] + ending + pager + '</section>')
         pre = 'Start here with basic Python and CNN concepts.' if lesson['number'] == 1 else f'Before this lesson: <a href="../{course[lesson["number"]-2]["slug"]}/index.html">{escape(course[lesson["number"]-2]["short"])}</a>.'
-        intro = f'''<header class="lesson-header"><p class="eyebrow">Lesson {lesson['number']:02} · Learn by doing</p><h1>{escape(lesson['title'])}</h1><p class="lead">{escape(lesson['goal'])}</p><div class="meta"><span>{escape(lesson['time'])}</span><span>{len(sections)} steps</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>{pre}</p><p><strong>Your deliverable:</strong> {escape(lesson['deliverable'])}</p><p>Browser activities use teaching examples. Practical work uses the linked official or project runner.</p></details></header>'''
+        intro = f'''<header class="lesson-header"><p class="eyebrow">Lesson {lesson['number']:02} · Learn by doing</p><h1>{escape(lesson['title'])}</h1><p class="lead">{escape(lesson['goal'])}</p><div class="meta"><span>{escape(lesson['time'])}</span><span>{len(sections)} steps</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>{pre}</p><p><strong>Your deliverable:</strong> {escape(lesson['deliverable'])}</p><p>Follow the next-step button. Extra reading is grouped at the end of each step; practical instructions remain available there. Browser activities use teaching examples and labelled real exports.</p></details></header>'''
         output = ROOT / f'lessons/{slug}/index.html'
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(migrate_links(shell(lesson['title'], '\n'.join(content), prefix='../../', page=slug, current=slug,

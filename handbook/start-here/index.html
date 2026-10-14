@@ -2,27 +2,27 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Start here: a guide for new
 students · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
 <body data-page="guide-START_HERE" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
-<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Start here: a guide for new
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Start here: a guide for new
 students</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 1. Understand the research
 question</a><a href="#chapter-3">3 · 2. Choose your first
 experiment</a><a href="#chapter-4">4 · 3. Prepare before running
 commands</a><a href="#chapter-5">5 · 4. What counts as
 completing onboarding?</a><a href="#chapter-6">6 · 5. Move from reproduction
 to research</a><a href="#chapter-7">7 · 6. Where to find help</a></nav></details>
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 7</p><h2>Before you begin</h2><span id="start-here-a-guide-for-new-students"></span>
 <p>Start with the <a href="../../index.html#course">central eight-lesson
 course directory</a>. After Fold 2 and the project-protocol transition,
 work through the <a href="../../lessons/erm/index.html">interactive ERM
 lesson</a>.</p>
-<p><strong>The active research route is <a class="experiment-name" href="../../experiments/index.html#X22+X17">Condition-specific specialist route <small>(X22+X17)</small></a> and its necessary
+<p><strong>The active research route is <span class="experiment-name">Condition-specific specialist route <small>(X22+X17)</small></span> and its necessary
 controls.</strong> Other methods remain historical explorations or
 teaching references; see <a href="../../docs/CODE_LIFECYCLE.md">code
 lifecycle</a>. The official single-fold tutorial remains the first
@@ -75,7 +75,7 @@ point)</td>
 data, pass the smoke check, then train and evaluate Fold 2</td>
 </tr>
 <tr class="even">
-<td>You know the workflow and want the project's corrected <a class="experiment-name" href="../../experiments/index.html#B0">Corrected T1 clean-input baseline <small>(B0)</small></a></td>
+<td>You know the workflow and want the project's corrected <span class="experiment-name">Corrected T1 clean-input baseline <small>(B0)</small></span></td>
 <td><a href="../project-b0-slurm/index.html">Project B0
 tutorial</a></td>
 <td>Follow the B0 route using the fixed chronological split and seed 0;
@@ -105,7 +105,7 @@ first exercise.</p>
 href="../matched-erm-experiment-design/index.html">Designing your first
 fair comparison</a>. The lesson explains how to move to the project
 protocol and establish a matched ERM continuation control before trying
-<a class="experiment-name" href="../../experiments/index.html#X22">Cosine-schedule continuation <small>(X22)</small></a> and <a class="experiment-name" href="../../experiments/index.html#X14">Mixed-severity block specialist <small>(X14)</small></a>.</p>
+<span class="experiment-name">Cosine-schedule continuation <small>(X22)</small></span> and <span class="experiment-name">Mixed-severity block specialist <small>(X14)</small></span>.</p>
 <div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
 <section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 7</p><h2 id="3-prepare-before-running-commands">3. Prepare before running
 commands</h2>
@@ -173,7 +173,7 @@ scenario. <strong>Inclusion is not confirmation of a
 contribution.</strong> An unrun experiment or invalid comparison is not
 evidence that a method fails.</p>
 <p>Follow the selected X22+X17 route: reproduce X22 against fresh ERM,
-then inspect the fixed-severity <a class="experiment-name" href="../../experiments/index.html#X17">Fixed-severity block specialists <small>(X17)</small></a> experts and mixed-severity X14
+then inspect the fixed-severity <span class="experiment-name">Fixed-severity block specialists <small>(X17)</small></span> experts and mixed-severity X14
 control. See <a href="../../docs/CODE_LIFECYCLE.md">code lifecycle</a>
 and the <a href="../method-recipes/index.html">method recipes</a>. Other
 directions retain their historical implementations; reopening one
@@ -233,5 +233,5 @@ audit</a></td>
 job ID, exit state and first error in the log. Preserve failed-run
 artifacts instead of overwriting them. Do not rerun a model on a login
 node to debug it.</p>
-<div class="reference-pager"><a href="#chapter-6">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/START_HERE.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+<div class="reference-pager"><a href="#chapter-6">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/START_HERE.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

@@ -118,3 +118,24 @@ Its manifest explicitly records the job failure at the third event and unavailab
 array-level metadata. `recover-reviewed-export.py` preserves this exceptional
 provenance; do not use it to invent metadata for a new run. See the implementation
 record for the bounds and actual checks.
+
+## Linear lessons and interactive examples
+
+`course_flow.py` groups exposed lesson reading links into a per-step disclosure;
+links already inside disclosures remain there. It preserves instructional prose
+and original targets. Lesson and course contents are collapsed by default during
+a lesson, and experiment names are text rather than automatic navigation links.
+
+`assets/course-route.js` adds a validated `via=lesson.stepN` query to supporting
+HTML links. Every supporting page provides an exact return route and propagates
+it into deeper reading. It uses no storage and preserves destination fragments.
+Opening another main lesson intentionally establishes that lesson as the new
+origin. With JavaScript disabled, use browser Back; all content remains readable.
+Images, raw documents and external sources open separately so the course remains.
+
+`course_visuals.py` emits real-export explorers, a schedule comparison design
+exercise and a specialist route/cost display. `assets/visual-lab.js` enhances
+them in place; static initial views and explanations remain readable without JS.
+The explorers reuse existing PNGs without claiming new inference or recoverable
+pixel values. Design feedback checks only the named choices, not full provenance.
+Costs count continuation updates, not GPU-hours or a full confirmation campaign.

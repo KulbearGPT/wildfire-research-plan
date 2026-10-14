@@ -2,17 +2,17 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17): active method
 recipe · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
 <body data-page="guide-method-recipes" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html" aria-current="page">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
-<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17): active method
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17): active method
 recipe</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 1. Check the intended command</a><a href="#chapter-3">3 · 2. Train one matched set</a><a href="#chapter-4">4 · 3. Evaluate the same
 checkpoints</a><a href="#chapter-5">5 · 4. Compose and interpret</a></nav></details>
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 5</p><h2>Before you begin</h2><span id="x22--x17-active-method-recipe"></span>
 <p>Only this route and its necessary controls are active. The <a
 href="../../docs/archive/method-recipes.md">archived recipe
@@ -33,7 +33,7 @@ T1/T5, <code>control</code>, <code>cosine_erm</code>, and
 <code>block_specialist</code>. It fixes 3000 optimizer steps and
 physical batch 64, allows the recorded seeds 0/1/2, and rejects archived
 methods and architecture overrides. It delegates training unchanged to
-the shared runner. <a class="experiment-name" href="../../experiments/index.html#B3">T1 missingness-trained foundation <small>(B3)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B5">T5 missingness-trained foundation <small>(B5)</small></a> initialization comes from the configured site
+the shared runner. <span class="experiment-name">T1 missingness-trained foundation <small>(B3)</small></span>/<span class="experiment-name">T5 missingness-trained foundation <small>(B5)</small></span> initialization comes from the configured site
 paths. Do not pass the old runner's <code>--steps</code>,
 <code>--batch-size</code>, <code>--architecture</code>, or
 <code>--bootstrap</code> switches.</p>
@@ -78,9 +78,9 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.cross_history.mainline <span class="dt">\</span></span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">--history</span> <span class="st">&quot;</span><span class="va">$history</span><span class="st">&quot;</span> <span class="at">--seed</span> <span class="st">&quot;</span><span class="va">$seed</span><span class="st">&quot;</span> <span class="at">--method</span> block_specialist <span class="at">--block-fraction</span> 0.5 <span class="dt">\</span></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$run_group</span><span class="st">/severe&quot;</span></span></code></pre></details></div>
-<p>The mixed expert is <a class="experiment-name" href="../../experiments/index.html#X14">Mixed-severity block specialist <small>(X14)</small></a>'s attribution control. Fixed mild/severe
-experts are <a class="experiment-name" href="../../experiments/index.html#X17">Fixed-severity block specialists <small>(X17)</small></a>. Fresh <code>control</code> supplies <a class="experiment-name" href="../../experiments/index.html#M00">Complete-input scenario <small>(M00)</small></a>, <a class="experiment-name" href="../../experiments/index.html#X22">Cosine-schedule continuation <small>(X22)</small></a> supplies
-<a class="experiment-name" href="../../experiments/index.html#M01">Fire-history-missing scenario <small>(M01)</small></a>, mild supplies <a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a>, severe supplies <a class="experiment-name" href="../../experiments/index.html#M07">Half-block-missing scenario <small>(M07)</small></a> in the final route. Frozen
+<p>The mixed expert is <span class="experiment-name">Mixed-severity block specialist <small>(X14)</small></span>'s attribution control. Fixed mild/severe
+experts are <span class="experiment-name">Fixed-severity block specialists <small>(X17)</small></span>. Fresh <code>control</code> supplies <span class="experiment-name">Complete-input scenario <small>(M00)</small></span>, <span class="experiment-name">Cosine-schedule continuation <small>(X22)</small></span> supplies
+<span class="experiment-name">Fire-history-missing scenario <small>(M01)</small></span>, mild supplies <span class="experiment-name">Quarter-block-missing scenario <small>(M06)</small></span>, severe supplies <span class="experiment-name">Half-block-missing scenario <small>(M07)</small></span> in the final route. Frozen
 B3/B5 are separate references, not fresh controls.</p>
 <p>Check each job's exit status and actual
 <code>checkpoint.pt</code>/<code>summary.json</code> before submitting
@@ -149,5 +149,5 @@ system improves over ERM. See <a
 href="../../docs/CODE_LIFECYCLE.md">scope and evidence limits</a>.
 Current selection does not promote X17 to an independently confirmed
 mechanism or reactivate any archive.</p>
-<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/research/method-recipes.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/method-recipes.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

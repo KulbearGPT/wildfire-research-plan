@@ -54,20 +54,22 @@ def directory(prefix, current=''):
 
 def shell(title, content, *, prefix, page, current='', step_links='', source='', intro=''):
     progress_html = '<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div>' if step_links else ''
+    in_lesson = page in {item['slug'] for item in lessons()}
+    directory_open = '' if in_lesson else ' open'
     src = f'<a href="{escape(source, quote=True)}">Maintained source</a> · ' if source else ''
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{escape(title)} · Wildfire Lab</title><link rel="stylesheet" href="{prefix}assets/learning.css">
-<script src="{prefix}assets/learning.js" defer></script><script src="{prefix}assets/lesson-demos.js" defer></script></head>
+<script src="{prefix}assets/course-route.js" defer></script><script src="{prefix}assets/visual-lab.js" defer></script><script src="{prefix}assets/learning.js" defer></script><script src="{prefix}assets/lesson-demos.js" defer></script></head>
 <body data-page="{page}" data-root="{prefix}"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="{prefix}index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="{prefix}index.html#course">Course</a><a href="{prefix}index.html#handbook">Practical handbook</a><a href="{prefix}index.html#library">Reference library</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary>{directory(prefix,current)}
+<nav aria-label="Main navigation"><a href="{prefix}index.html#course">Course directory</a></nav></header>
+<div class="layout"><aside class="sidebar"><details{directory_open} data-directory><summary>The learning path</summary>{directory(prefix,current)}
 <p class="small"><a href="{prefix}handbook/student-start/index.html">Practical readiness</a><br><a href="{prefix}handbook/student-real-data/index.html">Real-data examples</a><br><a href="{prefix}handbook/student-report/index.html">Output → report</a><br><a href="{prefix}handbook/student-help/index.html">I am stuck</a><br><a href="{prefix}experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-{progress_html}</details></aside>
-<main class="content" id="main">{intro}{step_links}
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
-{content}<footer class="footer">{src}<a href="{prefix}index.html#course">Course directory</a> · <a href="{prefix}experiments/index.html">Experiment names</a><br>
+</details>{progress_html}</aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="{prefix}index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside>{intro}{step_links}
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
+{content}<footer class="footer"><details><summary>Sources and course resources</summary>{src}<a href="{prefix}index.html#course">Course directory</a> · <a href="{prefix}experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>
 '''
 
@@ -99,7 +101,7 @@ def descriptive_names(fragment, prefix):
                 if ident in self.seen:
                     return ident
                 self.seen.add(ident)
-                return f'<a class="experiment-name" href="{prefix}experiments/index.html#{escape(ident,quote=True)}">{escape(mapping[ident])} <small>({escape(ident)})</small></a>'
+                return f'<span class="experiment-name">{escape(mapping[ident])} <small>({escape(ident)})</small></span>'
             self.parts.append(text if self.stack else pattern.sub(replace,text))
         def handle_entityref(self, name): self.parts.append(f'&{name};')
         def handle_charref(self, name): self.parts.append(f'&#{name};')

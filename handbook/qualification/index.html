@@ -2,18 +2,18 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Delivery qualification
 record · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
 <body data-page="guide-qualification" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
-<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
-<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Delivery qualification
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Delivery qualification
 record</h1><p class="lead">Historical evidence and context. These records support interpretation; they are not a required sequence of new experiments.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · Verified environment and
 CPU evidence</a><a href="#chapter-3">3 · GPU verification boundaries</a><a href="#chapter-4">4 · Subsequent actual
 verification</a></nav></details>
-<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 4</p><h2>Before you begin</h2><span id="delivery-qualification-record"></span>
 <p>The verification covers a fresh virtual environment, an independent
 checkout of the official source, per-job Git archives, and relocated
@@ -66,14 +66,14 @@ pass; old environment</td>
 <td>22101774</td>
 <td>454f192</td>
 <td>c14</td>
-<td>Data moved to a separate directory; <a class="experiment-name" href="../../experiments/index.html#B3">T1 missingness-trained foundation <small>(B3)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B5">T5 missingness-trained foundation <small>(B5)</small></a> and both sets of seed 0
+<td>Data moved to a separate directory; <span class="experiment-name">T1 missingness-trained foundation <small>(B3)</small></span>/<span class="experiment-name">T5 missingness-trained foundation <small>(B5)</small></span> and both sets of seed 0
 teacher weights relocated; teacher digests checked file by file</td>
 </tr>
 <tr class="odd">
 <td>22102009</td>
 <td>7416004</td>
 <td>c350</td>
-<td><a class="experiment-name" href="../../experiments/index.html#P00">Legacy FireDrop training <small>(P00)</small></a>, attention, and 48 QA maps relocated, with digests recorded</td>
+<td><span class="experiment-name">Legacy FireDrop training <small>(P00)</small></span>, attention, and 48 QA maps relocated, with digests recorded</td>
 </tr>
 <tr class="even">
 <td>22101441</td>
@@ -205,7 +205,7 @@ records</a>:</p>
 <td>22102396</td>
 <td>g36</td>
 <td>B5: actual Lightning 2 steps, best-weight selection, strict reload,
-2-sample evaluation each for <a class="experiment-name" href="../../experiments/index.html#M00">Complete-input scenario <small>(M00)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a></td>
+2-sample evaluation each for <span class="experiment-name">Complete-input scenario <small>(M00)</small></span>/<span class="experiment-name">Quarter-block-missing scenario <small>(M06)</small></span></td>
 </tr>
 <tr class="odd">
 <td>22102397</td>
@@ -245,7 +245,7 @@ verification</h2>
 href="../../docs/research/environment/gpu-qualification-second-batch.json">per-case
 report</a>. These include short training and reloading of the remaining
 positive-list cross-history methods at T1/T5, the RF and routed T5
-branches, and <a class="experiment-name" href="../../experiments/index.html#B1">Corrected T5 clean-input baseline <small>(B1)</small></a>, token, and CRA. Architectures, the remaining D-series,
+branches, and <span class="experiment-name">Corrected T5 clean-input baseline <small>(B1)</small></span>, token, and CRA. Architectures, the remaining D-series,
 and attention training were verified in the final batch.</p>
 <p>CPU job <code>22102402</code> (source <code>19132b0</code>,
 <code>c333</code>) completed the full 999-event audit. The <a
@@ -261,7 +261,7 @@ history windows.</p>
 <p>The next 10 GPU cases for historical entrypoints also passed; see the
 <a
 href="../../docs/research/environment/gpu-qualification-legacy-batch.json">per-case
-report</a>: <a class="experiment-name" href="../../experiments/index.html#D1-KL">T1 global predictive consistency <small>(D1-KL)</small></a> / paired0, original D12-SARP, <a class="experiment-name" href="../../experiments/index.html#B2">Corrected T1 FireDrop-trained baseline <small>(B2)</small></a>, B3, legacy-P00,
+report</a>: <span class="experiment-name">T1 global predictive consistency <small>(D1-KL)</small></span> / paired0, original D12-SARP, <span class="experiment-name">Corrected T1 FireDrop-trained baseline <small>(B2)</small></span>, B3, legacy-P00,
 CIWC, rank, FFCA, and prompt-pyramid. B2/B3/P00 use actual Lightning 2
 steps; the others use 1 step. All reports retain the qualification
 marker. CPU job <code>22103003</code> (<code>c86</code>) also ran the
@@ -284,5 +284,5 @@ short-budget validation boundaries, finding no new critical gaps.
 Retained negative results, invalid comparisons, and unrun states are
 archived according to the original evidence; no additional efficacy
 experiments were performed for them.</p>
-<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/research/qualification.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/qualification.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>
