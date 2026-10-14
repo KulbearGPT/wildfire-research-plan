@@ -24,24 +24,13 @@
     document.querySelectorAll('[data-delta]').forEach(node => { node.textContent = signed(delta[node.dataset.delta]); });
     document.getElementById('score-interpretation').textContent = item.text;
   });
-  const repairText = {
-    budget: ['Correct. Match 3,000 updates and starting weights; the intended difference is the schedule.', 'The training budgets differ. A higher score or AP per update cannot isolate the schedule.'],
-    start: ['Correct. Both branches load the same B3 bytes independently.', 'A seed or filename cannot undo the additional training in ERM’s final checkpoint.'],
-    checkpoint: ['Correct. Use the predeclared final-step selection rule for both continuations.', 'Selection changes the comparison. Do not choose a favorable rule or use test scores to select checkpoints.']
-  };
-  document.querySelectorAll('[data-repair]').forEach(select => {
-    select.addEventListener('change', () => {
-      document.getElementById(`feedback-${select.dataset.repair}`).textContent = select.value
-        ? repairText[select.dataset.repair][select.value === 'right' ? 0 : 1] : '';
-    });
-  });
-
-
   }
-  document.querySelectorAll('[data-quiz]').forEach(select => {
+  document.querySelectorAll('[data-quiz], [data-repair]').forEach(select => {
     select.addEventListener('change', () => {
-      const feedback = document.getElementById(`${select.id}-feedback`);
-      feedback.textContent = select.value === '' ? '' : `${select.value === select.dataset.answer ? 'Correct. ' : 'Reconsider. '}${select.dataset.explanation}`;
+      const feedbackId = select.dataset.repair ? `feedback-${select.dataset.repair}` : `${select.id}-feedback`;
+      const feedback = document.getElementById(feedbackId);
+      const option = select.selectedOptions[0];
+      feedback.textContent = select.value === '' ? '' : `${select.value === select.dataset.answer ? 'Correct. ' : 'Reconsider. '}${option.dataset.reason} Open the reasoning below to compare every option.`;
     });
   });
   const byId = id => document.getElementById(id);
