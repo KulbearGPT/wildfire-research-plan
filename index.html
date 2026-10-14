@@ -1,35 +1,305 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Learn wildfire forecasting research methods: foundations, official single-fold reproduction, and controlled-missingness experiments.">
-<title>Wildfire Forecasting · Research Methods and Practical Tutorials</title>
-<link rel="stylesheet" href="assets/course.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="An eight-lesson path from wildfire forecasting foundations to a fair experiment, with an interactive ERM control lesson.">
+<title>Wildfire Lab · Learn to build a trustworthy experiment</title>
+<link rel="stylesheet" href="assets/learning.css">
+<script src="assets/learning.js" defer>
+</script>
 </head>
-<body>
-<nav aria-label="Main navigation"><a href="./" aria-current="page">Course home</a><a href="related-work/">Research foundations</a><a href="baseline-reproduction/">Baseline reproduction</a><a href="guides/docs/START_HERE.html">Start here</a></nav>
-<main>
-<p class="eyebrow">Wildfire forecasting · Research methods</p>
-<h1>From your first baseline<br>to a trustworthy experiment.</h1>
-<p class="lead">A learning path for new research students: understand the task and data, complete one official fold, then learn to compare methods fairly and interpret positive and negative results. The active research route is X22+X17 with matched controls in the existing T1/T5 settings. Distillation, architecture transfer and other explorations remain archived teaching material.</p>
-<a class="button" href="guides/docs/START_HERE.html">Start learning</a><a href="guides/docs/tutorials/res18-baseline-slurm.html">Go to the Slurm practical →</a>
-<p><strong>Current code scope:</strong> <a href="docs/CODE_LIFECYCLE.md">X22+X17 mainline, controls and implementation archive</a>.</p>
-<section aria-labelledby="route"><h2 id="route">Your learning path</h2><div class="cards">
-<article class="card"><span class="step">01 · Define the question</span><h3><a href="related-work/">Research foundations and related work</a></h3><p>Understand satellite observations, active-fire labels, datasets and existing methods. Establish which questions the evidence can answer before proposing a model.</p><p>Milestone: explain the inputs, prediction target and limits of the task.</p></article>
-<article class="card"><span class="step">02 · Learn to reproduce</span><h3><a href="baseline-reproduction/">From a paper claim to a verified baseline</a></h3><p>Learn to freeze the protocol, audit data and folds, calibrate a runtime budget, and distinguish your training results from released-checkpoint evaluations.</p><p>Milestone: explain how a result was produced and verified.</p></article>
-<article class="card"><span class="step">03 · Run an experiment</span><h3><a href="guides/docs/tutorials/res18-baseline-slurm.html">Official Res18 single-fold practical</a></h3><p>Start with official code and public data. Follow the Slurm commands to prepare the environment, convert data, pass a smoke check, and train and evaluate Fold 2.</p><p>Complete one fold first. All twelve folds are optional.</p></article>
-<article class="card"><span class="step">04 · Join the research</span><h3><a href="guides/docs/research/reproduce.html">Reproduce a method and its control</a></h3><p>Set up a portable research environment, understand the corrected baselines, then follow X22+X17 and its matched controls.</p><p>Milestone: reproduce a fair comparison and explain your conclusion.</p></article>
-</div></section>
-<section><h2>Two different baseline protocols</h2><div class="table-wrap"><table><thead><tr><th>Route</th><th>Data and budget</th><th>When to use it</th></tr></thead><tbody>
-<tr><td><a href="guides/docs/tutorials/res18-baseline-slurm.html">Official Fold 2</a></td><td>Original four-year WSTS: train on 2018/2020, validate on 2019, test on 2021; 10,000 optimizer steps.</td><td>Your first practical exercise. Uses official code and public assets without this project's modules.</td></tr>
-<tr><td><a href="guides/docs/tutorials/project-b0-slurm.html">Project corrected B0</a></td><td>Eight-year dataset: train on 2016–2020, validate on 2021, test on 2022/2023; 3,000 steps.</td><td>Joining the project experiments. Includes corrected indexing and training statistics; it is not another name for an official fold.</td></tr>
-</tbody></table></div><p class="note">When splits, preprocessing or budgets differ, a score difference is not a method gain. Run downloads, installation, data processing, training and evaluation through Slurm. Use login nodes only for editing, Git, job submission and lightweight checks.</p></section>
-<section><h2>Current research and evidence</h2><div class="cards">
-<article class="card"><h3><a href="guides/docs/research/positive-signals.html">Directions with positive signals</a></h3><p>51 entries, including single-seed, single-metric or single-scenario improvements. Each retains code, result provenance and a reproduction route. Inclusion does not establish a confirmed contribution.</p></article>
-<article class="card"><h3><a href="guides/docs/research/negative-results.html">Negative and unrun experiments</a></h3><p>Preserved mechanisms, settings and results distinguish measured failures, invalid comparisons, cancellations and unrun ideas. Learn from the evidence before repeating an exploration.</p></article>
-<article class="card"><h3><a href="guides/docs/research/qualification.html">What has actually been checked</a></h3><p>Fresh-environment qualification passed 260 CPU checks, 91 short-budget GPU cases, a 999-event data audit and historical diagnostic replays.</p><p>These checks used new environments and relocated paths on the existing physical cluster. They do not reproduce every historical score at full budget.</p></article>
-</div><p><a href="guides/docs/research-roadmap.html">Research process and protocol</a> · <a href="guides/docs/research/method-recipes.html">Method recipes</a> · <a href="guides/docs/research/data-preparation.html">Data preparation</a> · <a href="guides/docs/research/teachers.html">Teachers and distillation</a> · <a href="guides/docs/research/architectures.html">Architecture experiments</a></p></section>
-<section><h2>Three rules for reading results</h2><ol><li><strong>The target is a next-day active-fire proxy.</strong> It is not a complete fire perimeter. The data audit supports controlled-missingness studies, not general claims about natural missingness or operational performance.</li><li><strong>T=1/T=5 is a cross-setting comparison.</strong> History length, architecture and features change together. Do not attribute the entire difference to more history.</li><li><strong>Historical test years have already been evaluated.</strong> Reproducing fixed results is valid; developing new methods requires an explicit confirmation plan rather than relabelling those years as unseen tests.</li></ol></section>
-<section><h2>What to submit after your first experiment</h2><p>An experiment notebook with the code commit, environment and data versions, split, seed, batch size, training budget, Slurm job ID and exit state, checkpoint and metric paths, and an explanation of differences from the reference.</p><p>Pass the smoke check before starting formal training. See <a href="guides/docs/START_HERE.html">Start here</a> for completion criteria and a problem-reporting template.</p></section>
-</main><footer>Course and project status updated 16 September 2026. Method claims follow the linked original evidence. <a href="site-content/en/docs/START_HERE.md">English source guide</a> · <a href="guides/docs/research/reproduce.html">Research handoff</a></footer>
-</body></html>
+<body data-page="home">
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+<a class="brand" href="index.html">WILDFIRE <span>/ LAB</span>
+</a>
+<nav aria-label="Main navigation">
+<a href="#course" aria-current="page">Course</a>
+<a href="#handbook">Practical handbook</a>
+<a href="#library">Reference library</a>
+</nav>
+</header>
+<div class="layout">
+<aside class="sidebar">
+<details open data-directory>
+<summary>The learning path</summary>
+<ol class="directory">
+<li>
+<a href="#lesson1">01 &nbsp; What are we predicting?</a>
+</li>
+<li>
+<a href="#lesson2">02 &nbsp; From channels to a fire map</a>
+</li>
+<li>
+<a href="#lesson3">03 &nbsp; How good is this prediction?</a>
+</li>
+<li>
+<a href="#lesson4">04 &nbsp; Your first official Fold 2</a>
+</li>
+<li>
+<a href="#lesson5">05 &nbsp; What if observations are missing?</a>
+</li>
+<li>
+<a href="#lesson6">06 &nbsp; Why do we need an ERM control?<span>Interactive pilot</span>
+</a>
+</li>
+<li>
+<a href="#lesson7">07 &nbsp; Does the schedule help?</a>
+</li>
+<li>
+<a href="#lesson8">08 &nbsp; When does specialization help?</a>
+</li>
+</ol>
+<p class="small">Read in order, or return to a lesson.<br>Lesson 6 is the first interactive pilot.</p>
+</details>
+</aside>
+<main class="content" id="main">
+<header class="hero">
+<p class="eyebrow">A practical course in research</p>
+<h1>From a fire map<br>to a fair experiment.</h1>
+<p class="lead">Eight lessons. One learning path. Understand the task, run a baseline, then learn what your results actually show.</p>
+<div class="actions">
+<a class="button" href="#lesson1">Start with lesson 1 →</a>
+<a class="button" href="lessons/erm/index.html" data-continue>Try the ERM lesson</a>
+</div>
+<div class="meta">
+<span>Before you start: basic Python + CNN concepts</span>
+<span>Browser exercises + Slurm practicals</span>
+</div>
+</header>
+<section id="course" class="section">
+<div class="section-heading">
+<h2>Your course directory</h2>
+<span class="muted">Understand → reproduce → compare</span>
+</div>
+<p>Each lesson has a task and a deliverable. The ERM pilot is ready to work through; the other entries currently lead to existing readings or practicals while their interactive versions are developed.</p>
+<article class="lesson-card" id="lesson1">
+<div class="number">01</div>
+<div>
+<span class="pill">Existing reading</span>
+<h3>What are we predicting?</h3>
+<p>One event → input days → next-day target.</p>
+<p class="deliver">
+<strong>You will produce:</strong> An annotated timeline that separates active-fire detections from burned area.</p>
+<details>
+<summary>What you will learn · Understand the task</summary>
+<p>Input dates and target day; satellite observations; active fire versus burned area.</p>
+</details>
+<div class="actions">
+<a  href="related-work/index.html#contract">Read the task definition</a>
+</div>
+</div>
+</article>
+<article class="lesson-card" id="lesson2">
+<div class="number">02</div>
+<div>
+<span class="pill">Reading available · practice planned</span>
+<h3>From channels to a fire map</h3>
+<p>Follow satellite features into a spatial prediction.</p>
+<p class="deliver">
+<strong>You will produce:</strong> An annotated input / probability / label example.</p>
+<details>
+<summary>What you will learn · Understand the model</summary>
+<p>Dynamic and static channels; tensor axes; spatial prediction; logits, probabilities and masks.</p>
+</details>
+<div class="actions">
+<a  href="related-work/index.html#baselines">Read the model overview</a>
+</div>
+</div>
+</article>
+<article class="lesson-card" id="lesson3">
+<div class="number">03</div>
+<div>
+<span class="pill">Reading available · practice planned</span>
+<h3>How good is this prediction?</h3>
+<p>Learn why sparse fire pixels make accuracy misleading.</p>
+<p class="deliver">
+<strong>You will produce:</strong> Explain a false alarm, a missed fire and the role of AP.</p>
+<details>
+<summary>What you will learn · Understand the evidence</summary>
+<p>Sparse positives; thresholds; precision and recall; AP; training, validation and test roles.</p>
+</details>
+<div class="actions">
+<a  href="related-work/index.html#challenges">Read the metric introduction</a>
+</div>
+</div>
+</article>
+<article class="lesson-card" id="lesson4">
+<div class="number">04</div>
+<div>
+<span class="pill">Existing practical</span>
+<h3>Your first official Fold 2</h3>
+<p>Prepare, smoke-check, train, then verify the result.</p>
+<p class="deliver">
+<strong>You will produce:</strong> One trained fold and an experiment record with traceable artifacts.</p>
+<details>
+<summary>What you will learn · Complete a reproduction</summary>
+<p>Personal environment; official data and split; smoke check; training; evaluation; completion evidence.</p>
+<p>
+<a href="baseline-reproduction/index.html">Before running: how baseline reproduction works</a>
+</p>
+</details>
+<div class="actions">
+<a  href="guides/docs/tutorials/res18-baseline-slurm.html">Open the step-by-step practical</a>
+</div>
+</div>
+</article>
+<article class="lesson-card" id="lesson5">
+<div class="number">05</div>
+<div>
+<span class="pill">Existing reading</span>
+<h3>What if observations are missing?</h3>
+<p>Distinguish an absent observation from a real zero.</p>
+<p class="deliver">
+<strong>You will produce:</strong> A four-scenario sheet and a project readiness checklist.</p>
+<details>
+<summary>What you will learn · Enter the project</summary>
+<p>M00/M01/M06/M07; controlled masks; official versus project protocol; corrected data and B3.</p>
+<p>
+<a href="guides/docs/tutorials/matched-erm-experiment-design.html#2-moving-from-fold-2-to-the-project-experiments">Bridge from official Fold 2 to the project</a> · <a href="guides/docs/research/baselines.html">Prepare B3</a>
+</p>
+</details>
+<div class="actions">
+<a  href="related-work/index.html#missingness">Read the missingness introduction</a>
+</div>
+</div>
+</article>
+<article class="lesson-card featured" id="lesson6">
+<div class="number">06</div>
+<div>
+<span class="pill live">Interactive pilot · ready</span>
+<h3>Why do we need an ERM control?</h3>
+<p>A higher score is the beginning of a question. Find the missing comparison.</p>
+<p class="deliver">
+<strong>You will produce:</strong> A matched B3 / ERM plan, a result table and a defensible conclusion.</p>
+<details>
+<summary>What you will learn · Design a fair comparison</summary>
+<p>Predict; trace the branches; understand ERM; repair a comparison; run A/B; interpret; submit.</p>
+</details>
+<div class="actions">
+<a class="button" href="lessons/erm/index.html">Start the interactive lesson →</a>
+</div>
+</div>
+</article>
+<article class="lesson-card" id="lesson7">
+<div class="number">07</div>
+<div>
+<span class="pill">Existing reading</span>
+<h3>Does the schedule help?</h3>
+<p>Compare X22 with the same-budget ERM continuation.</p>
+<p class="deliver">
+<strong>You will produce:</strong> An A/B/C comparison separating continuation from schedule effects.</p>
+<details>
+<summary>What you will learn · Attribute an improvement</summary>
+<p>Independent X22 branch; matched initialization and budget; B-to-C gain; variability and limits.</p>
+</details>
+<div class="actions">
+<a  href="guides/docs/tutorials/matched-erm-experiment-design.html#8-next-lessons-x22-first-then-x14">Read the next comparison</a>
+</div>
+</div>
+</article>
+<article class="lesson-card" id="lesson8">
+<div class="number">08</div>
+<div>
+<span class="pill">Existing reference</span>
+<h3>When does specialization help?</h3>
+<p>Move from mixed-severity training to fixed-severity experts.</p>
+<p class="deliver">
+<strong>You will produce:</strong> A controlled follow-up proposal that includes model and training costs.</p>
+<details>
+<summary>What you will learn · Advanced research</summary>
+<p>X14 mixed severity; X17 fixed severity; closest controls; condition-specific composition; claim limits.</p>
+</details>
+<div class="actions">
+<a  href="guides/docs/research/method-recipes.html">Read the active recipe</a>
+</div>
+</div>
+</article>
+</section>
+<section class="section" id="handbook">
+<p class="eyebrow">Use when you reach a practical</p>
+<h2>Practical handbook</h2>
+<div class="resource-grid">
+<article class="resource">
+<h3>First official experiment</h3>
+<p>Complete Fold 2 using official code and public assets.</p>
+<ul>
+<li>
+<a href="guides/docs/START_HERE.html">Preparation and completion checklist</a>
+</li>
+<li>
+<a href="guides/docs/tutorials/res18-baseline-slurm.html">Setup → smoke → train → evaluate</a>
+</li>
+<li>
+<a href="baseline-reproduction/index.html">Reproduction walkthrough</a>
+</li>
+</ul>
+</article>
+<article class="resource">
+<h3>Project experiments</h3>
+<p>Move to corrected project data before comparing methods.</p>
+<ul>
+<li>
+<a href="guides/docs/research/reproduce.html">Environment and site configuration</a>
+</li>
+<li>
+<a href="guides/docs/research/data-preparation.html">Data preparation</a> · <a href="guides/docs/research/baselines.html">B3/B5 foundations</a>
+</li>
+<li>
+<a href="guides/docs/research/method-recipes.html">Active continuation recipes</a>
+</li>
+<li>
+<a href="guides/docs/research/setup-recovery.html">Setup and job recovery</a>
+</li>
+<li>
+<a href="lessons/erm/report-template.md" download>ERM report template</a>
+</li>
+</ul>
+</article>
+</div>
+<p class="note">Official Fold 2 and the project protocol use different years, preprocessing and training budgets. Keep their results separate. Installation, data processing and model execution run through Slurm; queue time is separate from lesson time.</p>
+</section>
+<section class="section" id="library">
+<p class="eyebrow">Look up a detail</p>
+<h2>Reference library</h2>
+<p>You do not need to read this library before starting the course.</p>
+<div class="resource-grid">
+<article class="resource">
+<h3>Background &amp; reproduction</h3>
+<ul>
+<li>
+<a href="related-work/index.html">Research foundations and literature</a>
+</li>
+<li>
+<a href="baseline-reproduction/index.html#results">Historical released-weight results</a>
+</li>
+<li>
+<a href="guides/docs/research-roadmap.html">Historical research roadmap</a>
+</li>
+</ul>
+</article>
+<article class="resource">
+<h3>Research records</h3>
+<ul>
+<li>
+<a href="docs/CODE_LIFECYCLE.md">Active scope: X22 + X17 and controls</a>
+</li>
+<li>
+<a href="guides/docs/research/positive-signals.html">Positive signals</a> · <a href="guides/docs/research/negative-results.html">Negative, invalid and unrun records</a>
+</li>
+<li>
+<a href="guides/docs/research/qualification.html">Execution qualification</a>
+</li>
+<li>
+<a href="docs/archive/README.md">Implementation archive</a>
+</li>
+</ul>
+</article>
+</div>
+</section>
+<footer class="footer">Wildfire Lab · Course directory and ERM teaching pilot, October 2026.<br>Target: next-day active-fire proxy. Controlled missingness is an experimental setting, not proof of operational robustness.</footer>
+</main>
+</div>
+</body>
+</html>

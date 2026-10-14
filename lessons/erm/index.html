@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="An interactive lesson on matched ERM controls: separate continuation gains from method gains, plan a fair experiment, and interpret the result.">
+<title>The score improved. Did the method help? · Wildfire Lab</title>
+<link rel="stylesheet" href="../../assets/learning.css">
+<script src="../../assets/learning.js" defer>
+</script>
+</head>
+<body data-page="erm">
+<a class="skip" href="#main">Skip to lesson</a>
+<header class="topbar">
+<a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span>
+</a>
+<nav aria-label="Main navigation">
+<a href="../../index.html#course">Course</a>
+<a href="../../index.html#handbook">Practical handbook</a>
+<a href="../../index.html#library">Reference library</a>
+</nav>
+</header>
+<div class="layout">
+<aside class="sidebar">
+<details open data-directory>
+<summary>The learning path</summary>
+<ol class="directory">
+<li>
+<a href="../../index.html#lesson1">01 &nbsp; What are we predicting?</a>
+</li>
+<li>
+<a href="../../index.html#lesson2">02 &nbsp; From channels to a fire map</a>
+</li>
+<li>
+<a href="../../index.html#lesson3">03 &nbsp; Judge a prediction</a>
+</li>
+<li>
+<a href="../../index.html#lesson4">04 &nbsp; Official Fold 2</a>
+</li>
+<li>
+<a href="../../index.html#lesson5">05 &nbsp; Missing observations</a>
+</li>
+<li>
+<a href="index.html" aria-current="page">06 &nbsp; The ERM control<span>Interactive lesson</span>
+</a>
+</li>
+<li>
+<a href="../../index.html#lesson7">07 &nbsp; Does the schedule help?</a>
+</li>
+<li>
+<a href="../../index.html#lesson8">08 &nbsp; Specialization</a>
+</li>
+</ol>
+<p class="small">Concepts first. Then a real comparison.<br>You can revisit any step.</p>
+<div class="js-only">
+<p class="progress-note" id="progress-status" aria-live="polite">
+</p>
+<button class="reset" type="button" id="reset-progress">Reset lesson progress</button>
+</div>
+</details>
+</aside>
+<main class="content" id="main">
+<header class="lesson-header">
+<p class="eyebrow">Lesson 06 · Design a fair comparison</p>
+<h1>The score improved.<br>Did the method help?</h1>
+<p class="lead">Build the comparison that separates ordinary continuation from a new training choice.</p>
+<div class="meta">
+<span>45–60 min of learning</span>
+<span>7 short steps</span>
+<span>Cluster work is separate</span>
+</div>
+<details>
+<summary>Before you start</summary>
+<p>Know what a checkpoint is, what AP measures, and the four project input conditions. <a href="../../index.html#lesson5">Review lesson 5’s reading</a> if these are new.</p>
+<p>Steps 1–4 and the worked results need only your browser. The practical needs corrected project data, training-only statistics, an identified B3 checkpoint and a configured Slurm environment.</p>
+</details>
+</header>
+<nav class="step-nav" aria-label="Lesson steps">
+<a href="#step1">1 · Predict</a>
+<a href="#step2">2 · Compare</a>
+<a href="#step3">3 · Understand</a>
+<a href="#step4">4 · Repair</a>
+<a href="#step5">5 · Plan &amp; run</a>
+<a href="#step6">6 · Interpret</a>
+<a href="#step7">7 · Submit</a>
+</nav>
+<noscript>
+<p class="note">All seven steps are shown below. Worked examples, answers and downloads remain available; interactive controls require JavaScript.</p>
+</noscript>
+<section class="step-panel" id="step1" aria-labelledby="title1">
+<p class="step-kicker">Step 1 / 7 · Make a prediction</p>
+<h2 id="title1" tabindex="-1">A better number. An unanswered question.</h2>
+<p>You load a trained model, change its learning-rate schedule and give it another 3,000 updates. Its score goes up.</p>
+<div class="interactive">
+<p class="eyebrow">Synthetic teaching example · AP on a 0–1 scale</p>
+<div class="pair">
+<div class="score-card">
+<strong>A · Starting checkpoint</strong>
+<span class="score">0.40</span>
+<span class="score-label">No additional training</span>
+</div>
+<div class="score-card">
+<strong>C · New schedule</strong>
+<span class="score">0.44</span>
+<span class="score-label">3,000 additional updates</span>
+</div>
+</div>
+<p class="question">Can we conclude that the new schedule helped?</p>
+<div class="actions js-only" role="group" aria-label="Choose your prediction">
+<button type="button" data-prediction="yes">Yes, AP increased</button> <button type="button" class="secondary" data-prediction="no">We need another comparison</button>
+</div>
+<p class="feedback" id="prediction-feedback" aria-live="polite">
+</p>
+<details id="missing-control">
+<summary>Reveal the missing comparison</summary>
+<p>
+<strong>B · Ordinary continuation: AP 0.46.</strong> It starts from the same checkpoint and receives the same 3,000 updates, using a constant learning rate.</p>
+<p>C beats A by 0.04, but loses to B by 0.02. The total gain over A does not show a benefit from the schedule.</p>
+</details>
+</div>
+<p>These are invented scores for reasoning practice. They are not measured wildfire results.</p>
+<p class="done">
+<strong>Done when:</strong> you can name the missing comparison: an ordinary continuation with a matched starting point and budget.</p>
+<div class="pager">
+<a href="../../index.html#lesson6">← Course directory</a>
+<a class="button" href="#step2">Trace the three branches →</a>
+</div>
+</section>
+<section class="step-panel" id="step2" aria-labelledby="title2">
+<p class="step-kicker">Step 2 / 7 · Compare like with like</p>
+<h2 id="title2" tabindex="-1">One starting point. Three branches.</h2>
+<p>A is our before-training reference. B measures the continuation recipe. C tests the schedule against B.</p>
+<div class="interactive">
+<p class="eyebrow">Teaching diagram · no model runs in this browser</p>
+<div class="branch-root">
+<strong>Same B3 checkpoint bytes</strong>
+<br>
+<small>A trained T1 foundation</small>
+</div>
+<div class="three">
+<article class="score-card branch">
+<h3>A · Frozen reference</h3>
+<p>Evaluate B3 directly.<br>No additional updates.</p>
+<span class="score" data-score="a">0.40</span>
+</article>
+<article class="score-card branch">
+<h3>B · ERM control</h3>
+<p>Load B3 + fresh optimizer.<br>Constant LR · 3,000 updates.</p>
+<span class="score" data-score="b">0.46</span>
+</article>
+<article class="score-card branch">
+<h3>C · X22 candidate</h3>
+<p>Load B3 + fresh optimizer.<br>Cosine LR · 3,000 updates.</p>
+<span class="score" data-score="c">0.44</span>
+</article>
+</div>
+<label class="control js-only" for="score-case">Try another teaching case <select id="score-case">
+<option value="loses">Candidate improves, but loses to ERM</option>
+<option value="wins">Candidate improves on ERM</option>
+<option value="negative">Neither continuation helps</option>
+</select>
+</label>
+<div class="three" id="score-differences" aria-live="polite">
+<div>
+<small>Continuation recipe · B − A</small>
+<p class="math" data-delta="continuation">+0.06</p>
+</div>
+<div>
+<small>Schedule comparison · C − B</small>
+<p class="math" data-delta="schedule">−0.02</p>
+</div>
+<div>
+<small>Total change · C − A</small>
+<p class="math" data-delta="total">+0.04</p>
+</div>
+</div>
+<p id="score-interpretation" aria-live="polite">The candidate improves over B3, but ordinary continuation performs better. This case does not support a positive schedule effect.</p>
+</div>
+<p>
+<strong>B and C both start independently from B3.</strong> Starting C from B’s final weights would give it a second training stage.</p>
+<details>
+<summary>Why call B − A a “continuation recipe” effect?</summary>
+<p>The continuation includes a fresh optimizer and its specified training setup. This comparison does not isolate update count from every difference between foundation training and continuation.</p>
+<p>Even if C beats B in one run, further matched seeds are needed to assess variability. A single synthetic case establishes no scientific result.</p>
+</details>
+<p class="done">
+<strong>Done when:</strong> you can identify B − A, C − B and C − A, and explain why C must not start from B.</p>
+<div class="pager">
+<a href="#step1">← Predict</a>
+<a class="button" href="#step3">What does ERM actually do? →</a>
+</div>
+</section>
+<section class="step-panel" id="step3" aria-labelledby="title3">
+<p class="step-kicker">Step 3 / 7 · Understand the control</p>
+<h2 id="title3" tabindex="-1">ERM learns from the training examples.</h2>
+<p>
+<strong>Empirical risk minimization</strong> means fitting predictions to the available training labels using a chosen loss. Here, it is the ordinary supervised continuation that our next method must beat.</p>
+<div class="flow" aria-label="One supervised training update">
+<span>1 · Sample a batch</span>
+<span>2 · Predict fire probabilities</span>
+<span>3 · Compare with labels: loss</span>
+<span>4 · Backpropagate + update weights</span>
+</div>
+<p>The loss guides training. AP is used to evaluate predictions; a lower training loss alone does not establish better validation AP.</p>
+<div class="pair">
+<article class="score-card">
+<h3>Fresh continuation</h3>
+<p>Load B3’s learned weights.<br>Create a new optimizer.</p>
+<span class="pill live">Our ERM exercise</span>
+</article>
+<article class="score-card">
+<h3>Resume an interrupted run</h3>
+<p>Restore weights, optimizer moments and scheduler state.</p>
+<span class="pill">A different starting condition</span>
+</article>
+</div>
+<p class="note">
+<strong>ERM does not mean clean inputs only.</strong> The project control already uses FireDrop and BlockDrop. X22 keeps those rules; its intended change is the learning-rate schedule.</p>
+<details>
+<summary>Inspect the augmentation settings</summary>
+<p>FireDrop and BlockDrop each have probability 0.3 and can overlap. Block severity is sampled at 25% or 50%. Removing these augmentations only from ERM would make the schedule comparison unfair.</p>
+<p>B3 itself is a corrected T1 foundation trained with FireDrop and BlockDrop. It is neither clean B0 nor your official Fold 2 checkpoint.</p>
+</details>
+<details>
+<summary>Connect the words to a formula and one update</summary>
+<p>
+<code>empirical risk = (1 / N) × sum of loss(predictionᵢ, targetᵢ)</code>
+</p>
+<pre>
+<code># Teaching pseudocode; use the existing runner for real experiments.
+optimizer.zero_grad(set_to_none=True)
+logits = model(augmented_inputs)
+loss = supervised_loss(logits, targets)
+loss.backward()
+optimizer.step()</code>
+</pre>
+<p>The configured loss handles the logits. Preserve the actual project loss and optimizer settings rather than replacing them with this schematic.</p>
+</details>
+<p class="done">
+<strong>Done when:</strong> you can explain why “fresh ERM” can use missing-input augmentation and still be the control.</p>
+<div class="pager">
+<a href="#step2">← Compare</a>
+<a class="button" href="#step4">Repair a comparison →</a>
+</div>
+</section>
+<section class="step-panel" id="step4" aria-labelledby="title4">
+<p class="step-kicker">Step 4 / 7 · Find the extra changed variable</p>
+<h2 id="title4" tabindex="-1">Would you trust this comparison?</h2>
+<p>For each case, choose the repair that lets us test the schedule. The goal is to change one intended factor while matching the rest.</p>
+<div class="interactive">
+<p class="eyebrow">Three short reasoning exercises</p>
+<fieldset>
+<legend>1 · ERM gets 1,000 updates. X22 gets 3,000.</legend>
+<label class="js-only" for="repair-budget">Your repair</label>
+<select class="js-only" id="repair-budget" data-repair="budget">
+<option value="">Choose a repair…</option>
+<option value="wrong">Report only the higher AP</option>
+<option value="right">Start both from B3 for 3,000 updates</option>
+<option value="other">Divide each AP by its update count</option>
+</select>
+<p class="feedback" id="feedback-budget" aria-live="polite">
+</p>
+<details>
+<summary>Answer and explanation</summary>
+<p>Use the same 3,000-update budget and B3 starting weights. Otherwise, schedule and training budget change together. Dividing AP by the number of updates does not remove this confound.</p>
+</details>
+</fieldset>
+<fieldset>
+<legend>2 · X22 starts from ERM’s final checkpoint.</legend>
+<label class="js-only" for="repair-start">Your repair</label>
+<select class="js-only" id="repair-start" data-repair="start">
+<option value="">Choose a repair…</option>
+<option value="wrong">Use the same random seed only</option>
+<option value="other">Rename the checkpoint to B3</option>
+<option value="right">Restart X22 independently from the actual B3 weights</option>
+</select>
+<p class="feedback" id="feedback-start" aria-live="polite">
+</p>
+<details>
+<summary>Answer and explanation</summary>
+<p>Load the same actual B3 checkpoint for both runs. A matching seed or filename cannot undo the extra training already present in ERM’s final weights.</p>
+</details>
+</fieldset>
+<fieldset>
+<legend>3 · X22 uses best validation AP; ERM uses final step.</legend>
+<label class="js-only" for="repair-checkpoint">Your repair</label>
+<select class="js-only" id="repair-checkpoint" data-repair="checkpoint">
+<option value="">Choose a repair…</option>
+<option value="right">Use the predeclared final-step rule for both</option>
+<option value="wrong">Choose whichever checkpoint makes X22 look best</option>
+<option value="other">Use each model’s best test score</option>
+</select>
+<p class="feedback" id="feedback-checkpoint" aria-live="polite">
+</p>
+<details>
+<summary>Answer and explanation</summary>
+<p>Use the same final-step rule for these continuations. Different selection rules can change scores independently of the schedule. Test scores must not be used to choose checkpoints.</p>
+</details>
+</fieldset>
+</div>
+<p class="done">
+<strong>Done when:</strong> you can name each confound: budget, initialization history and checkpoint selection.</p>
+<div class="pager">
+<a href="#step3">← Understand</a>
+<a class="button" href="#step5">Prepare your A/B experiment →</a>
+</div>
+</section>
+<section class="step-panel" id="step5" aria-labelledby="title5">
+<p class="step-kicker">Step 5 / 7 · Plan first, then run</p>
+<h2 id="title5" tabindex="-1">Your first practical compares A with B.</h2>
+<p>
+<strong>Question:</strong> under a fixed project protocol, what changes after the specified 3,000-update ERM continuation?</p>
+<p>Save a prediction before running. Include an outcome that would contradict it. X22 is the next experiment; it is not required to finish this A/B exercise.</p>
+<dl class="protocol">
+<div>
+<dt>Setting</dt>
+<dd>T1 · seed 0 · Res18-U-Net</dd>
+</div>
+<div>
+<dt>Data</dt>
+<dd>2016–2020 train · 2021 validation</dd>
+</div>
+<div>
+<dt>Starting point</dt>
+<dd>Same identified B3 bytes</dd>
+</div>
+<div>
+<dt>Continuation</dt>
+<dd>3,000 updates · constant learning rate</dd>
+</div>
+<div>
+<dt>Batch and selection</dt>
+<dd>Physical / effective batch 64 · final step</dd>
+</div>
+<div>
+<dt>Evaluation</dt>
+<dd>Same samples and masks · all four scenarios</dd>
+</div>
+</dl>
+<details>
+<summary>Coming from official Fold 2? Read this transition.</summary>
+<p>Official Fold 2 trained on 2018/2020, validated on 2019 and tested on 2021 for 10,000 updates. This project uses corrected indexing, training-only normalization and a different split. Here 2021 is explicitly validation.</p>
+<p>Keep your official results separate. B3 is not the official checkpoint. Do not paste a Fold 2 score into row A.</p>
+<p>
+<a href="../../guides/docs/tutorials/matched-erm-experiment-design.html#2-moving-from-fold-2-to-the-project-experiments">Full protocol comparison</a>
+</p>
+</details>
+<article class="task">
+<h3>1 · Identify your starting assets</h3>
+<p>
+<strong>Do:</strong> prepare corrected data and training-only statistics; record the B3 checksum and provenance. Use instructor-provided B3 or regenerate it through the foundation guide.</p>
+<p>
+<strong>Bring back:</strong> data/statistics identities, B3 path and checksum, and the approved resource budget.</p>
+<p>
+<a href="../../guides/docs/research/reproduce.html">Set up the project</a> · <a href="../../guides/docs/research/data-preparation.html">Prepare data</a> · <a href="../../guides/docs/research/baselines.html">Prepare B3</a>
+</p>
+</article>
+<article class="task">
+<h3>2 · Establish row A before continuing</h3>
+<p>
+<strong>Do:</strong> evaluate frozen B3 on the same 2021 samples and four masks planned for B. Evaluation must not update weights or normalization state.</p>
+<p>
+<strong>Bring back:</strong> four AP values and their original evaluation records. A training-time validation score or a clean-only score is not a substitute.</p>
+<p>
+<a href="../../guides/docs/research/baselines.html">Foundation and evaluation reference</a> · <a href="../../guides/docs/research/evaluation-population.html">Check the evaluation population</a>
+</p>
+</article>
+<article class="task">
+<h3>3 · Smoke-check, then start formal ERM from B3</h3>
+<p>
+<strong>Do:</strong> check an unfamiliar execution path with a separate smoke run. Start the formal <code>control</code> continuation independently from B3.</p>
+<p>
+<strong>Bring back:</strong> source revision, configuration, job ID and a unique output directory. Smoke success is execution evidence, not a scientific score.</p>
+<details>
+<summary>Preview the control command without submitting a job</summary>
+<pre>
+<code>python3 -m reproductions.cross_history.mainline \
+  --history 1 --method control --seed 0 \
+  --output /path/to/new/erm-run --print-command</code>
+</pre>
+<p>This text-only preview can run in the configured project checkout on a login node. Replace the output path. It does not train or submit a job.</p>
+<p>For actual submission, follow the recipe’s <strong>control role only</strong>. The page also lists X22 and specialists; do not launch all five roles for this exercise. The submitter snapshots committed HEAD, not uncommitted edits.</p>
+<p>
+<a href="../../guides/docs/research/method-recipes.html#1-check-the-intended-command">Command preview and smoke rules</a> · <a href="../../guides/docs/research/method-recipes.html#2-train-one-matched-set">Submission recipe: select control only</a>
+</p>
+</details>
+</article>
+<article class="task">
+<h3>4 · Verify completion and establish row B</h3>
+<p>
+<strong>Do:</strong> check the job’s terminal state, exit code, actual 3,000 updates and final checkpoint. Evaluate on the matching 2021 contract, or retain an already matching evaluation from the training output.</p>
+<p>
+<strong>Bring back:</strong> final checkpoint, four AP values and original metric paths. Check sample identities and preprocessing, not just equal counts.</p>
+<p>
+<a href="../../guides/docs/tutorials/matched-erm-experiment-design.html#4-running-the-comparison">Detailed execution checklist</a> · <a href="../../guides/docs/research/setup-recovery.html">If setup or a job fails</a>
+</p>
+</article>
+<p class="note warning">Submit installation, data processing, model checks, training and evaluation through Slurm. A job ID only confirms submission. Preserve failed attempts; do not overwrite their outputs or extend the training budget after inspecting results.</p>
+<p class="done">
+<strong>Done when:</strong> your A/B plan is fixed. For the practical, also retain completion evidence and matching A/B evaluations. You can continue to the worked example while a job is queued.</p>
+<div class="pager">
+<a href="#step4">← Repair</a>
+<a class="button" href="#step6">Learn to read the result →</a>
+</div>
+</section>
+<section class="step-panel" id="step6" aria-labelledby="title6">
+<p class="step-kicker">Step 6 / 7 · Interpret all conditions</p>
+<h2 id="title6" tabindex="-1">An average can hide a trade-off.</h2>
+<p>Report each condition. Compute the missingness summary using the same predeclared rule, even when one condition gets worse.</p>
+<div class="table-wrap">
+<table>
+<caption>Project evaluation conditions</caption>
+<thead>
+<tr>
+<th>Condition</th>
+<th>What the model receives</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M00 · Complete</td>
+<td>Complete inputs</td>
+</tr>
+<tr>
+<td>M01 · No fire history</td>
+<td>Active-fire history removed</td>
+</tr>
+<tr>
+<td>M06 · 25% blocks</td>
+<td>25% structured block missingness on dynamic inputs</td>
+</tr>
+<tr>
+<td>M07 · 50% blocks</td>
+<td>50% structured block missingness on dynamic inputs</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Static inputs remain in the block conditions. Missingness here is controlled corruption; it does not establish natural-outage robustness.</p>
+<div class="interactive">
+<p class="eyebrow">Synthetic worked result · not project measurements</p>
+<div class="table-wrap">
+<table>
+<caption>AP on a 0–1 scale; each row uses the same evaluation contract</caption>
+<thead>
+<tr>
+<th>Run</th>
+<th>M00</th>
+<th>M01</th>
+<th>M06</th>
+<th>M07</th>
+<th>Primary</th>
+<th>Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>A · B3</th>
+<td>0.60</td>
+<td>0.30</td>
+<td>0.45</td>
+<td>0.45</td>
+<td>0.40</td>
+<td>0.45</td>
+</tr>
+<tr>
+<th>B · ERM</th>
+<td>0.58</td>
+<td>0.36</td>
+<td>0.51</td>
+<td>0.51</td>
+<td>0.46</td>
+<td>0.51</td>
+</tr>
+<tr>
+<th>B − A</th>
+<td>−0.02</td>
+<td>+0.06</td>
+<td>+0.06</td>
+<td>+0.06</td>
+<td>+0.06</td>
+<td>+0.06</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="math">Primary = (M01 + M06 + M07) / 3</p>
+<p class="math">Block = (M06 + M07) / 2</p>
+<p>Here ERM improves Primary by 0.06 but reduces clean AP by 0.02. The continuation helped under the chosen missingness summary, with a clean-input cost.</p>
+<details>
+<summary>Can we write “robustness improved everywhere”?</summary>
+<p>No. M00 regressed. State both outcomes, and keep the single-seed scope. Primary averages three separately computed AP values; it is not AP computed from pooled predictions.</p>
+<p>An absolute AP difference of 0.01 corresponds to one point on a 0–100 presentation scale.</p>
+</details>
+</div>
+<div class="pair">
+<article class="score-card">
+<h3>If ERM does not improve</h3>
+<p>Record the valid result. A negative result does not automatically mean the implementation is broken. Check the contract before interpreting it.</p>
+</article>
+<article class="score-card">
+<h3>If the inputs or masks differ</h3>
+<p>Repair or relabel the comparison. It cannot establish either a positive or a negative effect under the intended contract.</p>
+</article>
+</div>
+<p class="note">This practical uses T1, seed 0 and 2021 validation. Historical 2022/2023 results have already been inspected; those years are not newly untouched confirmation data.</p>
+<div class="actions">
+<a class="button secondary" href="results-worksheet.csv" download>Download blank result table</a>
+</div>
+<p class="done">
+<strong>Done when:</strong> you can compute both summaries, report clean AP separately, and write a conclusion that includes regressions.</p>
+<div class="pager">
+<a href="#step5">← Plan &amp; run</a>
+<a class="button" href="#step7">Prepare your report →</a>
+</div>
+</section>
+<section class="step-panel" id="step7" aria-labelledby="title7">
+<p class="step-kicker">Step 7 / 7 · Make your reasoning reviewable</p>
+<h2 id="title7" tabindex="-1">Submit evidence, not just a score.</h2>
+<p>Your report can be short. Another student should be able to locate the artifacts and understand exactly what you compared.</p>
+<ol class="checklist">
+<li>
+<strong>The question:</strong> your pre-run prediction and an outcome that would contradict it.</li>
+<li>
+<strong>The comparison:</strong> B3 identity, data/statistics, seed, budget, augmentation and checkpoint rule.</li>
+<li>
+<strong>The evidence:</strong> code revision, configs, job IDs, completion records, checkpoints and original metrics.</li>
+<li>
+<strong>The result:</strong> A/B table, improvements and regressions, one supported conclusion and one limitation.</li>
+<li>
+<strong>The next question:</strong> how would you test the schedule while retaining a fair control?</li>
+</ol>
+<div class="actions">
+<a class="button" href="report-template.md" download>Download report template</a>
+<a class="button secondary" href="results-worksheet.csv" download>Download blank CSV</a>
+<button class="secondary js-only" type="button" id="print-lesson">Print all seven steps</button>
+</div>
+<div class="interactive">
+<p class="eyebrow">Exit question</p>
+<h3>X22 beats frozen B3, but loses to ERM. What did we learn?</h3>
+<p>Answer aloud or in your report before opening the explanation.</p>
+<details>
+<summary>Check your reasoning</summary>
+<p>The total change over B3 is positive, but the schedule comparison is negative. The specified ordinary continuation performs better in this run. We have not established a positive X22 schedule contribution.</p>
+<p>Next, start X22 independently from the same B3, use the same continuation budget and compare with the matched ERM run. Do not continue training from ERM’s final checkpoint.</p>
+</details>
+</div>
+<p class="done">
+<strong>Conceptual lesson complete:</strong> you can explain and design the comparison.<br>
+<strong>Practical complete:</strong> you also have a finished A/B report with actual artifacts. A valid result with no improvement still completes the exercise.</p>
+<label class="completion js-only">
+<input type="checkbox" id="lesson-complete"> I have worked through the conceptual lesson. Save this reminder locally.</label>
+<p class="source">This checkbox is a personal reminder, not a grade or proof that an experiment finished. Progress stays in this browser when storage is available.</p>
+<div class="pager">
+<a href="#step6">← Interpret</a>
+<a class="button" href="../../index.html#lesson7">Next: does the schedule help? →</a>
+</div>
+<p class="source" style="margin-top:20px">Lesson 7 currently links to existing reading; its interactive rewrite is not yet available.</p>
+</section>
+<footer class="footer">
+<a href="../../guides/docs/tutorials/matched-erm-experiment-design.html">Full ERM protocol and reading</a> · <a href="../../index.html#course">Course directory</a>
+<br>Teaching examples are synthetic. Scientific settings follow the maintained project guide.</footer>
+</main>
+</div>
+</body>
+</html>

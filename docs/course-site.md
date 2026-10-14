@@ -29,3 +29,31 @@ python scripts/build-course-guides.py
 - 新的效果结论必须链接原始实验记录；运行资格验证不能当作效果复现。
 - 首页、课程中的项目定位与最新交付清单一致，历史结果标明时期。
 - 检查本地链接、图片路径、页内锚点与教程代码块；实际模型检查仍通过 Slurm。
+
+
+## Course directory and ERM pilot (October 2026)
+
+The root `index.html` is now the central eight-lesson directory. Its handbook
+and reference-library sections group existing resources. Readiness labels
+separate the new interactive ERM pilot from existing readings and planned
+interactive lessons; do not imply that all eight lessons have been rewritten.
+
+- Shared course shell: `assets/learning.css` and `assets/learning.js`.
+- ERM pilot source: `lessons/erm/index.html` (standalone HTML, not generated).
+- Blank student downloads: `lessons/erm/report-template.md` and
+  `lessons/erm/results-worksheet.csv`.
+- Curriculum and pilot design: `docs/course-redesign.md`.
+- Implementation and validation record: `docs/course-implementation-plan.md`.
+
+Maintain the ERM scientific contract against
+`site-content/en/docs/tutorials/matched-erm-experiment-design.md`. The full
+reference guide links back to the interactive lesson. Rebuild generated guides
+with the existing renderer after changing their Markdown sources.
+
+The pilot progressively displays one of seven steps. Without JavaScript, all
+steps, worked examples, answers and downloads remain readable. With JavaScript,
+printing expands all steps and answers, then restores the prior reading state.
+Progress uses only the `wildfire-erm-lesson-v1` localStorage key; storage failure
+must not prevent reading. The completion checkbox records conceptual review,
+not verified practical completion. Synthetic examples never populate the blank
+student worksheet.

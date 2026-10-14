@@ -1,0 +1,4 @@
+Run,M00 AP,M01 AP,M06 AP,M07 AP,Primary (mean M01 M06 M07),Block (mean M06 M07)
+A: frozen B3,,,,,,
+B: matched ERM,,,,,,
+B minus A,,,,,,

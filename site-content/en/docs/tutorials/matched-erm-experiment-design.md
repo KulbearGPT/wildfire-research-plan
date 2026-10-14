@@ -1,5 +1,9 @@
 # After Fold 2: designing your first fair comparison
 
+> **Interactive lesson:** [Work through the seven-step ERM lesson](../../lessons/erm/index.html).
+> Predict, compare, repair an unfair experiment, then download your report template.
+> This page retains the full protocol and reference explanation.
+
 This lesson follows the [official Fold 2 tutorial](res18-baseline-slurm.md).
 You should have a completed training run, a selected checkpoint and its test
 results. The sections below explain how to plan your next comparison; the

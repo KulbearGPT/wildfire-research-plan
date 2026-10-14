@@ -1,5 +1,9 @@
 # Start here: a guide for new students
 
+Start with the [central eight-lesson course directory](../index.html#course).
+After Fold 2 and the project-protocol transition, work through the
+[interactive ERM lesson](../lessons/erm/index.html).
+
 **The active research route is X22+X17 and its necessary controls.** Other methods remain historical explorations or teaching references; see [code lifecycle](CODE_LIFECYCLE.md). The official single-fold tutorial remains the first onboarding exercise.
 
 Course website: [Home](../index.html) · [Research foundations](../related-work/index.html) · [Baseline reproduction](../baseline-reproduction/index.html).
