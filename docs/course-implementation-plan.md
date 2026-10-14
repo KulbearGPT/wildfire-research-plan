@@ -244,3 +244,20 @@ simulated DOM/URL harness, including all-visible navigation, scroll save/resume,
 quiz and figure state, print, reference returns and blocked storage. The site
 checker reports 144 pages and 7,907 local links/assets with zero errors. Browser
 rendering and native scrolling/history remain untested on this host.
+
+
+## Grouped course navigation
+
+User approved separate Learning path, Practical handbook and Reference library
+sidebar groups. The shell now renders all three on every page, including home.
+Only the relevant group starts open, and the actual page is highlighted rather
+than a related lesson. The handbook follows environment, data/weights, execution,
+verification and recovery stages. The library groups concepts/examples, experiment
+lookup and historical research records. Individual experiment pages add their
+current title beneath the experiment index. Lookup groups are explicitly optional.
+Existing originating-lesson returns remain active for sidebar and inline links.
+
+Static checks passed for the three groups, exact current-page destination and
+active-group expansion across all 144 pages. The site link checker passes 12,046
+local links/assets. Continuous-reading behavior was rechecked with the DOM harness;
+real browser rendering remains unverified in this environment.

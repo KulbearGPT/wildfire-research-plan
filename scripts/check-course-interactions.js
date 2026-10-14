@@ -113,6 +113,20 @@ function runCourseChecks(fixtures) {
   b=boot('lessons/erm/index.html',{hash:'#repair-budget-reasoning',store:new Map([['wildfire-interactions-erm-v1',JSON.stringify({details:{'repair-budget-reasoning':false}})]])});assert(b.document.getElementById('repair-budget-reasoning').open,'deep disclosure overrides saved closed state');
   b=boot('index.html');assert(b.document.querySelectorAll('.hero .button').length===1,'single learning entry');
   b=boot('index.html',{store:new Map([['wildfire-course-last-v1',JSON.stringify({page:'erm',step:'step5-run'})]])});assert(b.document.querySelector('[data-continue]').href.endsWith('#step5-run'),'homepage continue');
+  for(const path of Object.keys(fixtures.pages)) {
+    b=boot(path);const groups=b.document.querySelectorAll('[data-nav-group]');
+    assert(groups.length===3,'three navigation groups');
+    const active=b.document.querySelectorAll('.sidebar a[aria-current="page"]');
+    assert(active.length===(path==='index.html'?0:1),'one actual current page, not a related lesson');
+    if(active.length)assert(active[0].closest('[data-nav-group]').open,'current group expanded');
+    assert(groups.filter(g=>g.open).length===1,'only relevant group initially expanded');
+  }
+  b=boot('lessons/forecast/index.html',{hash:'#step3'});
+  b.document.dispatchEvent(new Evt('click'));
+  const handbookLink=b.document.querySelectorAll('.sidebar a[href]').find(n=>n.href.includes('handbook/student-start/index.html'));
+  assert(handbookLink.href.includes('via=forecast.step3'),'sidebar handbook visit retains reading origin');
+  const libraryLink=b.document.querySelectorAll('.sidebar a[href]').find(n=>n.href.includes('library/foundations/index.html'));
+  assert(libraryLink.href.includes('via=forecast.step3'),'sidebar library visit retains reading origin');
   return {checks,passed:true,scope:'Actual generated HTML and scripts; simulated DOM and URL, not browser rendering'};
 }
 

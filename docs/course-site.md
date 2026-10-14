@@ -147,8 +147,12 @@ practical instructions, figure legends and task contents use `open
 data-default-open`: they begin expanded on every visit, overriding old saved
 collapsed states. Students can still collapse them while reading. Answers and
 optional exploration remain closed initially; directory navigation also starts
-expanded on mobile. The sidebar contains only the course sequence; support
-resources are offered at their relevant lesson locations.
+expanded on mobile. The sidebar separates Learning path, Practical handbook and Reference library.
+Only the current group starts expanded, with exactly one current-page marker;
+related lessons are not marked as the current page. Handbook links follow
+preparation, execution, verification and recovery stages. References are labelled
+as lookup material. The shared navigation also appears on the homepage.
+Sidebar reference visits carry the current lesson origin just like inline links.
 
 `course_visuals.py` supplies fixed observation tasks on real exported panels.
 Additional records, views and zoom are optional exploration with a task-view

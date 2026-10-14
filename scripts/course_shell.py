@@ -52,12 +52,62 @@ def directory(prefix, current=''):
     return '<ol class="directory">' + ''.join(items) + '</ol>'
 
 
+# The sidebar follows learning order; supporting groups are lookup material.
+HANDBOOK_NAV = [
+    ('Prepare environment', [('student-start', 'Readiness and access'), ('start-here', 'Preparation checklist'), ('reproduce', 'Project environment')]),
+    ('Prepare data and weights', [('student-bridge', 'Official-to-project handover'), ('data-preparation', 'Project data'), ('baselines', 'Foundation checkpoints')]),
+    ('Run an experiment', [('res18-baseline-slurm', 'Official Fold 2'), ('matched-erm-experiment-design', 'Matched ERM comparison'), ('method-recipes', 'Continuation recipes')]),
+    ('Check results', [('evaluation-population', 'Evaluation population'), ('artifacts', 'Required artifacts'), ('student-report', 'From outputs to a report')]),
+    ('Troubleshoot', [('student-help', 'Find the next recovery action'), ('setup-recovery', 'Environment and job recovery')]),
+]
+REFERENCE_NAV = [
+    ('Concepts and examples', [('handbook/student-real-data/index.html', 'Real-data examples'), ('handbook/student-case/index.html', 'Cedar counting exercise'), ('library/foundations/index.html', 'Datasets and research foundations'), ('handbook/architectures/index.html', 'Model architectures')]),
+    ('Experiment lookup', [('experiments/index.html', 'Experiment names and records')]),
+    ('Research and historical records', [('library/reproduction/index.html', 'Reproduction background and results'), ('handbook/research-roadmap/index.html', 'Research roadmap'), ('handbook/positive-signals/index.html', 'Positive signals'), ('handbook/negative-results/index.html', 'Negative and incomplete results'), ('handbook/qualification/index.html', 'Execution qualification'), ('handbook/diagnostics-reproduction/index.html', 'Reproduction diagnostics'), ('handbook/legacy-p00/index.html', 'Historical P00 protocol'), ('handbook/project-b0-slurm/index.html', 'Project B0 protocol'), ('handbook/teachers/index.html', 'Instructor notes')]),
+]
+
+
+def course_navigation(prefix, page, title):
+    lesson_page = page in {item['slug'] for item in lessons()}
+    if lesson_page:
+        path = f'lessons/{page}/index.html'
+    elif page.startswith('guide-'):
+        path = 'handbook/'+page[6:].lower().replace('_','-')+'/index.html'
+    elif page.startswith('student-'):
+        path = f'handbook/{page}/index.html'
+    elif page.startswith('reference-'):
+        path = 'library/'+('foundations' if page == 'reference-related-work' else 'reproduction')+'/index.html'
+    elif page == 'experiments':
+        path = 'experiments/index.html'
+    elif page.startswith('experiment-'):
+        path = 'experiments/'+page[11:]+'/index.html'
+    else:
+        path = 'index.html'
+    handbook = [(label, [(f'handbook/{slug}/index.html', name) for slug,name in entries]) for label,entries in HANDBOOK_NAV]
+    references = [(label,list(entries)) for label,entries in REFERENCE_NAV]
+    if page.startswith('experiment-'):
+        references[1][1].append((path,title))
+    handbook_active = any(path == href for _,entries in handbook for href,_ in entries)
+    reference_active = any(path == href for _,entries in references for href,_ in entries)
+    def groups(groups):
+        parts = []
+        for label,entries in groups:
+            rows = ''.join(f'<li><a href="{prefix}{href}"'+(' aria-current="page"' if href==path else '')+f'>{escape(name)}</a></li>' for href,name in entries)
+            parts.append(f'<li class="nav-category"><span>{escape(label)}</span><ul class="directory">{rows}</ul></li>')
+        return '<ul class="resource-directory">'+''.join(parts)+'</ul>'
+    primary_open = ' open' if lesson_page or page=='home' else ''
+    return f'''<nav aria-label="Course navigation"><h2 class="sidebar-title">Course navigation</h2>
+<details class="nav-group" data-directory data-nav-group="lessons"{primary_open}><summary>Learning path</summary>{directory(prefix,page if lesson_page else '')}</details>
+<details class="nav-group" data-nav-group="handbook"{' open' if handbook_active else ''}><summary>Practical handbook</summary><p class="nav-hint">Use when needed for a practical; not extra lessons.</p>{groups(handbook)}</details>
+<details class="nav-group" data-nav-group="reference"{' open' if reference_active else ''}><summary>Reference library</summary><p class="nav-hint">Look up a concept or record; no reading order required.</p>{groups(references)}</details></nav>'''
+
+
 def shell(title, content, *, prefix, page, current='', step_links='', source='', intro=''):
     progress_html = '<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div>' if step_links else ''
     in_lesson = page in {item['slug'] for item in lessons()}
     task_location = ''
     body_class = 'lesson-page' if in_lesson else 'reference-page'
-    directory_open = ' open'
+    navigation = course_navigation(prefix, page, title)
     src = f'<a href="{escape(source, quote=True)}">Maintained source</a> · ' if source else ''
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -66,9 +116,7 @@ def shell(title, content, *, prefix, page, current='', step_links='', source='',
 <body class="{body_class}" data-page="{page}" data-root="{prefix}"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="{prefix}index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="{prefix}index.html#course">Course directory</a></nav></header>
-<div class="layout"><aside class="sidebar"><details{directory_open} data-directory><summary>The learning path</summary>{directory(prefix,current)}
-
-</details>{progress_html}</aside>
+<div class="layout"><aside class="sidebar">{navigation}{progress_html}</aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="{prefix}index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside>{intro}{task_location}{step_links}
 <noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 {content}<p class="support-return"><a class="button" data-course-return-link hidden href="{prefix}index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary>{src}<a href="{prefix}index.html#course">Course directory</a> · <a href="{prefix}experiments/index.html">Experiment names</a></details>

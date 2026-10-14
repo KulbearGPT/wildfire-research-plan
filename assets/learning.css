@@ -220,8 +220,6 @@ html.with-course-return{scroll-padding-top:180px}
 @media(max-width:720px){html.with-course-return{scroll-padding-top:130px}}
 
 /* One current task, one named next action. */
-body[data-page="home"] .sidebar{display:none}
-body[data-page="home"] .layout{display:block;max-width:1120px}
 .task-purpose{padding:12px 16px;background:var(--soft);border-left:4px solid var(--teal);font-size:16px}
 html.enhanced .task-location{display:block;position:sticky;top:61px;z-index:4;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:8px;font-size:13px;box-shadow:0 3px 12px #1932440d}
 .task-reading{margin:14px 0 22px;background:#f7fafc;font-size:15px}
@@ -248,3 +246,16 @@ html{scroll-padding-top:155px}
 .lesson-page .step-nav a[aria-current=location]{background:transparent}
 html{scroll-padding-top:85px}
 @media(max-width:720px){html{scroll-padding-top:20px}}
+
+
+/* Site structure separates the ordered course from lookup resources. */
+.sidebar-title{font-size:15px;margin:0 0 18px}
+.sidebar .nav-group{padding:14px 0;border-bottom:1px solid var(--line);border-radius:0}
+.sidebar .nav-group:first-of-type{padding-top:0}
+.nav-hint{font-size:12px;color:var(--muted);line-height:1.5;margin:12px 0}
+.resource-directory{list-style:none;margin:0;padding:0}
+.nav-category{margin:18px 0}
+.nav-category>span{font-size:12px;font-weight:750;color:var(--muted)}
+.nav-category .directory{margin:5px 0}
+.nav-category .directory a{font-size:13px;overflow-wrap:anywhere;padding:7px 10px}
+@media(max-width:720px){.sidebar .resource-directory .directory{display:block}.sidebar .nav-group{padding:12px 0}}
