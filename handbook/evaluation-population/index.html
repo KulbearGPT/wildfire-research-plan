@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verified evaluation
+populations · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
+<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<body data-page="guide-evaluation-population" data-root="../../"><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-case/index.html">Running example</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
+<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Verified evaluation
+populations</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · Original source directories</a><a href="#chapter-3">3 · Statistics identity</a></nav></details>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 3</p><h2>Before you begin</h2><span id="verified-evaluation-populations"></span>
+<p>The earlier <strong>2,312</strong> figure for 2023 in the
+quantitative reliability ledger was a documentation error. The original
+completed <a class="experiment-name" href="../../experiments/index.html#B0">Corrected T1 clean-input baseline <small>(B0)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B2">Corrected T1 FireDrop-trained baseline <small>(B2)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B3">T1 missingness-trained foundation <small>(B3)</small></a>/<a class="experiment-name" href="../../experiments/index.html#D1-ERM">Corrected T1 consistency control <small>(D1-ERM)</small></a>/<a class="experiment-name" href="../../experiments/index.html#D1-KL">T1 global predictive consistency <small>(D1-KL)</small></a>/<a class="experiment-name" href="../../experiments/index.html#D2-STD">Standard reliability control <small>(D2-STD)</small></a>/D12-SARP summaries all report
+<strong>2,102</strong>, consistent with the cross-history population. No
+dataset change is needed to explain this discrepancy.</p>
+<p>On 2026-09-16, all 21 original year/method summary JSON files were
+read without loading HDF5 or model weights. Every scenario in every
+method reports 3,181 samples for 2021, 2,856 for 2022, and 2,102 for
+2023. All 84 <a class="experiment-name" href="../../experiments/index.html#M00">Complete-input scenario <small>(M00)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M01">Fire-history-missing scenario <small>(M01)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M07">Half-block-missing scenario <small>(M07)</small></a> AP entries reproduce the ledger's
+six-decimal values exactly. Only the population sentence was corrected;
+metric values and method conclusions were not changed.</p>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 3</p><h2 id="original-source-directories">Original source directories</h2>
+<p>These paths identify historical evidence, not required runtime
+locations. The original root is
+<code>/project/6085198/kulbear/wildfire/runs</code>. Within each listed
+directory the inspected file is
+<code>results-YEAR/summary.json</code>.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>2021 source directory</th>
+<th>2022 source directory</th>
+<th>2023 source directory</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>B0</td>
+<td><code>corrected-B0-S0-3K-21093263</code></td>
+<td><code>heldout-B0-2022-21098505</code></td>
+<td><code>heldout-B0-2023-21098506</code></td>
+</tr>
+<tr class="even">
+<td>B2</td>
+<td><code>corrected-B2-S0-3K-21093265</code></td>
+<td><code>heldout-B2-2022-21098505</code></td>
+<td><code>heldout-B2-2023-21098506</code></td>
+</tr>
+<tr class="odd">
+<td>B3</td>
+<td><code>corrected-B3-S0-3K-21093266</code></td>
+<td><code>heldout-B3-2022-21099907</code></td>
+<td><code>heldout-B3-2023-21099907</code></td>
+</tr>
+<tr class="even">
+<td>D1-ERM</td>
+<td><code>D1-erm-S0-3K-21102676</code></td>
+<td><code>heldout-D1-ERM-2022-21105328</code></td>
+<td><code>heldout-D1-ERM-2023-21105328</code></td>
+</tr>
+<tr class="odd">
+<td>D1-KL</td>
+<td><code>D1-kl-S0-3K-21102677</code></td>
+<td><code>heldout-D1-KL-2022-21105328</code></td>
+<td><code>heldout-D1-KL-2023-21105328</code></td>
+</tr>
+<tr class="even">
+<td>D2-STD</td>
+<td><code>D2-standard-S0-3K-21094929</code></td>
+<td><code>heldout-D2-STD-2022-21122938</code></td>
+<td><code>heldout-D2-STD-2023-21122938</code></td>
+</tr>
+<tr class="odd">
+<td>D12-SARP</td>
+<td><code>D12-SARP-S0-3K-21122172</code></td>
+<td><code>heldout-D12-SARP-2022-21122938</code></td>
+<td><code>heldout-D12-SARP-2023-21122938</code></td>
+</tr>
+</tbody>
+</table>
+<p>For all seven 2023 runs, each of the four scenarios has
+<code>sample_count: 2102</code> and <code>pixel_count: 34439168</code>,
+equal to 2,102 × 128 × 128. Their saved upstream commits are all
+<code>ed221d491fe2142a4b2e93462c2c0b7a1c7c31ad</code>. The archived
+runner scripts select <code>hdf5/wstsplus-active-fixed</code>; the saved
+data summary records 999 HDF5 events, including 68 events in 2023. Event
+count and evaluated window count are different quantities.</p>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 3</p><h2 id="statistics-identity">Statistics identity</h2>
+<p>Every inspected 2023 run's <code>inputs.sha256</code> records the
+same training-statistics SHA-256:</p>
+<pre class="text"><code>4f6d308f00afcfcafcd14404dca9fff4f5beb89e1c2d0f615723f4d08b690f49</code></pre>
+<p>The original 824-byte
+<code>runs/nibi-wstsplus-data-20260823/train-2016-2020-stats.npz</code>
+and the 824-byte transferred
+<code>handoff-20260916/public environment/data/train-2016-2020-stats.npz</code>,
+both beneath <code>/project/6085198/kulbear/wildfire</code>, were
+independently hashed during this check and both match that recorded
+value. These files were hashed as small metadata; no bulk data or
+checkpoint I/O occurred on login.</p>
+<p>This verification resolves the false historical population mismatch.
+It does not by itself prove byte identity of all HDF5 files or claim a
+new model replay; fresh allocated evaluations must still compare their
+metrics with these recorded results. The archive directory inspected
+contains run artifacts rather than a separate historical HDF5 snapshot,
+but a separate snapshot is not needed to explain the erroneous 2,312
+statement.</p>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/research/evaluation-population.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

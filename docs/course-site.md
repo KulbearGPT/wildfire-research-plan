@@ -1,59 +1,87 @@
-# 配套教学网站维护
+# Maintaining the teaching website
 
-入口是仓库根目录的 [index.html](../index.html)，配套 [研究基础](../related-work/index.html) 与 [基线复现](../baseline-reproduction/index.html) 两份课程。页面可直接从本地打开；静态服务器也可以原样托管仓库根目录。
+The root `index.html` is the central directory for eight progressive lessons,
+practical handbook chapters, reference readings, and experiment walkthroughs.
+Public content is English. All pages are static and share the same course shell.
 
-## 内容来源
+## Maintained sources
 
-- 网站首页：`index.html`；公共样式：`assets/course.css`。
-- 两份 HTML 课程保留已有图示、导航、搜索与打印功能。文献部分保留原有的文献核对日期，项目状态单独更新。
-- 网站统一使用英文。英文指南源文件位于 `site-content/en/docs/`，与 `docs/` 中对应文档的目录结构一致；原中文文档保留。`guides/` 下的 HTML 为生成物，不要直接编辑。
-- 英文源文件中的相对链接仍按对应的 `docs/` 文档位置书写，生成器负责重定位。代码命令、实验数字与协议必须同步维护；中文注释和交互提示可翻译成英文，但不能改变执行逻辑。
+| Content | Edit here | Generated output |
+|---|---|---|
+| Student readiness, running case, handover, report and help | `site-content/en/student-support/` | `handbook/student-*/index.html` and teaching JSON downloads |
+| Curriculum and lesson sections | `site-content/en/course-lessons.json`, `site-content/en/lessons/*.html` | `index.html`, `lessons/*/index.html` |
+| Homepage resources | `site-content/en/course-resources.html` | `index.html` |
+| Experiment names and high-level instructions | `site-content/en/experiment-names.json`, `site-content/en/experiment-walkthroughs.json` | `experiments/index.html`, `experiments/*/index.html` and worksheets |
+| Practical and research handbook | `site-content/en/docs/` | `handbook/*/index.html` |
+| Historical reference readings | `site-content/en/reference/` | `library/foundations/index.html`, `library/reproduction/index.html` |
+| Shared layout and naming/link transforms | `scripts/course_shell.py` | All generated HTML |
+| Presentation and interactions | `assets/learning.css`, `assets/learning.js`, `assets/lesson-demos.js` | Loaded directly |
 
-修改入门、Roadmap、两份 Slurm 教程或研究指南时，同时更新 `site-content/en/docs/` 下对应英文文档，再在仓库目录执行：
+The lesson builder also runs `scripts/build-student-support.py`. Maintain the
+continuous blank course record in `student-record.md`. Cedar arrays and report
+excerpts are explicitly synthetic and must never be presented as measured data.
+The report guide maps the distinct foundation and continuation output schemas;
+check its field paths against the evaluators when those schemas change.
+
+Edit lesson worksheets under `lessons/` directly. Experiment worksheets are generated.
+Keep the ERM report template and results CSV blank; teaching values are synthetic.
+Experiment names explain the method, while existing IDs remain stable in code,
+configurations, records, and URLs. See [naming policy](experiment-names.md).
+
+Handbook Markdown links are written relative to the corresponding canonical
+`docs/` file, even though the renderer reads the English counterpart. Update both
+versions when scientific commands or protocols change. Adding research documents
+to the discovery set requires their English counterparts. Lesson fragment links
+are relative to their generated output pages.
+
+## Build and check
+
+From the repository root with Pandoc available:
 
 ```bash
+python scripts/build-course-lessons.py
+python scripts/build-course-references.py
 python scripts/build-course-guides.py
+python scripts/check-course-site.py
+git diff --check
 ```
 
-需要 Pandoc；本次生成使用 Pandoc 2.18。生成过程不导入模型、不访问数据或网络，只转换文档。脚本拒绝缺失或仍含中文的英文指南，把文档之间的链接改为网页路径，并原样保留英文源文档的代码块；网页和生成脚本一起提交。页面不需要在线 Markdown 渲染服务。
+These are lightweight documentation operations with no model imports, network,
+or dataset processing. Commit maintained sources and generated pages together.
+The checker verifies HTML nesting, IDs, labels, local links and destination
+anchors, and absence of retired pages. It is not a rendered-browser test.
+Check desktop/mobile layouts, keyboard navigation, and print output in a browser
+when available. No model jobs are needed for teaching-only changes.
 
-## 发布边界
+## Retirement and publication
 
-此前课件内写入的 GitHub Pages 地址检查时返回 404，且仓库没有 Pages workflow。这里使用相对链接，不假定公网部署已经可用。
+The old `guides/**/*.html`, `related-work/index.html`, and
+`baseline-reproduction/index.html` are retired. Do not recreate them, redirect
+stubs, or migration notices. Old URL aliases in source are translated only at
+build time into current handbook/library links. Preserve `related-work/assets/`
+for figures still used by the new reference pages. Canonical research Markdown,
+source code, and evidence records remain available as supporting material.
 
-将完整静态目录部署到可用的静态站点即可，必须同时保留 `related-work/assets/`、`guides/`、`assets/` 和页面所链接的源文件。若使用 GitHub Pages，可在有仓库管理权限的会话中配置从 `main` 根目录发布；是否公开仓库或站点由维护者决定。仅本地 commit 不等于网站已发布。
+Deploy the repository root together with assets, downloads, and linked evidence.
+A local build, commit, push, and successful deployment are separate milestones;
+report only those actually verified.
 
-## 更新时核对
+## Teaching and scientific checks
 
-- 官方单 fold、项目 corrected baseline 和全量发布权重评估保持不同协议。
-- 新的效果结论必须链接原始实验记录；运行资格验证不能当作效果复现。
-- 首页、课程中的项目定位与最新交付清单一致，历史结果标明时期。
-- 检查本地链接、图片路径、页内锚点与教程代码块；实际模型检查仍通过 Slurm。
+Each lesson or experiment should explain its question, prerequisites, action,
+comparison, and deliverable. Keep high-level execution steps on walkthrough pages;
+link detailed commands and original evidence from the appropriate handbook chapter.
+Mainline experiments appear first; historical entries remain searchable and are
+explicitly scoped as historical, diagnostic, invalid, or unrun where applicable.
 
+Preserve the distinction between official Fold 2 and the project protocol,
+controlled and natural missingness, execution qualification and effectiveness,
+and historical signals and independent confirmation. Preserve original commands,
+anchors, figures, and evidence dates when reorganizing reference material.
 
-## Course directory and ERM pilot (October 2026)
-
-The root `index.html` is now the central eight-lesson directory. Its handbook
-and reference-library sections group existing resources. Readiness labels
-separate the new interactive ERM pilot from existing readings and planned
-interactive lessons; do not imply that all eight lessons have been rewritten.
-
-- Shared course shell: `assets/learning.css` and `assets/learning.js`.
-- ERM pilot source: `lessons/erm/index.html` (standalone HTML, not generated).
-- Blank student downloads: `lessons/erm/report-template.md` and
-  `lessons/erm/results-worksheet.csv`.
-- Curriculum and pilot design: `docs/course-redesign.md`.
-- Implementation and validation record: `docs/course-implementation-plan.md`.
-
-Maintain the ERM scientific contract against
-`site-content/en/docs/tutorials/matched-erm-experiment-design.md`. The full
-reference guide links back to the interactive lesson. Rebuild generated guides
-with the existing renderer after changing their Markdown sources.
-
-The pilot progressively displays one of seven steps. Without JavaScript, all
-steps, worked examples, answers and downloads remain readable. With JavaScript,
-printing expands all steps and answers, then restores the prior reading state.
-Progress uses only the `wildfire-erm-lesson-v1` localStorage key; storage failure
-must not prevent reading. The completion checkbox records conceptual review,
-not verified practical completion. Synthetic examples never populate the blank
-student worksheet.
+JavaScript progressively selects one section, with optional per-page local
+progress and course resume. The existing ERM storage key remains compatible.
+Without JavaScript all content is readable; lesson/reference printing expands
+sections and disclosures and restores their prior state. Deep links open the
+containing section and disclosures. Completion checkboxes record review, not
+verified experimental completion. Storage failure must not prevent reading.

@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "start",
+    "title": "Before your first practical"
+  },
+  {
+    "slug": "case",
+    "title": "Cedar: one sample through the course"
+  },
+  {
+    "slug": "bridge",
+    "title": "From official Fold 2 to the project experiment"
+  },
+  {
+    "slug": "report",
+    "title": "From output files to a defensible report"
+  },
+  {
+    "slug": "help",
+    "title": "When you cannot take the next step"
+  }
+]

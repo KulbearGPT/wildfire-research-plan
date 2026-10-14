@@ -20,7 +20,7 @@ remain available for intentional historical recovery.
 | Change data preparation or evaluation populations | [Data preparation](research/data-preparation.md), [population contract](research/evaluation-population.md), relevant `src/` code and tests |
 | Change a model or training method | The inventory's implementation path under `reproductions/`, its config and closest control |
 | Set up an environment or diagnose installation | [Reproduction setup](research/reproduce.md), [setup recovery](research/setup-recovery.md) |
-| Edit the course | `site-content/en/docs/` for generated guides; `index.html`, `related-work/index.html`, or `baseline-reproduction/index.html` for standalone pages |
+| Edit the course | [Course maintenance](course-site.md); maintained sources under `site-content/en/` |
 
 Do not read every linked document for a small change. Historical plans under
 `docs/superpowers/` preserve past decisions, not a required development sequence.
@@ -93,7 +93,7 @@ Full migration qualification is documented in
 
 The maintained website Markdown is under `site-content/en/docs/`. The parallel
 `docs/` pages retain the Chinese teaching material. Keep scientific commands and
-claims consistent when either version changes. Generated HTML under `guides/`
+claims consistent when either version changes. Generated HTML under `handbook/`
 must be rebuilt from its English source rather than edited by hand.
 
 The renderer resolves Markdown links relative to the canonical `docs/` path,
@@ -101,7 +101,10 @@ even though it reads English source. Use that convention when adding links.
 With Pandoc available, a lightweight documentation build is:
 
 ```bash
+python3 scripts/build-course-lessons.py
+python3 scripts/build-course-references.py
 python3 scripts/build-course-guides.py
+python3 scripts/check-course-site.py
 git diff --check
 git diff --stat
 ```

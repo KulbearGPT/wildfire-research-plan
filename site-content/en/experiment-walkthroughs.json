@@ -1,0 +1,2024 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "X1",
+      "question": "Can valid surrounding features help predict inside a missing block?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the path from valid-region pooling to the residual correction at encoder skip levels.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation; observable spatial route.",
+        "Separate the spatial route from standalone model scores; unchanged non-block scores can come from routing."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X1-adapter",
+      "question": "Can a context adapter help when the original backbone stays frozen?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Mark which backbone parameters are frozen and which adapter parameters can change.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: frozen initial B3/B5 plus fresh continuation.",
+        "Use both the frozen foundation and fresh continuation: beating frozen weights does not establish adoption value."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X2",
+      "question": "Does a clean-input teacher provide useful intermediate features under missingness?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the teacher's clean training view, the student's corrupted view, and where feature matching receives weight.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation.",
+        "Keep feature distillation distinct from output consistency; inspect block and non-block results separately."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X3",
+      "question": "Does modeling occupancy and fire change help the next-day forecast?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw occupancy, continuation, and new-activity heads, then show how their outputs form the forecast.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation.",
+        "Check both histories separately; a T1 signal does not establish transfer to the different T5 model."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X4",
+      "question": "Does emphasizing spatial risk improve missing-block prediction?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Locate the spatial weights in the loss rather than in the prediction input.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation.",
+        "Separate objective reweighting from any observable route used to report the result."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X5",
+      "question": "Does restricting consistency to missing regions help beyond global consistency?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Mark the region receiving consistency supervision and the region excluded from it.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: unchanged global D1 consistency.",
+        "Use unchanged global consistency as the attribution control, not only ordinary continuation."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X6",
+      "question": "Does more balanced corruption exposure help the same predictor?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Write the original and candidate corruption-sampling distributions side by side.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation.",
+        "Inspect complete-input performance as well as the missingness average; sampling changes can trade one condition for another."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X7",
+      "question": "Is a missingness-conditioned residual expert distinct from earlier adapters?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Sketch how the observed missingness pattern selects or conditions a residual expert.",
+        "Separate the proposed mechanism from completed evidence, and identify the recorded stop or cancellation reason before defining any new run."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation.",
+        "Read the overlap audit against the archived reliability-adapter family before treating this as a new experiment."
+      ],
+      "deliver": [
+        "Produce a mechanism/protocol diagram and explain the recorded feasibility, overlap, or identifiability boundary without inventing an accuracy result.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X8",
+      "question": "Does impact weighting improve consistency beyond uniform weighting?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace the clean/corrupted training views and the impact weights applied to prediction consistency.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: unchanged global D1 consistency; fresh ERM adoption.",
+        "Distinguish improvement over global consistency from improvement over matched ERM and from the routed FireDrop result."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X9",
+      "question": "Does context-dependent feature modulation help inside spatial holes?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the spatial-context signal and its scale/shift modulation of decoder features.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation with spatial route.",
+        "Compare the spatial route under matched controls; do not attribute copied non-block predictions to the modulation module."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X10",
+      "question": "Can forecast supervision teach useful restoration of missing dynamic inputs?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Mark which dynamic inputs are restored and which static or observed values remain unchanged.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation with spatial route.",
+        "Separate forecast usefulness from accurate physical reconstruction; the forecast loss alone does not establish the latter."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X11",
+      "question": "Does explicit reconstruction supervision add value to forecast-trained inpainting?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Place the reconstruction term next to the existing forecasting loss while keeping the restoration mechanism identified.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: X10 forecast-only inpainting.",
+        "Use forecast-only inpainting for reconstruction attribution; fresh ERM measures the total recipe instead."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X12",
+      "question": "Does specializing every corrupted branch for FireDrop improve its forecast?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Show the FireDrop-only training schedule and the impact-consistency term as separate ingredients.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation; plain specialist ablation if screen passes.",
+        "Check whether the conditional plain-specialist ablation was actually reached before assigning benefit to consistency."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X13",
+      "question": "Can spatial propagation fill holes without learning extra restoration weights?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace observed values through normalized diffusion into missing regions.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: same frozen control checkpoint with spatial route.",
+        "Hold the forecast checkpoint fixed; distinguish the fill operation from extra model training."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X14",
+      "question": "Does one specialist trained on mixed block severities help block conditions?",
+      "prepare": [
+        "Prepare the same corrected data, training-only statistics, and verified B3 or B5 starting checkpoint for the candidate and its controls; keep each history setting separate.",
+        "Freeze seed, physical batch, optimizer settings, per-run update budget, final-checkpoint rule, and evaluation samples from the source recipe; obtain authorization for the planned compute."
+      ],
+      "intervention": [
+        "Initialize the mixed-severity block specialist independently from the same foundation as ERM; use the declared block-only mixture of 25% and 50% severity.",
+        "After authorization, perform the bounded smoke check specified by the execution plan; verify input, loss, update, and checkpoint paths before the formal run.",
+        "Train each planned branch for its declared budget in a distinct output location, retain the final continuation checkpoint, and record actual completion rather than relying on submission status."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation with spatial route.",
+        "Inspect both block severities and preserve the separate non-block route when reading routed results."
+      ],
+      "deliver": [
+        "Evaluate the retained checkpoints on the same complete-input, FireDrop, 25% block, and 50% block samples and masks; keep individual-model and routed scores separately identified.",
+        "Report specialist-minus-ERM on both block conditions, the complete four-condition table, and any separately defined route; preserve complete-input regressions.",
+        "For a new run, label new measurements separately from the historical record and report any deviations or incomplete work."
+      ]
+    },
+    {
+      "id": "X15",
+      "question": "Can distance from an observation improve reliability prompting?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw erosion depth inside a missing region and the depth-scaled encoder token.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation with spatial route.",
+        "Distinguish geometric missingness information from transported feature content."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X16",
+      "question": "Does restoration add value after the model is already block-specialized?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Place the restoration module inside the block-only training recipe.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: X14 specialist plus fresh-control total check.",
+        "Use the mixed-severity block specialist for module attribution; comparison with ERM includes specialization too."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X17",
+      "question": "Does separating 25% and 50% training help beyond one mixed specialist?",
+      "prepare": [
+        "Prepare the same corrected data, training-only statistics, and verified B3 or B5 starting checkpoint for the candidate and its controls; keep each history setting separate.",
+        "Freeze seed, physical batch, optimizer settings, per-run update budget, final-checkpoint rule, and evaluation samples from the source recipe; obtain authorization for the planned compute."
+      ],
+      "intervention": [
+        "Initialize separate 25% and 50% block specialists from the same foundation as the mixed-severity specialist and ERM; do not continue one expert from another.",
+        "After authorization, perform the bounded smoke check specified by the execution plan; verify input, loss, update, and checkpoint paths before the formal run.",
+        "Train each planned branch for its declared budget in a distinct output location, retain the final continuation checkpoint, and record actual completion rather than relying on submission status."
+      ],
+      "comparison": [
+        "Locate the source comparison: X14 mixed-severity specialist plus fresh ERM.",
+        "Report two models and twice the per-specialist updates; compare each severity with the mixed specialist before claiming specialization benefit."
+      ],
+      "deliver": [
+        "Evaluate the retained checkpoints on the same complete-input, FireDrop, 25% block, and 50% block samples and masks; keep individual-model and routed scores separately identified.",
+        "Compare each fixed expert with the mixed specialist at its matching severity; report two training runs, total cost, and the composed route separately from component attribution.",
+        "For a new run, label new measurements separately from the historical record and report any deviations or incomplete work."
+      ]
+    },
+    {
+      "id": "X18",
+      "question": "Does context transport still help a block-trained specialist?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Add the context-transport path to the mixed-severity block-specialist diagram.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: X14 specialist plus fresh ERM.",
+        "Compare with the block specialist as well as ERM so that specialization is not mistaken for transport benefit."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X19",
+      "question": "Can severity-conditioned adapters share a specialist across severities?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Show where observed severity conditions the latent adapter and where the base features enter.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: X14 specialist; X17 two-checkpoint upper bound; fresh ERM.",
+        "Use the mixed specialist for attribution and the two-checkpoint specialist route as a separate capacity reference."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X20",
+      "question": "Can impact consistency help without changing ERM's supervised branch?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Keep corrupt-sample supervision and sampling unchanged; identify the detached clean teacher and the added consistency term.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh ERM; X8 diagnoses the repair.",
+        "Read ERM adoption separately from the diagnostic comparison with the earlier paired-view impact recipe."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X21",
+      "question": "Would first-layer reliability calibration differ from existing reliability inputs?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Place the proposed calibration at the first layer and compare its information with input tokens and reliability prompts.",
+        "Separate the proposed mechanism from completed evidence, and identify the recorded stop or cancellation reason before defining any new run."
+      ],
+      "comparison": [
+        "Locate the source comparison: D4/D12 and fresh ERM.",
+        "Use the pre-run closest-work decision; no execution result should be invented for this proposal."
+      ],
+      "deliver": [
+        "Produce a mechanism/protocol diagram and explain the recorded feasibility, overlap, or identifiability boundary without inventing an accuracy result.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X22",
+      "question": "Does cosine learning-rate decay help under a matched continuation budget?",
+      "prepare": [
+        "Prepare the same corrected data, training-only statistics, and verified B3 or B5 starting checkpoint for the candidate and its controls; keep each history setting separate.",
+        "Freeze seed, physical batch, optimizer settings, per-run update budget, final-checkpoint rule, and evaluation samples from the source recipe; obtain authorization for the planned compute."
+      ],
+      "intervention": [
+        "Initialize independent ERM and cosine branches from the same foundation; change only the declared learning-rate schedule.",
+        "After authorization, perform the bounded smoke check specified by the execution plan; verify input, loss, update, and checkpoint paths before the formal run.",
+        "Train each planned branch for its declared budget in a distinct output location, retain the final continuation checkpoint, and record actual completion rather than relying on submission status."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh constant-LR ERM.",
+        "Start both continuations independently from the same foundation; continuing the ERM result would add training exposure."
+      ],
+      "deliver": [
+        "Evaluate the retained checkpoints on the same complete-input, FireDrop, 25% block, and 50% block samples and masks; keep individual-model and routed scores separately identified.",
+        "Report cosine-minus-ERM separately from cosine-minus-foundation, with artifact identities, per-condition scores, the missingness mean, and the single-seed or multi-seed scope.",
+        "For a new run, label new measurements separately from the historical record and report any deviations or incomplete work."
+      ]
+    },
+    {
+      "id": "X23",
+      "question": "Does impact consistency add value to block-only training?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the block-specialist recipe before and after adding the impact-weighted term.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: X14 BlockDrop specialist plus fresh ERM.",
+        "Compare with the existing block specialist before citing the total difference from ERM."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X24",
+      "question": "Would a frozen clean teacher add a distinct FireDrop-specialist mechanism?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Diagram the proposed teacher's clean view and the student's missing-fire view.",
+        "Separate the proposed mechanism from completed evidence, and identify the recorded stop or cancellation reason before defining any new run."
+      ],
+      "comparison": [
+        "Locate the source comparison: X8 impact consistency and plain FireDrop specialist.",
+        "Keep this as a pre-implementation comparison with existing impact and FireDrop recipes unless a separately authorized protocol is defined."
+      ],
+      "deliver": [
+        "Produce a mechanism/protocol diagram and explain the recorded feasibility, overlap, or identifiability boundary without inventing an accuracy result.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X25",
+      "question": "Do severity-adaptive prompts add value to a block specialist?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Locate inherited reliability prompts within the block-specialist training recipe.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: X14 specialist plus fresh ERM; inherited D12 mechanism disclosed.",
+        "Attribute any module effect against the specialist without prompts, not only against ERM."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X26",
+      "question": "Does impact weighting still help when the consistency recipe uses cosine decay?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Separate the learning-rate schedule, FireDrop specialization, and consistency weights in the diagram.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: cosine FireDrop global-consistency control; X22 cosine ERM adoption.",
+        "Use cosine global-consistency for weighting attribution and cosine ERM for adoption; they answer different questions."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X27",
+      "question": "Does forecast-guided selection of difficult blocks help beyond random blocks?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Show how the training forecast guides block choice and keep that choice separate from evaluation masks.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: cosine random-BlockDrop specialist; X22 cosine ERM adoption.",
+        "Compare with a cosine random-block specialist before comparing with cosine ERM."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X28",
+      "question": "Does training with VIIRS-shaped footprints transfer to rectangular missing blocks?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the training footprint geometry beside the declared rectangular evaluation masks.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: cosine rectangular BlockDrop specialist; X22 cosine ERM adoption.",
+        "Treat geometry transfer as the tested question; natural-looking augmentation does not establish natural operational robustness."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X29",
+      "question": "Can attention retrieve useful observed context for a block specialist?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw queries from missing regions and the valid-context memory supplying keys and values.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: cosine rectangular BlockDrop specialist; X22 cosine ERM adoption.",
+        "Compare with the cosine block specialist without memory; extra attention capacity alone is not evidence of usefulness."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X30",
+      "question": "Do auxiliary fire-change tasks help the primary forecast during training?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw auxiliary heads connected to training supervision and mark their absence from the inference task.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: X22 cosine ERM.",
+        "Read primary-task losses and gains against cosine ERM; auxiliary prediction is not the final forecast metric."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X31",
+      "question": "Does supervision at multiple scales help the final output?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Place the same forecast target at the auxiliary output scales and identify the final prediction used for scoring.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: X22 cosine ERM.",
+        "Compare with cosine ERM under the declared recipe; do not select whichever auxiliary output scores best afterward."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X1+X3",
+      "question": "Do context transport and a transition head help when combined?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the composition and identify which branch belongs to each component.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation / component ablations.",
+        "Check each component ablation as well as ERM; a combined gain alone does not establish a beneficial interaction."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X2-block-signal",
+      "question": "What did the original distillation variant show specifically on blocks?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Locate the original variant's block scores and identify their source run.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: the original feature-distillation run and its fresh-continuation reference.",
+        "Do not rename a secondary positive metric as an independently validated method or confuse it with the later block-local repair."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X3-decoupled",
+      "question": "Did decoupling the transition mechanism repair its earlier limitation?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the coupling changed by the repair next to the original transition diagram.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation and the original latent-transition variant.",
+        "Compare original and repaired variants with their matched continuation references; preserve complete-input regressions."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X4-strong",
+      "question": "What did the stronger spatial weighting repair actually establish?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the fivefold weighting change and which planned history runs have evidence.",
+        "Separate the proposed mechanism from completed evidence, and identify the recorded stop or cancellation reason before defining any new run."
+      ],
+      "comparison": [
+        "Locate the source comparison: the original spatial-risk recipe and its fresh-continuation reference.",
+        "Check cancellation and run coverage before reading this as a completed stronger-weight experiment."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X2-block-repair",
+      "question": "Did restricting feature distillation to blocks repair the original result?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Locate the block-local feature-matching region and contrast it with the original weighting.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh continuation and the original distillation variant.",
+        "Keep the repair's result separate from the original variant's block signal."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X8+X17",
+      "question": "What can a FireDrop-and-block route achieve by composing existing specialists?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Assign FireDrop to impact consistency and the two block severities to their fixed experts.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh matched ERM and explicitly separate frozen B3/B5 audit.",
+        "Separate the routed system comparison from claims about any additional learned mechanism."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X22+X17",
+      "question": "What does the condition-specific route add over a matched single continuation?",
+      "prepare": [
+        "Identify the matched ERM, cosine, fixed-25%, and fixed-50% checkpoints for one history and seed; verify their common foundation and comparison contract.",
+        "Declare whether this is the current ERM-clean route or the preserved historical X22-clean variant, and record the exact checkpoint used for every condition.",
+        "If an arm is missing, prepare its independent training plan and obtain authorization before running it; do not silently mix histories, seeds, populations, or selection rules."
+      ],
+      "intervention": [
+        "For any authorized missing arm, run the bounded smoke check and its fixed training plan from the matching foundation, then verify the retained checkpoint.",
+        "Evaluate all required arms on the same scenario samples and masks; retain the full individual-model results before composing the route.",
+        "Compose the declared route: cosine for FireDrop, the matching fixed-severity expert for each block condition, and the explicitly chosen clean-input model."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh matched ERM and explicitly separate frozen B3/B5 audit.",
+        "Distinguish the historical X22-clean artifact from the current ERM-clean composition; missingness means do not reveal this clean-route difference."
+      ],
+      "deliver": [
+        "Report route-minus-matched-ERM and route-minus-frozen-foundation separately, with the selected arm for each condition and full checkpoint provenance.",
+        "Count independent training runs, total update budget, and retained checkpoints; distinguish these costs from the single selected model used per routed prediction.",
+        "Keep the historical and current clean-route results separately labeled and preserve the limitation that system composition does not isolate a new mechanism."
+      ]
+    },
+    {
+      "id": "legacy-c00-c02-3k",
+      "question": "What can be learned from the invalid pooled-year foundation comparison?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Reconstruct the 3000-step runs and locate the pooled-year resolver error.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: the recorded C00/C02 runs, with the invalid resolver disclosed.",
+        "Retain runtime evidence without treating invalid data exposure as a scientific method comparison."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "legacy-c00-c02-six-10k-runs",
+      "question": "Which failure-regime observations survive invalid training exposure?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Map the six legacy runs to their scenario evaluations and identify the exposure defect.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: the legacy scenario matrix, with invalid training exposure disclosed.",
+        "Separate the missingness-failure diagnosis from unsupported architecture or training-gain attribution."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P00",
+      "question": "What motivated corrected FireDrop training in the legacy experiment?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace where legacy training removed fire history and identify the inherited foundation problem.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the legacy clean-input reference identified in the source.",
+        "Use the legacy signal as motivation; corrected B2 is a different experiment, not a relabeled legacy result."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P02",
+      "question": "What did adding blocks to legacy FireDrop change?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Show the added block augmentation alongside the earlier FireDrop recipe.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop training (P00).",
+        "Read block gains together with complete-input and FireDrop changes, while retaining the legacy confound."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P09",
+      "question": "Did group-robust optimization help beyond matched legacy continuation?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the group objective and the matched ERM continuation that removes it.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy matched ERM continuation (P10).",
+        "Compare with P10 for optimization attribution rather than claiming all gain over P00 belongs to GroupDRO."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P10",
+      "question": "How much of a legacy candidate's gain came from ordinary continuation?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw continuation from the legacy foundation without the group-robust objective.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop training (P00) and GroupDRO (P09).",
+        "Treat this as a comparator and motivation for corrected experiments, not a validated replacement foundation."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P01",
+      "question": "Did a validity channel improve the legacy predictor?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Add the validity channel to the input diagram while leaving the observed features identified.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the source ledger’s legacy reference for the validity-channel probe.",
+        "Compare all recorded conditions; a tiny improvement on one severe condition can coexist with wider regressions."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P03",
+      "question": "Was hard routing stable across the recorded years?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Map the legacy route's choices to its component predictors.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the source ledger’s legacy reference across each recorded year.",
+        "Read year-specific block results instead of treating a pooled gain as temporal stability."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P04",
+      "question": "Could a pointwise residual correct the legacy forecast?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw a 1-by-1 correction above the legacy output or feature path specified in the source.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop (P00) and the hard router (P03).",
+        "Compare with both the underlying legacy reference and the stronger hard-router record."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P05",
+      "question": "Did a spatial residual help beyond the simpler legacy correction?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the 3-by-3 correction and contrast its spatial support with the pointwise variant.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop (P00) and the hard router (P03).",
+        "Do not equate extra correction capacity with an established improvement over the hard-router reference."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P06",
+      "question": "Did adapting the decoder improve the legacy missingness result?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Mark the decoder portion changed by the adaptation while tracing the inherited predictor.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop (P00) and the hard router (P03).",
+        "Read its result against the source comparator, including the stronger hard router where reported."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P07",
+      "question": "Did the stochastic residual learn meaningful variation?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the stochastic component and the reported predictive variance diagnostic.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop (P00), hard routing (P03), and the variance diagnostic.",
+        "Assess variation as well as AP; near-zero variance does not establish a useful latent uncertainty model."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P08",
+      "question": "Did teacher-posterior information improve the legacy correction?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace the teacher-posterior signal and the student correction specified by the archived recipe.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop training (P00).",
+        "Use the legacy P00 reference and retain the original initialization limitations."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P11",
+      "question": "Did missingness-pattern routing preserve FireDrop performance?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace the condition input to the router and the selected prediction path.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop training (P00).",
+        "Compare the complete-FireDrop score directly with P00 rather than relying only on block behavior."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P12",
+      "question": "Did prevalence-derived focal weighting balance the fire prediction?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Locate the prevalence-derived alpha in the training objective.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the recorded legacy focal-loss reference and overprediction diagnostics.",
+        "Inspect overprediction and block metrics together; class weighting can change the operating behavior adversely."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "P13",
+      "question": "Was a legacy FireDrop expert consistent across years?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the dedicated expert and the FireDrop scenario it was intended to serve.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the recorded FireDrop reference in each year.",
+        "Keep each recorded year visible because mixed temporal signs do not establish a stable gain."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "belief-filter-t-1",
+      "question": "Did belief-state filtering help the legacy T1 forecast?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the belief update and how its result reaches the forecast.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop training (P00).",
+        "Compare the corrupted-condition mean with P00 while keeping the legacy setting explicit."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "belief-attention-t-1",
+      "question": "Did attending to belief state help the legacy T1 forecast?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Show the belief information accessed by attention and the prediction it conditions.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop training (P00).",
+        "Read all three corrupted scenarios against the recorded legacy comparator."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "belief-reconstruction-t-1",
+      "question": "Did reconstructing a belief state help the legacy T1 forecast?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Separate the reconstruction task from the next-day forecasting output.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop training (P00).",
+        "Use next-day forecasting metrics for the conclusion; reconstruction alone is not the task outcome."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "corresponding-t-5-probes",
+      "question": "Did the T5 belief-state probes change the T1 conclusion?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "List the separate filter, attention, and reconstruction records rather than treating the suite as one model.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: each archived T5 candidate’s own reference.",
+        "Preserve each candidate's negative corrupted-mean finding and the different T5 architecture/input setting."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "natural-viirs-screen",
+      "question": "Did a natural-observation screen support a broad forecasting gain?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the natural-observation cohort and the attention comparison actually measured.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: the recorded natural-observation baseline on the same cohort.",
+        "Read F1, Brier score, and loss alongside AP; an isolated AP increase is not broad agreement."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "target-qa-censoring",
+      "question": "How does removing unreliable target observations change evaluation?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the target-day quality rule and which labeled pixels are excluded.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: the same P00 predictions before and after target-quality censoring.",
+        "Treat the before/after scores as a changed evaluation population, not a model improvement on identical targets."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "2016-2020-qa-cohort",
+      "question": "Why could the multiyear quality cohort not be prepared reliably?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Inspect the recorded CRS and geotransform absence in the added-year files.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: the required spatial metadata versus the files available during preparation.",
+        "Do not substitute guessed alignment or report a completed cross-year experiment from a failed preparation record."
+      ],
+      "deliver": [
+        "Produce a mechanism/protocol diagram and explain the recorded feasibility, overlap, or identifiability boundary without inventing an accuracy result.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "B4",
+      "question": "Did equal-year sampling help the corrected foundation?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Contrast equal-year sampling with the B3 training sampler.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the original B3 sampling recipe.",
+        "Read complete-input and block scores against B3; changed exposure across years is the intervention."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D2-RNC",
+      "question": "Did reliability-normalized convolution improve on the standard control?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw how reliability changes convolution normalization.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: standard reliability control (D2-STD).",
+        "Compare with D2-STD and show both block severities; a gain on one does not establish a positive average."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D3",
+      "question": "Could this corruption protocol identify temporal reliability selection?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the proposed temporal fusion and the variation in reliability it would need to learn from.",
+        "Separate the proposed mechanism from completed evidence, and identify the recorded stop or cancellation reason before defining any new run."
+      ],
+      "comparison": [
+        "Locate the source comparison: the temporal variation required by the proposal versus the frozen corruption contract.",
+        "Explain the identifiability rejection before proposing execution; frozen corruptions did not supply the required temporal distinction."
+      ],
+      "deliver": [
+        "Produce a mechanism/protocol diagram and explain the recorded feasibility, overlap, or identifiability boundary without inventing an accuracy result.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D4",
+      "question": "Did an input reliability token add value beyond the standard recipe?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Show where the token joins the model input.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: standard reliability control (D2-STD).",
+        "Compare against D2-STD and keep the original gate rather than changing it for a near miss."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D5",
+      "question": "Did impact consistency improve the corrected T1 recipe sufficiently?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace the clean/corrupted views and the impact-weighted consistency term.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected T1 ERM continuation (D1-ERM).",
+        "Separate the measured positive total effect from whether it passed this campaign's declared threshold."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D6",
+      "question": "Did ranking add value to impact consistency?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Locate the ranking term beside the impact-consistency loss.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the corrected T1 ERM control and impact-consistency record.",
+        "Inspect the complete-input and block guardrails as well as the primary mean."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D7",
+      "question": "Did a counterfactual reliability adapter help corrected T1 prediction?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the adapter's reliability information and residual path.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected T1 ERM continuation (D1-ERM).",
+        "Distinguish a positive total effect from the campaign's stronger contribution requirement."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D8",
+      "question": "Did factorizing the reliability adapter change the outcome?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Contrast the factorized adapter structure with the earlier adapter family.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected T1 ERM continuation (D1-ERM) and the adapter-family record.",
+        "Do not attribute all continuation gain to the factorization without its matched comparison."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D9",
+      "question": "Did error-pair ranking improve the intended forecast ordering?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the error pairs and ranking term in the recorded objective.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected T1 ERM continuation (D1-ERM).",
+        "Read complete-input and corrupted results together; ranking supervision is not automatically aligned with the final metric."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D10",
+      "question": "Did multiscale reliability prompts add value beyond the control stack?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw prompts at the pyramid scales and identify the unchanged prediction backbone.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: standard reliability control (D2-STD), with D1-ERM total-effect and D4 context.",
+        "Compare module effect with D2-STD and inspect the input-token alternative, rather than citing only the total effect over ERM."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D11",
+      "question": "Did the complete prompt-pyramid variant improve module attribution?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Contrast the complete variant with the earlier prompt-pyramid recipe.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: standard reliability control (D2-STD), with the earlier prompt-pyramid record.",
+        "Retain the declared threshold for the module; a near miss remains a near miss."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D13",
+      "question": "Did severity-adaptive prompts transfer to the T5 setting?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Place the prompting module on the corrected T5 foundation and identify its standard T5 control.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the matched T5 standard reliability control (D13-STD).",
+        "Use D13-STD, not a T1 model, for attribution; distinguish incomplete year coverage from measured negative years."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "B0",
+      "question": "What is the corrected clean-input T1 reference?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle, then declare the comparison and resource budget before proposing any execution."
+      ],
+      "intervention": [
+        "Trace corrected input indexing, training-only normalization, and clean-input training.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the corrected project contract itself; official reproduction is a separate reference.",
+        "Keep the project split and budget separate from the official Fold 2 reference."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "B2",
+      "question": "What does stochastic FireDrop training add to the clean T1 reference?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle, then declare the comparison and resource budget before proposing any execution."
+      ],
+      "intervention": [
+        "Show when FireDrop is sampled during training and distinguish that probability from complete removal in the M01 evaluation.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected clean T1 baseline (B0).",
+        "Separate the raw B2 scores from the B0/B2 route used for the specialist contribution."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "B3",
+      "question": "What does adding block augmentation contribute to the T1 foundation?",
+      "prepare": [
+        "Prepare the corrected T1 input pipeline, training-year normalization statistics, declared data split, and the foundation recipe’s encoder initialization; do not start from a later continuation checkpoint.",
+        "Identify the foundation-specific training budget, validation-AP checkpoint-selection rule, and export/provenance requirements from the source; declare compute limits before execution."
+      ],
+      "intervention": [
+        "Keep the clean reference and FireDrop/BlockDrop foundation recipes distinct, including their declared stochastic augmentation probabilities.",
+        "Once authorized, run the bounded setup and loader/model smoke checks, then train the identified foundation for its fixed budget in a new output location.",
+        "Verify that training completed and export the checkpoint selected by the foundation validation rule, which can precede the final training update; preserve its checksum and selection metadata."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected T1 FireDrop-trained baseline (B2).",
+        "Use B2 for the block-augmentation comparison; later continuations answer a different question."
+      ],
+      "deliver": [
+        "Evaluate the exported foundation under the same project scenario and sample contract used for the intended baseline comparison.",
+        "Deliver data/statistics identities, initialization provenance, completion evidence, selected-checkpoint identity, and per-condition scores; keep this stage separate from final-step continuation selection.",
+        "Record any missing comparison arm or protocol deviation rather than treating unmatched scores as a method gain."
+      ]
+    },
+    {
+      "id": "D1-KL",
+      "question": "Does global predictive consistency help the corrected T1 continuation?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the paired prediction views and their consistency loss.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected T1 consistency control (D1-ERM).",
+        "Compare with D1-ERM, which isolates consistency from extra continuation."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D2-STD",
+      "question": "What does the standard reliability control hold fixed?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Reconstruct the standard recipe before adding reliability-normalized convolution or prompts.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: its matched reliability modules, with D1-ERM as a separate reference.",
+        "Use it as the attribution reference for its matched modules, not as an independently attributed intervention."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "D12",
+      "question": "Do severity-adaptive reliability prompts add value in corrected T1?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw local reliability prompts and the severity-dependent behavior specified by the recipe.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: standard reliability control (D2-STD) and separately D1-ERM.",
+        "Separate module effect against D2-STD from the complete recipe's effect against D1-ERM."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "RF-BN",
+      "question": "Does condition-specific normalization survive a corrected diagnostic?",
+      "prepare": [
+        "Use the reliability-fusion campaign contract and distinguish it from the earlier three-directions campaign with similar mechanisms.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace common versus conditional calibration using the corrected batch-stat procedure.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: common batch-normalization calibration and the original cosine continuation.",
+        "Keep this result separate from the superseded fixed-forward diagnostic and from unperformed affine training."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "RF-BN-fixed",
+      "question": "What went wrong in the original fixed-forward normalization diagnostic?",
+      "prepare": [
+        "Use the reliability-fusion campaign contract and distinguish it from the earlier three-directions campaign with similar mechanisms.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify how statistics were collected and where activation scaling became unstable.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the original cosine checkpoint and the subsequently corrected batch-stat diagnostic.",
+        "Use it to understand the diagnostic correction; do not pool its scores with the corrected procedure."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "RF-MIXED",
+      "question": "What does an equal-capacity mixed-input branch provide as a control?",
+      "prepare": [
+        "Use the reliability-fusion campaign contract and distinguish it from the earlier three-directions campaign with similar mechanisms.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the shallow residual branch that processes static and dynamic inputs jointly.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: matched cosine continuation.",
+        "Use its parameter count and recipe to judge the typed branch, rather than treating branch separation and extra capacity as one intervention."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "RF-TYPED",
+      "question": "Does separating static and dynamic processing help beyond equal capacity?",
+      "prepare": [
+        "Use the reliability-fusion campaign contract and distinguish it from the earlier three-directions campaign with similar mechanisms.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw separate static and dynamic shallow branches beside the mixed-input branch.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the equal-capacity mixed branch and matched cosine continuation.",
+        "Compare with the equal-capacity control and inspect T1/T5 separately."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "RF-KD",
+      "question": "Can one student retain a route's behavior from the same corrupted input?",
+      "prepare": [
+        "Use the reliability-fusion campaign contract and distinguish it from the earlier three-directions campaign with similar mechanisms.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Show the observable-mask teacher selection and the shared corrupted input for teacher and student.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the matched no-distillation student and routed teacher.",
+        "Compare with both no-distillation continuation and the teacher route; improving over a student control does not establish replacement of the teacher."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "TD-N",
+      "question": "Could four normalization banks preserve the generalist predictor?",
+      "prepare": [
+        "Use the earlier three-directions campaign contract and its recorded calibration or student controls; later reliability-fusion recipes are different.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw one statistics bank per recorded condition while keeping the model weights identified.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: shared-statistics recalibration.",
+        "Compare against common recalibration and preserve this earlier campaign's diagnostic limitations."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "TD-W",
+      "question": "Could averaging weights replace explicit specialist routing?",
+      "prepare": [
+        "Use the earlier three-directions campaign contract and its recorded calibration or student controls; later reliability-fusion recipes are different.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the fixed half-generalist, half-specialist parameter merge and its recalibration step.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: recalibrated cosine continuation.",
+        "Read FireDrop and block results separately; parameter averaging is not prediction routing."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "TD-D",
+      "question": "Could the earlier distilled student replace its routed teacher?",
+      "prepare": [
+        "Use the earlier three-directions campaign contract and its recorded calibration or student controls; later reliability-fusion recipes are different.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace teacher selection, shared corrupted input, and student distillation.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: the matched no-distillation student and its routed teacher.",
+        "Apply both improvement-over-student and retention-of-teacher criteria, including the worst scenario."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "ARCH-SegFormer-B2",
+      "question": "Did the continuation and specialist recipes transfer to SegFormer-B2?",
+      "prepare": [
+        "Recover this architecture’s exact input configuration, bootstrap initialization, matched continuation arms, selection rules, and recorded history settings from the source; leave undocumented fields unresolved.",
+        "Separate completed historical artifacts from planned or unreported work, then define a bounded new transfer experiment only for the settings and budget explicitly authorized."
+      ],
+      "intervention": [
+        "Prepare and verify the architecture-specific foundation; initialize each matched continuation independently from that foundation rather than importing another architecture’s checkpoint.",
+        "Once authorized and all required protocol fields are known, perform bounded loader/model/update/checkpoint smoke checks before formal training.",
+        "Run only the declared matched arms for their fixed budgets, preserve their checkpoint-selection rules, and record which runs actually completed."
+      ],
+      "comparison": [
+        "Locate the source comparison: matched ERM and the campaign’s specialist arms within each history.",
+        "Read T1 and T5 gates separately; one architecture/history signal does not establish cross-history transfer."
+      ],
+      "deliver": [
+        "Evaluate completed checkpoints on identical declared scenarios, samples, and masks within each history setting; compare each candidate with that architecture’s matched ERM control.",
+        "Deliver per-arm provenance, per-condition results, compute costs, and unresolved cells; apply the recorded transfer gate without treating absent results as negative findings.",
+        "Keep T1 and T5 transfer conclusions separate; a positive screen in one setting does not establish cross-history transfer."
+      ]
+    },
+    {
+      "id": "ARCH-SwinUnet",
+      "question": "What does the recorded Swin-Unet transfer screen establish?",
+      "prepare": [
+        "Recover this architecture’s exact input configuration, bootstrap initialization, matched continuation arms, selection rules, and recorded history settings from the source; leave undocumented fields unresolved.",
+        "Separate completed historical artifacts from planned or unreported work, then define a bounded new transfer experiment only for the settings and budget explicitly authorized."
+      ],
+      "intervention": [
+        "Prepare and verify the architecture-specific foundation; initialize each matched continuation independently from that foundation rather than importing another architecture’s checkpoint.",
+        "Once authorized and all required protocol fields are known, perform bounded loader/model/update/checkpoint smoke checks before formal training.",
+        "Run only the declared matched arms for their fixed budgets, preserve their checkpoint-selection rules, and record which runs actually completed."
+      ],
+      "comparison": [
+        "Locate the source comparison: matched ERM and the reported Swin-Unet specialist arms.",
+        "Do not infer an unreported T1 result from the reported T5 screen."
+      ],
+      "deliver": [
+        "Evaluate completed checkpoints on identical declared scenarios, samples, and masks within each history setting; compare each candidate with that architecture’s matched ERM control.",
+        "Deliver per-arm provenance, per-condition results, compute costs, and unresolved cells; apply the recorded transfer gate without treating absent results as negative findings.",
+        "Preserve the historical T1 reporting gap; any newly executed T1 result must be identified as new evidence."
+      ]
+    },
+    {
+      "id": "ARCH-ConvLSTM",
+      "question": "How far did the ConvLSTM transfer campaign actually progress?",
+      "prepare": [
+        "Recover this architecture’s exact input configuration, bootstrap initialization, matched continuation arms, selection rules, and recorded history settings from the source; leave undocumented fields unresolved.",
+        "Separate completed historical artifacts from planned or unreported work, then define a bounded new transfer experiment only for the settings and budget explicitly authorized."
+      ],
+      "intervention": [
+        "Prepare and verify the architecture-specific foundation; initialize each matched continuation independently from that foundation rather than importing another architecture’s checkpoint.",
+        "Once authorized and all required protocol fields are known, perform bounded loader/model/update/checkpoint smoke checks before formal training.",
+        "Run only the declared matched arms for their fixed budgets, preserve their checkpoint-selection rules, and record which runs actually completed."
+      ],
+      "comparison": [
+        "Locate the source comparison: the submitted screen plan; final results are not recorded in the inventory.",
+        "Submission and a saved bootstrap are not final continuation outcomes."
+      ],
+      "deliver": [
+        "Evaluate completed checkpoints on identical declared scenarios, samples, and masks within each history setting; compare each candidate with that architecture’s matched ERM control.",
+        "Deliver per-arm provenance, per-condition results, compute costs, and unresolved cells; apply the recorded transfer gate without treating absent results as negative findings.",
+        "Preserve the historical distinction between saved bootstrap, submitted continuation jobs, and unreported final screen values; verify new completion evidence independently."
+      ]
+    },
+    {
+      "id": "P04-P07-block",
+      "question": "What do the grouped residual corrections show against a weak legacy base?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Create separate rows for pointwise, spatial, decoder, and stochastic corrections.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop (P00) and the stronger hard router (P03).",
+        "Retain P00 and the stronger P03 comparison; gains over a weak reference do not establish adoption value."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "GLOBAL-D1",
+      "question": "What is the global-consistency comparator for cross-history variants?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Draw the unweighted global consistency objective before introducing local or impact weights.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh matched ERM.",
+        "Keep this later cross-history control distinct from the corrected T1 D1-KL record."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X8+X10",
+      "question": "Can complementary FireDrop and inpainting components form a useful route?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Map FireDrop to impact consistency and spatial missingness to inpainting.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh matched ERM.",
+        "Assess the composition against matched ERM without claiming the routing itself is a new learned mechanism."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "X11-vs-ERM",
+      "question": "What is the total effect of reconstruction-supervised inpainting?",
+      "prepare": [
+        "Identify the B3 or B5 starting checkpoint and the exact cross-history variant; T1 and T5 change architecture and features as well as history.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Identify the full restoration recipe included in the comparison with ERM.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: fresh matched ERM.",
+        "Use the separate X11-versus-X10 comparison to isolate reconstruction supervision."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "B1",
+      "question": "What does the corrected clean T5 baseline establish?",
+      "prepare": [
+        "Reconstruct the corrected project recipe: input indexing, training-only normalization, data years, starting weights, and the selection rule at this stage.",
+        "Read the source and current lifecycle, then declare the comparison and resource budget before proposing any execution."
+      ],
+      "intervention": [
+        "Identify the T5 architecture and features alongside its history window.",
+        "Recover which parameters, inputs, losses, or sampling rules changed in this variant, and keep all other recorded choices visible."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected T1 clean baseline (B0), with architecture/input confounds stated.",
+        "Comparison with B0 changes more than history length, so it cannot isolate a history effect."
+      ],
+      "deliver": [
+        "Produce a method diagram and a comparison table using only recorded outcomes; label raw, routed, and total-effect results wherever applicable.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "B5",
+      "question": "What provides the missingness-trained T5 starting point?",
+      "prepare": [
+        "Prepare the corrected T5 input pipeline, training-year normalization statistics, declared data split, and the foundation recipe’s encoder initialization; do not start from a later continuation checkpoint.",
+        "Identify the foundation-specific training budget, validation-AP checkpoint-selection rule, and export/provenance requirements from the source; declare compute limits before execution."
+      ],
+      "intervention": [
+        "Keep the clean reference and FireDrop/BlockDrop foundation recipes distinct, including their declared stochastic augmentation probabilities.",
+        "Once authorized, run the bounded setup and loader/model smoke checks, then train the identified foundation for its fixed budget in a new output location.",
+        "Verify that training completed and export the checkpoint selected by the foundation validation rule, which can precede the final training update; preserve its checksum and selection metadata."
+      ],
+      "comparison": [
+        "Locate the source comparison: corrected T5 clean baseline (B1).",
+        "Compare with clean T5 B1 and show complete-input behavior as well as missingness performance."
+      ],
+      "deliver": [
+        "Evaluate the exported foundation under the same project scenario and sample contract used for the intended baseline comparison.",
+        "Deliver data/statistics identities, initialization provenance, completion evidence, selected-checkpoint identity, and per-condition scores; keep this stage separate from final-step continuation selection.",
+        "Record any missing comparison arm or protocol deviation rather than treating unmatched scores as a method gain."
+      ]
+    },
+    {
+      "id": "P09-total",
+      "question": "How much total improvement was observed without isolating GroupDRO?",
+      "prepare": [
+        "Locate the historical recipe and its actual data, initialization, and evaluation population; do not silently replace it with today’s corrected protocol.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Trace the full path from legacy P00 through continuation plus the group objective.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: legacy FireDrop (P00), with matched ERM (P10) for attribution.",
+        "Use P10 to diagnose continuation contribution; P09-minus-P00 alone is not GroupDRO attribution."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "FOUNDATION-RULES",
+      "question": "How do deterministic no-fire and persistence references behave?",
+      "prepare": [
+        "Identify the deterministic prediction rules, target dates, and event-macro evaluation population before reading their scores.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Write each prediction rule explicitly and identify the label population used to score it.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: the no-fire and persistence rules under their recorded event-macro metric.",
+        "Keep event-macro rule metrics distinct from any differently pooled learned-model table."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    },
+    {
+      "id": "FOUNDATION-OFFICIAL",
+      "question": "What does the official reproduction establish independently of project methods?",
+      "prepare": [
+        "Locate the official WSTS contract, the trained Fold 2 artifact, and the released-weight campaign; preserve their distinct provenance.",
+        "Read the source and current lifecycle before planning work; the historical record is not authorization for a new run."
+      ],
+      "intervention": [
+        "Separate the trained Fold 2 result from released-weight evaluation and the multi-fold summary.",
+        "Organize the existing artifacts as an evidence review; this grouped or diagnostic record is not a single training recipe to execute."
+      ],
+      "comparison": [
+        "Locate the source comparison: the official trained Fold 2 and released-weight references under their own contracts.",
+        "Do not interpret differences from corrected project baselines as method gains because their contracts differ."
+      ],
+      "deliver": [
+        "Produce an evidence table that keeps the component records, evaluation populations, and reported limitations separate.",
+        "State what this comparison can attribute and what it cannot; retain the source’s negative, invalid, incomplete, or single-setting limitations."
+      ]
+    }
+  ]
+}

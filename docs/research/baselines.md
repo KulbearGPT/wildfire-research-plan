@@ -2,6 +2,58 @@
 
 Use the generic submitter from the committed checkout after environment/data setup. The historical `initialization: from_scratch` label means no wildfire task checkpoint; the encoder starts from ImageNet weights.
 
+## T1 classroom path
+
+For lessons 5–7, prepare **B3 only**. If the instructor has supplied a verified
+B3 checkpoint and completion record, inspect those identities and go directly to
+its 2021 evaluation. Do not launch a replacement training job merely to follow
+this page. B5 belongs to the separate T5 extension.
+
+Start after project setup and corrected data/statistics preparation are complete.
+Record the agreed resource limits and use fresh output locations. Train B3:
+
+```bash
+source "$WILDFIRE_SITE_ENV"
+cd "$WILDFIRE_REPO"
+bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.train_corrected_baseline \
+  --baseline-id B3 --upstream-root "$WILDFIRE_UPSTREAM" \
+  --data-root "$WILDFIRE_DATA" --stats-path "$WILDFIRE_STATS" \
+  --run-root "$WILDFIRE_ROOT/runs/B3"
+```
+
+Wait for successful training, its completion receipt and actual budget completion.
+Then export the validation-selected foundation checkpoint:
+
+```bash
+bash scripts/research/submit.sh cpu python -m reproductions.wsts_fast_track.complete_baseline \
+  --baseline-id B3 --run-root "$WILDFIRE_ROOT/runs/B3" \
+  --checkpoint-output "$WILDFIRE_ROOT/checkpoints/b3.ckpt" \
+  --record-output "$WILDFIRE_ROOT/checkpoints/B3-completed.json"
+```
+
+After export succeeds, evaluate the frozen foundation for row A:
+
+```bash
+bash scripts/research/submit.sh gpu python -m reproductions.wsts_fast_track.evaluate_corrected_baseline \
+  --record "$WILDFIRE_ROOT/checkpoints/B3-completed.json" \
+  --upstream-root "$WILDFIRE_UPSTREAM" --data-root "$WILDFIRE_DATA" \
+  --stats-path "$WILDFIRE_STATS" --year 2021 --device cuda \
+  --output-root "$WILDFIRE_ROOT/runs/B3/eval-2021"
+```
+
+These destinations follow the example configuration. For provided or relocated
+weights, use the actual verified record and configured paths; do not overwrite
+existing runs. Bring back the completion record, exported checkpoint/checksum,
+and four-condition 2021 summary. Read AP from
+`results.M00.metrics.avg_precision` and the equivalent M01/M06/M07 fields.
+Then return to the [ERM practical](../../lessons/erm/index.html#step5).
+
+## Optional paired T1 and T5 foundation preparation
+
+The following paired commands are for an intentionally planned two-history
+comparison, not the first classroom route. Do not run them again after preparing
+B3 above; choose only missing foundations within the agreed budget.
+
 ```bash
 source "$WILDFIRE_SITE_ENV"
 cd "$WILDFIRE_REPO"

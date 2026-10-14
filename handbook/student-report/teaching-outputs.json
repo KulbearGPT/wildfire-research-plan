@@ -1,0 +1,72 @@
+{
+  "teaching_only": true,
+  "description": "Invented population metrics, not derived from Cedar. A/B/C are wrapper labels; each value is a partial summary schema example, not an executable or completed run record.",
+  "excerpts": {
+    "A": {
+      "year": 2021,
+      "results": {
+        "M00": {
+          "metrics": {
+            "avg_precision": 0.6
+          }
+        },
+        "M01": {
+          "metrics": {
+            "avg_precision": 0.3
+          }
+        },
+        "M06": {
+          "metrics": {
+            "avg_precision": 0.45
+          }
+        },
+        "M07": {
+          "metrics": {
+            "avg_precision": 0.45
+          }
+        }
+      },
+      "baseline_id": "B3"
+    },
+    "B": {
+      "year": 2021,
+      "results": {
+        "M00": {
+          "avg_precision": 0.58
+        },
+        "M01": {
+          "avg_precision": 0.36
+        },
+        "M06": {
+          "avg_precision": 0.51
+        },
+        "M07": {
+          "avg_precision": 0.51
+        }
+      },
+      "history": 1,
+      "seed": 0,
+      "method": "control"
+    },
+    "C": {
+      "year": 2021,
+      "results": {
+        "M00": {
+          "avg_precision": 0.57
+        },
+        "M01": {
+          "avg_precision": 0.39
+        },
+        "M06": {
+          "avg_precision": 0.54
+        },
+        "M07": {
+          "avg_precision": 0.54
+        }
+      },
+      "history": 1,
+      "seed": 0,
+      "method": "cosine_erm"
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "teaching_only": true,
+  "description": "Fictional Cedar patch; no geographic or measured model provenance.",
+  "last_input_day": 3,
+  "target_day": 4,
+  "inputs": {
+    "fire": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "weather": [
+      [
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      [
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      [
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      [
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ]
+    ],
+    "terrain": [
+      [
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        2,
+        2,
+        2,
+        2
+      ],
+      [
+        3,
+        3,
+        3,
+        3
+      ],
+      [
+        4,
+        4,
+        4,
+        4
+      ]
+    ]
+  },
+  "target": [
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "probabilities": [
+    [
+      0.1,
+      0.1,
+      0.1,
+      0.1
+    ],
+    [
+      0.1,
+      0.8,
+      0.4,
+      0.1
+    ],
+    [
+      0.1,
+      0.7,
+      0.6,
+      0.1
+    ],
+    [
+      0.1,
+      0.1,
+      0.1,
+      0.1
+    ]
+  ],
+  "threshold_rule": "p > 0.5",
+  "mask_note": "Teaching masks only: M06 top-left 2x2; M07 left two columns; both affect dynamic inputs only."
+}

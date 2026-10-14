@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Artifacts for the Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17)
+route · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
+<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<body data-page="guide-artifacts" data-root="../../"><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-case/index.html">Running example</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
+<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Artifacts for the Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17)
+route</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · Required files and roles</a><a href="#chapter-3">3 · Preserve source and
+comparison provenance</a><a href="#chapter-4">4 · Transfer or regenerate</a><a href="#chapter-5">5 · Current tooling limits and
+archive</a></nav></details>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 5</p><h2>Before you begin</h2><span id="artifacts-for-the-x22--x17-route"></span>
+<p>The active handoff needs corrected <a class="experiment-name" href="../../experiments/index.html#B3">T1 missingness-trained foundation <small>(B3)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B5">T5 missingness-trained foundation <small>(B5)</small></a> initialization, the <a class="experiment-name" href="../../experiments/index.html#X22+X17">Condition-specific specialist route <small>(X22+X17)</small></a>
+components, and their matched controls. Keep weights, data and large
+logs outside Git. This page describes what to retain and transfer; it
+does not establish that the historical files are currently accessible.
+Use the <a href="../method-recipes/index.html">active recipe</a> and <a
+href="../../docs/CODE_LIFECYCLE.md">code lifecycle</a> for execution and
+claim limits.</p>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 5</p><h2 id="required-files-and-roles">Required files and roles</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Asset</th>
+<th>What to preserve</th>
+<th>Role in the comparison</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Corrected data and statistics</td>
+<td>Dataset identity, repair/audit records, checksums and training-only
+normalization statistics</td>
+<td>Same event/target-date population for every paired result; see <a
+href="../data-preparation/index.html">data preparation</a></td>
+</tr>
+<tr class="even">
+<td>B3 at T1 and B5 at T5</td>
+<td>Original Lightning checkpoint, its SHA256 and available
+completion/training records</td>
+<td>Shared initialization within each setting and separate
+frozen-reference evaluation</td>
+</tr>
+<tr class="odd">
+<td>Fresh ERM</td>
+<td><code>control</code> continuation checkpoint and results</td>
+<td>Same-budget comparator; supplies <a class="experiment-name" href="../../experiments/index.html#M00">Complete-input scenario <small>(M00)</small></a> to the complete route</td>
+</tr>
+<tr class="even">
+<td><a class="experiment-name" href="../../experiments/index.html#X22">Cosine-schedule continuation <small>(X22)</small></a></td>
+<td><code>cosine_erm</code> continuation checkpoint and results</td>
+<td>Cosine-schedule component; supplies <a class="experiment-name" href="../../experiments/index.html#M01">Fire-history-missing scenario <small>(M01)</small></a></td>
+</tr>
+<tr class="odd">
+<td>Mixed expert / <a class="experiment-name" href="../../experiments/index.html#X14">Mixed-severity block specialist <small>(X14)</small></a></td>
+<td><code>block_specialist</code> without a fixed block fraction,
+checkpoint and results</td>
+<td>Nearest attribution control for severity decomposition</td>
+</tr>
+<tr class="even">
+<td>Mild expert / <a class="experiment-name" href="../../experiments/index.html#X17">Fixed-severity block specialists <small>(X17)</small></a></td>
+<td><code>block_specialist --block-fraction 0.25</code>, checkpoint and
+results</td>
+<td>Supplies <a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a></td>
+</tr>
+<tr class="odd">
+<td>Severe expert / X17</td>
+<td><code>block_specialist --block-fraction 0.5</code>, checkpoint and
+results</td>
+<td>Supplies <a class="experiment-name" href="../../experiments/index.html#M07">Half-block-missing scenario <small>(M07)</small></a></td>
+</tr>
+</tbody>
+</table>
+<p>Retain a matched set of all five continuation roles for each required
+history and seed. Full recorded evidence covers histories 1/5, seeds
+0/1/2 and years 2021/2022/2023. Each trained role has a
+<code>checkpoint.pt</code>; each evaluated year has its own
+<code>summary.json</code> and <code>M00.json</code>,
+<code>M01.json</code>, <code>M06.json</code>, <code>M07.json</code>. The
+2022/2023 evaluations reuse the frozen trained checkpoint. Preserve
+<code>started.json</code> and the associated job records as well. Smoke
+outputs qualify execution only.</p>
+<p>The canonical settings are T1 Res18-U-Net with 40 features and T5
+Res18-UTAE with 33 features/day. Continuations share the relevant B3/B5
+checkpoint, seed, 3000 optimizer updates, physical/effective batch 64,
+data, normalization and final-step checkpoint selection. B3/B5 bootstrap
+selection follows its own <a href="../baselines/index.html">baseline
+contract</a>; a baseline's selected checkpoint need not be its final
+training step. Do not replace a fresh ERM control with frozen B3/B5.</p>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 5</p><h2 id="preserve-source-and-comparison-provenance">Preserve source and
+comparison provenance</h2>
+<p>A result summary contains scenario metrics and identifiers; it is not
+the complete experiment record. Keep a transfer inventory recording each
+file's role, history/seed/year where applicable, original location,
+destination, byte count and SHA256. Record missing assets explicitly.
+This inventory is a handoff record, not an input format accepted by the
+current runner.</p>
+<p>For every matched set, preserve:</p>
+<ul>
+<li>The exact source commit or source archive, executed command,
+configuration, upstream revision/patch and environment record. The
+submitter saves <code>source-commit.txt</code>,
+<code>command.txt</code>, <code>site-at-submission.env</code>,
+<code>job-id.txt</code> and <code>submission-status.txt</code> beside
+the archived source under <code>$WILDFIRE_ROOT/jobs/</code>. Retain the
+relevant allocation logs and setup <code>pip freeze</code> records.</li>
+<li>B3/B5 file identity and the relationship between that source
+checkpoint and each continuation. Verify initialization, physical batch,
+optimizer budget, schedule, corruption policy and checkpoint selection
+from the source/config and checkpoint training metadata, rather than
+inferring them from a directory name. <code>started.json</code> records
+the invocation; an evaluate-only invocation does not certify the
+original training settings.</li>
+<li>Dataset/normalization identity and matched evaluation populations.
+The recorded 2021/2022/2023 counts are 3181/2856/2102 in both settings;
+see the <a href="../evaluation-population/index.html">population
+audit</a>. Historical reporting years are already exposed and are not
+untouched confirmation data for a new method.</li>
+<li>Per-role results and the generated comparison reports. Keep X22
+versus fresh ERM, X17 versus mixed X14, and the complete route versus
+fresh ERM distinct. Preserve frozen B3/B5 evaluation results for the
+separate reference comparison.</li>
+</ul>
+<p>Use <code>compare.py</code>, <code>compose_severity_routes.py</code>
+and <code>compose_complete_routes.py</code> under
+<code>reproductions/cross_history/</code> as described in the <a
+href="../method-recipes/index.html">active recipe</a>. Their checks do
+not certify the complete artifact inventory, shared initialization,
+batch, data identity or source provenance. Check exactly one matched row
+per history/seed/year and align repeated arguments. For the active
+complete route, verify <code>component_methods.control</code> is
+<code>control</code> and <code>component_methods.fire</code> is
+<code>cosine_erm</code>. The composer assembles scenario scores; it does
+not export a fused model. Preserve failed X17 attribution cells and the
+distinction between gains over fresh ERM and frozen B3/B5.</p>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 5</p><h2 id="transfer-or-regenerate">Transfer or regenerate</h2>
+<ol type="1">
+<li>Locate the source files and make an inventory before copying. A
+historical absolute path or committed manifest is provenance, not proof
+of availability.</li>
+<li>Copy the required checkpoints, records, result directories and
+provenance into a new external artifact directory. Compute and verify
+SHA256 on both sides; perform weight hashing, bulk copying and model
+validation in Slurm allocations.</li>
+<li>Set <code>WILDFIRE_B3_CHECKPOINT</code> and
+<code>WILDFIRE_B5_CHECKPOINT</code> to the transferred Lightning
+baseline files in the site's configuration. Use the relocated
+continuation checkpoint path with <code>--evaluate-only</code> when
+evaluation is needed. Follow <a href="../baselines/index.html">baseline
+record relocation</a> for a completion record's runtime
+<code>checkpoint</code> field; preserve the scientific provenance fields
+and original initialization identities in historical checkpoints.</li>
+<li>Confirm file integrity, matching roles and settings, result
+completeness and the exact submitted source before any authorized
+reproduction. The submitter archives committed HEAD, so working-tree
+changes alone do not enter a job. If originals are unavailable, use the
+<a href="../baselines/index.html">baseline</a> and <a
+href="../method-recipes/index.html">active continuation</a> recipes
+within the agreed budget. Regenerated artifacts have new checksums and
+provenance; they do not acquire the historical identities or establish
+the old measured results automatically.</li>
+</ol>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="#chapter-5">Next section →</a></div></section>
+<section class="step-panel" id="chapter-5"><p class="step-kicker">Reference · 5 / 5</p><h2 id="current-tooling-limits-and-archive">Current tooling limits and
+archive</h2>
+<p><code>reproductions.artifact_bundle</code> supports only the
+<code>reliability</code> and <code>routed</code> teacher-manifest
+formats from the archived RF and TD campaigns. It does not provide a
+complete X22+X17 bundle, export B3/B5 initialization, collect the five
+matched roles with all yearly evaluations, or verify the whole
+comparison contract. No active-route manifest schema or automatic
+bundler is provided here.</p>
+<p>The original verified teacher-copy commands and format-specific
+relocation rules are preserved in <a
+href="../../docs/archive/teacher-artifacts.md">archived teacher artifact
+transfer</a>. They are useful for deliberate recovery of those campaigns
+and are not part of the active route's prerequisites.</p>
+<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/research/artifacts.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

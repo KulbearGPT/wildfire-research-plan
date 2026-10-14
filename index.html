@@ -1,238 +1,31 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="An eight-lesson path from wildfire forecasting foundations to a fair experiment, with an interactive ERM control lesson.">
-<title>Wildfire Lab · Learn to build a trustworthy experiment</title>
-<link rel="stylesheet" href="assets/learning.css">
-<script src="assets/learning.js" defer>
-</script>
-</head>
-<body data-page="home">
-<a class="skip" href="#main">Skip to content</a>
-<header class="topbar">
-<a class="brand" href="index.html">WILDFIRE <span>/ LAB</span>
-</a>
-<nav aria-label="Main navigation">
-<a href="#course" aria-current="page">Course</a>
-<a href="#handbook">Practical handbook</a>
-<a href="#library">Reference library</a>
-</nav>
-</header>
-<div class="layout">
-<aside class="sidebar">
-<details open data-directory>
-<summary>The learning path</summary>
-<ol class="directory">
-<li>
-<a href="#lesson1">01 &nbsp; What are we predicting?</a>
-</li>
-<li>
-<a href="#lesson2">02 &nbsp; From channels to a fire map</a>
-</li>
-<li>
-<a href="#lesson3">03 &nbsp; How good is this prediction?</a>
-</li>
-<li>
-<a href="#lesson4">04 &nbsp; Your first official Fold 2</a>
-</li>
-<li>
-<a href="#lesson5">05 &nbsp; What if observations are missing?</a>
-</li>
-<li>
-<a href="#lesson6">06 &nbsp; Why do we need an ERM control?<span>Interactive pilot</span>
-</a>
-</li>
-<li>
-<a href="#lesson7">07 &nbsp; Does the schedule help?</a>
-</li>
-<li>
-<a href="#lesson8">08 &nbsp; When does specialization help?</a>
-</li>
-</ol>
-<p class="small">Read in order, or return to a lesson.<br>Lesson 6 is the first interactive pilot.</p>
-</details>
-</aside>
-<main class="content" id="main">
-<header class="hero">
-<p class="eyebrow">A practical course in research</p>
-<h1>From a fire map<br>to a fair experiment.</h1>
-<p class="lead">Eight lessons. One learning path. Understand the task, run a baseline, then learn what your results actually show.</p>
-<div class="actions">
-<a class="button" href="#lesson1">Start with lesson 1 →</a>
-<a class="button" href="lessons/erm/index.html" data-continue>Try the ERM lesson</a>
-</div>
-<div class="meta">
-<span>Before you start: basic Python + CNN concepts</span>
-<span>Browser exercises + Slurm practicals</span>
-</div>
-</header>
-<section id="course" class="section">
-<div class="section-heading">
-<h2>Your course directory</h2>
-<span class="muted">Understand → reproduce → compare</span>
-</div>
-<p>Each lesson has a task and a deliverable. The ERM pilot is ready to work through; the other entries currently lead to existing readings or practicals while their interactive versions are developed.</p>
-<article class="lesson-card" id="lesson1">
-<div class="number">01</div>
-<div>
-<span class="pill">Existing reading</span>
-<h3>What are we predicting?</h3>
-<p>One event → input days → next-day target.</p>
-<p class="deliver">
-<strong>You will produce:</strong> An annotated timeline that separates active-fire detections from burned area.</p>
-<details>
-<summary>What you will learn · Understand the task</summary>
-<p>Input dates and target day; satellite observations; active fire versus burned area.</p>
-</details>
-<div class="actions">
-<a  href="related-work/index.html#contract">Read the task definition</a>
-</div>
-</div>
-</article>
-<article class="lesson-card" id="lesson2">
-<div class="number">02</div>
-<div>
-<span class="pill">Reading available · practice planned</span>
-<h3>From channels to a fire map</h3>
-<p>Follow satellite features into a spatial prediction.</p>
-<p class="deliver">
-<strong>You will produce:</strong> An annotated input / probability / label example.</p>
-<details>
-<summary>What you will learn · Understand the model</summary>
-<p>Dynamic and static channels; tensor axes; spatial prediction; logits, probabilities and masks.</p>
-</details>
-<div class="actions">
-<a  href="related-work/index.html#baselines">Read the model overview</a>
-</div>
-</div>
-</article>
-<article class="lesson-card" id="lesson3">
-<div class="number">03</div>
-<div>
-<span class="pill">Reading available · practice planned</span>
-<h3>How good is this prediction?</h3>
-<p>Learn why sparse fire pixels make accuracy misleading.</p>
-<p class="deliver">
-<strong>You will produce:</strong> Explain a false alarm, a missed fire and the role of AP.</p>
-<details>
-<summary>What you will learn · Understand the evidence</summary>
-<p>Sparse positives; thresholds; precision and recall; AP; training, validation and test roles.</p>
-</details>
-<div class="actions">
-<a  href="related-work/index.html#challenges">Read the metric introduction</a>
-</div>
-</div>
-</article>
-<article class="lesson-card" id="lesson4">
-<div class="number">04</div>
-<div>
-<span class="pill">Existing practical</span>
-<h3>Your first official Fold 2</h3>
-<p>Prepare, smoke-check, train, then verify the result.</p>
-<p class="deliver">
-<strong>You will produce:</strong> One trained fold and an experiment record with traceable artifacts.</p>
-<details>
-<summary>What you will learn · Complete a reproduction</summary>
-<p>Personal environment; official data and split; smoke check; training; evaluation; completion evidence.</p>
-<p>
-<a href="baseline-reproduction/index.html">Before running: how baseline reproduction works</a>
-</p>
-</details>
-<div class="actions">
-<a  href="guides/docs/tutorials/res18-baseline-slurm.html">Open the step-by-step practical</a>
-</div>
-</div>
-</article>
-<article class="lesson-card" id="lesson5">
-<div class="number">05</div>
-<div>
-<span class="pill">Existing reading</span>
-<h3>What if observations are missing?</h3>
-<p>Distinguish an absent observation from a real zero.</p>
-<p class="deliver">
-<strong>You will produce:</strong> A four-scenario sheet and a project readiness checklist.</p>
-<details>
-<summary>What you will learn · Enter the project</summary>
-<p>M00/M01/M06/M07; controlled masks; official versus project protocol; corrected data and B3.</p>
-<p>
-<a href="guides/docs/tutorials/matched-erm-experiment-design.html#2-moving-from-fold-2-to-the-project-experiments">Bridge from official Fold 2 to the project</a> · <a href="guides/docs/research/baselines.html">Prepare B3</a>
-</p>
-</details>
-<div class="actions">
-<a  href="related-work/index.html#missingness">Read the missingness introduction</a>
-</div>
-</div>
-</article>
-<article class="lesson-card featured" id="lesson6">
-<div class="number">06</div>
-<div>
-<span class="pill live">Interactive pilot · ready</span>
-<h3>Why do we need an ERM control?</h3>
-<p>A higher score is the beginning of a question. Find the missing comparison.</p>
-<p class="deliver">
-<strong>You will produce:</strong> A matched B3 / ERM plan, a result table and a defensible conclusion.</p>
-<details>
-<summary>What you will learn · Design a fair comparison</summary>
-<p>Predict; trace the branches; understand ERM; repair a comparison; run A/B; interpret; submit.</p>
-</details>
-<div class="actions">
-<a class="button" href="lessons/erm/index.html">Start the interactive lesson →</a>
-</div>
-</div>
-</article>
-<article class="lesson-card" id="lesson7">
-<div class="number">07</div>
-<div>
-<span class="pill">Existing reading</span>
-<h3>Does the schedule help?</h3>
-<p>Compare X22 with the same-budget ERM continuation.</p>
-<p class="deliver">
-<strong>You will produce:</strong> An A/B/C comparison separating continuation from schedule effects.</p>
-<details>
-<summary>What you will learn · Attribute an improvement</summary>
-<p>Independent X22 branch; matched initialization and budget; B-to-C gain; variability and limits.</p>
-</details>
-<div class="actions">
-<a  href="guides/docs/tutorials/matched-erm-experiment-design.html#8-next-lessons-x22-first-then-x14">Read the next comparison</a>
-</div>
-</div>
-</article>
-<article class="lesson-card" id="lesson8">
-<div class="number">08</div>
-<div>
-<span class="pill">Existing reference</span>
-<h3>When does specialization help?</h3>
-<p>Move from mixed-severity training to fixed-severity experts.</p>
-<p class="deliver">
-<strong>You will produce:</strong> A controlled follow-up proposal that includes model and training costs.</p>
-<details>
-<summary>What you will learn · Advanced research</summary>
-<p>X14 mixed severity; X17 fixed severity; closest controls; condition-specific composition; claim limits.</p>
-</details>
-<div class="actions">
-<a  href="guides/docs/research/method-recipes.html">Read the active recipe</a>
-</div>
-</div>
-</article>
-</section>
-<section class="section" id="handbook">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Learn to build a trustworthy experiment · Wildfire Lab</title><link rel="stylesheet" href="assets/learning.css">
+<script src="assets/learning.js" defer></script><script src="assets/lesson-demos.js" defer></script></head>
+<body data-page="home" data-root=""><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="index.html">WILDFIRE <span>/ LAB</span></a>
+<nav aria-label="Main navigation"><a href="index.html#course">Course</a><a href="index.html#handbook">Practical handbook</a><a href="index.html#library">Reference library</a></nav></header>
+<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<p class="small"><a href="handbook/student-start/index.html">Practical readiness</a><br><a href="handbook/student-case/index.html">Running example</a><br><a href="handbook/student-report/index.html">Output → report</a><br><a href="handbook/student-help/index.html">I am stuck</a><br><a href="experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+</details></aside>
+<main class="content" id="main"><header class="hero"><p class="eyebrow">A practical course in research</p><h1>From a fire map<br>to a fair experiment.</h1><p class="lead">Eight lessons. One learning path. Explore an example, make a decision, then produce something you can explain.</p><div class="actions"><a class="button" href="lessons/forecast/index.html">Start lesson 1 →</a><a class="button" href="lessons/erm/index.html" data-continue>Try the ERM comparison →</a></div><div class="meta"><span>Before you start: basic Python + CNN concepts</span><span>Browser activities + separate Slurm practicals</span></div></header>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<section class="section"><h2>Before you begin</h2><p><a href="handbook/student-start/index.html">Choose your study or practical route</a> · <a href="handbook/student-case/index.html">Meet the Cedar teaching case</a> · <a href="student-record.md" download>Keep one course record</a></p><p>Start with lessons 1–3. Before cluster work, check access and assets. Without compute access, continue the labelled teaching exercises.</p></section><section id="course" class="section"><h2>Your course directory</h2><p>Follow the lessons in order. Each ends with a completion criterion, an exit task and a downloadable worksheet. Cluster work is separate from browser exercises.</p><article class="lesson-card" id="lesson1"><div class="number">01</div><div><span class="pill live">Interactive lesson · 30–40 min</span><h3>What are we predicting?</h3><p>Identify exactly what enters a forecast and what its target means.</p><p class="deliver"><strong>You will produce:</strong> An annotated forecast timeline and input/target contract.</p><a class="button secondary" href="lessons/forecast/index.html">Start lesson 1 →</a><a class="lesson-resume js-only" data-resume-page="forecast" href="lessons/forecast/index.html">Resume saved step →</a></div></article><article class="lesson-card" id="lesson2"><div class="number">02</div><div><span class="pill live">Interactive lesson · 35–45 min</span><h3>From channels to a fire map</h3><p>Follow a satellite sample through features, logits and a pixel prediction.</p><p class="deliver"><strong>You will produce:</strong> An annotated tensor diagram and a probability-to-mask calculation.</p><a class="button secondary" href="lessons/prediction/index.html">Start lesson 2 →</a><a class="lesson-resume js-only" data-resume-page="prediction" href="lessons/prediction/index.html">Resume saved step →</a></div></article><article class="lesson-card" id="lesson3"><div class="number">03</div><div><span class="pill live">Interactive lesson · 35–45 min</span><h3>Judge a prediction</h3><p>Explain false alarms, missed fire and why one accuracy number is insufficient.</p><p class="deliver"><strong>You will produce:</strong> A metric worksheet and a fixed evaluation plan.</p><a class="button secondary" href="lessons/evaluation/index.html">Start lesson 3 →</a><a class="lesson-resume js-only" data-resume-page="evaluation" href="lessons/evaluation/index.html">Resume saved step →</a></div></article><article class="lesson-card" id="lesson4"><div class="number">04</div><div><span class="pill live">Interactive lesson · 45–60 min + cluster work</span><h3>Official Fold 2</h3><p>Move from setup to a verified official Fold 2 result, one gate at a time.</p><p class="deliver"><strong>You will produce:</strong> A Fold 2 experiment record with completion evidence.</p><a class="button secondary" href="lessons/fold2/index.html">Start lesson 4 →</a><a class="lesson-resume js-only" data-resume-page="fold2" href="lessons/fold2/index.html">Resume saved step →</a></div></article><article class="lesson-card" id="lesson5"><div class="number">05</div><div><span class="pill live">Interactive lesson · 35–45 min</span><h3>Missing observations</h3><p>Understand controlled missingness and make the transition to the project protocol.</p><p class="deliver"><strong>You will produce:</strong> A scenario sheet and a project-readiness checklist.</p><a class="button secondary" href="lessons/missingness/index.html">Start lesson 5 →</a><a class="lesson-resume js-only" data-resume-page="missingness" href="lessons/missingness/index.html">Resume saved step →</a></div></article><article class="lesson-card" id="lesson6"><div class="number">06</div><div><span class="pill live">Interactive lesson · 45–60 min + optional cluster work</span><h3>The ERM control</h3><p>Separate ordinary continuation from a new training choice.</p><p class="deliver"><strong>You will produce:</strong> A matched foundation / ERM plan and an A/B result report.</p><a class="button secondary" href="lessons/erm/index.html">Start lesson 6 →</a><a class="lesson-resume js-only" data-resume-page="erm" href="lessons/erm/index.html">Resume saved step →</a></div></article><article class="lesson-card" id="lesson7"><div class="number">07</div><div><span class="pill live">Interactive lesson · 35–45 min + optional cluster work</span><h3>Does the schedule help?</h3><p>Test cosine-schedule continuation against a matched ERM control.</p><p class="deliver"><strong>You will produce:</strong> An A/B/C comparison with a schedule-specific conclusion.</p><a class="button secondary" href="lessons/schedule/index.html">Start lesson 7 →</a><a class="lesson-resume js-only" data-resume-page="schedule" href="lessons/schedule/index.html">Resume saved step →</a></div></article><article class="lesson-card" id="lesson8"><div class="number">08</div><div><span class="pill live">Interactive lesson · 40–50 min</span><h3>When specialization helps</h3><p>Distinguish specialist performance, system routing and the cost of extra models.</p><p class="deliver"><strong>You will produce:</strong> A matched specialist comparison and a follow-up proposal.</p><a class="button secondary" href="lessons/specialists/index.html">Start lesson 8 →</a><a class="lesson-resume js-only" data-resume-page="specialists" href="lessons/specialists/index.html">Resume saved step →</a></div></article></section><section class="section" id="handbook">
 <p class="eyebrow">Use when you reach a practical</p>
-<h2>Practical handbook</h2>
+<h2>Practical handbook</h2><p><a href="handbook/student-start/index.html">Readiness</a> · <a href="handbook/student-bridge/index.html">Official-to-project handover</a> · <a href="handbook/student-report/index.html">Output-to-report example</a> · <a href="handbook/student-help/index.html">When you are stuck</a></p>
 <div class="resource-grid">
 <article class="resource">
 <h3>First official experiment</h3>
 <p>Complete Fold 2 using official code and public assets.</p>
 <ul>
 <li>
-<a href="guides/docs/START_HERE.html">Preparation and completion checklist</a>
+<a href="handbook/start-here/index.html">Preparation and completion checklist</a>
 </li>
 <li>
-<a href="guides/docs/tutorials/res18-baseline-slurm.html">Setup → smoke → train → evaluate</a>
+<a href="handbook/res18-baseline-slurm/index.html">Setup → smoke → train → evaluate</a>
 </li>
 <li>
-<a href="baseline-reproduction/index.html">Reproduction walkthrough</a>
+<a href="library/reproduction/index.html">Reproduction walkthrough</a>
 </li>
 </ul>
 </article>
@@ -241,16 +34,16 @@
 <p>Move to corrected project data before comparing methods.</p>
 <ul>
 <li>
-<a href="guides/docs/research/reproduce.html">Environment and site configuration</a>
+<a href="handbook/reproduce/index.html">Environment and site configuration</a>
 </li>
 <li>
-<a href="guides/docs/research/data-preparation.html">Data preparation</a> · <a href="guides/docs/research/baselines.html">B3/B5 foundations</a>
+<a href="handbook/data-preparation/index.html">Data preparation</a> · <a href="handbook/baselines/index.html">B3/B5 foundations</a>
 </li>
 <li>
-<a href="guides/docs/research/method-recipes.html">Active continuation recipes</a>
+<a href="handbook/method-recipes/index.html">Active continuation recipes</a>
 </li>
 <li>
-<a href="guides/docs/research/setup-recovery.html">Setup and job recovery</a>
+<a href="handbook/setup-recovery/index.html">Setup and job recovery</a>
 </li>
 <li>
 <a href="lessons/erm/report-template.md" download>ERM report template</a>
@@ -262,20 +55,20 @@
 </section>
 <section class="section" id="library">
 <p class="eyebrow">Look up a detail</p>
-<h2>Reference library</h2>
+<h2>Reference library</h2><p><a href="experiments/index.html">Find any experiment by its descriptive name or record ID →</a></p>
 <p>You do not need to read this library before starting the course.</p>
 <div class="resource-grid">
 <article class="resource">
 <h3>Background &amp; reproduction</h3>
 <ul>
 <li>
-<a href="related-work/index.html">Research foundations and literature</a>
+<a href="library/foundations/index.html">Research foundations and literature</a>
 </li>
 <li>
-<a href="baseline-reproduction/index.html#results">Historical released-weight results</a>
+<a href="library/reproduction/index.html#results">Historical released-weight results</a>
 </li>
 <li>
-<a href="guides/docs/research-roadmap.html">Historical research roadmap</a>
+<a href="handbook/research-roadmap/index.html">Historical research roadmap</a>
 </li>
 </ul>
 </article>
@@ -286,10 +79,10 @@
 <a href="docs/CODE_LIFECYCLE.md">Active scope: X22 + X17 and controls</a>
 </li>
 <li>
-<a href="guides/docs/research/positive-signals.html">Positive signals</a> · <a href="guides/docs/research/negative-results.html">Negative, invalid and unrun records</a>
+<a href="handbook/positive-signals/index.html">Positive signals</a> · <a href="handbook/negative-results/index.html">Negative, invalid and unrun records</a>
 </li>
 <li>
-<a href="guides/docs/research/qualification.html">Execution qualification</a>
+<a href="handbook/qualification/index.html">Execution qualification</a>
 </li>
 <li>
 <a href="docs/archive/README.md">Implementation archive</a>
@@ -297,9 +90,5 @@
 </ul>
 </article>
 </div>
-</section>
-<footer class="footer">Wildfire Lab · Course directory and ERM teaching pilot, October 2026.<br>Target: next-day active-fire proxy. Controlled missingness is an experimental setting, not proof of operational robustness.</footer>
-</main>
-</div>
-</body>
-</html>
+</section><footer class="footer"><a href="site-content/en/course-lessons.json">Maintained source</a> · <a href="index.html#course">Course directory</a> · <a href="experiments/index.html">Experiment names</a><br>
+Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

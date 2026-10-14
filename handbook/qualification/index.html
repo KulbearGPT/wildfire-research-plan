@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delivery qualification
+record · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
+<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<body data-page="guide-qualification" data-root="../../"><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-case/index.html">Running example</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
+<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Delivery qualification
+record</h1><p class="lead">Historical evidence and context. These records support interpretation; they are not a required sequence of new experiments.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · Verified environment and
+CPU evidence</a><a href="#chapter-3">3 · GPU verification boundaries</a><a href="#chapter-4">4 · Subsequent actual
+verification</a></nav></details>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 4</p><h2>Before you begin</h2><span id="delivery-qualification-record"></span>
+<p>The verification covers a fresh virtual environment, an independent
+checkout of the official source, per-job Git archives, and relocated
+data and weight paths. It ran on compute nodes of the existing cluster;
+<strong>there is no claim of execution on another physical
+cluster</strong>. A new cluster selects its account, GPU, Python/module,
+and storage paths through the site configuration.</p>
+<p>Runtime qualification of the new environment is complete: 143
+training-environment checks and 117 audit-environment checks passed, 91
+GPU short-budget cases passed, and the 999-event audit and historical
+diagnostic replays completed. This conclusion verifies the execution
+pipeline; it is not a full-budget reproduction of every historical
+score. All tensor/model operations, dependency installation, downloads,
+and large-file verification ran under Slurm. The login node handled only
+source code, small metadata, Git, and submission checks.</p>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 4</p><h2 id="verified-environment-and-cpu-evidence">Verified environment and
+CPU evidence</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Job</th>
+<th>Source commit</th>
+<th>Node</th>
+<th>Result and scope</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>22101442</td>
+<td>98d12f0</td>
+<td>c142</td>
+<td>66 tests pass; old environment, early regression checks only</td>
+</tr>
+<tr class="even">
+<td>22101813</td>
+<td>58cf86a</td>
+<td>c56</td>
+<td>106 tests pass; imports of the actual official T5 class and drivers
+pass; old environment</td>
+</tr>
+<tr class="odd">
+<td>22102010</td>
+<td>7416004</td>
+<td>c376</td>
+<td>133 tests pass; imports of the actual official T5 class and drivers
+pass; old environment</td>
+</tr>
+<tr class="even">
+<td>22101774</td>
+<td>454f192</td>
+<td>c14</td>
+<td>Data moved to a separate directory; <a class="experiment-name" href="../../experiments/index.html#B3">T1 missingness-trained foundation <small>(B3)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B5">T5 missingness-trained foundation <small>(B5)</small></a> and both sets of seed 0
+teacher weights relocated; teacher digests checked file by file</td>
+</tr>
+<tr class="odd">
+<td>22102009</td>
+<td>7416004</td>
+<td>c350</td>
+<td><a class="experiment-name" href="../../experiments/index.html#P00">Legacy FireDrop training <small>(P00)</small></a>, attention, and 48 QA maps relocated, with digests recorded</td>
+</tr>
+<tr class="even">
+<td>22101441</td>
+<td>98d12f0</td>
+<td>c83</td>
+<td>Installation failed: a missing final newline in an official file
+made the old patch inapplicable; module loading was also found to reset
+the pip wheelhouse</td>
+</tr>
+<tr class="odd">
+<td>22101770</td>
+<td>454f192</td>
+<td>c56</td>
+<td>Fresh training environment installed from public PyPI; stopped at
+the same old patch</td>
+</tr>
+<tr class="even">
+<td>22102098</td>
+<td>c617100</td>
+<td>c3</td>
+<td>Continued from the public-source environment above, precisely
+corrected the official-source patch; training/audit
+<code>pip check</code> both pass; setup completed</td>
+</tr>
+<tr class="odd">
+<td>22102101</td>
+<td>c617100</td>
+<td>c38</td>
+<td>Three Swin and MiT-B2 assets downloaded from public sources; all
+match pinned SHA256 values</td>
+</tr>
+<tr class="even">
+<td>22102100</td>
+<td>c617100</td>
+<td>c3</td>
+<td>New environment: 134 tests pass, 2 fail; failures were old
+assertions of original-server paths, changed to explicit temporary
+directories and passed on rerun in 22102394</td>
+</tr>
+<tr class="odd">
+<td>22102394</td>
+<td>19132b0</td>
+<td>c333</td>
+<td>New training environment: 143 tests pass; imports of the actual
+official T5 class and retained drivers pass</td>
+</tr>
+<tr class="even">
+<td>22102400</td>
+<td>19132b0</td>
+<td>c332</td>
+<td>New audit environment: 117 tests pass, covering repair/validation,
+schema, inventory, target gate, and split</td>
+</tr>
+<tr class="odd">
+<td>22102613</td>
+<td>eb702c2</td>
+<td>c422</td>
+<td>In the new training environment, both the official original-year
+converter CLI and the added-year converter pass synthetic 23-band
+GeoTIFF → HDF5 checks, covering values, dates, coordinates, and
+active-fire conversion semantics</td>
+</tr>
+</tbody>
+</table>
+<p>Logs from both installation failures are retained; failed jobs are
+not reported as successful. The public-source environment came from the
+empty directory created by <code>22101770</code>, without reusing the
+old training venv; <code>22102098</code> reused this newly installed
+public-source environment. Pip variables were isolated again after
+module configuration, and installation records do not depend on this
+site's wheelhouse. Observed versions are recorded in the <a
+href="../../docs/research/environment/train-pip-freeze.txt">training
+freeze</a> and <a
+href="../../docs/research/environment/audit-pip-freeze.txt">audit
+freeze</a>; official-source changes appear in <a
+href="../../docs/research/environment/upstream.diff">upstream.diff</a>.
+These are observations; the installation inputs remain
+<code>environments/research-*.txt</code>.</p>
+<p>The complete data came from the existing audited 999-event dataset,
+relocated with hard links on the same filesystem. This therefore
+verifies new paths and a new software environment, without repeating the
+complete public download/conversion. Weights were actually copied and
+verified. Complete public-data reconstruction commands, stage-by-stage
+checks, and original checksums are in <a
+href="../data-preparation/index.html">data preparation</a>.</p>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 4</p><h2 id="gpu-verification-boundaries">GPU verification boundaries</h2>
+<p>Cross-history and both September smoke campaigns use real data, one
+short training or calibration run, checkpoint saving/reloading, and
+limited-sample evaluation. Historical D-series and base models use the
+<a href="../../scripts/research/README-qualification.md">qualification
+driver</a>; short-budget outputs are explicitly marked as qualification
+and cannot serve as 3,000/10,000-step results, teachers, or completed
+full-baseline records.</p>
+<p>The formal D-series evaluator requires a fixed training budget.
+Qualification replaces its budget/status fields only in an in-memory
+copy to call the original model constructor; all other method-metadata
+checks and strict state_dict loading are retained. The formal validator
+still rejects the short-budget weights on disk. This demonstrates the
+loading/computation pipeline, not method efficacy or numerical agreement
+with full training.</p>
+<p>GPU job <code>22102452</code> (<code>e13b9fb5db55</code>,
+<code>g36</code>) completed two actual 24-sample diagnostics. The <a
+href="../../docs/research/environment/diagnostics-replay.json">replay
+results</a> agree with historical records in comparison direction, with
+a maximum absolute numerical difference of approximately
+<code>4.3e-6</code>. This verifies inference after weight relocation,
+not retraining.</p>
+<p>The first 6 training/calibration GPU jobs exited successfully.
+Reports for their 19 short-budget cases are in the <a
+href="../../docs/research/environment/gpu-qualification-first-batch.json">raw
+records</a>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Job</th>
+<th>Node</th>
+<th>Passed scope</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>22102102 / 22102104</td>
+<td>g32 / g35</td>
+<td>T1 / T5: control, cosine_erm, context, transition; each actually ran
+1 step, strict reload, prediction reload difference 0</td>
+</tr>
+<tr class="even">
+<td>22102396</td>
+<td>g36</td>
+<td>B5: actual Lightning 2 steps, best-weight selection, strict reload,
+2-sample evaluation each for <a class="experiment-name" href="../../experiments/index.html#M00">Complete-input scenario <small>(M00)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a></td>
+</tr>
+<tr class="odd">
+<td>22102397</td>
+<td>g32</td>
+<td>RNC: actual 1 step, formal validator rejects short-budget weights,
+strict reload, 2-sample evaluation each for M00/M06</td>
+</tr>
+<tr class="even">
+<td>22102787</td>
+<td>g36</td>
+<td>RF T1: control, mixed, typed, distill, BN batch_stats; reload
+difference 0</td>
+</tr>
+<tr class="odd">
+<td>22102798</td>
+<td>g35</td>
+<td>Routed T1: student_control, student_distill, merge, bn_shared;
+evaluation after strict equality of reloaded state</td>
+</tr>
+</tbody>
+</table>
+<p>These short-budget samples are not used to assess efficacy; AP of 0
+on a small sample cannot be interpreted as method failure. Later batches
+complete the remaining execution families, as detailed below.</p>
+<p>The conversion job's <a
+href="../../docs/research/environment/conversion-qualification.json">raw
+compact report</a> retains year-by-year checks. It uses eight synthetic
+events and does not replace the full public download, 999-event
+conversion, or repair-stage validation.</p>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 4</p><h2 id="subsequent-actual-verification">Subsequent actual
+verification</h2>
+<p>All 9 GPU jobs in the second batch
+(<code>22102808/09/10/82/84/88/93/94/95</code>, source
+<code>a7e8e0a</code>) exited normally, adding 50 passing cases; see the
+<a
+href="../../docs/research/environment/gpu-qualification-second-batch.json">per-case
+report</a>. These include short training and reloading of the remaining
+positive-list cross-history methods at T1/T5, the RF and routed T5
+branches, and <a class="experiment-name" href="../../experiments/index.html#B1">Corrected T5 clean-input baseline <small>(B1)</small></a>, token, and CRA. Architectures, the remaining D-series,
+and attention training were verified in the final batch.</p>
+<p>CPU job <code>22102402</code> (source <code>19132b0</code>,
+<code>c333</code>) completed the full 999-event audit. The <a
+href="../../docs/research/environment/data-audit-phase0_report.md">report</a>
+shows no invalid-file errors, with gate decision
+<code>continue_controlled</code>. The original data lack
+observation/availability times, QA, coverage, target validity, and
+related fields, so they support the specified controlled-missingness
+experiments but not natural-missingness or operational claims. The
+report's target days are daily counts from original events and use a
+different counting unit from model evaluation samples constructed with
+history windows.</p>
+<p>The next 10 GPU cases for historical entrypoints also passed; see the
+<a
+href="../../docs/research/environment/gpu-qualification-legacy-batch.json">per-case
+report</a>: <a class="experiment-name" href="../../experiments/index.html#D1-KL">T1 global predictive consistency <small>(D1-KL)</small></a> / paired0, original D12-SARP, <a class="experiment-name" href="../../experiments/index.html#B2">Corrected T1 FireDrop-trained baseline <small>(B2)</small></a>, B3, legacy-P00,
+CIWC, rank, FFCA, and prompt-pyramid. B2/B3/P00 use actual Lightning 2
+steps; the others use 1 step. All reports retain the qualification
+marker. CPU job <code>22103003</code> (<code>c86</code>) also ran the
+T1/T5 complete-route and severity-route CLIs on relocated historical
+summaries; see the <a
+href="../../docs/research/environment/composition-qualification.json">output</a>.
+This verifies the aggregation commands, not a new model evaluation.</p>
+<p>All 12 cases across the final 10 GPU jobs passed; see the <a
+href="../../docs/research/environment/gpu-qualification-final-batch.json">per-case
+report</a>: complete-pyramid, T5 standard/SARP, Swin/SegFormer T1/T5
+short training from public initialization, T1/T5 training with fixed
+25%/50% missingness, and actual 1-step attention training and reloading.
+Swin/SegFormer use microbatch 2 for pipeline verification; formal
+reproduction still uses the historical batch in the architecture
+tutorial. Their actual completed_steps is 1, not the target budget of
+10,000 in metadata. All jobs have exit code 0.</p>
+<p>An independent coverage review checked the 51 positive signals, code
+entrypoints, controls, historical batches, route compositions, and
+short-budget validation boundaries, finding no new critical gaps.
+Retained negative results, invalid comparisons, and unrun states are
+archived according to the original evidence; no additional efficacy
+experiments were performed for them.</p>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/research/qualification.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

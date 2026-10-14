@@ -64,3 +64,68 @@ actual keyboard traversal and print/PDF appearance remain to be checked in a
 browser. No new dependencies, model jobs, commits, pushes or deployment were
 performed. The implementation uses no new training commands beyond a verified
 existing text-only control preview; actual execution stays in the linked guides.
+
+## Phase 2 — Full course and descriptive experiment names
+
+Authorized after review of the ERM pilot. Keep the accepted visual language.
+
+- [x] Add complete lessons 1–5, 7–8 with meaningful interactions, short stages,
+  exit questions and downloadable worksheets; retain lesson 6.
+- [x] Share navigation/progress/printing across all lessons; preserve old ERM
+  progress and exact deep links, including nested reference headings.
+- [x] Use one static shell for the two historical lecture pages and all 19
+  generated guides. Preserve original anchors, commands, images and evidence;
+  make each reference chapter independently readable.
+- [x] Add descriptive experiment names and a searchable name/ID catalog covering
+  the inventory and foundations; keep machine identifiers unchanged.
+- [x] Link the home directory directly to all eight completed lessons and make
+  handbook/library resources navigable in the same shell.
+- [x] Rebuild, verify all local links, original command preservation, interaction
+  logic and markup. Record browser limitations explicitly if still unavailable.
+
+Implementation units: scripts/course_shell.py (shared static layout),
+scripts/build-course-lessons.py (lesson generation),
+site-content/en/lessons/*.html and course-lessons.json (lesson sources),
+assets/learning.js (navigation), assets/lesson-demos.js (teaching interactions),
+assets/learning.css (presentation), and the existing guide renderer.
+Experiment naming is an independent content task delegated with exclusive
+ownership of site-content/en/experiment-names.json and docs/experiment-names.md.
+
+
+### Phase 2 completion and retirement
+
+All eight lessons, 19 handbook pages, two reference readings, and 107 named
+experiment/scenario walkthroughs now use the shared shell. Every walkthrough
+includes high-level steps and a blank worksheet. The catalog prioritizes the
+mainline and expands historical entries on search. Machine identifiers remain
+unchanged. The user explicitly superseded the phase-1 URL-preservation rule:
+all 21 old HTML pages are removed, with no redirects or retirement notices.
+
+Validation: 138 pages and 7,011 local links/assets pass structural and destination
+checks. All 96 original reference/handbook code blocks and content anchors were
+preserved. V8 DOM-harness checks cover staged navigation, interactions, storage,
+print state, and resume behavior; these are not browser rendering tests.
+No browser runtime is installed, so desktop/mobile rendering, keyboard traversal,
+and print appearance remain unverified. No model jobs or dependencies were run.
+This phase has not been committed, pushed, or deployed.
+
+## Student-path review follow-up
+
+The user approved closing the gaps identified by walking the course as a novice.
+Added five staged support pages: practical readiness, a synthetic running sample,
+official-to-project handover, output-to-report example and troubleshooting.
+Connected these at the relevant lesson steps and in global navigation. Added a
+continuous blank course record and explicitly labelled synthetic downloads.
+The report guide traces actual, different AP field paths in foundation and
+continuation summaries. The B3-only classroom recipe precedes optional paired
+B3/B5 work. Mainline experiment guides specify required branches, artifacts and
+acceptance conditions. Historical numerical shorthand links to original evidence
+instead of appearing as unexplained classroom targets.
+
+Validation: all 143 generated pages and 8,323 local links/assets pass the
+structural/link checker; whitespace checks pass. Synthetic confusion counts and
+A/B/C summary arithmetic were checked against the downloadable values. Actual
+foundation and continuation output schemas were inspected without model imports.
+51 V8 DOM-harness assertions pass across all five new pages for deep links,
+section isolation, blocked storage, mobile menu state and print restoration.
+No real browser rendering, training, commit, push or deployment was performed.

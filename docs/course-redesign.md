@@ -1,7 +1,10 @@
 # Wildfire course: curriculum and ERM pilot design
 
-Status: proposed curriculum and pilot specification for review. No website
-implementation or deployment is included in this document.
+Status: approved design, implemented as an initial ERM pilot and then extended
+to all eight lessons. See course-implementation-plan.md for the current record.
+The pilot-specific preservation rules below describe phase 1 only. The user
+subsequently requested removal of old pages without redirects or notices; phase 2
+uses new handbook/library paths and adds named experiment walkthroughs.
 
 ## Purpose and audience
 

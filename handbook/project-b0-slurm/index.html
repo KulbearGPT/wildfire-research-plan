@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>From
+Data Download to a Complete ResNet18-U-Net Run: A Step-by-Step Nibi
+Slurm Tutorial · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
+<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<body data-page="guide-project-b0-slurm" data-root="../../"><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-case/index.html">Running example</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
+<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>From
+Data Download to a Complete ResNet18-U-Net Run: A Step-by-Step Nibi
+Slurm Tutorial</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 0. First Choose What
+You Want to Complete</a><a href="#chapter-3">3 · 1. Log In and Create
+Your Own Directories</a><a href="#chapter-4">4 · 2. Understand a Slurm
+Submission</a><a href="#chapter-5">5 · 3. Create Two Isolated
+Environments</a><a href="#chapter-6">6 · 4. Download and Verify
+Original WSTS</a><a href="#chapter-7">7 · 5. CPU Job: GeoTIFF → HDF5</a><a href="#chapter-8">8 · 6. Official
+Fold 2: Start with a One-Step Smoke Test</a><a href="#chapter-9">9 · 7.
+Official Fold 2: Train for 10000 Steps and Automatically Test the Best
+Validation Checkpoint</a><a href="#chapter-10">10 · 8.
+Optional: Test the Official Released Fold 2 Weights</a><a href="#chapter-11">11 · 9.
+Join Project Corrected T1 clean-input baseline (B0): Prepare Extension Years and Recalculate Training
+Statistics</a><a href="#chapter-12">12 · 10. Train
+Project Corrected T1 clean-input baseline (B0): A 3000-Step Clean Baseline</a><a href="#chapter-13">13 · 11. Optional:
+Test the Fixed Corrected T1 clean-input baseline (B0) Once on 2022/2023</a><a href="#chapter-14">14 · 12.
+Full Reproduction Appendix: 12 Folds, with Training and Released-Weight
+Evaluation Summarized Separately</a><a href="#chapter-15">15 · 13. Common
+Failures: Where to Look and What to Do</a><a href="#chapter-16">16 · 14. What Students Should
+Submit</a><a href="#chapter-17">17 · 15. Validation Scope of
+This Tutorial</a></nav></details>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 17</p><h2>Before you begin</h2><span id="from-data-download-to-a-complete-resnet18-u-net-run-a-step-by-step-nibi-slurm-tutorial"></span>
+<p>For students encountering this project for the first time. Commands
+use <strong>Bash + Alliance Nibi</strong>, starting from an empty
+personal experiment directory. Prepared: 2026-09-11.</p>
+<p>The accompanying scripts are in <code>docs/tutorials/res18/</code>
+(including the <a href="../../docs/tutorials/res18/official.sh">official
+runner</a>) and are already included in the repository; there is no need
+to search the instructor's personal cache directories. They call the
+project's existing official reproduction and <a class="experiment-name" href="../../experiments/index.html#B0">Corrected T1 clean-input baseline <small>(B0)</small></a> entry points rather than
+implementing another model-training pipeline.</p>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 17</p><h2 id="0-first-choose-what-you-want-to-complete">0. First Choose What
+You Want to Complete</h2>
+<p>The model is called <strong>ResNet18-U-Net / Res18-U-Net</strong>
+throughout: ResNet18 extracts features, and the U-Net decoder outputs
+per-pixel probabilities of next-day active fire. <code>T=1</code> means
+one day of input observations; All means all features under that
+configuration. The original HDF5 has 23 bands; processing features such
+as categories and directions through the model data pipeline produces 40
+input channels.</p>
+<p>However, the same model does not mean the same experiment.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Route</th>
+<th>Data and split</th>
+<th>Training budget</th>
+<th>Appropriate comparison</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Project B0, ultimately joining the main research
+workflow</strong></td>
+<td>Eight-year WSTS+; 2016–2020 train, 2021 val, 2022/2023 test;
+corrected sample indexing and training-set statistics</td>
+<td>seed 0, 3000 steps; one fixed split, no 12-fold loop</td>
+<td>Project B0 ledger</td>
+</tr>
+<tr class="even">
+<td><strong>Official Fold 2, learning single-fold paper
+reproduction</strong></td>
+<td>Original WSTS 2018–2021; 2018/2020 train, 2019 val, 2021 test;
+retain the pinned official data pipeline</td>
+<td>seed 0, 10000 steps</td>
+<td>Our existing Fold 2 training and released-weight results</td>
+</tr>
+<tr class="odd">
+<td><strong>Complete official 12-fold</strong></td>
+<td>The 12 year combinations under official
+<code>additional_data=false</code></td>
+<td>10000 steps per fold, or test only the 12 released weights</td>
+<td>Official Res18-U-Net T=1 All reference <code>0.460 ± 0.084</code>
+from the WSTS+ work, without guaranteeing identical provenance to the
+paper's table</td>
+</tr>
+</tbody>
+</table>
+<p><strong>B0 only: follow 1–6 → 9–10; testing in Section 11 is
+optional. One official fold only: follow 1–7; released-weight evaluation
+in Section 8 is optional.</strong> The complete 12-fold run in Section
+12 is an extension exercise, not a student requirement. Both routes
+share the original data and model environment.</p>
+<p>WSTS+ is the name of the paper/extended benchmark; it does not mean
+that every released weight set uses an eight-year split. In the pinned
+code, <code>additional_data=true</code> has only <strong>4</strong>
+eight-year folds; do not set it to true and submit 0–11. Project B0
+implements a separate forward temporal split. This tutorial uses
+explicit parameters to avoid confusing these three protocols.</p>
+<p>Paper reference numbers come from the <a
+href="https://github.com/slahrichi/WildfireSpreadTS#benchmark-results-ap--standard-deviation">authors'
+repository results table</a>. Fold and code conventions follow the
+project's <a
+href="../../reproductions/wsts_res18_unet_t1/upstream.lock.json">upstream
+lock</a>, <a
+href="../../reproductions/wsts_res18_unet_t1/official_weights_manifest.json">released-weight
+manifest</a>, and <a
+href="../../reproductions/wsts_fast_track/contract.py">B0
+contract</a>.</p>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 17</p><h2 id="1-log-in-and-create-your-own-directories">1. Log In and Create
+Your Own Directories</h2>
+<h3
+id="11-instructor-once-only-provide-a-repository-version-containing-this-tutorial">1.1
+Instructor, Once Only: Provide a Repository Version Containing This
+Tutorial</h3>
+<p>Local commits do not automatically appear on GitHub. The instructor
+can publish the corresponding branch or provide a Git bundle. The
+following creates a standalone file from <strong>the main branch
+containing this tutorial</strong>; then place the bundle in a project
+directory readable by students:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /home/kulbear/scratch/wildfire-research-plan</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> bundle create /tmp/wildfire-res18-course.bundle main</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> bundle verify /tmp/wildfire-res18-course.bundle</span></code></pre></div>
+<p>Copy this bundle into the shared course directory. Students can enter
+its absolute path below to <code>git clone</code>, or use a Git
+repository URL where this tutorial has already been published. Students
+should not directly modify the instructor's worktree while experiments
+are running.</p>
+<h3 id="12-students-log-in-from-a-terminal-on-your-own-computer">1.2
+Students: Log In from a Terminal on Your Own Computer</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> YOUR_ALLIANCE_USERNAME@nibi.alliancecan.ca</span></code></pre></div>
+<p>Replace <code>YOUR_ALLIANCE_USERNAME</code> with your Alliance
+username. Run all commands below after logging in to Nibi. Use login
+nodes only to edit scripts, inspect lightweight results, and submit or
+inspect jobs; use Slurm for downloads, extraction, data traversal,
+training, and model evaluation.</p>
+<h3 id="13-check-available-accounts-and-gpu-names">1.3 Check Available
+Accounts and GPU Names</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sacctmgr</span> <span class="at">-nP</span> show assoc where user=<span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span> format=Account,Partition</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">sinfo</span> <span class="at">-h</span> <span class="at">-o</span> <span class="st">&#39;%P %G&#39;</span></span></code></pre></div>
+<p>The instructor's accounts for this project are
+<code>def-vislearn_cpu</code> / <code>def-vislearn_gpu</code>; students
+must use accounts actually associated with their own users. Enter the
+following once, and do not submit placeholders such as
+<code>replace-me</code> literally.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;Project group directory, for example /project/6085198: &#39;</span> <span class="va">WF_GROUP</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;Your CPU Slurm account: &#39;</span> <span class="va">WF_CPU_ACCOUNT</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;Your GPU Slurm account: &#39;</span> <span class="va">WF_GPU_ACCOUNT</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;Repository URL or absolute Git bundle path containing this tutorial: &#39;</span> <span class="va">WF_SOURCE</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GROUP</span><span class="st">/</span><span class="va">$USER</span><span class="st">/wildfire-res18-course&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">&quot;</span>/<span class="dt">{downloads</span><span class="op">,</span><span class="dt">hdf5</span><span class="op">,</span><span class="dt">envs</span><span class="op">,</span><span class="dt">cache</span><span class="op">,</span><span class="dt">runs</span><span class="op">,</span><span class="dt">logs</span><span class="op">,</span><span class="dt">weights}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_REPO</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/repo&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="at">--branch</span> main <span class="st">&quot;</span><span class="va">$WF_SOURCE</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$WF_REPO</span><span class="st">&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_REPO</span><span class="st">/docs/tutorials/res18/official.sh&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">&quot;</span><span class="va">$WF_REPO</span><span class="st">&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rev-parse HEAD</span></code></pre></div>
+<p>Create your own configuration so paths are not hardcoded in shared
+scripts:</p>
+<div class="sourceCode" id="cb5"><details class="code-disclosure"><summary>Show complete code · 16 rendered lines</summary><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_TUTORIAL_ENV</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/tutorial.env&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_ROOT=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_REPO=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_REPO</span><span class="st">&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_CPU_ACCOUNT=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_GPU_ACCOUNT=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$WF_TUTORIAL_ENV</span><span class="st">&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_SCRIPTS</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_REPO</span><span class="st">/docs/tutorials/res18&quot;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_GPU_SMOKE</span><span class="op">=</span><span class="st">&#39;nvidia_h100_80gb_hbm3_1g.10gb:1&#39;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_GPU_TRAIN</span><span class="op">=</span><span class="st">&#39;nvidia_h100_80gb_hbm3_2g.20gb:1&#39;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_SCRIPTS=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">&quot;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_GPU_SMOKE=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_GPU_SMOKE</span><span class="st">&quot;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">&#39;export WF_GPU_TRAIN=%q\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_GPU_TRAIN</span><span class="st">&quot;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span> <span class="op">&gt;&gt;</span> <span class="st">&quot;</span><span class="va">$WF_TUTORIAL_ENV</span><span class="st">&quot;</span></span></code></pre></details></div>
+<p>This requests one 10GB/20GB MIG slice of an H100, not 10/20 GPUs. The
+20GB slice is a conservative starting point for the first full training
+run and exact AP testing; it can be reduced after memory usage is
+measured, but do not arbitrarily lower the full-run batch size to fit a
+smaller slice. If <code>sinfo</code> does not list these names, update
+the configuration using the cluster's actual resource names; other
+clusters cannot simply reuse Nibi's module and GPU names.</p>
+<p>Restore the configuration after logging in again:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">read</span> <span class="at">-r</span> <span class="at">-p</span> <span class="st">&#39;Absolute path to your tutorial.env: &#39;</span> <span class="va">WF_TUTORIAL_ENV</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_TUTORIAL_ENV</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WF_TUTORIAL_ENV</span><span class="st">&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">&quot;</span><span class="va">$WF_REPO</span><span class="st">&quot;</span></span></code></pre></div>
+<p><strong>Storage planning:</strong> The original ZIP is approximately
+48.4GB and the extension ZIP approximately 19.9GB; you also need HDF5
+data, verification copies for extension years, environments, and
+checkpoints. First confirm at least approximately 400GB of available
+project quota, and allow around 200GB of node-local temporary space for
+extracting the original archive. These are conservative allowances, not
+measured peaks; concurrent data jobs increase requirements.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-h</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">quota</span> <span class="at">-s</span></span></code></pre></div>
+<p><code>df</code> reports free filesystem space, not personal project
+quota. If the site's <code>quota</code> does not report project quota,
+use the quota-checking method supplied by the course group.</p>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 17</p><h2 id="2-understand-a-slurm-submission">2. Understand a Slurm
+Submission</h2>
+<p><code>sbatch</code> hands the task to the scheduler and immediately
+returns a job ID; an ID <strong>does not mean training has
+finished</strong>. <code>--cpus-per-task</code> is the CPU core count,
+<code>--mem</code> is host memory, <code>--gpus</code> specifies GPUs,
+and <code>--time</code> is the maximum wall-clock time. Successful
+script completion requires <code>COMPLETED</code> and
+<code>ExitCode=0:0</code>; scientific results also require checking
+output files.</p>
+<p>This tutorial uses <code>--parsable</code> to save job IDs and
+<code>afterok</code> to run only after prerequisite jobs succeed,
+preventing training after a failed download. In log filenames,
+<code>%j</code> expands to the job ID; array jobs use <code>%A_%a</code>
+for array ID and fold ID.</p>
+<p>Define this function in your login terminal, then use it to check
+status at each step:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">jobcheck()</span> <span class="kw">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">squeue</span> <span class="at">-j</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="at">-o</span> <span class="st">&#39;%.18i %.24j %.10T %.10M %.25R&#39;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">sacct</span> <span class="at">-j</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="at">--format</span><span class="op">=</span>JobID,JobName%28,State,ExitCode,Elapsed,MaxRSS</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<p>An empty <code>squeue</code> after a job ends is normal; rely on
+<code>sacct</code> and logs. After each submission, wait for
+<code>COMPLETED 0:0</code> before performing that section's “After
+success” file checks; logs may not exist before a job starts.
+<code>afterok</code> allows advance queueing, but a queued job does not
+mean the data are ready. Each scientific run uses a separate output
+directory. Diagnose failures first; do not overwrite the original
+directory to present a retry as first-attempt success. After logging in
+again, redefine <code>jobcheck</code> and recover downstream dependency
+job IDs from your records or <code>sacct</code>.</p>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="#chapter-5">Next section →</a></div></section>
+<section class="step-panel" id="chapter-5"><p class="step-kicker">Reference · 5 / 17</p><h2 id="3-create-two-isolated-environments">3. Create Two Isolated
+Environments</h2>
+<p>Training depends on older Lightning/SMP versions and uses the Python
+3.10 environment inputs previously used by this project; the data-audit
+package requires Python 3.13. Keeping them separate prevents
+installation on one side from changing the other's NumPy/PyTorch
+versions.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_SETUP_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>res18-setup <span class="at">--cpus-per-task</span><span class="op">=</span>4 <span class="at">--mem</span><span class="op">=</span>16G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-setup.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/setup.sh&quot;</span><span class="va">)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="va">WF_SETUP_JOB</span><span class="op">=</span><span class="va">${WF_SETUP_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;%s\n&#39;</span> <span class="st">&quot;</span><span class="va">$WF_SETUP_JOB</span><span class="st">&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_SETUP_JOB</span><span class="st">&quot;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 40 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$WF_SETUP_JOB</span><span class="st">-setup.out&quot;</span></span></code></pre></div>
+<p>The script creates environments, installs <a
+href="../../docs/tutorials/res18/requirements-training.txt"><code>requirements-training.txt</code></a>,
+pins upstream commit <code>ed221d4…</code>, applies the repository's
+existing Res18 import-pruning patch and removes the unused
+<code>T_co</code> type import, and caches ResNet18 ImageNet
+initialization. These patches do not change the network, loss, or
+training-data indexing; the actual diff is saved with each run. Model
+jobs also use <code>git archive HEAD</code> to save and execute a
+snapshot of this project's committed source, with a separate copy of
+tutorial scripts. Commit the project code you actually intend to use
+before submitting, and do not edit the upstream checkout during a
+run.</p>
+<p><strong>Success criteria:</strong> Slurm <code>0:0</code>, with the
+following files present:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/envs/READY&quot;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/envs/training-freeze.txt&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/envs/audit-freeze.txt&quot;</span></span></code></pre></div>
+<p>Installation uses <code>--no-index</code> with the Alliance
+wheelhouse. If a pinned version is unavailable, preserve the logs and
+ask the instructor to confirm a compatible version or validated
+environment; do not simply <code>pip install -U</code> the entire
+dependency set. Scripts refuse to overwrite installed environments.
+Small downloads of the upstream repository and pretrained encoder also
+occur in this CPU job.</p>
+<p>Note: <code>encoder_weights=imagenet</code> is public ImageNet
+initialization. In project records, “from scratch” means not resuming
+from our existing wildfire checkpoints; it does not mean that all
+ResNet18 parameters are randomly initialized.</p>
+<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="#chapter-6">Next section →</a></div></section>
+<section class="step-panel" id="chapter-6"><p class="step-kicker">Reference · 6 / 17</p><h2 id="4-download-and-verify-original-wsts">4. Download and Verify
+Original WSTS</h2>
+<p>Original WSTS covers 2018–2021 for the official single fold and also
+forms part of the eight-year WSTS+ assembly. Its release page is <a
+href="https://zenodo.org/records/8006177">Zenodo 8006177</a>. The script
+pins <code>WildfireSpreadTS.zip</code> with MD5
+<code>dc1a04e63ccc70037b277d585b8fe761</code>.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_DOWNLOAD_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>wsts-download <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>08:00:00 <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-download.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/download.sh&quot;</span> original<span class="va">)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="va">WF_DOWNLOAD_JOB</span><span class="op">=</span><span class="va">${WF_DOWNLOAD_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_DOWNLOAD_JOB</span><span class="st">&quot;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 20 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$WF_DOWNLOAD_JOB</span><span class="st">-download.out&quot;</span></span></code></pre></div>
+<p>The script's actual download and verification logic is equivalent
+to:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Explanatory snippet, already executed by the Slurm job above; do not download again on the login node.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fL</span> <span class="at">--retry</span> 8 <span class="at">--retry-delay</span> 5 <span class="at">--continue-at</span> <span class="at">-</span> <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;https://zenodo.org/api/records/8006177/files/WildfireSpreadTS.zip/content&#39;</span> <span class="dt">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> WildfireSpreadTS.zip.partial</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;%s  %s\n&#39;</span> dc1a04e63ccc70037b277d585b8fe761 WildfireSpreadTS.zip.partial <span class="kw">|</span> <span class="fu">md5sum</span> <span class="at">-c</span> <span class="at">-</span></span></code></pre></div>
+<p><strong>Why verify:</strong> A zero download exit code does not
+necessarily mean the file is complete and the version correct. The
+script renames <code>.partial</code> to the final <code>.zip</code> only
+after verification passes. After a network interruption, keep the
+partial file and resubmit the download step; failed full training should
+not be blindly retried in the same way.</p>
+<div class="reference-pager"><a href="#chapter-5">← Previous section</a><a class="button" href="#chapter-7">Next section →</a></div></section>
+<section class="step-panel" id="chapter-7"><p class="step-kicker">Reference · 7 / 17</p><h2 id="5-cpu-job-geotiff--hdf5">5. CPU Job: GeoTIFF → HDF5</h2>
+<p>GeoTIFF uses one file per day and suits geographic raster exchange.
+Training reads time series frequently, so organizing each event in HDF5
+reduces file-opening overhead. Each event is arranged as
+<code>data[day, channel, height, width]</code>, with date, year, event
+name, and location metadata saved alongside it.</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_ORIGINAL_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_SETUP_JOB</span><span class="st">:</span><span class="va">$WF_DOWNLOAD_JOB</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>wsts-hdf5 <span class="at">--cpus-per-task</span><span class="op">=</span>4 <span class="at">--mem</span><span class="op">=</span>32G <span class="at">--tmp</span><span class="op">=</span>200G <span class="at">--time</span><span class="op">=</span>08:00:00 <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-original.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/prepare-original.sh&quot;</span><span class="va">)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="va">WF_ORIGINAL_JOB</span><span class="op">=</span><span class="va">${WF_ORIGINAL_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_ORIGINAL_JOB</span><span class="st">&quot;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 40 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$WF_ORIGINAL_JOB</span><span class="st">-original.out&quot;</span></span></code></pre></div>
+<p>The script extracts into <code>$SLURM_TMPDIR</code>, calls the pinned
+upstream <code>src/preprocess/CreateHDF5Dataset.py</code>, and writes
+persistent output to <code>$WF_ROOT/hdf5/original/</code>. This official
+converter handles only 2018–2021 and cannot directly process the
+extension years.</p>
+<p><strong>Success criteria:</strong> 607 events total, with yearly
+counts 176, 74, 201, and 156; the log prints <code>status: pass</code>,
+then READY is written:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/hdf5/original/READY&quot;</span></span></code></pre></div>
+<p>Output consists of four year directories such as
+<code>original/2018/*.hdf5</code>. The original active-fire band uses
+HHMM encoding, which this step converts to hours; target generation uses
+active-fire presence. Extension years use different encoding and are
+handled separately in Section 9; do not divide them by 100 again.</p>
+<p><strong>Data preparation is now complete. Both routes first run the
+GPU smoke test in Section 6; after it passes, the B0 route jumps to
+Section 9, while the official single-fold route continues to Section
+7.</strong></p>
+<div class="reference-pager"><a href="#chapter-6">← Previous section</a><a class="button" href="#chapter-8">Next section →</a></div></section>
+<section class="step-panel" id="chapter-8"><p class="step-kicker">Reference · 8 / 17</p><h2 id="6-official-fold-2-start-with-a-one-step-smoke-test">6. Official
+Fold 2: Start with a One-Step Smoke Test</h2>
+<p>The smoke test is an engineering check: fetch a training batch,
+backpropagate, and check a validation batch. It runs only 1 step with
+batch size 4 and one validation batch, with testing disabled; it does
+not produce an AP suitable for comparison with the paper.</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_SMOKE_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_ORIGINAL_JOB</span><span class="st">&quot;</span> <span class="at">--job-name</span><span class="op">=</span>res18-smoke <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_SMOKE</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>64G <span class="at">--time</span><span class="op">=</span>00:20:00 <span class="dt">\</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-smoke.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/official.sh&quot;</span> smoke 2<span class="va">)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="va">WF_SMOKE_JOB</span><span class="op">=</span><span class="va">${WF_SMOKE_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_SMOKE_JOB</span><span class="st">&quot;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 60 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$WF_SMOKE_JOB</span><span class="st">-smoke.out&quot;</span></span></code></pre></div>
+<p>After success:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_SMOKE_RUN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/official-smoke-fold2-</span><span class="va">$WF_SMOKE_JOB</span><span class="st">&quot;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_SMOKE_RUN</span><span class="st">/SMOKE_PASSED&quot;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_SMOKE_RUN</span><span class="st">/command.txt&quot;</span></span></code></pre></div>
+<p>The log should contain the <code>max_steps=1</code> completion
+message and a positive <code>WSTS_OBSERVER_PEAK_ALLOCATED_BYTES</code>.
+Seeing only <code>CUDA available: True</code> does not establish that
+the model ran successfully.</p>
+<div class="reference-pager"><a href="#chapter-7">← Previous section</a><a class="button" href="#chapter-9">Next section →</a></div></section>
+<section class="step-panel" id="chapter-9"><p class="step-kicker">Reference · 9 / 17</p><h2
+id="7-official-fold-2-train-for-10000-steps-and-automatically-test-the-best-validation-checkpoint">7.
+Official Fold 2: Train for 10000 Steps and Automatically Test the Best
+Validation Checkpoint</h2>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_FOLD_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_SMOKE_JOB</span><span class="st">&quot;</span> <span class="at">--job-name</span><span class="op">=</span>res18-fold2 <span class="dt">\</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_TRAIN</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>12:00:00 <span class="dt">\</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-fold2.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/official.sh&quot;</span> full 2<span class="va">)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="va">WF_FOLD_JOB</span><span class="op">=</span><span class="va">${WF_FOLD_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_FOLD_JOB</span><span class="st">&quot;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 50 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$WF_FOLD_JOB</span><span class="st">-fold2.out&quot;</span></span></code></pre></div>
+<p>The <code>2</code> in <code>full 2</code> is the fold ID, not the
+seed. This script explicitly passes:</p>
+<pre class="text"><code>--data.additional_data=false
+--data.data_fold_id=2
+--seed_everything=0
+--data.n_leading_observations=1
+--data.features_to_keep=null
+--data.remove_duplicate_features=true
+--data.n_leading_observations_test_adjustment=5
+--data.batch_size=64
+--data.num_workers=8
+--trainer.max_steps=10000
+--do_train=true --do_test=true --do_predict=false</code></pre>
+<p><strong>Why select checkpoints this way:</strong> The optimizer
+performs all 10000 updates, validation AP determines which checkpoint is
+saved, and the official <code>train.py</code> tests that checkpoint at
+the end. The best checkpoint's <code>global_step</code> can be less than
+10000; that does not mean training was shorter. Do not use the test set
+to choose parameters or the best seed.</p>
+<p>Retain the official Focal loss, AdamW optimizer, and learning rate
+0.001. The official training entry point recalculates YAML's
+<code>pos_class_weight: 236</code> using the fire rate in the training
+years; our saved effective Fold 2 value is
+<code>608.4653828020165</code>. Do not manually reset it to 236 to
+approach a particular score.</p>
+<p>Read the results after success:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_FOLD_RUN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/official-full-fold2-</span><span class="va">$WF_FOLD_JOB</span><span class="st">&quot;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_FOLD_RUN</span><span class="st">/result.json&quot;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_FOLD_RUN</span><span class="st">/command.txt&quot;</span></span></code></pre></div>
+<p><code>result.json</code> contains AP, F1, IoU, precision, recall,
+loss, the best checkpoint path and step, and the original log's SHA-256.
+The script writes it only after checks pass for the training-completion
+marker, test metrics, and checkpoint.</p>
+<p><strong>Existing references, not results from this rerun:</strong>
+Historical full Fold 2 training on Windows achieved test AP
+<strong>0.554664</strong>; measured AP for the released Fold 2 weights
+was <strong>0.570902</strong>. A single-fold score can exceed the
+paper's cross-fold mean <strong>0.460</strong> because test years
+differ. Nibi differs from the historical Windows environment, so bitwise
+equality is not promised; retain actual results rather than replacing
+them with target numbers.</p>
+<div class="reference-pager"><a href="#chapter-8">← Previous section</a><a class="button" href="#chapter-10">Next section →</a></div></section>
+<section class="step-panel" id="chapter-10"><p class="step-kicker">Reference · 10 / 17</p><h2 id="8-optional-test-the-official-released-fold-2-weights">8.
+Optional: Test the Official Released Fold 2 Weights</h2>
+<p>This quickly checks whether the data and evaluation entry point are
+compatible with the official released assets. It <strong>does not
+train</strong> and does not evaluate the checkpoint you just
+trained.</p>
+<div class="sourceCode" id="cb20"><details class="code-disclosure"><summary>Show complete code · 13 rendered lines</summary><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_WEIGHT_DOWNLOAD_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>res18-weight-fetch <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>00:30:00 <span class="dt">\</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-weight-fetch.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/fetch-weights.sh&quot;</span> 2<span class="va">)</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="va">WF_WEIGHT_DOWNLOAD_JOB</span><span class="op">=</span><span class="va">${WF_WEIGHT_DOWNLOAD_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="va">WF_WEIGHT_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_ORIGINAL_JOB</span><span class="st">:</span><span class="va">$WF_WEIGHT_DOWNLOAD_JOB</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>res18-weight2 <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_TRAIN</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="dt">\</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-weight2.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/official.sh&quot;</span> weight 2<span class="va">)</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="va">WF_WEIGHT_JOB</span><span class="op">=</span><span class="va">${WF_WEIGHT_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_WEIGHT_JOB</span><span class="st">&quot;</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/official-weight-fold2-</span><span class="va">$WF_WEIGHT_JOB</span><span class="st">/result.json&quot;</span></span></code></pre></details></div>
+<p>Downloads use pinned Hub revision <code>acf70a3…</code>, checking
+each file's size and SHA-256. Evaluation checks them again, loads the
+raw state dict with <code>strict=True</code>, and calls only
+<code>Trainer.test</code>. A <code>.pth</code> raw state dict cannot be
+used as a Lightning <code>.ckpt</code> for resuming training.</p>
+<p>The reference file is <code>fold2_testAP0.571.pth</code>; the
+historical reevaluation <code>0.570902</code> agrees with the rounded
+filename. All weights come from the <a
+href="https://huggingface.co/saadlahrichi/WSTSPlus/tree/acf70a37394849f4ec8d108a51d6f4325a554d0a/trained_model_weights/Res18Unet_T1/All">authors'
+release repository</a>.</p>
+<div class="reference-pager"><a href="#chapter-9">← Previous section</a><a class="button" href="#chapter-11">Next section →</a></div></section>
+<section class="step-panel" id="chapter-11"><p class="step-kicker">Reference · 11 / 17</p><h2
+id="9-join-project-b0-prepare-extension-years-and-recalculate-training-statistics">9.
+Join Project B0: Prepare Extension Years and Recalculate Training
+Statistics</h2>
+<p>The WSTS+ download contains <strong>four additional years</strong>,
+not the complete eight-year dataset. Extension data are released at <a
+href="https://zenodo.org/records/17584629">Zenodo 17584629</a>;
+`WSTSPlus.zip` is approximately 19.9GB, with MD5
+<code>42da7598cc33a170064e78d8027148c9</code>.</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_PLUS_DOWNLOAD_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>wstsplus-download <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>06:00:00 <span class="dt">\</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-plus-download.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/download.sh&quot;</span> plus<span class="va">)</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="va">WF_PLUS_DOWNLOAD_JOB</span><span class="op">=</span><span class="va">${WF_PLUS_DOWNLOAD_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="va">WF_PLUS_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_ORIGINAL_JOB</span><span class="st">:</span><span class="va">$WF_PLUS_DOWNLOAD_JOB</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>wstsplus-prepare <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>64G <span class="at">--tmp</span><span class="op">=</span>100G <span class="at">--time</span><span class="op">=</span>12:00:00 <span class="dt">\</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-plus-prepare.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/prepare-plus.sh&quot;</span><span class="va">)</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="va">WF_PLUS_JOB</span><span class="op">=</span><span class="va">${WF_PLUS_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_PLUS_JOB</span><span class="st">&quot;</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 60 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$WF_PLUS_JOB</span><span class="st">-plus-prepare.out&quot;</span></span></code></pre></div>
+<p>This CPU job performs the following in order:</p>
+<ol type="1">
+<li>Extract the four extension years and generate event HDF5 files using
+the converter included with this tutorial. Preserve source active-fire
+values that are already in hours; record missing locations for events
+without CRS rather than inventing latitude/longitude.</li>
+<li>Use the project's <code>repair-active-fire</code> to generate
+normalized labels and evidence in a new directory. Labels already
+correct after conversion still undergo the same verification; there is
+no need to deliberately introduce errors first.</li>
+<li>Use the independent <code>verify_repair</code> to check event
+counts, target-day counts, and positive-pixel counts, verifying the
+exact five excluded empty events.</li>
+<li>Hard-link the original four years and verified four years into
+<code>hdf5/combined/</code>. Hard links require the same filesystem, so
+keep all these directories under your own <code>WF_ROOT</code>. Do not
+modify any hard-linked data in place afterward.</li>
+<li>Audit the full dataset; calculate normalization statistics using
+only <strong>2016–2020</strong> training samples. Validation and test
+years do not participate in this step.</li>
+</ol>
+<p>After success:</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/hdf5/combined/READY&quot;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/hdf5/train-stats.npz&quot;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/prepare-plus-</span><span class="va">$WF_PLUS_JOB</span><span class="st">/data-summary.json&quot;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/prepare-plus-</span><span class="va">$WF_PLUS_JOB</span><span class="st">/audit/contract_decision.json&quot;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/prepare-plus-</span><span class="va">$WF_PLUS_JOB</span><span class="st">/audit/phase0_report.md&quot;</span></span></code></pre></div>
+<p>Actual available event counts are below; do not invent nonexistent
+events because the paper reports 1005:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Year</th>
+<th style="text-align: right;">2016</th>
+<th style="text-align: right;">2017</th>
+<th style="text-align: right;">2018</th>
+<th style="text-align: right;">2019</th>
+<th style="text-align: right;">2020</th>
+<th style="text-align: right;">2021</th>
+<th style="text-align: right;">2022</th>
+<th style="text-align: right;">2023</th>
+<th style="text-align: right;">Total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>HDF5 events</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">201</td>
+<td style="text-align: right;">156</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;"><strong>999</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Train/validation/test event counts should be <strong>653 / 156 /
+190</strong>. The expected audit decision is
+<code>continue_controlled</code>: controlled-missingness experiments may
+proceed, but the data do not yet support claims about natural
+missingness or operational deployment. See the <a
+href="../../docs/experiments/phase0.md">phase0 data report</a> for the
+reasons.</p>
+<p><strong>Why recalculate statistics:</strong> Input bands have
+different units, and means/standard deviations are used for
+normalization; computing them from test years leaks test information
+into training. Official fold reproduction retains the official
+statistics procedure, while project B0 uses the frozen training-year
+statistics computed here. These are not interchangeable.</p>
+<div class="reference-pager"><a href="#chapter-10">← Previous section</a><a class="button" href="#chapter-12">Next section →</a></div></section>
+<section class="step-panel" id="chapter-12"><p class="step-kicker">Reference · 12 / 17</p><h2 id="10-train-project-b0-a-3000-step-clean-baseline">10. Train
+Project B0: A 3000-Step Clean Baseline</h2>
+<p>This is B0 in the <a
+href="../research-roadmap/index.html">roadmap</a>. <code>clean</code>
+means no artificial FireDrop/BlockDrop during training; missing values
+in the original inputs are still handled by the existing data pipeline.
+Do not add reliability hints, consistency loss, or expert routing at
+this stage.</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_B0_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_PLUS_JOB</span><span class="st">:</span><span class="va">$WF_SMOKE_JOB</span><span class="st">&quot;</span> <span class="at">--job-name</span><span class="op">=</span>project-B0 <span class="dt">\</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_TRAIN</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>03:00:00 <span class="dt">\</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-B0.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/b0.sh&quot;</span><span class="va">)</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="va">WF_B0_JOB</span><span class="op">=</span><span class="va">${WF_B0_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_B0_JOB</span><span class="st">&quot;</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 60 <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$WF_B0_JOB</span><span class="st">-B0.out&quot;</span></span></code></pre></div>
+<p>The script's training core is the repository's existing module:</p>
+<pre class="text"><code>python -m reproductions.wsts_fast_track.train_corrected_baseline
+  --baseline-id B0
+  --upstream-root &quot;$WF_ROOT/upstream&quot;
+  --data-root &quot;$WF_ROOT/hdf5/combined&quot;
+  --run-root &quot;THIS_JOB_SEPARATE_DIRECTORY/scientific&quot;
+  --stats-path &quot;$WF_ROOT/hdf5/train-stats.npz&quot;</code></pre>
+<p>This snippet explains the parameters; the actual executable
+submission is the <code>sbatch</code> command above. The entry point
+fixes seed 0, 3000 steps, batch 64, AdamW 0.001, and 2016–2020 train /
+2021 val, and corrects sample indexing across years. It does not
+implement the split by changing <code>fold_id</code>, so B0's fold 0
+must not be interpreted as official Fold 0.</p>
+<p>After training, the job automatically generates a completion record
+and evaluates four scenarios on 2021. <a class="experiment-name" href="../../experiments/index.html#M00">Complete-input scenario <small>(M00)</small></a> is the main clean-baseline
+reference; <a class="experiment-name" href="../../experiments/index.html#M01">Fire-history-missing scenario <small>(M01)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M06">Quarter-block-missing scenario <small>(M06)</small></a>/<a class="experiment-name" href="../../experiments/index.html#M07">Half-block-missing scenario <small>(M07)</small></a> diagnose robustness without retraining the
+model.</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_B0_RUN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/B0-</span><span class="va">$WF_B0_JOB</span><span class="st">&quot;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_B0_RUN</span><span class="st">/scientific/completed.json&quot;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_B0_RUN</span><span class="st">/results-2021/summary.json&quot;</span></span></code></pre></div>
+<p><strong>B0 acceptance criteria:</strong> Slurm
+<code>COMPLETED 0:0</code>; <code>completed.json</code> contains
+<code>baseline_id=B0</code>, <code>max_steps=3000</code>,
+<code>corrected_index=true</code>, and <code>test_enabled=false</code>;
+the best checkpoint file exists; and
+<code>results-2021/summary.json</code> contains four scenarios.</p>
+<p>Existing B0 ledger (reruns in different environments need not match
+bitwise):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Year</th>
+<th style="text-align: right;">M00 clean AP</th>
+<th style="text-align: right;">M01 AP</th>
+<th style="text-align: right;">M06 AP</th>
+<th style="text-align: right;">M07 AP</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2021 validation</td>
+<td style="text-align: right;">0.580988</td>
+<td style="text-align: right;">0.039387</td>
+<td style="text-align: right;">0.323805</td>
+<td style="text-align: right;">0.133672</td>
+</tr>
+<tr class="even">
+<td>2022 fixed test</td>
+<td style="text-align: right;">0.278852</td>
+<td style="text-align: right;">0.006669</td>
+<td style="text-align: right;">0.135278</td>
+<td style="text-align: right;">0.071779</td>
+</tr>
+<tr class="odd">
+<td>2023 fixed test</td>
+<td style="text-align: right;">0.412674</td>
+<td style="text-align: right;">0.010101</td>
+<td style="text-align: right;">0.205411</td>
+<td style="text-align: right;">0.078691</td>
+</tr>
+</tbody>
+</table>
+<p>These follow the project's historical B0 evaluation protocol, from
+the <a
+href="../../docs/experiments/quantitative_reliability_ledger.md">quantitative
+ledger</a>. Do not directly compare 2021's 0.580988 against the paper's
+12-fold 0.460, or mix it into the later main table that aligns target
+dates across T. The trainer's internal validation AP and external
+controlled evaluation may use different target-date sets; check loaders
+and sample counts before comparing, rather than relying only on metric
+names.</p>
+<p><strong>Students have now completed one B0 run.</strong> The
+subsequent fixed tests and full official 12-fold run are extensions.</p>
+<div class="reference-pager"><a href="#chapter-11">← Previous section</a><a class="button" href="#chapter-13">Next section →</a></div></section>
+<section class="step-panel" id="chapter-13"><p class="step-kicker">Reference · 13 / 17</p><h2 id="11-optional-test-the-fixed-b0-once-on-20222023">11. Optional:
+Test the Fixed B0 Once on 2022/2023</h2>
+<p>Run this only after the recipe is frozen. The following explicitly
+enables <code>--heldout-authorized</code> in the existing evaluation
+entry point, without training, selecting a new checkpoint, or tuning
+thresholds. Students reproduce historical test results already disclosed
+to this project; they cannot describe these as their own newly unseen
+tests.</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_B0_RECORD</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_B0_RUN</span><span class="st">/scientific/completed.json&quot;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> year <span class="kw">in</span> 2022 2023<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">sbatch</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="at">--job-name</span><span class="op">=</span><span class="st">&quot;B0-test-</span><span class="va">$year</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_TRAIN</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-B0-test.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/evaluate-b0.sh&quot;</span> <span class="st">&quot;</span><span class="va">$WF_B0_RECORD</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$year</span><span class="st">&quot;</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>Record these two job IDs. Outputs are
+<code>runs/B0-test-2022-JOBID/results-2022/summary.json</code> and
+<code>runs/B0-test-2023-JOBID/results-2023/summary.json</code>,
+respectively.</p>
+<div class="reference-pager"><a href="#chapter-12">← Previous section</a><a class="button" href="#chapter-14">Next section →</a></div></section>
+<section class="step-panel" id="chapter-14"><p class="step-kicker">Reference · 14 / 17</p><h2
+id="12-full-reproduction-appendix-12-folds-with-training-and-released-weight-evaluation-summarized-separately">12.
+Full Reproduction Appendix: 12 Folds, with Training and Released-Weight
+Evaluation Summarized Separately</h2>
+<h3 id="121-train-all-12-official-folds-from-scratch">12.1 Train All 12
+Official Folds from Scratch</h3>
+<p>Run this after the Section 6 smoke test passes. Each array task
+trains for 10000 steps and tests the best checkpoint selected by its own
+validation set. <code>%2</code> limits execution to two concurrent
+folds; it does not divide the batch or data into two parts.</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_FULL_ARRAY</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_SMOKE_JOB</span><span class="st">&quot;</span> <span class="at">--array</span><span class="op">=</span>0-11%2 <span class="at">--job-name</span><span class="op">=</span>res18-full12 <span class="dt">\</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_TRAIN</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>12:00:00 <span class="dt">\</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%A_%a-full12.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/official.sh&quot;</span> full<span class="va">)</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="va">WF_FULL_ARRAY</span><span class="op">=</span><span class="va">${WF_FULL_ARRAY</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_FULL_ARRAY</span><span class="st">&quot;</span></span></code></pre></div>
+<p>If you already completed Fold 2, this independent array trains it
+again to produce a separate, complete course campaign. With limited
+resources, do not run both full single-fold training and the full array.
+An existing Fold 2 can be reused, but the instructor must verify
+versions and parameters and explicitly select the files; do not
+automatically mix it into the array results.</p>
+<p>Each directory name contains <code>official-full-foldN-…</code>.
+Slurm's <code>SLURM_JOB_ID</code> for an array task need not match the
+main array ID, so use a small listing to locate this campaign's
+outputs:</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sacct</span> <span class="at">-nP</span> <span class="at">-j</span> <span class="st">&quot;</span><span class="va">$WF_FULL_ARRAY</span><span class="st">&quot;</span> <span class="at">--format</span><span class="op">=</span>JobIDRaw,State,ExitCode</span></code></pre></div>
+<p>After everything completes, select only this campaign's 12
+<code>result.json</code> files and list their absolute paths in a file,
+one per line. For example, a small CPU job can match array metadata;
+Section 12.3 gives a general method.</p>
+<h3 id="122-evaluate-only-all-12-released-weights">12.2 Evaluate Only
+All 12 Released Weights</h3>
+<p>This usually takes less time than training 12 times and is useful for
+learning to verify a published baseline's evaluation protocol. It
+demonstrates executable reproduction of released weights; it does not
+replace training all 12 folds yourself from scratch.</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="va">WF_ALL_WEIGHTS_JOB</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>weights12-fetch <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>4G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-weights12-fetch.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/fetch-weights.sh&quot;</span> all<span class="va">)</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="va">WF_ALL_WEIGHTS_JOB</span><span class="op">=</span><span class="va">${WF_ALL_WEIGHTS_JOB</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="va">WF_WEIGHT_ARRAY</span><span class="op">=</span><span class="va">$(</span><span class="ex">sbatch</span> <span class="at">--parsable</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_ACCOUNT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_ORIGINAL_JOB</span><span class="st">:</span><span class="va">$WF_ALL_WEIGHTS_JOB</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--array</span><span class="op">=</span>0-11%2 <span class="at">--job-name</span><span class="op">=</span>res18-weight12 <span class="dt">\</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--gpus</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_GPU_TRAIN</span><span class="st">&quot;</span> <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--mem</span><span class="op">=</span>96G <span class="at">--time</span><span class="op">=</span>01:00:00 <span class="dt">\</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%A_%a-weight12.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/official.sh&quot;</span> weight<span class="va">)</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="va">WF_WEIGHT_ARRAY</span><span class="op">=</span><span class="va">${WF_WEIGHT_ARRAY</span><span class="op">%%</span>;<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="ex">jobcheck</span> <span class="st">&quot;</span><span class="va">$WF_WEIGHT_ARRAY</span><span class="st">&quot;</span></span></code></pre></div>
+<h3
+id="123-summarize-this-array-and-check-that-all-12-folds-are-present">12.3
+Summarize This Array and Check That All 12 Folds Are Present</h3>
+<p>Each run saves <code>slurm-job.txt</code>, which contains
+<code>ArrayJobId</code>. First choose the array type you actually
+ran:</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To summarize released weights:</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_SUMMARY_ARRAY</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_WEIGHT_ARRAY</span><span class="st">&quot;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WF_SUMMARY_MODE</span><span class="op">=</span>weight</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># To summarize full training instead, use:</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co"># export WF_SUMMARY_ARRAY=&quot;$WF_FULL_ARRAY&quot;</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co"># export WF_SUMMARY_MODE=full</span></span></code></pre></div>
+<p>Submit a small CPU summary job:</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> <span class="at">--account</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_CPU_ACCOUNT</span><span class="st">&quot;</span> <span class="at">--dependency</span><span class="op">=</span><span class="st">&quot;afterok:</span><span class="va">$WF_SUMMARY_ARRAY</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--job-name</span><span class="op">=</span>res18-summary <span class="at">--cpus-per-task</span><span class="op">=</span>1 <span class="at">--mem</span><span class="op">=</span>2G <span class="at">--time</span><span class="op">=</span>00:10:00 <span class="dt">\</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/%j-summary.out&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SCRIPTS</span><span class="st">/summarize-array.sh&quot;</span> <span class="dt">\</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$WF_SUMMARY_MODE</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$WF_SUMMARY_ARRAY</span><span class="st">&quot;</span></span></code></pre></div>
+<p>Final file:</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/runs/summary-</span><span class="va">$WF_SUMMARY_MODE</span><span class="st">-</span><span class="va">$WF_SUMMARY_ARRAY</span><span class="st">.json&quot;</span></span></code></pre></div>
+<p>The summary script requires exactly one result for each fold 0–11,
+all in the same mode; missing folds, duplicates, or mixed
+training/weight results fail. It outputs mean AP, population standard
+deviation <code>ddof=0</code>, and sample standard deviation
+<code>ddof=1</code>; state which you report. Do not average yearly AP
+values first and call that the 12-fold mean.</p>
+<h3 id="124-how-to-interpret-close-to-the-original-papers-numbers">12.4
+How to Interpret “Close to the Original Paper's Numbers”</h3>
+<p>The table below contains existing independent reevaluation records,
+not new 12-fold results executed for this tutorial:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Comparison</th>
+<th style="text-align: right;">AP</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Res18-U-Net T=1 All in the official WSTS+ table</td>
+<td style="text-align: right;">0.460 ± 0.084</td>
+<td>Paper/authors' repository reference</td>
+</tr>
+<tr class="even">
+<td>Historical per-fold reevaluation of twelve released weights</td>
+<td style="text-align: right;"><strong>0.452764 ± 0.088217</strong></td>
+<td>Population standard deviation; mean differs from the paper reference
+by about -0.007236</td>
+</tr>
+<tr class="odd">
+<td>AP labels in the twelve weight filenames</td>
+<td style="text-align: right;">0.452917 ± 0.088272</td>
+<td>Statistics of rounded filename values only, not a new
+evaluation</td>
+</tr>
+<tr class="even">
+<td>Historical Fold 2 trained by us</td>
+<td style="text-align: right;">0.554664</td>
+<td>Single fold, not a twelve-fold mean</td>
+</tr>
+<tr class="odd">
+<td>Historical released Fold 2 weights</td>
+<td style="text-align: right;">0.570902</td>
+<td>Single fold, consistent with filename 0.571</td>
+</tr>
+</tbody>
+</table>
+<p>For complete per-fold metrics, runs, and independent verification
+records, see the <a
+href="../../docs/experiments/res18_unet_t1_reproduction.md">official
+reproduction report</a> and <a
+href="../../reproductions/wsts_res18_unet_t1/README.md">reproduction
+README</a>.</p>
+<p>“Close” describes existing results; it is not a tuning target or a
+pass condition for this tutorial. Current records cannot prove that
+released weights and the paper's table share exactly the same
+provenance, runs, and aggregation procedure; the intended official
+positive-weight configuration also remains historically unresolved.
+Correct delivery reports actual scores and differences, rather than
+repeatedly changing parameters until reaching 0.460.</p>
+<div class="reference-pager"><a href="#chapter-13">← Previous section</a><a class="button" href="#chapter-15">Next section →</a></div></section>
+<section class="step-panel" id="chapter-15"><p class="step-kicker">Reference · 15 / 17</p><h2 id="13-common-failures-where-to-look-and-what-to-do">13. Common
+Failures: Where to Look and What to Do</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>Check first</th>
+<th>Correct action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Invalid account</code> / GPU type does not exist</td>
+<td><code>sacctmgr</code>, <code>sinfo</code>, and configuration</td>
+<td>Use your own account and actual resource names, not the instructor's
+account</td>
+</tr>
+<tr class="even">
+<td><code>DependencyNeverSatisfied</code></td>
+<td>Prerequisite job's <code>sacct</code> and logs</td>
+<td>Fix the prerequisite failure, save the new job ID, then resubmit
+downstream jobs; old dependencies do not recover automatically</td>
+</tr>
+<tr class="odd">
+<td>Environment installation reports
+<code>No matching distribution</code></td>
+<td>Specific pinned version in <code>setup</code> logs</td>
+<td>Ask the instructor to confirm the wheelhouse and existing validated
+environment; do not arbitrarily upgrade all model dependencies</td>
+</tr>
+<tr class="even">
+<td>ZIP checksum fails</td>
+<td><code>.partial</code>, disk quota, download logs</td>
+<td>Do not extract a corrupt archive; preserve evidence and obtain the
+file again</td>
+</tr>
+<tr class="odd">
+<td>Extension-year targets are almost all zero</td>
+<td>Whether the original four-year official converter was used
+incorrectly</td>
+<td>Return to Section 9; convert and verify using the extension years'
+hour encoding</td>
+</tr>
+<tr class="even">
+<td><code>refusing existing target</code> /
+<code>FileExistsError</code></td>
+<td>Previous failed directory and logs</td>
+<td>Identify the last completed step; use a new course root directory or
+have the instructor confirm recovery. Do not delete data still used by
+other steps</td>
+</tr>
+<tr class="odd">
+<td>CUDA OOM</td>
+<td>Actual requested slice, peak usage, full testing stage</td>
+<td>Request a larger slice and rerun, preserving failure logs; do not
+arbitrarily change full-training batch size, features, precision, or
+crop</td>
+</tr>
+<tr class="even">
+<td>CPU <code>OUT_OF_MEMORY</code></td>
+<td><code>sacct MaxRSS</code>, worker count, test AP stage</td>
+<td>Increase <code>--mem</code>; record worker changes, and do not treat
+incomplete testing as a result</td>
+</tr>
+<tr class="odd">
+<td>Checkpoint warning about <code>weights_only</code> / untrusted
+deserialization</td>
+<td>Whether the file is your own <code>.ckpt</code> or an official
+weight in the pinned manifest</td>
+<td>This tutorial accommodates old Lightning for these two trusted
+sources; do not apply the setting to unknown checkpoints</td>
+</tr>
+<tr class="even">
+<td>Checkpoint exists but <code>result.json</code> is missing</td>
+<td>Completion marker, whether testing ended, log-parsing errors</td>
+<td>A checkpoint does not mean the whole experiment succeeded; inspect
+logs first and do not fabricate completion files</td>
+</tr>
+<tr class="odd">
+<td>Queued for more than ten minutes</td>
+<td><code>squeue --start -j JOBID</code> and resource probes</td>
+<td>Compare <code>sbatch --test-only</code> estimates for the same
+command; change the request only if resources stay within twice the
+necessary amount and it is clearly faster. Avoid leaving two duplicate
+sets of scientific jobs</td>
+</tr>
+</tbody>
+</table>
+<p>Inspecting training progress does not start new training:</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">squeue</span> <span class="at">-u</span> <span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="ex">squeue</span> <span class="at">--start</span> <span class="at">-j</span> <span class="st">&quot;</span><span class="va">$WF_FOLD_JOB</span><span class="st">&quot;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-f</span> <span class="st">&quot;</span><span class="va">$WF_ROOT</span><span class="st">/logs/</span><span class="va">$WF_FOLD_JOB</span><span class="st">-fold2.out&quot;</span></span></code></pre></div>
+<p><code>Ctrl-C</code> stops only <code>tail</code>, not the job. Run
+<code>scancel JOBID</code> only when cancellation is actually needed; do
+not indiscriminately cancel all your jobs.</p>
+<div class="reference-pager"><a href="#chapter-14">← Previous section</a><a class="button" href="#chapter-16">Next section →</a></div></section>
+<section class="step-panel" id="chapter-16"><p class="step-kicker">Reference · 16 / 17</p><h2 id="14-what-students-should-submit">14. What Students Should
+Submit</h2>
+<ul>
+<li>Course repository commit, upstream commit,
+<code>tutorial.env</code>, and both environment freezes.</li>
+<li>Download verification logs and data conversion/audit results; for
+B0, include training statistics and a description of data years.</li>
+<li>Your job IDs, original training logs, actual commands, and best
+checkpoint path.</li>
+<li>Single-fold <code>result.json</code>, or B0's
+<code>scientific/completed.json</code> and
+<code>results-2021/summary.json</code>.</li>
+<li>Your own results table, clearly distinguishing single fold / twelve
+folds, your own training / released-weight evaluation, and official
+protocol / project B0.</li>
+</ul>
+<p>A complete submission should explain the inputs, labels, training
+years, when checkpoints were selected, when testing occurred, and
+exactly which reference the score can be compared with.</p>
+<div class="reference-pager"><a href="#chapter-15">← Previous section</a><a class="button" href="#chapter-17">Next section →</a></div></section>
+<section class="step-panel" id="chapter-17"><p class="step-kicker">Reference · 17 / 17</p><h2 id="15-validation-scope-of-this-tutorial">15. Validation Scope of
+This Tutorial</h2>
+<p>The accompanying data converters come from the project's existing
+Nibi execution scripts; model calls reuse the existing official/B0 entry
+points. The new summarizer checks metric validity, the complete fold
+set, and experiment type. Specific static checks, lightweight tests, and
+Slurm smoke results are recorded in <a
+href="../../docs/tutorials/res18/validation.md">validation.md</a>.</p>
+<p>Writing this tutorial does not automatically rerun full ZIP
+downloads, conversion of 999 events, 10000-step training, and the
+complete 12-fold campaign. The historical numbers above are recorded
+separately from tutorial validation. On their first run with their own
+account and new environment, students must still verify each step
+against its success criteria.</p>
+<div class="reference-pager"><a href="#chapter-16">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/tutorials/project-b0-slurm.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

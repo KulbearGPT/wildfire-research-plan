@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Legacy Legacy FireDrop training (P00)
+initialization for historical diagnostics · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
+<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<body data-page="guide-legacy-p00" data-root="../../"><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-case/index.html">Running example</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
+<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Legacy Legacy FireDrop training (P00)
+initialization for historical diagnostics</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a></nav></details>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 1</p><h2>Before you begin</h2><span id="legacy-p00-initialization-for-historical-diagnostics"></span>
+<p><strong>Archived workflow:</strong> this page preserves an inactive
+exploration or diagnostic. See <a
+href="../../docs/CODE_LIFECYCLE.md">code lifecycle</a>. Other methods
+and recipes below are retained for historical reproduction; their
+evidence status does not imply active use.</p>
+<p>This is the <strong>historical invalid-foundation replay</strong>,
+needed only by the two <a
+href="../diagnostics-reproduction/index.html">VIIRS/target-QA diagnostic
+observations</a>. It does not replace corrected <a class="experiment-name" href="../../experiments/index.html#B2">Corrected T1 FireDrop-trained baseline <small>(B2)</small></a>/<a class="experiment-name" href="../../experiments/index.html#B3">T1 missingness-trained foundation <small>(B3)</small></a> or establish a new
+forecasting result.</p>
+<p><code>reproductions.wsts_fast_track.legacy_p00</code> recovers the
+<a class="experiment-name" href="../../experiments/index.html#P00">Legacy FireDrop training <small>(P00)</small></a> entrypoint from
+<code>4b843ad:reproductions/wsts_fast_track/prototype_entrypoint.py</code>.
+It uses that archive's C00 argument contract, seed0, 10,000 updates,
+batch64, ImageNet ResNet18 initialization and training-only FireDrop
+probability .3. The retained <code>apply_training_fire_dropout</code>
+and <code>install_training_fire_dropout</code> functions are
+AST-identical to that archive. Shared runtime split/statistics code is
+equivalent for C00. Crucially it <strong>does not install corrected
+dataset indexing</strong>: it leaves the pinned upstream pooled-year
+index loop leak intact, preserving the invalid exposure that was later
+diagnosed. A contaminated process with an already replaced resolver is
+rejected. Run it as a separate process.</p>
+<p>Public prerequisites are the pinned upstream/import patch, complete
+prepared data, ImageNet initialization, and train statistics from the
+normal setup. Exact reproduction of original numerical scores
+additionally needs the same historical data/statistics snapshot.
+Regenerating from today's corrected data produces a replay of the old
+algorithm and its known indexing defect, not proof of byte-identical
+original weights. Keep its fresh provenance and checksums.</p>
+<p>After <a href="../reproduce/index.html">setup and data
+preparation</a>, submit the full legacy initialization only if its
+weights are needed:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_SITE_ENV</span><span class="st">&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">P00_RUN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/runs/legacy-P00&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python <span class="at">-m</span> reproductions.wsts_fast_track.legacy_p00 <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--upstream-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_UPSTREAM</span><span class="st">&quot;</span> <span class="at">--data-root</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_DATA</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stats-path</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_STATS</span><span class="st">&quot;</span> <span class="at">--run-root</span> <span class="st">&quot;</span><span class="va">$P00_RUN</span><span class="st">&quot;</span></span></code></pre></div>
+<p>Wait for this job to complete successfully; do not submit completion
+concurrently. The training wrapper captures the actual final fit step
+and best validation-AP checkpoint/score/hash, and writes
+<code>legacy-training-completion.json</code> only after fit and final
+validation return successfully. A best checkpoint may precede
+step10,000; its presence alone does not demonstrate full fitting.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh cpu python <span class="at">-m</span> reproductions.wsts_fast_track.legacy_p00_completion <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--run-root</span> <span class="st">&quot;</span><span class="va">$P00_RUN</span><span class="st">&quot;</span></span></code></pre></div>
+<p>The completion module requires a 10,000-step receipt with the exact
+legacy policy, verifies the checkpoint digest, actual selected step and
+saved ModelCheckpoint best-score metadata, then creates
+<code>$P00_RUN/completed.json</code>. It keeps
+<code>scientific_claim: false</code> and
+<code>legacy_index_semantics: true</code>. Existing completed records
+are not overwritten. Its required P00 fields are compatible with the
+recovered attention/diagnostic loaders; it cannot be used as a corrected
+B3 completion record.</p>
+<p>Set <code>P00_RECORD="$P00_RUN/completed.json"</code> and
+<code>P00_CHECKPOINT</code> to the checkpoint named in that record.
+Continue with <code>diagnostic_artifacts</code> and the attention-head
+training command in <a
+href="../diagnostics-reproduction/index.html">diagnostic
+reproduction</a>, then regenerate the public maps and evaluate. For a
+fresh regenerated head, use the map's current-path identity entries; the
+original recorded P00 alias is needed only to replay an original
+transferred attention checkpoint. Do not combine a regenerated P00 with
+a transferred attention head and claim they are the same original
+pair.</p>
+<p>For execution qualification only, the dedicated case locally changes
+the budget to two steps and batch2/workers0 with one validation batch;
+it does not run a full scientific job:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/research/submit.sh gpu python scripts/research/qualify-legacy.py <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--case</span> legacy-P00 <span class="at">--output</span> <span class="st">&quot;</span><span class="va">$WILDFIRE_ROOT</span><span class="st">/qualification/legacy-P00&quot;</span></span></code></pre></div>
+<p>It verifies strict checkpoint reload and two-example real-data
+evaluation, asserts that formal P00 completion rejects its two-step
+receipt, and retains only a clearly named
+<code>legacy-p00-qualification.json</code>. It never emits a successful
+10,000-step completion. No full legacy training or efficacy rerun is
+performed as part of handoff qualification.</p>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/research/legacy-p00.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

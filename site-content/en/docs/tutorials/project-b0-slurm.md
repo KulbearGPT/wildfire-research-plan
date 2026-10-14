@@ -2,7 +2,7 @@
 
 For students encountering this project for the first time. Commands use **Bash + Alliance Nibi**, starting from an empty personal experiment directory. Prepared: 2026-09-11.
 
-The accompanying scripts are in [`res18/`](res18/) and are already included in the repository; there is no need to search the instructor's personal cache directories. They call the project's existing official reproduction and B0 entry points rather than implementing another model-training pipeline.
+The accompanying scripts are in `docs/tutorials/res18/` (including the [official runner](res18/official.sh)) and are already included in the repository; there is no need to search the instructor's personal cache directories. They call the project's existing official reproduction and B0 entry points rather than implementing another model-training pipeline.
 
 ## 0. First Choose What You Want to Complete
 

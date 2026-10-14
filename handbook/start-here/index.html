@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Start here: a guide for new
+students · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
+<script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<body data-page="guide-START_HERE" data-root="../../"><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
+<nav aria-label="Main navigation"><a href="../../index.html#course">Course</a><a href="../../index.html#handbook">Practical handbook</a><a href="../../index.html#library">Reference library</a></nav></header>
+<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-case/index.html">Running example</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></details></aside>
+<main class="content" id="main"><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Start here: a guide for new
+students</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 1. Understand the research
+question</a><a href="#chapter-3">3 · 2. Choose your first
+experiment</a><a href="#chapter-4">4 · 3. Prepare before running
+commands</a><a href="#chapter-5">5 · 4. What counts as
+completing onboarding?</a><a href="#chapter-6">6 · 5. Move from reproduction
+to research</a><a href="#chapter-7">7 · 6. Where to find help</a></nav></details>
+<noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>
+<div class="reference-body"><section class="step-panel" id="chapter-1"><p class="step-kicker">Reference · 1 / 7</p><h2>Before you begin</h2><span id="start-here-a-guide-for-new-students"></span>
+<p>Start with the <a href="../../index.html#course">central eight-lesson
+course directory</a>. After Fold 2 and the project-protocol transition,
+work through the <a href="../../lessons/erm/index.html">interactive ERM
+lesson</a>.</p>
+<p><strong>The active research route is <a class="experiment-name" href="../../experiments/index.html#X22+X17">Condition-specific specialist route <small>(X22+X17)</small></a> and its necessary
+controls.</strong> Other methods remain historical explorations or
+teaching references; see <a href="../../docs/CODE_LIFECYCLE.md">code
+lifecycle</a>. The official single-fold tutorial remains the first
+onboarding exercise.</p>
+<p>Course website: <a href="../../index.html">Home</a> · <a
+href="../../library/foundations/index.html">Research foundations</a> · <a
+href="../../library/reproduction/index.html">Baseline
+reproduction</a>.</p>
+<p>Welcome to the wildfire forecasting project. This page takes you from
+understanding the task to your first experiment and then to the existing
+research. <strong>For your first practical exercise, complete one
+official fold. You do not need to rerun every experiment.</strong></p>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 7</p><h2 id="1-understand-the-research-question">1. Understand the research
+question</h2>
+<p>We study how to predict next-day active fire when satellite inputs
+have predefined missing observations. The model outputs a fire
+probability for each pixel. The target is an active-fire proxy, not a
+complete fire perimeter. The existing evidence primarily concerns
+controlled missingness.</p>
+<p>Start with the problem definition, research process and experimental
+contract in the <a href="../research-roadmap/index.html">research
+roadmap</a>. Understand why data audits, index corrections and baselines
+precede method comparisons. The roadmap preserves the earlier teaching
+narrative; <strong>use the <a href="../reproduce/index.html">research
+handoff guide</a> for current methods, evidence and execution
+status</strong>.</p>
+<p>After reading, explain in your own words: what goes into the model,
+which day it predicts, what the label represents, and how we decide
+whether a change helps.</p>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 7</p><h2 id="2-choose-your-first-experiment">2. Choose your first
+experiment</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Your goal</th>
+<th>Starting point</th>
+<th>First milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Learn the full download, training and evaluation workflow using only
+official code</td>
+<td><strong><a href="../res18-baseline-slurm/index.html">Official
+Res18-U-Net practical tutorial</a></strong> (recommended starting
+point)</td>
+<td>Start in an empty personal directory, prepare the environment and
+data, pass the smoke check, then train and evaluate Fold 2</td>
+</tr>
+<tr class="even">
+<td>You know the workflow and want the project's corrected <a class="experiment-name" href="../../experiments/index.html#B0">Corrected T1 clean-input baseline <small>(B0)</small></a></td>
+<td><a href="../project-b0-slurm/index.html">Project B0
+tutorial</a></td>
+<td>Follow the B0 route using the fixed chronological split and seed 0;
+this does not involve selecting another fold</td>
+</tr>
+<tr class="odd">
+<td>You know the baseline and want to migrate the environment or
+reproduce our methods</td>
+<td><a href="../reproduce/index.html">New-cluster reproduction
+guide</a></td>
+<td>Configure personal paths and Slurm resources, prepare data and
+required weights, then choose one method and its matched control</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Official Fold 2 and project B0 are different
+experiments.</strong> The former uses the official split of the original
+four-year dataset and 10,000 optimizer steps. The latter uses a fixed
+chronological split of eight years, corrected indexing and training
+statistics, with 3,000 steps. Their score difference is not a method
+gain.</p>
+<p>The first route does not require cloning this project, using your
+supervisor's environment or accessing their wildfire checkpoints. All
+twelve folds are an optional extension; do not launch them all for your
+first exercise.</p>
+<p>After completing official Fold 2, read <a
+href="../matched-erm-experiment-design/index.html">Designing your first
+fair comparison</a>. The lesson explains how to move to the project
+protocol and establish a matched ERM continuation control before trying
+<a class="experiment-name" href="../../experiments/index.html#X22">Cosine-schedule continuation <small>(X22)</small></a> and <a class="experiment-name" href="../../experiments/index.html#X14">Mixed-severity block specialist <small>(X14)</small></a>.</p>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 7</p><h2 id="3-prepare-before-running-commands">3. Prepare before running
+commands</h2>
+<ul>
+<li>Your own cluster login, CPU/GPU accounts, and the GPU types and
+partitions available at your site.</li>
+<li>A personal experiment directory that compute nodes can read and
+write, with sufficient storage quota.</li>
+<li>The Python/module environment required by the tutorial and a
+supported download route from compute nodes.</li>
+<li>An experiment notebook for configurations, commit IDs, job IDs and
+result paths.</li>
+</ul>
+<p>The tutorials give the exact directory, storage and command
+instructions. Use your site's accounts, module names and GPU names; do
+not copy a supervisor's personal paths or Slurm account.</p>
+<p>Use login nodes only for editing, Git, small log reads and job
+submission/status checks. <strong>Run installation, downloads, data
+conversion, training and model evaluation through Slurm.</strong> A job
+ID from <code>sbatch</code> confirms submission only. Check for
+<code>COMPLETED</code>, exit code <code>0:0</code>, and the expected
+artifacts. Do not submit duplicate experiments while a job is
+queued.</p>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="#chapter-5">Next section →</a></div></section>
+<section class="step-panel" id="chapter-5"><p class="step-kicker">Reference · 5 / 7</p><h2 id="4-what-counts-as-completing-onboarding">4. What counts as
+completing onboarding?</h2>
+<p>For the official tutorial, bring the following to your
+supervisor:</p>
+<ul>
+<li>An explanation of the dataset, year split, T=1 input and next-day
+target.</li>
+<li>Successful environment and data preparation jobs and a passing smoke
+check.</li>
+<li>A completed Fold 2 training run with inspectable step count, logs
+and selected checkpoint.</li>
+<li>The tutorial's prescribed checkpoint evaluation, including AP and
+the corresponding split.</li>
+<li>A clear distinction between your training result, an author's
+released-checkpoint result and the paper's multi-fold aggregate.</li>
+</ul>
+<p>A smoke check establishes that the execution path works; it does not
+reproduce the paper's performance. If scores differ, check the split,
+preprocessing, budget, checkpoint selection and metric definition first.
+Do not repeatedly adjust choices on the test set to chase a target
+number.</p>
+<p>Keep at least the following in your experiment notebook:</p>
+<pre class="text"><code>Experiment purpose and tutorial used:
+Code commit and environment configuration:
+Data version/preparation records and year split:
+Model, seed, batch size and training steps:
+Slurm job ID, final state and exit code:
+Log, checkpoint and evaluation-result paths:
+Metrics, comparison source, differences and unresolved questions:</code></pre>
+<p>For the project B0 route, replace Fold 2 above with that tutorial's
+B0 training and evaluation protocol. Keep the two acceptance criteria
+separate.</p>
+<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="#chapter-6">Next section →</a></div></section>
+<section class="step-panel" id="chapter-6"><p class="step-kicker">Reference · 6 / 7</p><h2 id="5-move-from-reproduction-to-research">5. Move from reproduction
+to research</h2>
+<p>Read the <a href="../positive-signals/index.html">positive-signal
+catalog</a>, followed by the <a
+href="../negative-results/index.html">negative and unrun archive</a>.
+The positive catalog includes improvements on a single seed, metric or
+scenario. <strong>Inclusion is not confirmation of a
+contribution.</strong> An unrun experiment or invalid comparison is not
+evidence that a method fails.</p>
+<p>Follow the selected X22+X17 route: reproduce X22 against fresh ERM,
+then inspect the fixed-severity <a class="experiment-name" href="../../experiments/index.html#X17">Fixed-severity block specialists <small>(X17)</small></a> experts and mixed-severity X14
+control. See <a href="../../docs/CODE_LIFECYCLE.md">code lifecycle</a>
+and the <a href="../method-recipes/index.html">method recipes</a>. Other
+directions retain their historical implementations; reopening one
+requires a new research decision. For base weights, see <a
+href="../baselines/index.html">baseline training and export</a>. The <a
+href="../teachers/index.html">teacher and distillation recipes</a> are
+archived references.</p>
+<p>Before every experiment, write down the hypothesis, comparator, fixed
+conditions, and observations that would support or contradict the
+hypothesis. The project's historical test years have already been
+evaluated; agree on a confirmation plan before designing new
+methods.</p>
+<div class="reference-pager"><a href="#chapter-5">← Previous section</a><a class="button" href="#chapter-7">Next section →</a></div></section>
+<section class="step-panel" id="chapter-7"><p class="step-kicker">Reference · 7 / 7</p><h2 id="6-where-to-find-help">6. Where to find help</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Documentation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Installing, configuring and submitting jobs on a new server</td>
+<td><a href="../reproduce/index.html">New-cluster reproduction
+guide</a></td>
+</tr>
+<tr class="even">
+<td>Downloading, converting, repairing data and computing
+statistics</td>
+<td><a href="../data-preparation/index.html">Data preparation</a></td>
+</tr>
+<tr class="odd">
+<td>Obtaining, transferring or regenerating weights</td>
+<td><a href="../artifacts/index.html">External artifacts</a>, <a
+href="../baselines/index.html">baselines</a>, <a
+href="../teachers/index.html">teachers</a></td>
+</tr>
+<tr class="even">
+<td>Which execution checks actually ran, and what they establish</td>
+<td><a href="../qualification/index.html">Qualification record</a></td>
+</tr>
+<tr class="odd">
+<td>Why historical evaluation sample counts had inconsistent
+wording</td>
+<td><a href="../evaluation-population/index.html">Evaluation-population
+audit</a></td>
+</tr>
+<tr class="even">
+<td>Using AI to edit code, prepare experiments or diagnose jobs</td>
+<td><a href="../../docs/DEVELOPMENT.md">Development and AI workflow</a>,
+<a href="../../AGENTS.md">project agreement</a></td>
+</tr>
+</tbody>
+</table>
+<p>When reporting a problem, include the submitted command, code commit,
+job ID, exit state and first error in the log. Preserve failed-run
+artifacts instead of overwriting them. Do not rerun a model on a login
+node to debug it.</p>
+<div class="reference-pager"><a href="#chapter-6">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><a href="../../site-content/en/docs/START_HERE.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a><br>
+Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

@@ -1,0 +1,861 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "X1",
+      "name": "Valid-context feature transport",
+      "name_zh": "有效上下文特征传递",
+      "explanation": "Moves pooled valid-region feature information into missing regions through learned residuals.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X1-adapter",
+      "name": "Frozen-backbone context adapter",
+      "name_zh": "冻结主干的上下文适配器",
+      "explanation": "Trains the context adapter while retaining the initial foundation backbone.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X2",
+      "name": "Fire-weighted feature distillation",
+      "name_zh": "火点加权特征蒸馏",
+      "explanation": "Matches student features to a frozen clean-input teacher with spatial and fire-target weighting.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X3",
+      "name": "Latent fire-transition head",
+      "name_zh": "潜在火情转移预测头",
+      "explanation": "Combines occupancy, continuation, and new-activity predictions into a next-day forecast.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X4",
+      "name": "Spatial-risk loss weighting",
+      "name_zh": "空间风险损失加权",
+      "explanation": "Reweights the forecasting objective spatially under controlled missingness.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X5",
+      "name": "Missing-region consistency",
+      "name_zh": "缺失区域一致性",
+      "explanation": "Localizes predictive consistency instead of applying the global consistency objective.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X6",
+      "name": "Balanced corruption sampling",
+      "name_zh": "均衡缺失采样",
+      "explanation": "Changes training corruption coverage through balanced corruption sampling.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X7",
+      "name": "Missingness-conditioned residual experts",
+      "name_zh": "缺失条件残差专家",
+      "explanation": "Proposes residual experts conditioned on the observed missingness pattern.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X8",
+      "name": "Impact-weighted predictive consistency",
+      "name_zh": "影响加权预测一致性",
+      "explanation": "Weights clean-to-corrupted prediction consistency by counterfactual corruption impact.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X9",
+      "name": "Spatial-impact feature modulation",
+      "name_zh": "空间影响特征调制",
+      "explanation": "Uses spatial context to modulate decoder features with a FiLM mechanism.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X10",
+      "name": "Forecast-trained dynamic inpainting",
+      "name_zh": "预测损失训练的动态输入修补",
+      "explanation": "Restores missing dynamic inputs using the forecasting objective.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X11",
+      "name": "Reconstruction-supervised dynamic inpainting",
+      "name_zh": "重建监督的动态输入修补",
+      "explanation": "Adds reconstruction supervision to the forecast-trained restoration mechanism.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X12",
+      "name": "Counterfactual FireDrop specialist",
+      "name_zh": "反事实火点历史缺失专家",
+      "explanation": "Specializes continuation training for complete fire-history removal using counterfactual consistency.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X13",
+      "name": "Normalized diffusion inpainting",
+      "name_zh": "归一化扩散修补",
+      "explanation": "Propagates observed spatial values into missing regions without learned restoration parameters.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X14",
+      "name": "Mixed-severity block specialist",
+      "name_zh": "混合缺失程度块状缺失专家",
+      "explanation": "Trains one block-only specialist with both 25% and 50% missing-block severities.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X15",
+      "name": "Distance-to-observation prompts",
+      "name_zh": "观测距离提示",
+      "explanation": "Injects encoder prompts scaled by depth inside a missing spatial region.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X16",
+      "name": "Block-trained dynamic inpainting",
+      "name_zh": "块状缺失训练的动态输入修补",
+      "explanation": "Trains the dynamic restoration module under the block-only specialist schedule.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X17",
+      "name": "Fixed-severity block specialists",
+      "name_zh": "固定缺失程度块状缺失专家组",
+      "explanation": "Trains separate 25% and 50% block-only specialists and selects them by observed missing fraction.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X18",
+      "name": "Block-trained context transport",
+      "name_zh": "块状缺失训练的上下文传递",
+      "explanation": "Adds valid-context transport to the block-specialist training recipe.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X19",
+      "name": "Severity-conditioned latent adapters",
+      "name_zh": "缺失程度条件潜在特征适配器",
+      "explanation": "Conditions latent feature adapters on block-missingness severity.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X20",
+      "name": "ERM-anchored impact consistency",
+      "name_zh": "经验风险最小化锚定的影响一致性",
+      "explanation": "Anchors the impact-consistency recipe to the matched ERM continuation objective.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X21",
+      "name": "First-layer reliability calibration",
+      "name_zh": "首层可靠性校准",
+      "explanation": "Proposes reliability-dependent calibration at the first model layer.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X22",
+      "name": "Cosine-schedule continuation",
+      "name_zh": "余弦学习率续训",
+      "explanation": "Continues ERM training with cosine learning-rate decay instead of the matched constant-rate schedule.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X23",
+      "name": "Impact-consistent block specialist",
+      "name_zh": "影响一致性块状缺失专家",
+      "explanation": "Adds impact-weighted consistency to the block-specialist recipe.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X24",
+      "name": "Frozen-clean FireDrop distillation",
+      "name_zh": "冻结完整输入教师的火点缺失蒸馏",
+      "explanation": "Proposes a frozen clean-input teacher for FireDrop-specialist distillation.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X25",
+      "name": "Block-specialist reliability prompts",
+      "name_zh": "块状缺失专家可靠性提示",
+      "explanation": "Adds severity-adaptive reliability prompts to block-specialist training.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X26",
+      "name": "Cosine-scheduled impact consistency",
+      "name_zh": "余弦学习率影响一致性",
+      "explanation": "Combines cosine-scheduled continuation with impact-weighted FireDrop consistency.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X27",
+      "name": "Forecast-guided block selection",
+      "name_zh": "预测引导的缺失块选择",
+      "explanation": "Selects hard missing blocks using forecast information during specialist training.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X28",
+      "name": "VIIRS-footprint missingness augmentation",
+      "name_zh": "VIIRS观测足迹缺失增强",
+      "explanation": "Uses VIIRS reliability-footprint geometry for training corruption instead of rectangular blocks.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X29",
+      "name": "Valid-context memory attention",
+      "name_zh": "有效上下文记忆注意力",
+      "explanation": "Retrieves valid-context information through attention during block-specialist training.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X30",
+      "name": "Training-only fire-change heads",
+      "name_zh": "仅训练使用的火情变化预测头",
+      "explanation": "Adds auxiliary fire-change prediction heads during training.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X31",
+      "name": "Multiscale forecast supervision",
+      "name_zh": "多尺度预测监督",
+      "explanation": "Adds forecasting supervision at multiple feature scales.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X1+X3",
+      "name": "Context-and-transition composition",
+      "name_zh": "上下文与火情转移组合",
+      "explanation": "Combines context transport with the latent fire-transition head.",
+      "kind": "system",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X2-block-signal",
+      "name": "Original feature-distillation block analysis",
+      "name_zh": "原始特征蒸馏块状缺失分析",
+      "explanation": "Records the original feature-distillation variant's block results; it is not a separate new mechanism.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X3-decoupled",
+      "name": "Decoupled fire-transition head",
+      "name_zh": "解耦火情转移预测头",
+      "explanation": "Changes the coupling in the latent-transition prediction mechanism.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X4-strong",
+      "name": "Fivefold spatial-risk weighting",
+      "name_zh": "五倍空间风险加权",
+      "explanation": "Increases the spatial-risk weighting strength in a repair variant.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X2-block-repair",
+      "name": "Block-local feature distillation",
+      "name_zh": "块内局部特征蒸馏",
+      "explanation": "Restricts feature distillation to the block-local repair variant.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X8+X17",
+      "name": "Impact-and-block specialist route",
+      "name_zh": "影响一致性与块状缺失专家路由",
+      "explanation": "Routes fire-history loss to impact consistency and spatial loss to fixed-severity block specialists.",
+      "kind": "system",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X22+X17",
+      "name": "Condition-specific specialist route",
+      "name_zh": "按缺失条件选择的专家路由",
+      "explanation": "Combines cosine continuation for FireDrop with fixed-severity block specialists; the historical and current clean-input routes differ.",
+      "kind": "system",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "legacy-c00-c02-3k",
+      "name": "Legacy 3000-step foundation comparison",
+      "name_zh": "历史3000步基础模型比较",
+      "explanation": "Records the legacy C00/C02 foundation runs with an invalid pooled-year resolver.",
+      "kind": "baseline",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "legacy-c00-c02-six-10k-runs",
+      "name": "Legacy six-run 10000-step foundation comparison",
+      "name_zh": "历史六次10000步基础模型比较",
+      "explanation": "Records the six legacy C00/C02 runs with invalid training exposure.",
+      "kind": "baseline",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P00",
+      "name": "Legacy FireDrop training",
+      "name_zh": "历史火点缺失训练",
+      "explanation": "Trains with complete fire-history removal in the legacy experiment family.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P02",
+      "name": "Legacy FireDrop-and-BlockDrop training",
+      "name_zh": "历史火点与块状缺失训练",
+      "explanation": "Adds spatial block corruption to the legacy FireDrop recipe.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P09",
+      "name": "Legacy group-robust optimization",
+      "name_zh": "历史分组鲁棒优化",
+      "explanation": "Uses GroupDRO in the legacy continuation comparison.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P10",
+      "name": "Legacy matched ERM continuation",
+      "name_zh": "历史匹配经验风险最小化续训",
+      "explanation": "Provides the matched ERM continuation control for legacy GroupDRO.",
+      "kind": "control",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P01",
+      "name": "Legacy validity-channel input",
+      "name_zh": "历史有效性通道输入",
+      "explanation": "Adds an input validity channel in the legacy model family.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P03",
+      "name": "Legacy hard expert router",
+      "name_zh": "历史硬选择专家路由",
+      "explanation": "Uses hard routing in the legacy specialist comparison.",
+      "kind": "system",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P04",
+      "name": "Legacy pointwise residual correction",
+      "name_zh": "历史逐点残差修正",
+      "explanation": "Adds a 1-by-1 residual correction to the legacy predictor.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P05",
+      "name": "Legacy spatial residual correction",
+      "name_zh": "历史空间残差修正",
+      "explanation": "Adds a 3-by-3 residual correction to the legacy predictor.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P06",
+      "name": "Legacy decoder adaptation",
+      "name_zh": "历史解码器适配",
+      "explanation": "Adapts the decoder in the legacy correction family.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P07",
+      "name": "Legacy stochastic residual correction",
+      "name_zh": "历史随机残差修正",
+      "explanation": "Uses a stochastic residual correction in the legacy predictor.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P08",
+      "name": "Legacy teacher-posterior correction",
+      "name_zh": "历史教师后验修正",
+      "explanation": "Uses teacher-posterior information in the legacy correction family.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P11",
+      "name": "Legacy missingness-pattern router",
+      "name_zh": "历史缺失模式路由",
+      "explanation": "Routes predictions according to missingness in the legacy FireDrop comparison.",
+      "kind": "system",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P12",
+      "name": "Prevalence-weighted focal loss",
+      "name_zh": "按发生率加权的焦点损失",
+      "explanation": "Sets focal-loss alpha from prevalence in the legacy probe.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "P13",
+      "name": "Legacy FireDrop specialist",
+      "name_zh": "历史火点缺失专家",
+      "explanation": "Evaluates a dedicated FireDrop expert in the legacy family.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "belief-filter-t-1",
+      "name": "T1 belief-state filter",
+      "name_zh": "单日历史信念状态滤波",
+      "explanation": "Uses belief-state filtering in the T1 legacy probe.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "belief-attention-t-1",
+      "name": "T1 belief-state attention",
+      "name_zh": "单日历史信念状态注意力",
+      "explanation": "Uses attention over belief-state information in the T1 legacy probe.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "belief-reconstruction-t-1",
+      "name": "T1 belief-state reconstruction",
+      "name_zh": "单日历史信念状态重建",
+      "explanation": "Uses belief-state reconstruction in the T1 legacy probe.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "corresponding-t-5-probes",
+      "name": "T5 belief-state probe suite",
+      "name_zh": "五日历史信念状态实验组",
+      "explanation": "Groups the corresponding T5 belief-state probes; it is a suite rather than one mechanism.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "natural-viirs-screen",
+      "name": "Natural VIIRS observation screen",
+      "name_zh": "自然VIIRS观测筛查",
+      "explanation": "Screens prediction behavior on naturally varying VIIRS observations.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "target-qa-censoring",
+      "name": "Target-observation quality censoring",
+      "name_zh": "目标观测质量筛除",
+      "explanation": "Examines evaluation after censoring targets without reliable target-day observations.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "2016-2020-qa-cohort",
+      "name": "Multiyear observation-quality cohort preparation",
+      "name_zh": "多年观测质量队列准备",
+      "explanation": "Attempts to prepare the 2016–2020 observation-quality cohort; this is a data-preparation record.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "B4",
+      "name": "Equal-year training sampler",
+      "name_zh": "等年份训练采样",
+      "explanation": "Samples training years equally in a corrected-baseline comparison.",
+      "kind": "baseline",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D2-RNC",
+      "name": "Reliability-normalized convolution",
+      "name_zh": "可靠性归一化卷积",
+      "explanation": "Changes convolution normalization according to reliability information.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D3",
+      "name": "Temporal reliability fusion",
+      "name_zh": "时序可靠性融合",
+      "explanation": "Proposes temporal fusion using reliability information.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D4",
+      "name": "Input reliability token",
+      "name_zh": "输入可靠性令牌",
+      "explanation": "Adds a reliability token at the model input.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D5",
+      "name": "T1 counterfactual-impact consistency",
+      "name_zh": "单日历史反事实影响一致性",
+      "explanation": "Applies counterfactual-impact-weighted consistency in the corrected T1 campaign.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D6",
+      "name": "T1 impact-and-rank consistency",
+      "name_zh": "单日历史影响与排序一致性",
+      "explanation": "Adds rank consistency to the corrected T1 impact-consistency recipe.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D7",
+      "name": "Counterfactual reliability adapter",
+      "name_zh": "反事实可靠性适配器",
+      "explanation": "Adds a reliability adapter in the corrected T1 campaign.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D8",
+      "name": "Factorized reliability adapter",
+      "name_zh": "因子化可靠性适配器",
+      "explanation": "Uses a factorized variant of the reliability adapter.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D9",
+      "name": "Error-pair ranking objective",
+      "name_zh": "误差对排序目标",
+      "explanation": "Adds an error-pair ranking objective to the corrected T1 comparison.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D10",
+      "name": "Reliability prompt pyramid",
+      "name_zh": "可靠性提示金字塔",
+      "explanation": "Injects reliability prompts across multiple model scales.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D11",
+      "name": "Complete-variant reliability prompt pyramid",
+      "name_zh": "完整变体可靠性提示金字塔",
+      "explanation": "Uses the archived complete-prompt-pyramid variant, distinct from the D10 recipe.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "D13",
+      "name": "T5 severity-adaptive reliability prompts",
+      "name_zh": "五日历史缺失程度自适应可靠性提示",
+      "explanation": "Transfers severity-adaptive reliability prompting to the corrected T5 foundation.",
+      "kind": "method",
+      "source": "docs/experiments/rejected_experiments.md"
+    },
+    {
+      "id": "B0",
+      "name": "Corrected T1 clean-input baseline",
+      "name_zh": "修正单日历史完整输入基线",
+      "explanation": "Trains the corrected project T1 baseline on clean inputs under the project contract.",
+      "kind": "baseline",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "B2",
+      "name": "Corrected T1 FireDrop-trained baseline",
+      "name_zh": "修正单日历史火点缺失训练基线",
+      "explanation": "Uses stochastic FireDrop during corrected T1 baseline training; its reported specialist contribution selects B2 for FireDrop and B0 elsewhere.",
+      "kind": "baseline",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "B3",
+      "name": "T1 missingness-trained foundation",
+      "name_zh": "单日历史缺失训练基础模型",
+      "explanation": "Adds BlockDrop to corrected T1 FireDrop training and supplies the T1 continuation foundation.",
+      "kind": "baseline",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "D1-KL",
+      "name": "T1 global predictive consistency",
+      "name_zh": "单日历史全局预测一致性",
+      "explanation": "Adds global prediction consistency in the corrected T1 campaign against D1-ERM.",
+      "kind": "method",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "D2-STD",
+      "name": "Standard reliability control",
+      "name_zh": "标准可靠性对照",
+      "explanation": "Provides the matched standard-reliability recipe for module attribution.",
+      "kind": "control",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "D12",
+      "name": "T1 severity-adaptive reliability prompts",
+      "name_zh": "单日历史缺失程度自适应可靠性提示",
+      "explanation": "Adds severity-adaptive reliability prompts to the corrected T1 standard-reliability recipe.",
+      "kind": "method",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "RF-BN",
+      "name": "Batch-stat missingness normalization",
+      "name_zh": "批次统计缺失条件归一化",
+      "explanation": "Calibrates missingness-conditional batch normalization using the corrected batch-stat diagnostic.",
+      "kind": "method",
+      "source": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "id": "RF-BN-fixed",
+      "name": "Fixed-forward missingness normalization",
+      "name_zh": "固定前向缺失条件归一化",
+      "explanation": "Records the original fixed-forward conditional-normalization diagnostic, later superseded.",
+      "kind": "method",
+      "source": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "id": "RF-MIXED",
+      "name": "Mixed-input shallow residual branch",
+      "name_zh": "混合输入浅层残差分支",
+      "explanation": "Processes static and dynamic inputs jointly in an equal-capacity shallow residual branch.",
+      "kind": "control",
+      "source": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "id": "RF-TYPED",
+      "name": "Separate static-and-dynamic residual branches",
+      "name_zh": "静态动态分离残差分支",
+      "explanation": "Separates static and dynamic shallow processing against the equal-capacity mixed-input control.",
+      "kind": "method",
+      "source": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "id": "RF-KD",
+      "name": "Reliability-fusion same-input expert distillation",
+      "name_zh": "可靠性融合实验同输入专家蒸馏",
+      "explanation": "Distills a routed teacher using the same corrupted input for teacher and student in the reliability-fusion campaign.",
+      "kind": "method",
+      "source": "docs/experiments/three_directions_results.md"
+    },
+    {
+      "id": "TD-N",
+      "name": "Legacy four-bank normalization",
+      "name_zh": "历史四组统计归一化",
+      "explanation": "Separates batch-normalization statistics into four condition banks in the earlier three-directions campaign.",
+      "kind": "method",
+      "source": "docs/experiments/three-directions-results.md"
+    },
+    {
+      "id": "TD-W",
+      "name": "Half-and-half expert weight merge",
+      "name_zh": "专家权重等比例合并",
+      "explanation": "Averages generalist and block-specialist model weights with a fixed 0.5 coefficient.",
+      "kind": "method",
+      "source": "docs/experiments/three-directions-results.md"
+    },
+    {
+      "id": "TD-D",
+      "name": "Legacy routed-expert distillation",
+      "name_zh": "历史路由专家蒸馏",
+      "explanation": "Distills the expert route into one student in the earlier three-directions campaign.",
+      "kind": "method",
+      "source": "docs/experiments/three-directions-results.md"
+    },
+    {
+      "id": "ARCH-SegFormer-B2",
+      "name": "SegFormer-B2 recipe transfer",
+      "name_zh": "SegFormer-B2训练方案迁移",
+      "explanation": "Tests continuation and specialist recipes with the SegFormer-B2 architecture.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "ARCH-SwinUnet",
+      "name": "Swin-Unet recipe transfer",
+      "name_zh": "Swin-Unet训练方案迁移",
+      "explanation": "Tests continuation and specialist recipes with the Swin-Unet architecture.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "ARCH-ConvLSTM",
+      "name": "ConvLSTM recipe transfer",
+      "name_zh": "ConvLSTM训练方案迁移",
+      "explanation": "Records the architecture-transfer campaign for ConvLSTM without implying completed screen results.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "P04-P07-block",
+      "name": "Legacy residual-correction block comparison",
+      "name_zh": "历史残差修正块状缺失比较",
+      "explanation": "Groups legacy residual variants compared with P00 on block-missingness scenarios.",
+      "kind": "method",
+      "source": "docs/research/method-inventory.json"
+    },
+    {
+      "id": "GLOBAL-D1",
+      "name": "Cross-history global predictive consistency",
+      "name_zh": "跨历史设置全局预测一致性",
+      "explanation": "Provides global predictive consistency as the cross-history control for localized or impact-weighted variants.",
+      "kind": "control",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X8+X10",
+      "name": "Impact-and-inpainting route",
+      "name_zh": "影响一致性与输入修补路由",
+      "explanation": "Combines impact consistency for FireDrop with dynamic inpainting for spatial missingness.",
+      "kind": "system",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "X11-vs-ERM",
+      "name": "Reconstruction-inpainting total-effect comparison",
+      "name_zh": "重建修补总体效果比较",
+      "explanation": "Compares reconstruction-supervised restoration with fresh ERM to measure the full recipe rather than isolate reconstruction.",
+      "kind": "method",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "B1",
+      "name": "Corrected T5 clean-input baseline",
+      "name_zh": "修正五日历史完整输入基线",
+      "explanation": "Provides the corrected clean T5 reference; architecture and features also differ from T1.",
+      "kind": "baseline",
+      "source": "docs/research/method-inventory.json"
+    },
+    {
+      "id": "B5",
+      "name": "T5 missingness-trained foundation",
+      "name_zh": "五日历史缺失训练基础模型",
+      "explanation": "Uses corrected T5 FireDrop-and-BlockDrop training as the T5 continuation foundation.",
+      "kind": "baseline",
+      "source": "docs/research/method-inventory.json"
+    },
+    {
+      "id": "P09-total",
+      "name": "Legacy group-robust total-effect comparison",
+      "name_zh": "历史分组鲁棒总体效果比较",
+      "explanation": "Compares GroupDRO plus continuation with P00 without isolating the GroupDRO contribution.",
+      "kind": "method",
+      "source": "docs/research/method-inventory.json"
+    },
+    {
+      "id": "FOUNDATION-RULES",
+      "name": "No-fire and persistence references",
+      "name_zh": "无火与持续性参考",
+      "explanation": "Groups deterministic no-fire and persistence references rather than a learned method.",
+      "kind": "baseline",
+      "source": "docs/research/method-inventory.json"
+    },
+    {
+      "id": "FOUNDATION-OFFICIAL",
+      "name": "Official WSTS reproduction reference",
+      "name_zh": "官方WSTS复现参考",
+      "explanation": "Records the official Res18 U-Net reproduction and released-weight reference under the original WSTS contract.",
+      "kind": "baseline",
+      "source": "docs/research/method-inventory.json"
+    },
+    {
+      "id": "control",
+      "name": "Matched ERM continuation",
+      "name_zh": "匹配经验风险最小化续训",
+      "explanation": "Continues from the matching B3 or B5 foundation with the fixed constant-learning-rate ERM recipe. Fresh means a newly run continuation, not training from random initialization.",
+      "kind": "control",
+      "source": "docs/experiments/t1_t5_innovations.md"
+    },
+    {
+      "id": "D1-ERM",
+      "name": "Corrected T1 consistency control",
+      "name_zh": "修正单日历史一致性对照",
+      "explanation": "Provides the corrected T1 ERM comparator for D1-KL; this historical control is distinct from the later cross-history fresh continuation.",
+      "kind": "control",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "official-fold-2",
+      "name": "Official WSTS Fold 2 reproduction",
+      "name_zh": "官方WSTS第二折复现",
+      "explanation": "Uses the official Fold 2 data, split, and training contract; its score cannot isolate a method gain over corrected project B0.",
+      "kind": "baseline",
+      "source": "reproductions/wsts_res18_unet_t1/README.md"
+    },
+    {
+      "id": "M00",
+      "name": "Complete-input scenario",
+      "name_zh": "完整输入场景",
+      "explanation": "Evaluates inputs without the controlled missingness intervention.",
+      "kind": "scenario",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "M01",
+      "name": "Fire-history-missing scenario",
+      "name_zh": "火点历史完全缺失场景",
+      "explanation": "Removes active-fire history from the input; this is an evaluation condition, not an algorithm.",
+      "kind": "scenario",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "M06",
+      "name": "Quarter-block-missing scenario",
+      "name_zh": "四分之一块状缺失场景",
+      "explanation": "Applies structured missing blocks over 25% of the dynamic input.",
+      "kind": "scenario",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    },
+    {
+      "id": "M07",
+      "name": "Half-block-missing scenario",
+      "name_zh": "二分之一块状缺失场景",
+      "explanation": "Applies structured missing blocks over 50% of the dynamic input.",
+      "kind": "scenario",
+      "source": "docs/experiments/quantitative_reliability_ledger.md"
+    }
+  ]
+}
