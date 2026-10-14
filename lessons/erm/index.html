@@ -1,18 +1,18 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The score improved. Did the method help? · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-map.js" defer></script><script src="../../assets/course-state.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script><script src="../../assets/course-route.js" defer></script></head>
 <body data-page="erm" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="index.html" aria-current="page">06 &nbsp; The ERM control</a></li><li><a href="../schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../../handbook/student-start/index.html">Practical readiness</a><br><a href="../../handbook/student-real-data/index.html">Real-data examples</a><br><a href="../../handbook/student-report/index.html">Output → report</a><br><a href="../../handbook/student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
-<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header"><p class="eyebrow">Lesson 06 · Learn by doing</p><h1>The score improved. Did the method help?</h1><p class="lead">Separate ordinary continuation from a new training choice.</p><div class="meta"><span>45–60 min + optional cluster work</span><span>7 steps</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>Before this lesson: <a href="../missingness/index.html">Missing observations</a>.</p><p><strong>Your deliverable:</strong> A matched foundation / ERM plan and an A/B result report.</p><p>Follow the next-step button. Extra reading is grouped at the end of each step; practical instructions remain available there. Browser activities use teaching examples and labelled real exports.</p></details></header><details class="lesson-contents"><summary id="section-label">Contents · choose a step</summary><nav class="step-nav" aria-label="Lesson steps"><a href="#step1">1 · Predict</a><a href="#step2">2 · Compare</a><a href="#step3">3 · Understand</a><a href="#step4">4 · Repair</a><a href="#step5">5 · Plan &amp; run</a><a href="#step6">6 · Interpret</a><a href="#step7">7 · Submit</a></nav></details>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div></aside>
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header"><p class="eyebrow">Lesson 06 · Learn by doing</p><h1>The score improved. Did the method help?</h1><p class="lead">Separate ordinary continuation from a new training choice.</p><div class="meta"><span>45–60 min + optional cluster work</span><span data-task-total>12 tasks</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>Before this lesson: <a href="../missingness/index.html">Missing observations</a>.</p><p><strong>Your deliverable:</strong> A matched foundation / ERM plan and an A/B result report.</p><p>Complete the task shown above the activity, then follow its named next action. Supporting explanations stay beside the task. Browser activities use teaching examples and labelled real exports.</p></details></header><div class="task-location js-only" data-task-location aria-live="polite"></div><details class="lesson-contents"><summary id="section-label">Contents · choose a step</summary><nav class="step-nav" aria-label="Lesson steps"><a href="#step1">1 · Predict</a><a href="#step2">2 · Compare</a><a href="#step3">3 · Understand</a><a href="#step4">4 · Repair</a><a href="#step5">5 · Fix your A/B plan</a><a href="#step5-assets">6 · Verify starting assets</a><a href="#step5-row-a">7 · Establish frozen row A</a><a href="#step5-smoke">8 · Check the execution path</a><a href="#step5-run">9 · Run the ERM control</a><a href="#step5-verify">10 · Verify row B</a><a href="#step6">11 · Interpret</a><a href="#step7">12 · Submit</a></nav></details>
 <noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
-<section class="step-panel" data-title="Predict" id="step1" aria-labelledby="title1">
-<p class="step-kicker">Step 1 / 7 · Make a prediction</p>
-<h2 id="title1" tabindex="-1">A better number. An unanswered question.</h2>
+<section class="step-panel" data-title="Predict" id="step1" aria-labelledby="title1" data-task="Decide whether a gain over frozen weights identifies a schedule effect.">
+<p class="step-kicker">Lesson task · Make a prediction</p>
+<h2 id="title1" tabindex="-1">A better number. An unanswered question.</h2><p class="task-purpose"><strong>Your task:</strong> Decide whether a gain over frozen weights identifies a schedule effect.</p>
 <p>You load a trained model, change its learning-rate schedule and give it another 3,000 updates. Its score goes up.</p>
 <div class="interactive">
 <p class="eyebrow">Synthetic teaching example · AP on a 0–1 scale</p>
@@ -48,10 +48,10 @@
 <p class="done">
 <strong>Done when:</strong> you can name the missing comparison: an ordinary continuation with a matched starting point and budget.</p>
 
-<div class="pager"><a href="../../index.html#course">← Course directory</a><a class="button" href="#step2">Next step →</a></div></section>
-<section class="step-panel" data-title="Compare" id="step2" aria-labelledby="title2">
-<p class="step-kicker">Step 2 / 7 · Compare like with like</p>
-<h2 id="title2" tabindex="-1">One starting point. Three branches.</h2>
+<div class="pager"><a data-task-prev href="../../index.html#course">← Course directory</a><a data-task-next class="button" href="#step2">Next: Compare →</a></div></section>
+<section class="step-panel" data-title="Compare" id="step2" aria-labelledby="title2" data-task="Match each score difference to the question it answers.">
+<p class="step-kicker">Lesson task · Compare like with like</p>
+<h2 id="title2" tabindex="-1">One starting point. Three branches.</h2><p class="task-purpose"><strong>Your task:</strong> Match each score difference to the question it answers.</p>
 <p>A is our before-training reference. B measures the continuation recipe. C tests the schedule against B.</p>
 <div class="interactive">
 <p class="eyebrow">Teaching diagram · no model runs in this browser</p>
@@ -109,10 +109,10 @@
 <p class="done">
 <strong>Done when:</strong> you can identify B − A, C − B and C − A, and explain why C must not start from B.</p>
 
-<div class="pager"><a href="#step1">← Previous step</a><a class="button" href="#step3">Next step →</a></div></section>
-<section class="step-panel" data-title="Understand" id="step3" aria-labelledby="title3">
-<p class="step-kicker">Step 3 / 7 · Understand the control</p>
-<h2 id="title3" tabindex="-1">ERM learns from the training examples.</h2>
+<div class="pager"><a data-task-prev href="#step1">← Previous step</a><a data-task-next class="button" href="#step3">Next: Understand →</a></div></section>
+<section class="step-panel" data-title="Understand" id="step3" aria-labelledby="title3" data-task="Explain what the ERM continuation changes and preserves.">
+<p class="step-kicker">Lesson task · Understand the control</p>
+<h2 id="title3" tabindex="-1">ERM learns from the training examples.</h2><p class="task-purpose"><strong>Your task:</strong> Explain what the ERM continuation changes and preserves.</p>
 <p>
 <strong>Empirical risk minimization</strong> means fitting predictions to the available training labels using a chosen loss. Here, it is the ordinary supervised continuation that our next method must beat.</p>
 <div class="flow" aria-label="One supervised training update">
@@ -159,10 +159,10 @@ optimizer.step()</code>
 <p class="done">
 <strong>Done when:</strong> you can explain why “fresh ERM” can use missing-input augmentation and still be the control.</p>
 
-<div class="pager"><a href="#step2">← Previous step</a><a class="button" href="#step4">Next step →</a></div></section>
-<section class="step-panel" data-title="Repair" id="step4" aria-labelledby="title4">
-<p class="step-kicker">Step 4 / 7 · Find the extra changed variable</p>
-<h2 id="title4" tabindex="-1">Would you trust this comparison?</h2>
+<div class="pager"><a data-task-prev href="#step2">← Previous step</a><a data-task-next class="button" href="#step4">Next: Repair →</a></div></section>
+<section class="step-panel" data-title="Repair" id="step4" aria-labelledby="title4" data-task="Repair the three confounded comparisons.">
+<p class="step-kicker">Lesson task · Find the extra changed variable</p>
+<h2 id="title4" tabindex="-1">Would you trust this comparison?</h2><p class="task-purpose"><strong>Your task:</strong> Repair the three confounded comparisons.</p>
 <p>For each case, choose the repair that lets us test the schedule. The goal is to change one intended factor while matching the rest.</p>
 <div class="interactive">
 <p class="eyebrow">Three short reasoning exercises</p>
@@ -209,14 +209,8 @@ optimizer.step()</code>
 <p class="done">
 <strong>Done when:</strong> you can name each confound: budget, initialization history and checkpoint selection.</p>
 
-<div class="pager"><a href="#step3">← Previous step</a><a class="button" href="#step5">Next step →</a></div></section>
-<section class="step-panel" data-title="Plan & run" id="step5" aria-labelledby="title5">
-<p class="step-kicker">Step 5 / 7 · Plan first, then run</p>
-<h2 id="title5" tabindex="-1">Your first practical compares A with B.</h2><p class="note">Bring your completed <span class="reading-label">project asset sheet</span>. Use the <span class="reading-label">output-field guide</span> to establish rows A and B; missing assets mean the practical is not ready.</p>
-<p>
-<strong>Question:</strong> under a fixed project protocol, what changes after the specified 3,000-update ERM continuation?</p>
-<p>Save a prediction before running. Include an outcome that would contradict it. X22 is the next experiment; it is not required to finish this A/B exercise.</p>
-<dl class="protocol">
+<div class="pager"><a data-task-prev href="#step3">← Previous step</a><a data-task-next class="button" href="#step5">Next: Fix your A/B plan →</a></div></section>
+<section class="step-panel" id="step5" data-title="Fix your A/B plan" data-task="Write the matched comparison before choosing whether to run it." aria-labelledby="title-step5"><h2 id="title-step5">Fix your A/B plan</h2><p class="task-purpose"><strong>Your task:</strong> Write the matched comparison before choosing whether to run it.</p><p>Question: what changes after a 3,000-update ERM continuation from the same B3 foundation? Write your prediction and an outcome that would contradict it.</p><dl class="protocol">
 <div>
 <dt>Setting</dt>
 <dd>T1 · seed 0 · Res18-U-Net</dd>
@@ -241,8 +235,7 @@ optimizer.step()</code>
 <dt>Evaluation</dt>
 <dd>Same samples and masks · all four scenarios</dd>
 </div>
-</dl>
-<details>
+</dl><details>
 <summary>Coming from official Fold 2? Read this transition.</summary>
 <p>Official Fold 2 trained on 2018/2020, validated on 2019 and tested on 2021 for 10,000 updates. This project uses corrected indexing, training-only normalization and a different split. Here 2021 is explicitly validation.</p>
 <p>Keep your official results separate. B3 is not the official checkpoint. Do not paste a Fold 2 score into row A.</p>
@@ -250,29 +243,25 @@ optimizer.step()</code>
 <a href="../../handbook/matched-erm-experiment-design/index.html#2-moving-from-fold-2-to-the-project-experiments">Full protocol comparison</a>
 </p>
 </details>
-<article class="task">
+<fieldset class="study-route"><legend>Choose what you will complete</legend><label for="erm-mode">Learning route</label><select id="erm-mode"><option value="study">Browser study — plan and interpret; no execution</option><option value="practical">Cluster practical — prepare, run and verify</option></select><p>Browser study continues to the worked A/B result. The practical adds five tasks before interpretation. You can return to the worked example while access or a job is pending.</p></fieldset><noscript><p><a href="#step5-assets">Follow the cluster practical tasks →</a> or continue below to the browser worked example.</p></noscript>
+<p class="done"><strong>Done when:</strong> your plan fixes the shared contract and records your prediction. Mark planned runs “not executed.”</p><div class="pager"><a data-task-prev href="#step4">← Previous step</a><a data-task-next class="button" href="#step6">Next: Interpret the A/B result →</a></div></section>
+<section class="step-panel" id="step5-assets" data-title="Verify starting assets" data-task="Complete one asset sheet for the project B3 foundation." data-practical aria-labelledby="title-step5-assets"><h2 id="title-step5-assets">Verify starting assets</h2><p class="task-purpose"><strong>Your task:</strong> Complete one asset sheet for the project B3 foundation.</p><article class="task">
 <h3>1 · Identify your starting assets</h3>
 <p>
 <strong>Do:</strong> prepare corrected data and training-only statistics; record the B3 checksum and provenance. Use instructor-provided B3 or regenerate it through the foundation guide.</p>
 <p>
 <strong>Bring back:</strong> data/statistics identities, B3 path and checksum, and the approved resource budget.</p>
-
-</article>
-<article class="task">
+<details class="task-reading" id="reading-step5-assets-1"><summary>Supporting detail: Set up the project</summary><p>For this T1 comparison, identify B3 by its actual checkpoint and provenance. Its foundation selection stage is distinct from final-step selection for the later ERM continuation. B5 is a separate T5 extension.</p><p class="source">Open the full reference only if you need more detail; its return button brings you back to this task.</p><ul><li><a data-course-reading href="../../handbook/reproduce/index.html">Set up the project</a></li><li><a data-course-reading href="../../handbook/data-preparation/index.html">Prepare data</a></li><li><a data-course-reading href="../../handbook/baselines/index.html">Prepare B3</a></li></ul></details>
+</article><details><summary>What belongs in the asset sheet?</summary><p>Record source and environment, corrected data and training-only statistics identities, the actual B3 checkpoint and checksum, provenance and selection rule, plus approved resource and output limits. Missing fields mean execution is not ready.</p><a href="../../handbook/student-bridge/index.html#handover">Inspect the complete handover checklist</a></details><p class="done"><strong>Done when:</strong> each required asset is identified and verified. Otherwise continue browser study with missing fields recorded.</p><div class="pager"><a data-task-prev href="#step5">← Previous step</a><a data-task-next class="button" href="#step5-row-a">Next: Establish frozen row A →</a></div><p class="source"><a data-study-switch href="#step6">Pause the practical and study the worked result →</a></p></section>
+<section class="step-panel" id="step5-row-a" data-title="Establish frozen row A" data-task="Record four matched evaluation scores for frozen B3." data-practical aria-labelledby="title-step5-row-a"><h2 id="title-step5-row-a">Establish frozen row A</h2><p class="task-purpose"><strong>Your task:</strong> Record four matched evaluation scores for frozen B3.</p><article class="task">
 <h3>2 · Establish row A before continuing</h3>
 <p>
 <strong>Do:</strong> evaluate frozen B3 on the same 2021 samples and four masks planned for B. Evaluation must not update weights or normalization state.</p>
 <p>
 <strong>Bring back:</strong> four AP values and their original evaluation records. A training-time validation score or a clean-only score is not a substitute.</p>
-
-</article>
-<article class="task">
-<h3>3 · Smoke-check, then start formal ERM from B3</h3>
-<p>
-<strong>Do:</strong> check an unfamiliar execution path with a separate smoke run. Start the formal <code>control</code> continuation independently from B3.</p>
-<p>
-<strong>Bring back:</strong> source revision, configuration, job ID and a unique output directory. Smoke success is execution evidence, not a scientific score.</p>
-<details>
+<details class="task-reading" id="reading-step5-row-a-1"><summary>Supporting detail: Foundation and evaluation reference</summary><p>For this T1 comparison, identify B3 by its actual checkpoint and provenance. Its foundation selection stage is distinct from final-step selection for the later ERM continuation. B5 is a separate T5 extension.</p><p>Use the same sample identities, preprocessing and missingness masks for both rows. Equal counts alone do not establish the same population. Record excluded samples and keep the comparison scope explicit.</p><p class="source">Open the full reference only if you need more detail; its return button brings you back to this task.</p><ul><li><a data-course-reading href="../../handbook/baselines/index.html">Foundation and evaluation reference</a></li><li><a data-course-reading href="../../handbook/evaluation-population/index.html">Check the evaluation population</a></li></ul></details>
+</article><p>Use 2021 validation and M00, M01, M06 and M07. Record metric paths, sample identities and masks. This is evaluation only: weights and normalization state remain fixed.</p><p class="done"><strong>Done when:</strong> row A has four AP values with traceable evaluation records; a clean-only training validation score cannot replace them.</p><div class="pager"><a data-task-prev href="#step5-assets">← Previous step</a><a data-task-next class="button" href="#step5-smoke">Next: Check the execution path →</a></div><p class="source"><a data-study-switch href="#step6">Pause the practical and study the worked result →</a></p></section>
+<section class="step-panel" id="step5-smoke" data-title="Check the execution path" data-task="Establish that a separate smoke run can execute the control recipe." data-practical aria-labelledby="title-step5-smoke"><h2 id="title-step5-smoke">Check the execution path</h2><p class="task-purpose"><strong>Your task:</strong> Establish that a separate smoke run can execute the control recipe.</p><p>Preview the control command, then smoke-check an unfamiliar execution path through Slurm in a separate output directory. A short smoke establishes execution, not a score.</p><details>
 <summary>Preview the control command without submitting a job</summary>
 <pre>
 <code>python3 -m reproductions.cross_history.mainline \
@@ -284,24 +273,19 @@ optimizer.step()</code>
 <p>
 <a href="../../handbook/method-recipes/index.html#1-check-the-intended-command">Command preview and smoke rules</a> · <a href="../../handbook/method-recipes/index.html#2-train-one-matched-set">Submission recipe: select control only</a>
 </p>
-</details>
-</article>
-<article class="task">
+</details><p>Keep the source revision, configuration and loader/update logs. Fix execution failures before a formal run; do not reuse a smoke checkpoint as the formal starting weights.</p><p class="done"><strong>Done when:</strong> the intended control path executes and its evidence is saved.</p><div class="pager"><a data-task-prev href="#step5-row-a">← Previous step</a><a data-task-next class="button" href="#step5-run">Next: Run the ERM control →</a></div><p class="source"><a data-study-switch href="#step6">Pause the practical and study the worked result →</a></p></section>
+<section class="step-panel" id="step5-run" data-title="Run the ERM control" data-task="Submit and monitor one formal continuation from B3." data-practical aria-labelledby="title-step5-run"><h2 id="title-step5-run">Run the ERM control</h2><p class="task-purpose"><strong>Your task:</strong> Submit and monitor one formal continuation from B3.</p><p>Start independently from the verified B3 with a fresh optimizer, T1, seed 0, constant learning rate, batch 64 and 3,000 updates. Preserve the specified loss, augmentation and final-step selection.</p><p>Use the <code>control</code> role only. The shared recipe also lists cosine and specialists; those are not part of this A/B exercise.</p><details><summary>Open the submission instructions when ready</summary><p>The submitter snapshots committed HEAD. Give this formal run a new output directory and keep its configuration and job ID.</p><a href="../../handbook/method-recipes/index.html#2-train-one-matched-set">Submission recipe — select control only</a></details><p>PENDING means queued: monitor the existing job instead of submitting a duplicate. While waiting, you may study the worked result; that does not complete this practical.</p><p class="done"><strong>Done when:</strong> the identified run reaches a terminal state. The next task verifies whether it actually completed.</p><div class="pager"><a data-task-prev href="#step5-smoke">← Previous step</a><a data-task-next class="button" href="#step5-verify">Next: Verify row B →</a></div><p class="source"><a data-study-switch href="#step6">Pause the practical and study the worked result →</a></p></section>
+<section class="step-panel" id="step5-verify" data-title="Verify row B" data-task="Establish completion and record four matched ERM evaluation scores." data-practical aria-labelledby="title-step5-verify"><h2 id="title-step5-verify">Verify row B</h2><p class="task-purpose"><strong>Your task:</strong> Establish completion and record four matched ERM evaluation scores.</p><article class="task">
 <h3>4 · Verify completion and establish row B</h3>
 <p>
 <strong>Do:</strong> check the job’s terminal state, exit code, actual 3,000 updates and final checkpoint. Evaluate on the matching 2021 contract, or retain an already matching evaluation from the training output.</p>
 <p>
 <strong>Bring back:</strong> final checkpoint, four AP values and original metric paths. Check sample identities and preprocessing, not just equal counts.</p>
-
-</article>
-<p class="note warning">Submit installation, data processing, model checks, training and evaluation through Slurm. A job ID only confirms submission. Preserve failed attempts; do not overwrite their outputs or extend the training budget after inspecting results.</p>
-<p class="done">
-<strong>Done when:</strong> your A/B plan is fixed. For the practical, also retain completion evidence and matching A/B evaluations. You can continue to the worked example while a job is queued.</p>
-
-<details class="step-readings" id="readings-step5"><summary>Practical instructions and references · 8</summary><p>Open a resource when needed. Its return button brings you back to this exact lesson step.</p><ul><li><a data-course-reading href="../../handbook/student-bridge/index.html#handover">project asset sheet</a></li><li><a data-course-reading href="../../handbook/student-report/index.html#files">output-field guide</a></li><li><a data-course-reading href="../../handbook/reproduce/index.html">Set up the project</a></li><li><a data-course-reading href="../../handbook/data-preparation/index.html">Prepare data</a></li><li><a data-course-reading href="../../handbook/baselines/index.html">Prepare B3</a></li><li><a data-course-reading href="../../handbook/evaluation-population/index.html">Check the evaluation population</a></li><li><a data-course-reading href="../../handbook/matched-erm-experiment-design/index.html#4-running-the-comparison">Detailed execution checklist</a></li><li><a data-course-reading href="../../handbook/setup-recovery/index.html">If setup or a job fails</a></li></ul></details><div class="pager"><a href="#step4">← Previous step</a><a class="button" href="#step6">Next step →</a></div></section>
-<section class="step-panel" data-title="Interpret" id="step6" aria-labelledby="title6">
-<p class="step-kicker">Step 6 / 7 · Interpret all conditions</p>
-<h2 id="title6" tabindex="-1">An average can hide a trade-off.</h2>
+<details class="task-reading" id="reading-step5-verify-1"><summary>Supporting detail: Detailed execution checklist</summary><p>Find the first failed stage before resubmitting. Preserve failed output and logs, repair the cause, and use a new output location for a replacement. Do not silently extend the agreed experiment budget.</p><p class="source">Open the full reference only if you need more detail; its return button brings you back to this task.</p><ul><li><a data-course-reading href="../../handbook/matched-erm-experiment-design/index.html#4-running-the-comparison">Detailed execution checklist</a></li><li><a data-course-reading href="../../handbook/setup-recovery/index.html">If setup or a job fails</a></li></ul></details>
+</article><p>Check actual 3,000 updates and final checkpoint as well as terminal state and exit code. Evaluate on the same population, preprocessing and four masks as row A. A matching sample count alone does not prove matching sample identities.</p><p class="done"><strong>Done when:</strong> completion evidence and four row B AP values are traceable to original artifacts. Preserve failed attempts instead of overwriting them.</p><div class="pager"><a data-task-prev href="#step5-run">← Previous step</a><a data-task-next class="button" href="#step6">Next: Interpret →</a></div><p class="source"><a data-study-switch href="#step6">Pause the practical and study the worked result →</a></p></section>
+<section class="step-panel" data-title="Interpret" id="step6" aria-labelledby="title6" data-task="Interpret the A/B trade-off across all four conditions.">
+<p class="step-kicker">Lesson task · Interpret all conditions</p>
+<h2 id="title6" tabindex="-1">An average can hide a trade-off.</h2><p class="task-purpose"><strong>Your task:</strong> Interpret the A/B trade-off across all four conditions.</p>
 <p>Report each condition. Compute the missingness summary using the same predeclared rule, even when one condition gets worse.</p>
 <div class="table-wrap">
 <table>
@@ -406,10 +390,10 @@ optimizer.step()</code>
 <p class="done">
 <strong>Done when:</strong> you can compute both summaries, report clean AP separately, and write a conclusion that includes regressions.</p>
 
-<div class="pager"><a href="#step5">← Previous step</a><a class="button" href="#step7">Next step →</a></div></section>
-<section class="step-panel" data-title="Submit" id="step7" aria-labelledby="title7">
-<p class="step-kicker">Step 7 / 7 · Make your reasoning reviewable</p>
-<h2 id="title7" tabindex="-1">Submit evidence, not just a score.</h2>
+<div class="pager"><a data-task-prev href="#step5-verify">← Previous step</a><a data-task-next class="button" href="#step7">Next: Submit →</a></div></section>
+<section class="step-panel" data-title="Submit" id="step7" aria-labelledby="title7" data-task="Write a conclusion supported by your comparison and evidence.">
+<p class="step-kicker">Lesson task · Make your reasoning reviewable</p>
+<h2 id="title7" tabindex="-1">Submit evidence, not just a score.</h2><p class="task-purpose"><strong>Your task:</strong> Write a conclusion supported by your comparison and evidence.</p>
 <p>Your report can be short. Another student should be able to locate the artifacts and understand exactly what you compared.</p>
 <ol class="checklist">
 <li>
@@ -446,6 +430,6 @@ optimizer.step()</code>
 
 
 
-<details class="step-readings" id="readings-step7"><summary>Help and further reading · 2</summary><p>Open a resource when needed. Its return button brings you back to this exact lesson step.</p><ul><li><a data-course-reading href="../../handbook/student-report/index.html#review">Check your deliverable</a></li><li><a data-course-reading href="../../handbook/student-help/index.html">If you are stuck</a></li></ul></details><div class="actions"><a class="button secondary" href="report-template.md" download>Download your worksheet</a><button class="secondary js-only" type="button" id="print-lesson">Print all steps</button></div>
-<label class="completion js-only"><input type="checkbox" id="lesson-complete"> I have reviewed the concepts. Save this reminder locally.</label><p class="source">This is a personal reminder, not a grade or proof that a cluster experiment finished.</p><div class="pager"><a href="#step6">← Previous step</a><a class="button" href="../schedule/index.html">Next: Does the schedule help? →</a></div></section><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/lessons/erm.html">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
+<details class="task-reading" id="reading-step7-1"><summary>Supporting detail: Check your deliverable</summary><p>Keep planned and executed results separate. For each reported score, record the evaluated checkpoint, original metric path, population and condition. A conclusion must include regressions and the limits of the comparison.</p><p>Name the blocker and the current task. For execution problems, retain the job ID, source revision, configuration, output path and relevant error. A queued job is not a failed run, and a failed run is not a scientific negative result.</p><p class="source">Open the full reference only if you need more detail; its return button brings you back to this task.</p><ul><li><a data-course-reading href="../../handbook/student-report/index.html#review">Check your deliverable</a></li><li><a data-course-reading href="../../handbook/student-help/index.html">If you are stuck</a></li></ul></details><div class="actions"><a class="button secondary" href="report-template.md" download>Download your worksheet</a><button class="secondary js-only" type="button" id="print-lesson">Print all steps</button></div>
+<label class="completion js-only"><input type="checkbox" id="lesson-complete"> I have reviewed the concepts. Save this reminder locally.</label><p class="source">This is a personal reminder, not a grade or proof that a cluster experiment finished.</p><div class="pager"><a data-task-prev href="#step6">← Previous step</a><a data-task-next class="button" href="../schedule/index.html">Next: Does the schedule help? →</a></div></section><p class="support-return"><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/lessons/erm.html">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

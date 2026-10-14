@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>From a paper claim to a verified baseline · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-map.js" defer></script><script src="../../assets/course-state.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script><script src="../../assets/course-route.js" defer></script></head>
 <body data-page="reference-baseline-reproduction" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html" aria-current="page">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html" aria-current="page">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../../handbook/student-start/index.html">Practical readiness</a><br><a href="../../handbook/student-real-data/index.html">Real-data examples</a><br><a href="../../handbook/student-report/index.html">Output → report</a><br><a href="../../handbook/student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div></aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>From a paper claim to a verified baseline</h1><p class="lead">Historical reproduction published 13 August 2026. These measurements are preserved records, not newly run experiments.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#why-baselines">1 · Why reproduce before inventing?</a><a href="#vocabulary">2 · Four terms to understand before the workflow</a><a href="#target">3 · What exactly did we reproduce?</a><a href="#contract">4 · Freeze the question before touching the code</a><a href="#official-code">5 · Reuse official code, then wrap it with evidence</a><a href="#data-folds">6 · Audit the data before asking the model a question</a><a href="#environment">7 · Rebuild the environment without changing the experiment</a><a href="#calibration">8 · Calibrate before committing to a long run</a><a href="#one-fold">9 · Complete one full fold before scaling out</a><a href="#released-weights">10 · Evaluate all twelve released weights</a><a href="#verification">11 · An independent verifier should distrust the summary</a><a href="#results">12 · Read the fold distribution, not only the mean</a><a href="#failures">13 · What went wrong—and why the failures were useful</a><a href="#boundaries">14 · What this result proves—and what it does not</a><a href="#checklist">15 · A practical checklist for the next reproduction</a><a href="#summary">16 · A baseline is a scientific instrument, not just a number</a></nav></details>
 <noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="why-baselines"><p class="step-kicker">Reference · 1 / 16</p>
@@ -23,7 +23,7 @@
         </ol>
 
         <div class="callout accent"><strong>Beginner rule:</strong> reproduce the smallest official baseline before changing the architecture.</div>
-      <div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#vocabulary">Next section →</a></div></section>
+      <div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#vocabulary">Read next: Four terms to understand before the workflow →</a></span></div></section>
 <section class="step-panel" id="vocabulary"><p class="step-kicker">Reference · 2 / 16</p>
         <div class="section-kicker">02 · Vocabulary</div>
         <h2>Four terms to understand before the workflow</h2>
@@ -49,7 +49,7 @@
         </div>
 
         <p><strong>Training reproduction</strong> asks whether we can learn a comparable checkpoint. <strong>Released-weight reproduction</strong> asks whether the authors' checkpoint produces the expected metrics here. We did both for Fold 2, then tested all twelve released weights.</p>
-      <div class="reference-pager"><a href="#why-baselines">← Previous section</a><a class="button" href="#target">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#why-baselines">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#target">Read next: What exactly did we reproduce? →</a></span></div></section>
 <section class="step-panel" id="target"><p class="step-kicker">Reference · 3 / 16</p>
         <div class="section-kicker">03 · Scientific target</div>
         <h2>What exactly did we reproduce?</h2>
@@ -74,7 +74,7 @@
         </div>
 
         <div class="callout"><span class="badge science">Scientific decision</span> <strong>Res18-U-Net, T=1, All features, official folds.</strong> Changing any of these would create a different experiment, not a faithful baseline reproduction.</div>
-      <div class="reference-pager"><a href="#vocabulary">← Previous section</a><a class="button" href="#contract">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#vocabulary">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#contract">Read next: Freeze the question before touching the code →</a></span></div></section>
 <section class="step-panel" id="contract"><p class="step-kicker">Reference · 4 / 16</p>
         <div class="section-kicker">04 · Experiment design</div>
         <h2>Freeze the question before touching the code</h2>
@@ -104,7 +104,7 @@
         </div>
 
         <div class="callout warning"><strong>Scientific contract:</strong> it lets us classify a changed number as scientific (model/data/protocol) or operational (environment/loader/parser).</div>
-      <div class="reference-pager"><a href="#target">← Previous section</a><a class="button" href="#official-code">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#target">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#official-code">Read next: Reuse official code, then wrap it with evidence →</a></span></div></section>
 <section class="step-panel" id="official-code"><p class="step-kicker">Reference · 5 / 16</p>
         <div class="section-kicker">05 · Implementation lineage</div>
         <h2>Reuse official code, then wrap it with evidence</h2>
@@ -137,7 +137,7 @@
         </dl>
 
         <div class="callout blue"><span class="badge engineering">Engineering compatibility</span> The runtime patch deleted <strong>seven unused eager architecture exports</strong> for files absent from the pinned commit. Required training imports remained; it <strong>did not modify the model, loss, optimizer, data, or metrics</strong>.</div>
-      <div class="reference-pager"><a href="#contract">← Previous section</a><a class="button" href="#data-folds">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#contract">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#data-folds">Read next: Audit the data before asking the model a question →</a></span></div></section>
 <section class="step-panel" id="data-folds"><p class="step-kicker">Reference · 6 / 16</p>
         <div class="section-kicker">06 · Data integrity</div>
         <h2>Audit the data before asking the model a question</h2>
@@ -158,7 +158,7 @@
         </ol>
 
         <div class="callout"><strong>Concrete example:</strong> official Fold 2 uses training years 2018 and 2020, validation year 2019, and test year 2021. That mapping is part of the result—not a background detail.</div>
-      <div class="reference-pager"><a href="#official-code">← Previous section</a><a class="button" href="#environment">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#official-code">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#environment">Read next: Rebuild the environment without changing the experiment →</a></span></div></section>
 <section class="step-panel" id="environment"><p class="step-kicker">Reference · 7 / 16</p>
         <div class="section-kicker">07 · Runtime</div>
         <h2>Rebuild the environment without changing the experiment</h2>
@@ -180,7 +180,7 @@
         </div>
 
         <div class="callout warning"><strong>Beginner trap:</strong> importing code is not enough. Cross the real loader boundary and verify shapes, finite values, binary targets, and no training/test side effects.</div>
-      <div class="reference-pager"><a href="#data-folds">← Previous section</a><a class="button" href="#calibration">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#data-folds">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#calibration">Read next: Calibrate before committing to a long run →</a></span></div></section>
 <section class="step-panel" id="calibration"><p class="step-kicker">Reference · 8 / 16</p>
         <div class="section-kicker">08 · Cost control</div>
         <h2>Calibrate before committing to a long run</h2>
@@ -200,7 +200,7 @@
         </ol>
 
         <div class="callout blue"><strong>Why this helps:</strong> plan hardware from evidence and catch loader problems in minutes, not hours.</div>
-      <div class="reference-pager"><a href="#environment">← Previous section</a><a class="button" href="#one-fold">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#environment">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#one-fold">Read next: Complete one full fold before scaling out →</a></span></div></section>
 <section class="step-panel" id="one-fold"><p class="step-kicker">Reference · 9 / 16</p>
         <div class="section-kicker">09 · Training reproduction</div>
         <h2>Complete one full fold before scaling out</h2>
@@ -220,7 +220,7 @@
         </div>
 
         <div class="callout warning"><span class="badge boundary">Evidence boundary</span> The source YAML says <code>pos_class_weight: 236</code>, but official <code>train.py</code> recomputed <code>1 / fire_rate</code> and saved the effective Fold-2 value <code>608.4653828020165</code>. We followed the official runtime path and recorded the discrepancy rather than guessing which value the paper intended.</div>
-      <div class="reference-pager"><a href="#calibration">← Previous section</a><a class="button" href="#released-weights">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#calibration">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#released-weights">Read next: Evaluate all twelve released weights →</a></span></div></section>
 <section class="step-panel" id="released-weights"><p class="step-kicker">Reference · 10 / 16</p>
         <div class="section-kicker">10 · Test-only campaign</div>
         <h2>Evaluate all twelve released weights</h2>
@@ -249,7 +249,7 @@
         </div>
 
         <p>Scientific test wall time totalled <strong>5749.570263385773 seconds</strong> (95.83 minutes); median fold time was <strong>549.7098723649979 seconds</strong>. Each fold waited for the previous independent PASS.</p>
-      <div class="reference-pager"><a href="#one-fold">← Previous section</a><a class="button" href="#verification">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#one-fold">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#verification">Read next: An independent verifier should distrust the summary →</a></span></div></section>
 <section class="step-panel" id="verification"><p class="step-kicker">Reference · 11 / 16</p>
         <div class="section-kicker">11 · Evidence</div>
         <h2>An independent verifier should distrust the summary</h2>
@@ -263,7 +263,7 @@
         </ol>
 
         <p class="small">Full audit details are preserved in <a href="../../docs/experiments/res18_unet_t1_reproduction.md">res18_unet_t1_reproduction.md</a>. The public lecture intentionally teaches the reasoning rather than listing every artifact hash.</p>
-      <div class="reference-pager"><a href="#released-weights">← Previous section</a><a class="button" href="#results">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#released-weights">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#results">Read next: Read the fold distribution, not only the mean →</a></span></div></section>
 <section class="step-panel" id="results"><p class="step-kicker">Reference · 12 / 16</p>
         <div class="section-kicker">12 · Results</div>
         <h2>Read the fold distribution, not only the mean</h2>
@@ -311,7 +311,7 @@
         </div>
 
         <div class="callout accent"><strong>Interpretation:</strong> Fold 3 and Fold 6 differ by about 0.27 AP. Future methods must report the official fold distribution, not select one favourable fold. Also, moderate AP can coexist with low fixed-threshold Recall, so AP and thresholded metrics answer different questions.</div>
-      <div class="reference-pager"><a href="#verification">← Previous section</a><a class="button" href="#failures">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#verification">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#failures">Read next: What went wrong—and why the failures were useful →</a></span></div></section>
 <section class="step-panel" id="failures"><p class="step-kicker">Reference · 13 / 16</p>
         <div class="section-kicker">13 · Debugging</div>
         <h2>What went wrong—and why the failures were useful</h2>
@@ -334,7 +334,7 @@
         <div class="callout warning"><strong>Debugging rule:</strong> preserve the failure, prove whether scientific computation started, change the smallest layer that is actually broken, and never relaunch a successful scientific child just to repair an observer or publication defect.</div>
 
         <div class="callout"><strong>Recovery evidence:</strong> the preserved Fold 0 output was finalized offline and <strong>no scientific evaluation child was relaunched</strong>. Fold 2's legacy parser qualification was also an observer/provenance repair, not a scientific retry.</div>
-      <div class="reference-pager"><a href="#results">← Previous section</a><a class="button" href="#boundaries">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#results">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#boundaries">Read next: What this result proves—and what it does not →</a></span></div></section>
 <section class="step-panel" id="boundaries"><p class="step-kicker">Reference · 14 / 16</p>
         <div class="section-kicker">14 · Scientific interpretation</div>
         <h2>What this result proves—and what it does not</h2>
@@ -366,7 +366,7 @@
         <div class="callout warning"><span class="badge boundary">Future question</span> The official focal-alpha/config-code behavior remains a <strong>separate future training ablation</strong>. It was not silently changed and is not part of this baseline claim.</div>
 
         <div class="callout blue"><strong>GPU boundary:</strong> 5,756 roughly one-Hz WDDM samples observed fold peaks of <code>15,525--19,976 MiB</code>. Child attribution was unavailable and <strong>sampled maxima may miss transients</strong>; these are not absolute CUDA peaks.</div>
-      <div class="reference-pager"><a href="#failures">← Previous section</a><a class="button" href="#checklist">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#failures">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#checklist">Read next: A practical checklist for the next reproduction →</a></span></div></section>
 <section class="step-panel" id="checklist"><p class="step-kicker">Reference · 15 / 16</p>
         <div class="section-kicker">15 · Reuse</div>
         <h2>A practical checklist for the next reproduction</h2>
@@ -404,7 +404,7 @@
             </ol>
           </article>
         </div>
-      <div class="reference-pager"><a href="#boundaries">← Previous section</a><a class="button" href="#summary">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#boundaries">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#summary">Read next: A baseline is a scientific instrument, not just a number →</a></span></div></section>
 <section class="step-panel" id="summary"><p class="step-kicker">Reference · 16 / 16</p>
         <p><a href="../../lessons/erm/index.html">Continue with the interactive ERM lesson: design your first fair comparison →</a></p>
         <div class="closing-content">
@@ -419,5 +419,5 @@
           <p style="margin-top:20px;color:#d7efe1"><strong>Next step:</strong> follow the <a href="../../handbook/res18-baseline-slurm/index.html">official single-fold Slurm tutorial</a>. After completing Fold 2, continue with <a href="../../handbook/matched-erm-experiment-design/index.html">designing a matched ERM comparison</a>. It explains the move to the project protocol before trying <span class="experiment-name">Cosine-schedule continuation <small>(X22)</small></span> and <span class="experiment-name">Mixed-severity block specialist <small>(X14)</small></span>.</p>
           <p><a href="../foundations/index.html">← Previous lecture: research foundations and related work</a> · <a href="../..">Return to the course home →</a></p>
         </div>
-      <div class="reference-pager"><a href="#checklist">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/reference/baseline-reproduction.html">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
+      <div class="reference-pager"><a href="#checklist">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="../../index.html#course">Back to the course →</a></span></div></section></div><p class="support-return"><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/reference/baseline-reproduction.html">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

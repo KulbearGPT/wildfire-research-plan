@@ -12,6 +12,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 
 def main():
     course = lessons()
+    route_map = {}
     for lesson in course:
         slug = lesson['slug']
         path = ROOT / f'site-content/en/lessons/{slug}.html'
@@ -19,6 +20,7 @@ def main():
         sections = Sections(text, lambda a: 'step-panel' in a.get('class', '').split()).items
         if not sections:
             raise ValueError(f'No steps in {path}')
+        route_map[slug] = {a['id']: {'title': a['data-title'], 'task': a['data-task'], 'practical': 'data-practical' in a} for a, _, _, _ in sections}
         nav = '<details class="lesson-contents"><summary id="section-label">Contents · choose a step</summary><nav class="step-nav" aria-label="Lesson steps">' + ''.join(
             f'<a href="#{a["id"]}">{i} · {escape(a["data-title"])}</a>'
             for i, (a, _, _, _) in enumerate(sections, 1)) + '</nav></details>'
@@ -36,9 +38,11 @@ def main():
             if (slug, attrs['id']) == ('specialists','step2'):
                 body = body[:-len('</section>')] + route_lab() + '</section>'
             body = lesson_readings(body, slug, attrs['id'])
+            task = f'<p class="task-purpose"><strong>Your task:</strong> {escape(attrs["data-task"])}</p>'
+            body = re.sub(r'(<h2\b[^>]*>.*?</h2>)', lambda m: m[0]+task, body, count=1, flags=re.S)
             prev = ('../../index.html#course', '← Course directory') if i == 0 else (f'#{sections[i-1][0]["id"]}', '← Previous step')
             if i + 1 < len(sections):
-                next_link = (f'#{sections[i+1][0]["id"]}', 'Next step →')
+                next_link = (f'#{sections[i+1][0]["id"]}', 'Next: '+sections[i+1][0]['data-title']+' →')
             elif lesson['number'] < 8:
                 next_lesson = course[lesson['number']]
                 next_link = (f'../{next_lesson["slug"]}/index.html', f'Next: {next_lesson["short"]} →')
@@ -49,14 +53,19 @@ def main():
                 download = 'report-template.md' if slug == 'erm' else 'worksheet.md'
                 ending = f'''<div class="actions"><a class="button secondary" href="{download}" download>Download your worksheet</a><button class="secondary js-only" type="button" id="print-lesson">Print all steps</button></div>
 <label class="completion js-only"><input type="checkbox" id="lesson-complete"> I have reviewed the concepts. Save this reminder locally.</label><p class="source">This is a personal reminder, not a grade or proof that a cluster experiment finished.</p>'''
-            pager = f'<div class="pager"><a href="{prev[0]}">{escape(prev[1])}</a><a class="button" href="{next_link[0]}">{escape(next_link[1])}</a></div>'
+            if slug == 'erm' and attrs['id'] == 'step5':
+                next_link = ('#step6', 'Next: Interpret the A/B result →')
+            pager = f'<div class="pager"><a data-task-prev href="{prev[0]}">{escape(prev[1])}</a><a data-task-next class="button" href="{next_link[0]}">{escape(next_link[1])}</a></div>'
+            if 'data-practical' in attrs:
+                pager += '<p class="source"><a data-study-switch href="#step6">Pause the practical and study the worked result →</a></p>'
             content.append(body[:-len('</section>')] + ending + pager + '</section>')
         pre = 'Start here with basic Python and CNN concepts.' if lesson['number'] == 1 else f'Before this lesson: <a href="../{course[lesson["number"]-2]["slug"]}/index.html">{escape(course[lesson["number"]-2]["short"])}</a>.'
-        intro = f'''<header class="lesson-header"><p class="eyebrow">Lesson {lesson['number']:02} · Learn by doing</p><h1>{escape(lesson['title'])}</h1><p class="lead">{escape(lesson['goal'])}</p><div class="meta"><span>{escape(lesson['time'])}</span><span>{len(sections)} steps</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>{pre}</p><p><strong>Your deliverable:</strong> {escape(lesson['deliverable'])}</p><p>Follow the next-step button. Extra reading is grouped at the end of each step; practical instructions remain available there. Browser activities use teaching examples and labelled real exports.</p></details></header>'''
+        intro = f'''<header class="lesson-header"><p class="eyebrow">Lesson {lesson['number']:02} · Learn by doing</p><h1>{escape(lesson['title'])}</h1><p class="lead">{escape(lesson['goal'])}</p><div class="meta"><span>{escape(lesson['time'])}</span><span data-task-total>{len(sections)} tasks</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>{pre}</p><p><strong>Your deliverable:</strong> {escape(lesson['deliverable'])}</p><p>Complete the task shown above the activity, then follow its named next action. Supporting explanations stay beside the task. Browser activities use teaching examples and labelled real exports.</p></details></header>'''
         output = ROOT / f'lessons/{slug}/index.html'
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(migrate_links(shell(lesson['title'], '\n'.join(content), prefix='../../', page=slug, current=slug,
                                 step_links=nav, intro=intro, source=f'../../site-content/en/lessons/{slug}.html'),output,output))
+    (ROOT/'assets/course-map.js').write_text('/* Generated from maintained lesson tasks. */\nwindow.CourseMap = '+json.dumps(route_map, ensure_ascii=False)+';\n')
     spec=spec_from_file_location('experiment_guides',ROOT/'scripts/build-experiment-guides.py')
     module=module_from_spec(spec); spec.loader.exec_module(module); module.main()
     support_spec=spec_from_file_location("student_support", ROOT/"scripts/build-student-support.py")
@@ -93,11 +102,11 @@ def build_catalog():
 def build_home(course):
     cards=[]
     for item in course:
-        cards.append(f'''<article class="lesson-card" id="lesson{item['number']}"><div class="number">{item['number']:02}</div><div><span class="pill live">Interactive lesson · {escape(item['time'])}</span><h3>{escape(item['short'])}</h3><p>{escape(item['goal'])}</p><p class="deliver"><strong>You will produce:</strong> {escape(item['deliverable'])}</p><a class="button secondary" href="lessons/{item['slug']}/index.html">Start lesson {item['number']} →</a><a class="lesson-resume js-only" data-resume-page="{item['slug']}" href="lessons/{item['slug']}/index.html">Resume saved step →</a></div></article>''')
-    intro='''<header class="hero"><p class="eyebrow">A practical course in research</p><h1>From a fire map<br>to a fair experiment.</h1><p class="lead">Eight lessons. One learning path. Explore an example, make a decision, then produce something you can explain.</p><div class="actions"><a class="button" href="lessons/forecast/index.html">Start lesson 1 →</a><a class="button" href="lessons/erm/index.html" data-continue>Try the ERM comparison →</a></div><div class="meta"><span>Before you start: basic Python + CNN concepts</span><span>Browser activities + separate Slurm practicals</span></div></header>'''
-    content='<section class="section"><h2>Before you begin</h2><p><a href="handbook/student-start/index.html">Choose your study or practical route</a> · <a href="handbook/student-real-data/index.html">Explore real wildfire observations</a> · <a href="student-record.md" download>Keep one course record</a></p><p>Start with lessons 1–3. Before cluster work, check access and assets. Without compute access, continue the labelled teaching exercises.</p></section>'+'<section id="course" class="section"><h2>Your course directory</h2><p>Follow the lessons in order. Each ends with a completion criterion, an exit task and a downloadable worksheet. Cluster work is separate from browser exercises.</p>'+''.join(cards)+'</section>'
+        cards.append(f'''<article class="lesson-card" id="lesson{item['number']}"><div class="number">{item['number']:02}</div><div><span class="pill live">Interactive lesson · {escape(item['time'])}</span><h3>{escape(item['short'])}</h3><p>{escape(item['goal'])}</p><p class="deliver"><strong>You will produce:</strong> {escape(item['deliverable'])}</p><a class="button secondary" href="lessons/{item['slug']}/index.html">Open lesson {item['number']} →</a></div></article>''')
+    intro='''<header class="hero"><p class="eyebrow">A practical course in research</p><h1>From a fire map<br>to a fair experiment.</h1><p class="lead">Eight lessons. One learning path. Explore an example, make a decision, then produce something you can explain.</p><div class="actions"><a class="button" href="lessons/forecast/index.html" data-continue>Start learning →</a></div><div class="meta"><span>Before you start: basic Python + CNN concepts</span><span>Browser activities + separate Slurm practicals</span></div></header>'''
+    content='<p class="note">Start with the first task. You need no account or data download for browser study. Practical preparation appears when you reach the relevant experiment.</p><section id="course" class="section"><h2>Your course directory</h2><p>Open a lesson to continue your saved task. Restart is a separate action inside the lesson. Lesson 6 is the worked ERM example.</p>'+''.join(cards)+'</section>'
     resources=(ROOT/'site-content/en/course-resources.html').read_text()
-    (ROOT/'index.html').write_text(migrate_links(shell('Learn to build a trustworthy experiment',content+resources,prefix='',page='home',intro=intro,source='site-content/en/course-lessons.json'),ROOT/'index.html',ROOT/'index.html'))
+    (ROOT/'index.html').write_text(migrate_links(shell('Learn to build a trustworthy experiment',content+'<details class="course-resources"><summary>Optional handbook and reference library</summary>'+resources+'</details>',prefix='',page='home',intro=intro,source='site-content/en/course-lessons.json'),ROOT/'index.html',ROOT/'index.html'))
 
 if __name__ == '__main__':
     main()

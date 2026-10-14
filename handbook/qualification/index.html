@@ -2,13 +2,13 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Delivery qualification
 record · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-map.js" defer></script><script src="../../assets/course-state.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script><script src="../../assets/course-route.js" defer></script></head>
 <body data-page="guide-qualification" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div></aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Delivery qualification
 record</h1><p class="lead">Historical evidence and context. These records support interpretation; they are not a required sequence of new experiments.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · Verified environment and
 CPU evidence</a><a href="#chapter-3">3 · GPU verification boundaries</a><a href="#chapter-4">4 · Subsequent actual
@@ -29,7 +29,8 @@ pipeline; it is not a full-budget reproduction of every historical
 score. All tensor/model operations, dependency installation, downloads,
 and large-file verification ran under Slurm. The login node handled only
 source code, small metadata, Git, and submission checks.</p>
-<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-2">Read next: Verified environment and
+CPU evidence →</a></span></div></section>
 <section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 4</p><h2 id="verified-environment-and-cpu-evidence">Verified environment and
 CPU evidence</h2>
 <table>
@@ -159,7 +160,7 @@ complete public download/conversion. Weights were actually copied and
 verified. Complete public-data reconstruction commands, stage-by-stage
 checks, and original checksums are in <a
 href="../data-preparation/index.html">data preparation</a>.</p>
-<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-3">Read next: GPU verification boundaries →</a></span></div></section>
 <section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 4</p><h2 id="gpu-verification-boundaries">GPU verification boundaries</h2>
 <p>Cross-history and both September smoke campaigns use real data, one
 short training or calibration run, checkpoint saving/reloading, and
@@ -235,7 +236,8 @@ href="../../docs/research/environment/conversion-qualification.json">raw
 compact report</a> retains year-by-year checks. It uses eight synthetic
 events and does not replace the full public download, 999-event
 conversion, or repair-stage validation.</p>
-<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-4">Read next: Subsequent actual
+verification →</a></span></div></section>
 <section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 4</p><h2 id="subsequent-actual-verification">Subsequent actual
 verification</h2>
 <p>All 9 GPU jobs in the second batch
@@ -284,5 +286,5 @@ short-budget validation boundaries, finding no new critical gaps.
 Retained negative results, invalid comparisons, and unrun states are
 archived according to the original evidence; no additional efficacy
 experiments were performed for them.</p>
-<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/qualification.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="../../index.html#course">Back to the course →</a></span></div></section></div><p class="support-return"><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/qualification.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

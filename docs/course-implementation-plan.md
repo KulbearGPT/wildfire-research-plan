@@ -189,3 +189,37 @@ from 63 to 9; supporting targets remain available in disclosures.
 Real image legends and scaling caveats remain explicit. Browser rendering and
 actual keyboard traversal were not available on this host. No commit or push
 was performed for this follow-up.
+
+## Task-led learning flow (2026-10-14)
+
+User-approved scope: one clear task and next action at every point; a single
+start/continue entry; contextual reading; separate ERM study/practical paths;
+reliable step and interaction restoration; guided real observations before free
+exploration. Implement in the existing static shell without dependencies.
+
+- [x] Simplify the homepage and give every lesson step an explicit task and
+  named next action (`build-course-lessons.py`, maintained lesson fragments).
+- [x] Split ERM preparation into sequential practical tasks, preserving existing
+  lesson anchors; browser study proceeds from planning to interpretation.
+- [x] Replace detached reading menus with contextual disclosures; make supporting
+  chapter footers return to the originating task, with further reading secondary.
+- [x] Restore valid saved steps before saving; persist validated controls and
+  disclosures; explicit restart clears only the current lesson. Handle blocked
+  storage, malformed state, old anchors, direct links and browser history.
+- [x] Start real-image activities with a fixed observation task and move optional
+  controls behind an exploration disclosure, with a return-to-task-view action.
+- [x] Rebuild all pages; check links, task coverage, default/explicit resume,
+  practical routes, reference return, interaction restoration and print behavior.
+  Use actual scripts in a DOM harness; do not claim browser rendering evidence.
+
+
+Validation: 236 assertions passed against generated page fixtures and the actual
+JavaScript in the dependency-free DOM/URL harness. Covered default and explicit
+resume, all lesson task labels, ERM study/practical sequences, deep-link priority,
+per-option feedback, persisted selections and computed displays, image/view/zoom
+restoration, explicit restart, nested reference returns, invalid/corrupt state,
+blocked storage, pageshow restoration and print restore. The final site checker
+reports 144 pages and 8,707 local links/assets with zero errors. Whitespace checks
+pass. No browser is installed here; desktop/mobile rendering, native history and
+keyboard traversal remain unverified. No new compute or data export was run.
+The preceding question-analysis update was committed and pushed as 2947f06.

@@ -40,6 +40,13 @@
     q('[data-lab-event]').addEventListener('change',refresh);
     q('[data-lab-view]').addEventListener('change',refresh);
     q('[data-lab-zoom]').addEventListener('input',zoom);
+    q('[data-lab-reset]').addEventListener('click', () => {
+      q('[data-lab-event]').value='fire_24935867';
+      q('[data-lab-view]').value=lab.dataset.initialView;
+      refresh();
+      q('.lab-explore').open=false;
+      window.CourseState?.save();
+    });
     refresh();
   });
   const get=id=>document.getElementById(id);

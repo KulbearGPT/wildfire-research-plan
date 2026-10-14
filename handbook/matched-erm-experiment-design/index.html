@@ -2,13 +2,13 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>After Fold 2:
 designing your first fair comparison · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-map.js" defer></script><script src="../../assets/course-state.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script><script src="../../assets/course-route.js" defer></script></head>
 <body data-page="guide-matched-erm-experiment-design" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html" aria-current="page">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html" aria-current="page">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div></aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>After Fold 2:
 designing your first fair comparison</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 1. Why we need a
 continuation control</a><a href="#chapter-3">3 · 2. Moving from
@@ -40,7 +40,8 @@ schedule.</p>
 <p>That model is the <strong>matched ERM continuation control</strong>
 you will prepare in this lesson. You will use it later to evaluate <span class="experiment-name">Cosine-schedule continuation <small>(X22)</small></span>
 and <span class="experiment-name">Mixed-severity block specialist <small>(X14)</small></span>.</p>
-<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-2">Read next: 1. Why we need a
+continuation control →</a></span></div></section>
 <section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 9</p><h2 id="1-why-we-need-a-continuation-control">1. Why we need a
 continuation control</h2>
 <p>The first experiment asks:</p>
@@ -99,7 +100,8 @@ from every difference between foundation training and continuation.</p>
 <p><strong>Discussion:</strong> If you evaluated only A and C, could you
 tell whether the schedule helped? Explain which comparison is
 missing.</p>
-<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-3">Read next: 2. Moving from
+Fold 2 to the project experiments →</a></span></div></section>
 <section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 9</p><h2 id="2-moving-from-fold-2-to-the-project-experiments">2. Moving from
 Fold 2 to the project experiments</h2>
 <p>You have completed an official reproduction. The project's method
@@ -178,7 +180,7 @@ continuation must use the same actual starting checkpoint bytes.</p>
 student to repeat foundation training to learn this comparison. Record
 which route you used. Newly trained B3 weights need not match the
 historical project's weights.</p>
-<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-4">Read next: 3. What must match? →</a></span></div></section>
 <section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 9</p><h2 id="3-what-must-match">3. What must match?</h2>
 <p>ERM means empirical risk minimization: fit predictions to the
 training labels using the chosen supervised loss. Here it identifies the
@@ -256,7 +258,7 @@ hardware or make one run conclusive.</p>
 <p><strong>Discussion:</strong> A student selects X22's best validation
 checkpoint but uses ERM's final checkpoint. What else, besides the
 schedule, could explain the result?</p>
-<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="#chapter-5">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-5">Read next: 4. Running the comparison →</a></span></div></section>
 <section class="step-panel" id="chapter-5"><p class="step-kicker">Reference · 5 / 9</p><h2 id="4-running-the-comparison">4. Running the comparison</h2>
 <h3 id="step-1-save-the-official-experiment">Step 1: Save the official
 experiment</h3>
@@ -321,7 +323,7 @@ scores. Describe which conditions improved and which regressed. An
 unexpectedly strong ERM result is worth keeping: it tells you how much a
 new method must improve on. Choosing a weaker control seed afterwards
 would bias the comparison.</p>
-<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="#chapter-6">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-6">Read next: 5. What to measure →</a></span></div></section>
 <section class="step-panel" id="chapter-6"><p class="step-kicker">Reference · 6 / 9</p><h2 id="5-what-to-measure">5. What to measure</h2>
 <p>Report all four conditions, not only the one that improves:</p>
 <table>
@@ -413,7 +415,7 @@ results:</p>
 <p>All cells must share the same evaluation contract. Historical project
 averages across settings, seeds and years are not target values for this
 single T1/2021 exercise.</p>
-<div class="reference-pager"><a href="#chapter-5">← Previous section</a><a class="button" href="#chapter-7">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-5">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-7">Read next: 6. What the results tell you →</a></span></div></section>
 <section class="step-panel" id="chapter-7"><p class="step-kicker">Reference · 7 / 9</p><h2 id="6-what-the-results-tell-you">6. What the results tell you</h2>
 <table>
 <thead>
@@ -462,7 +464,7 @@ results have already been examined historically; later evaluation there
 is historical reporting, not a newly untouched confirmation set. The
 official tutorial also used 2021 as a test year, whereas it is
 explicitly a validation year here.</p>
-<div class="reference-pager"><a href="#chapter-6">← Previous section</a><a class="button" href="#chapter-8">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-6">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-8">Read next: 7. Your experiment report →</a></span></div></section>
 <section class="step-panel" id="chapter-8"><p class="step-kicker">Reference · 8 / 9</p><h2 id="7-your-experiment-report">7. Your experiment report</h2>
 <p>Submit a short experiment note containing:</p>
 <ol type="1">
@@ -483,7 +485,8 @@ exercise. Your report will be assessed on the comparison, the supporting
 records and your interpretation. Be ready to explain why frozen B3,
 clean B0, official Fold 2 and fresh ERM cannot be substituted for one
 another.</p>
-<div class="reference-pager"><a href="#chapter-7">← Previous section</a><a class="button" href="#chapter-9">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-7">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-9">Read next: 8. Next lessons: Cosine-schedule continuation (X22) first,
+then Mixed-severity block specialist (X14) →</a></span></div></section>
 <section class="step-panel" id="chapter-9"><p class="step-kicker">Reference · 9 / 9</p><h2 id="8-next-lessons-x22-first-then-x14">8. Next lessons: X22 first,
 then X14</h2>
 <p>For <strong>X22</strong>, start again from the same B3, use the same
@@ -508,5 +511,5 @@ budgets.</p>
 do two fixed-severity experts perform better than one mixed-severity
 expert? X14 then becomes the closest control, and the additional
 training and model storage must be included in the comparison.</p>
-<div class="reference-pager"><a href="#chapter-8">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/tutorials/matched-erm-experiment-design.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
+<div class="reference-pager"><a href="#chapter-8">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="../../index.html#course">Back to the course →</a></span></div></section></div><p class="support-return"><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/tutorials/matched-erm-experiment-design.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

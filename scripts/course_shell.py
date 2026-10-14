@@ -53,23 +53,24 @@ def directory(prefix, current=''):
 
 
 def shell(title, content, *, prefix, page, current='', step_links='', source='', intro=''):
-    progress_html = '<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div>' if step_links else ''
+    progress_html = '<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div>' if step_links else ''
     in_lesson = page in {item['slug'] for item in lessons()}
-    directory_open = '' if in_lesson else ' open'
+    task_location = '<div class="task-location js-only" data-task-location aria-live="polite"></div>' if in_lesson else ''
+    directory_open = ''
     src = f'<a href="{escape(source, quote=True)}">Maintained source</a> · ' if source else ''
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{escape(title)} · Wildfire Lab</title><link rel="stylesheet" href="{prefix}assets/learning.css">
-<script src="{prefix}assets/course-route.js" defer></script><script src="{prefix}assets/visual-lab.js" defer></script><script src="{prefix}assets/learning.js" defer></script><script src="{prefix}assets/lesson-demos.js" defer></script></head>
+<script src="{prefix}assets/course-map.js" defer></script><script src="{prefix}assets/course-state.js" defer></script><script src="{prefix}assets/visual-lab.js" defer></script><script src="{prefix}assets/learning.js" defer></script><script src="{prefix}assets/lesson-demos.js" defer></script><script src="{prefix}assets/course-route.js" defer></script></head>
 <body data-page="{page}" data-root="{prefix}"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="{prefix}index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="{prefix}index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details{directory_open} data-directory><summary>The learning path</summary>{directory(prefix,current)}
 <p class="small"><a href="{prefix}handbook/student-start/index.html">Practical readiness</a><br><a href="{prefix}handbook/student-real-data/index.html">Real-data examples</a><br><a href="{prefix}handbook/student-report/index.html">Output → report</a><br><a href="{prefix}handbook/student-help/index.html">I am stuck</a><br><a href="{prefix}experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
 </details>{progress_html}</aside>
-<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="{prefix}index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside>{intro}{step_links}
+<main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="{prefix}index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside>{intro}{task_location}{step_links}
 <noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
-{content}<footer class="footer"><details><summary>Sources and course resources</summary>{src}<a href="{prefix}index.html#course">Course directory</a> · <a href="{prefix}experiments/index.html">Experiment names</a></details>
+{content}<p class="support-return"><a class="button" data-course-return-link hidden href="{prefix}index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary>{src}<a href="{prefix}index.html#course">Course directory</a> · <a href="{prefix}experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>
 '''
 
@@ -126,8 +127,8 @@ def reference_page(title, sections, *, prefix, page, source, description, curren
     content = []
     for i, (ident, label, fragment) in enumerate(sections):
         prev = f'<a href="#{sections[i-1][0]}">← Previous section</a>' if i else f'<a href="{prefix}index.html#handbook">← Handbook</a>'
-        nxt = f'<a class="button" href="#{sections[i+1][0]}">Next section →</a>' if i+1<len(sections) else f'<a class="button" href="{prefix}index.html#course">Back to the course →</a>'
-        content.append(f'<section class="step-panel" id="{escape(ident,quote=True)}"><p class="step-kicker">Reference · {i+1} / {len(sections)}</p>{fragment}<div class="reference-pager">{prev}{nxt}</div></section>')
+        nxt = f'<a class="button" href="#{sections[i+1][0]}">Read next: {escape(descriptive_title(sections[i+1][1]))} →</a>' if i+1<len(sections) else f'<a class="button" href="{prefix}index.html#course">Back to the course →</a>'
+        content.append(f'<section class="step-panel" id="{escape(ident,quote=True)}"><p class="step-kicker">Reference · {i+1} / {len(sections)}</p>{fragment}<div class="reference-pager">{prev}<a class="button" data-course-return-link hidden href="{prefix}index.html#course">Return to your task</a><span data-reference-next>{nxt}</span></div></section>')
     intro = f'<header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>{escape(title)}</h1><p class="lead">{escape(description)}</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header>'
     body = descriptive_names('\n'.join(content),prefix)
     import re

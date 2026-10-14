@@ -3,13 +3,13 @@
 <title>From
 Data Download to a Complete ResNet18-U-Net Run: A Step-by-Step Nibi
 Slurm Tutorial · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-map.js" defer></script><script src="../../assets/course-state.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script><script src="../../assets/course-route.js" defer></script></head>
 <body data-page="guide-project-b0-slurm" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div></aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>From
 Data Download to a Complete ResNet18-U-Net Run: A Step-by-Step Nibi
 Slurm Tutorial</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 0. First Choose What
@@ -42,7 +42,8 @@ runner</a>) and are already included in the repository; there is no need
 to search the instructor's personal cache directories. They call the
 project's existing official reproduction and <span class="experiment-name">Corrected T1 clean-input baseline <small>(B0)</small></span> entry points rather than
 implementing another model-training pipeline.</p>
-<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-2">Read next: 0. First Choose What
+You Want to Complete →</a></span></div></section>
 <section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 17</p><h2 id="0-first-choose-what-you-want-to-complete">0. First Choose What
 You Want to Complete</h2>
 <p>The model is called <strong>ResNet18-U-Net / Res18-U-Net</strong>
@@ -111,7 +112,8 @@ href="../../reproductions/wsts_res18_unet_t1/official_weights_manifest.json">rel
 manifest</a>, and <a
 href="../../reproductions/wsts_fast_track/contract.py">B0
 contract</a>.</p>
-<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-3">Read next: 1. Log In and Create
+Your Own Directories →</a></span></div></section>
 <section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 17</p><h2 id="1-log-in-and-create-your-own-directories">1. Log In and Create
 Your Own Directories</h2>
 <h3
@@ -207,7 +209,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="
 <p><code>df</code> reports free filesystem space, not personal project
 quota. If the site's <code>quota</code> does not report project quota,
 use the quota-checking method supplied by the course group.</p>
-<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-4">Read next: 2. Understand a Slurm
+Submission →</a></span></div></section>
 <section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 17</p><h2 id="2-understand-a-slurm-submission">2. Understand a Slurm
 Submission</h2>
 <p><code>sbatch</code> hands the task to the scheduler and immediately
@@ -240,7 +243,8 @@ directory. Diagnose failures first; do not overwrite the original
 directory to present a retry as first-attempt success. After logging in
 again, redefine <code>jobcheck</code> and recover downstream dependency
 job IDs from your records or <code>sacct</code>.</p>
-<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="#chapter-5">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-5">Read next: 3. Create Two Isolated
+Environments →</a></span></div></section>
 <section class="step-panel" id="chapter-5"><p class="step-kicker">Reference · 5 / 17</p><h2 id="3-create-two-isolated-environments">3. Create Two Isolated
 Environments</h2>
 <p>Training depends on older Lightning/SMP versions and uses the Python
@@ -285,7 +289,8 @@ occur in this CPU job.</p>
 initialization. In project records, “from scratch” means not resuming
 from our existing wildfire checkpoints; it does not mean that all
 ResNet18 parameters are randomly initialized.</p>
-<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="#chapter-6">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-6">Read next: 4. Download and Verify
+Original WSTS →</a></span></div></section>
 <section class="step-panel" id="chapter-6"><p class="step-kicker">Reference · 6 / 17</p><h2 id="4-download-and-verify-original-wsts">4. Download and Verify
 Original WSTS</h2>
 <p>Original WSTS covers 2018–2021 for the official single fold and also
@@ -314,7 +319,7 @@ script renames <code>.partial</code> to the final <code>.zip</code> only
 after verification passes. After a network interruption, keep the
 partial file and resubmit the download step; failed full training should
 not be blindly retried in the same way.</p>
-<div class="reference-pager"><a href="#chapter-5">← Previous section</a><a class="button" href="#chapter-7">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-5">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-7">Read next: 5. CPU Job: GeoTIFF → HDF5 →</a></span></div></section>
 <section class="step-panel" id="chapter-7"><p class="step-kicker">Reference · 7 / 17</p><h2 id="5-cpu-job-geotiff--hdf5">5. CPU Job: GeoTIFF → HDF5</h2>
 <p>GeoTIFF uses one file per day and suits geographic raster exchange.
 Training reads time series frequently, so organizing each event in HDF5
@@ -348,7 +353,8 @@ handled separately in Section 9; do not divide them by 100 again.</p>
 GPU smoke test in Section 6; after it passes, the B0 route jumps to
 Section 9, while the official single-fold route continues to Section
 7.</strong></p>
-<div class="reference-pager"><a href="#chapter-6">← Previous section</a><a class="button" href="#chapter-8">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-6">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-8">Read next: 6. Official
+Fold 2: Start with a One-Step Smoke Test →</a></span></div></section>
 <section class="step-panel" id="chapter-8"><p class="step-kicker">Reference · 8 / 17</p><h2 id="6-official-fold-2-start-with-a-one-step-smoke-test">6. Official
 Fold 2: Start with a One-Step Smoke Test</h2>
 <p>The smoke test is an engineering check: fetch a training batch,
@@ -372,7 +378,9 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href=
 message and a positive <code>WSTS_OBSERVER_PEAK_ALLOCATED_BYTES</code>.
 Seeing only <code>CUDA available: True</code> does not establish that
 the model ran successfully.</p>
-<div class="reference-pager"><a href="#chapter-7">← Previous section</a><a class="button" href="#chapter-9">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-7">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-9">Read next: 7.
+Official Fold 2: Train for 10000 Steps and Automatically Test the Best
+Validation Checkpoint →</a></span></div></section>
 <section class="step-panel" id="chapter-9"><p class="step-kicker">Reference · 9 / 17</p><h2
 id="7-official-fold-2-train-for-10000-steps-and-automatically-test-the-best-validation-checkpoint">7.
 Official Fold 2: Train for 10000 Steps and Automatically Test the Best
@@ -427,7 +435,8 @@ paper's cross-fold mean <strong>0.460</strong> because test years
 differ. Nibi differs from the historical Windows environment, so bitwise
 equality is not promised; retain actual results rather than replacing
 them with target numbers.</p>
-<div class="reference-pager"><a href="#chapter-8">← Previous section</a><a class="button" href="#chapter-10">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-8">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-10">Read next: 8.
+Optional: Test the Official Released Fold 2 Weights →</a></span></div></section>
 <section class="step-panel" id="chapter-10"><p class="step-kicker">Reference · 10 / 17</p><h2 id="8-optional-test-the-official-released-fold-2-weights">8.
 Optional: Test the Official Released Fold 2 Weights</h2>
 <p>This quickly checks whether the data and evaluation entry point are
@@ -457,7 +466,9 @@ historical reevaluation <code>0.570902</code> agrees with the rounded
 filename. All weights come from the <a
 href="https://huggingface.co/saadlahrichi/WSTSPlus/tree/acf70a37394849f4ec8d108a51d6f4325a554d0a/trained_model_weights/Res18Unet_T1/All">authors'
 release repository</a>.</p>
-<div class="reference-pager"><a href="#chapter-9">← Previous section</a><a class="button" href="#chapter-11">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-9">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-11">Read next: 9.
+Join Project Corrected T1 clean-input baseline (B0): Prepare Extension Years and Recalculate Training
+Statistics →</a></span></div></section>
 <section class="step-panel" id="chapter-11"><p class="step-kicker">Reference · 11 / 17</p><h2
 id="9-join-project-b0-prepare-extension-years-and-recalculate-training-statistics">9.
 Join Project B0: Prepare Extension Years and Recalculate Training
@@ -552,7 +563,8 @@ normalization; computing them from test years leaks test information
 into training. Official fold reproduction retains the official
 statistics procedure, while project B0 uses the frozen training-year
 statistics computed here. These are not interchangeable.</p>
-<div class="reference-pager"><a href="#chapter-10">← Previous section</a><a class="button" href="#chapter-12">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-10">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-12">Read next: 10. Train
+Project Corrected T1 clean-input baseline (B0): A 3000-Step Clean Baseline →</a></span></div></section>
 <section class="step-panel" id="chapter-12"><p class="step-kicker">Reference · 12 / 17</p><h2 id="10-train-project-b0-a-3000-step-clean-baseline">10. Train
 Project B0: A 3000-Step Clean Baseline</h2>
 <p>This is B0 in the <a
@@ -643,7 +655,8 @@ and sample counts before comparing, rather than relying only on metric
 names.</p>
 <p><strong>Students have now completed one B0 run.</strong> The
 subsequent fixed tests and full official 12-fold run are extensions.</p>
-<div class="reference-pager"><a href="#chapter-11">← Previous section</a><a class="button" href="#chapter-13">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-11">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-13">Read next: 11. Optional:
+Test the Fixed Corrected T1 clean-input baseline (B0) Once on 2022/2023 →</a></span></div></section>
 <section class="step-panel" id="chapter-13"><p class="step-kicker">Reference · 13 / 17</p><h2 id="11-optional-test-the-fixed-b0-once-on-20222023">11. Optional:
 Test the Fixed B0 Once on 2022/2023</h2>
 <p>Run this only after the recipe is frozen. The following explicitly
@@ -664,7 +677,9 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href=
 <code>runs/B0-test-2022-JOBID/results-2022/summary.json</code> and
 <code>runs/B0-test-2023-JOBID/results-2023/summary.json</code>,
 respectively.</p>
-<div class="reference-pager"><a href="#chapter-12">← Previous section</a><a class="button" href="#chapter-14">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-12">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-14">Read next: 12.
+Full Reproduction Appendix: 12 Folds, with Training and Released-Weight
+Evaluation Summarized Separately →</a></span></div></section>
 <section class="step-panel" id="chapter-14"><p class="step-kicker">Reference · 14 / 17</p><h2
 id="12-full-reproduction-appendix-12-folds-with-training-and-released-weight-evaluation-summarized-separately">12.
 Full Reproduction Appendix: 12 Folds, with Training and Released-Weight
@@ -799,7 +814,8 @@ provenance, runs, and aggregation procedure; the intended official
 positive-weight configuration also remains historically unresolved.
 Correct delivery reports actual scores and differences, rather than
 repeatedly changing parameters until reaching 0.460.</p>
-<div class="reference-pager"><a href="#chapter-13">← Previous section</a><a class="button" href="#chapter-15">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-13">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-15">Read next: 13. Common
+Failures: Where to Look and What to Do →</a></span></div></section>
 <section class="step-panel" id="chapter-15"><p class="step-kicker">Reference · 15 / 17</p><h2 id="13-common-failures-where-to-look-and-what-to-do">13. Common
 Failures: Where to Look and What to Do</h2>
 <table>
@@ -896,7 +912,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href=
 <p><code>Ctrl-C</code> stops only <code>tail</code>, not the job. Run
 <code>scancel JOBID</code> only when cancellation is actually needed; do
 not indiscriminately cancel all your jobs.</p>
-<div class="reference-pager"><a href="#chapter-14">← Previous section</a><a class="button" href="#chapter-16">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-14">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-16">Read next: 14. What Students Should
+Submit →</a></span></div></section>
 <section class="step-panel" id="chapter-16"><p class="step-kicker">Reference · 16 / 17</p><h2 id="14-what-students-should-submit">14. What Students Should
 Submit</h2>
 <ul>
@@ -916,7 +933,8 @@ protocol / project B0.</li>
 <p>A complete submission should explain the inputs, labels, training
 years, when checkpoints were selected, when testing occurred, and
 exactly which reference the score can be compared with.</p>
-<div class="reference-pager"><a href="#chapter-15">← Previous section</a><a class="button" href="#chapter-17">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-15">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-17">Read next: 15. Validation Scope of
+This Tutorial →</a></span></div></section>
 <section class="step-panel" id="chapter-17"><p class="step-kicker">Reference · 17 / 17</p><h2 id="15-validation-scope-of-this-tutorial">15. Validation Scope of
 This Tutorial</h2>
 <p>The accompanying data converters come from the project's existing
@@ -931,5 +949,5 @@ complete 12-fold campaign. The historical numbers above are recorded
 separately from tutorial validation. On their first run with their own
 account and new environment, students must still verify each step
 against its success criteria.</p>
-<div class="reference-pager"><a href="#chapter-16">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/tutorials/project-b0-slurm.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
+<div class="reference-pager"><a href="#chapter-16">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="../../index.html#course">Back to the course →</a></span></div></section></div><p class="support-return"><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/tutorials/project-b0-slurm.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

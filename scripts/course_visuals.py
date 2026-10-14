@@ -17,16 +17,24 @@ def explorer(slug, view):
     options = ''.join(f'<option value="{escape(e["id"])}">{escape(e["id"])} · 16 → 17 Feb 2021</option>' for e in events)
     choices = ''.join(f'<option value="{key}"'+(' selected' if key==view else '')+f'>{value[0]}</option>' for key,value in VIEWS.items())
     prompt, answer = VIEWS[view][1:]
+    instructions = {
+        'timeline': 'Read the dates from left to right. Point to the last legal input, then the next-day target. Stop when you can explain which mask must stay outside the input.',
+        'channels': 'Compare the terrain and wind panels on the same patch. Find a coarse block in the wind panel, then explain why a shared grid does not imply equal source resolution.',
+        'missingness': 'Compare the complete input, gray hidden regions and target. Point out one hidden region without treating it as observed background.',
+        'persistence': 'Locate one purple missed-fire region and one orange false alarm. Explain why simply copying yesterday can make both errors.',
+        'fire-mask': 'Compare one positive observation with its binary-mask pixel. Explain why the mask records detection rather than fire intensity.'}
+
     path = '../../assets/real-examples/'+events[0]['id']+'/'+view+'.png'
     return f'''<div class="visual-lab" data-real-lab data-initial-view="{view}">
 <p class="eyebrow">Explore real observations · no model runs in the browser</p>
-<h3>Look, make a prediction, then check it.</h3>
-<div class="lab-controls js-only"><label for="{ident}-event">Dataset record<select id="{ident}-event" data-lab-event>{options}</select></label><label for="{ident}-view">View<select id="{ident}-view" data-lab-view>{choices}</select></label><label for="{ident}-zoom">Magnification<input id="{ident}-zoom" data-lab-zoom type="range" min="1" max="4" step="0.5" value="1"></label></div>
+<h3>Your observation task</h3><p class="guided-observation">{instructions[view]}</p>
+
 <p data-lab-prompt class="lab-question">{prompt}</p>
 <div class="lab-viewport" tabindex="0" role="region" aria-label="Real observation figure; scroll when magnified"><img data-lab-image src="{path}" alt="{VIEWS[view][0]} for {events[0]['id']}, input 2021-02-16 and target 2021-02-17" loading="lazy"></div>
 <p data-lab-caption class="source">{events[0]['id']} · input 2021-02-16 → target 2021-02-17 · {VIEWS[view][0]}. These dataset records may overlap; they are not independent fire cases.</p>
 <details data-lab-answer><summary>Check my interpretation</summary><p data-lab-explanation>{answer}</p></details>
-<p class="note">Mask panels: orange means detected fire, pale means encoded background, and gray means deliberately hidden input. Error panels use their own hit/false-alarm/miss legend. Feature panels show raw stored values with independent 2nd–98th percentile color limits, not natural-color photos. Zoom changes display size only. No probability values are inferred from PNG colors; exact metric counts are unavailable in this partial export.</p>
+<details class="lab-explore" id="{ident}-explore"><summary>After this task: explore other views</summary><p>Optional exploration. Return to the task view whenever you want to continue the lesson.</p><div class="lab-controls js-only"><label for="{ident}-event">Dataset record<select id="{ident}-event" data-lab-event>{options}</select></label><label for="{ident}-view">View<select id="{ident}-view" data-lab-view>{choices}</select></label><label for="{ident}-zoom">Magnification<input id="{ident}-zoom" data-lab-zoom type="range" min="1" max="4" step="0.5" value="1"></label></div><button type="button" class="secondary js-only" data-lab-reset>Return to the task view</button></details>
+<details><summary>Read the figure legends and limits</summary><p class="note">Mask panels: orange means detected fire, pale means encoded background, and gray means deliberately hidden input. Error panels use their own hit/false-alarm/miss legend. Feature panels show raw stored values with independent 2nd–98th percentile color limits, not natural-color photos. Zoom changes display size only. No probability values are inferred from PNG colors; exact metric counts are unavailable in this partial export.</p></details>
 </div>'''
 
 

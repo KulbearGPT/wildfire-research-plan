@@ -119,23 +119,37 @@ array-level metadata. `recover-reviewed-export.py` preserves this exceptional
 provenance; do not use it to invent metadata for a new run. See the implementation
 record for the bounds and actual checks.
 
-## Linear lessons and interactive examples
+## Task-led lessons and interactive examples
 
-`course_flow.py` groups exposed lesson reading links into a per-step disclosure;
-links already inside disclosures remain there. It preserves instructional prose
-and original targets. Lesson and course contents are collapsed by default during
-a lesson, and experiment names are text rather than automatic navigation links.
+Each maintained lesson section declares `data-task` and `data-title`. The lesson
+builder generates `assets/course-map.js` from these declarations, so navigation,
+resume validation and reference return labels share the same task IDs. Preserve
+old ERM `step1`–`step7` anchors; optional practical tasks use `step5-*` IDs.
+Browser study skips the practical tasks; explicit practical deep links select the
+practical route. Review reminders never certify execution.
 
-`assets/course-route.js` adds a validated `via=lesson.stepN` query to supporting
-HTML links. Every supporting page provides an exact return route and propagates
-it into deeper reading. It uses no storage and preserves destination fragments.
-Opening another main lesson intentionally establishes that lesson as the new
-origin. With JavaScript disabled, use browser Back; all content remains readable.
-Images, raw documents and external sources open separately so the course remains.
+`course_flow.py` keeps optional explanations and full-reference links beside the
+paragraph that needs them. Its short reading notes are high-level teaching copy,
+not replacements for the authoritative execution records. Supplementary chapter
+footers prioritize returning to the originating lesson task, inherited through
+validated `via` query parameters. Continued reading is secondary.
 
-`course_visuals.py` emits real-export explorers, a schedule comparison design
-exercise and a specialist route/cost display. `assets/visual-lab.js` enhances
-them in place; static initial views and explanations remain readable without JS.
-The explorers reuse existing PNGs without claiming new inference or recoverable
-pixel values. Design feedback checks only the named choices, not full provenance.
-Costs count continuation updates, not GPU-hours or a full confirmation campaign.
+`learning.js` resolves explicit anchors or saved positions before writing any
+progress. Ordinary directory links resume; the separate restart action clears
+only that page’s activities and review reminder. `course-state.js` validates and
+restores choice, slider, prediction and disclosure state, then replays normal UI
+handlers to reconstruct feedback. Storage failure leaves navigation functional.
+Printing must not save the temporary all-expanded state.
+
+`course_visuals.py` supplies fixed observation tasks on real exported panels.
+Additional records, views and zoom are optional exploration with a task-view
+reset. `visual-lab.js` handles rendering and the comparison/routing exercises.
+No probability values or exact pixel counts are inferred from PNG colors.
+
+For behavioral checks, export actual generated markup and scripts with
+`python scripts/course-test-fixtures.py`. Load the resulting JSON and call
+`runCourseChecks(fixtures)` from `scripts/check-course-interactions.js` in a
+JavaScript engine. With Node available, run `python scripts/course-test-fixtures.py | node scripts/check-course-interactions.js`. The dependency-free harness checks navigation, persisted
+activities, ERM routes, reference returns, invalid state and printing. Its DOM
+and URL objects are stand-ins: this does not replace rendered desktop/mobile,
+keyboard or browser-history testing.

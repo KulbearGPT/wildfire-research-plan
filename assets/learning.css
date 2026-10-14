@@ -218,3 +218,21 @@ html.enhanced .lab-controls.js-only{display:flex}
 
 html.with-course-return{scroll-padding-top:180px}
 @media(max-width:720px){html.with-course-return{scroll-padding-top:130px}}
+
+/* One current task, one named next action. */
+body[data-page="home"] .sidebar{display:none}
+body[data-page="home"] .layout{display:block;max-width:1120px}
+.task-purpose{padding:12px 16px;background:var(--soft);border-left:4px solid var(--teal);font-size:16px}
+html.enhanced .task-location{display:block;position:sticky;top:61px;z-index:4;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:8px;font-size:13px;box-shadow:0 3px 12px #1932440d}
+.task-reading{margin:14px 0 22px;background:#f7fafc;font-size:15px}
+.task-reading ul{margin-bottom:0}
+.study-route{background:#f8fcfa}
+.study-route select{display:block;margin:10px 0}
+.guided-observation{font-size:16px;max-width:65ch}
+.lab-explore{margin:18px 0}
+html.enhanced .lab-explore:not([open]) .lab-controls{display:none}
+.reference-pager [data-reference-next]{display:block;font-size:13px}
+.with-course-return .task-location{position:static!important}
+html{scroll-padding-top:155px}
+@media(max-width:720px){html.enhanced .task-location{top:0;font-size:12px}html{scroll-padding-top:115px}.step-panel{padding:22px}.pager .button{max-width:100%}}
+@media print{.task-location,.support-return,.study-route,.lab-explore button{display:none!important}}

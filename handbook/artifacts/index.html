@@ -2,13 +2,13 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Artifacts for the Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17)
 route · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-map.js" defer></script><script src="../../assets/course-state.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script><script src="../../assets/course-route.js" defer></script></head>
 <body data-page="guide-artifacts" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div></aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Artifacts for the Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17)
 route</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · Required files and roles</a><a href="#chapter-3">3 · Preserve source and
 comparison provenance</a><a href="#chapter-4">4 · Transfer or regenerate</a><a href="#chapter-5">5 · Current tooling limits and
@@ -22,7 +22,7 @@ does not establish that the historical files are currently accessible.
 Use the <a href="../method-recipes/index.html">active recipe</a> and <a
 href="../../docs/CODE_LIFECYCLE.md">code lifecycle</a> for execution and
 claim limits.</p>
-<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-2">Read next: Required files and roles →</a></span></div></section>
 <section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 5</p><h2 id="required-files-and-roles">Required files and roles</h2>
 <table>
 <thead>
@@ -93,7 +93,8 @@ data, normalization and final-step checkpoint selection. B3/B5 bootstrap
 selection follows its own <a href="../baselines/index.html">baseline
 contract</a>; a baseline's selected checkpoint need not be its final
 training step. Do not replace a fresh ERM control with frozen B3/B5.</p>
-<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-3">Read next: Preserve source and
+comparison provenance →</a></span></div></section>
 <section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 5</p><h2 id="preserve-source-and-comparison-provenance">Preserve source and
 comparison provenance</h2>
 <p>A result summary contains scenario metrics and identifiers; it is not
@@ -140,7 +141,7 @@ complete route, verify <code>component_methods.control</code> is
 <code>cosine_erm</code>. The composer assembles scenario scores; it does
 not export a fused model. Preserve failed X17 attribution cells and the
 distinction between gains over fresh ERM and frozen B3/B5.</p>
-<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-4">Read next: Transfer or regenerate →</a></span></div></section>
 <section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 5</p><h2 id="transfer-or-regenerate">Transfer or regenerate</h2>
 <ol type="1">
 <li>Locate the source files and make an inventory before copying. A
@@ -168,7 +169,8 @@ within the agreed budget. Regenerated artifacts have new checksums and
 provenance; they do not acquire the historical identities or establish
 the old measured results automatically.</li>
 </ol>
-<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="#chapter-5">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-5">Read next: Current tooling limits and
+archive →</a></span></div></section>
 <section class="step-panel" id="chapter-5"><p class="step-kicker">Reference · 5 / 5</p><h2 id="current-tooling-limits-and-archive">Current tooling limits and
 archive</h2>
 <p><code>reproductions.artifact_bundle</code> supports only the
@@ -183,5 +185,5 @@ relocation rules are preserved in <a
 href="../../docs/archive/teacher-artifacts.md">archived teacher artifact
 transfer</a>. They are useful for deliberate recovery of those campaigns
 and are not part of the active route's prerequisites.</p>
-<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/artifacts.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
+<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="../../index.html#course">Back to the course →</a></span></div></section></div><p class="support-return"><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/artifacts.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

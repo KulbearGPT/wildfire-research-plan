@@ -2,13 +2,13 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17): active method
 recipe · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-map.js" defer></script><script src="../../assets/course-state.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script><script src="../../assets/course-route.js" defer></script></head>
 <body data-page="guide-method-recipes" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html" aria-current="page">08 &nbsp; When specialization helps</a></li></ol>
+<div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html" aria-current="page">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../student-start/index.html">Practical readiness</a><br><a href="../student-real-data/index.html">Real-data examples</a><br><a href="../student-report/index.html">Output → report</a><br><a href="../student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div></aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Cosine-schedule continuation (X22) + Fixed-severity block specialists (X17): active method
 recipe</h1><p class="lead">Read one section at a time. Keep the exact settings and record the artifacts for your chosen protocol.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#chapter-1">1 · Before you begin</a><a href="#chapter-2">2 · 1. Check the intended command</a><a href="#chapter-3">3 · 2. Train one matched set</a><a href="#chapter-4">4 · 3. Evaluate the same
 checkpoints</a><a href="#chapter-5">5 · 4. Compose and interpret</a></nav></details>
@@ -26,7 +26,7 @@ committed checkout and a trusted <code>WILDFIRE_SITE_ENV</code>. These
 examples are submission instructions, not evidence of new runs or
 authorization for a sweep. Choose the history, seed and run set within
 the agreed compute budget.</p>
-<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#chapter-2">Next section →</a></div></section>
+<div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-2">Read next: 1. Check the intended command →</a></span></div></section>
 <section class="step-panel" id="chapter-2"><p class="step-kicker">Reference · 2 / 5</p><h2 id="1-check-the-intended-command">1. Check the intended command</h2>
 <p>The narrow <code>mainline</code> entrypoint accepts only canonical
 T1/T5, <code>control</code>, <code>cosine_erm</code>, and
@@ -50,7 +50,7 @@ path, <code>--smoke</code> checks one training step and save/reload; it
 retains batch 64 and does not reproduce scientific scores. Use a
 separate smoke directory. Do not replace a formal run with its
 checkpoint.</p>
-<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" href="#chapter-3">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-1">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-3">Read next: 2. Train one matched set →</a></span></div></section>
 <section class="step-panel" id="chapter-3"><p class="step-kicker">Reference · 3 / 5</p><h2 id="2-train-one-matched-set">2. Train one matched set</h2>
 <p>Set a new group name for every attempt. These commands show the five
 distinct roles; submit only the roles needed for the approved
@@ -87,7 +87,8 @@ B3/B5 are separate references, not fresh controls.</p>
 dependent work. Outputs must be new; do not restart into an old result
 directory. Log the source commit and job ID printed by the
 submitter.</p>
-<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" href="#chapter-4">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-2">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-4">Read next: 3. Evaluate the same
+checkpoints →</a></span></div></section>
 <section class="step-panel" id="chapter-4"><p class="step-kicker">Reference · 4 / 5</p><h2 id="3-evaluate-the-same-checkpoints">3. Evaluate the same
 checkpoints</h2>
 <p>Training validates on 2021. To reproduce historical 2022/2023
@@ -107,7 +108,7 @@ recorded history, method, seed or block fraction differs from the
 evaluation request. Do not relabel a different expert or seed by
 changing command-line arguments. This guard applies to new evaluations;
 old summary files still need their provenance checked.</p>
-<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" href="#chapter-5">Next section →</a></div></section>
+<div class="reference-pager"><a href="#chapter-3">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#chapter-5">Read next: 4. Compose and interpret →</a></span></div></section>
 <section class="step-panel" id="chapter-5"><p class="step-kicker">Reference · 5 / 5</p><h2 id="4-compose-and-interpret">4. Compose and interpret</h2>
 <p>After matching 2021 summaries exist, these CPU Slurm jobs produce the
 system report and the necessary attribution comparison:</p>
@@ -149,5 +150,5 @@ system improves over ERM. See <a
 href="../../docs/CODE_LIFECYCLE.md">scope and evidence limits</a>.
 Current selection does not promote X17 to an independently confirmed
 mechanism or reactivate any archive.</p>
-<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/method-recipes.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
+<div class="reference-pager"><a href="#chapter-4">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="../../index.html#course">Back to the course →</a></span></div></section></div><p class="support-return"><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/docs/research/method-recipes.md">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>

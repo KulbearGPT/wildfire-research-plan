@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Research foundations and related work · Wildfire Lab</title><link rel="stylesheet" href="../../assets/learning.css">
-<script src="../../assets/course-route.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script></head>
+<script src="../../assets/course-map.js" defer></script><script src="../../assets/course-state.js" defer></script><script src="../../assets/visual-lab.js" defer></script><script src="../../assets/learning.js" defer></script><script src="../../assets/lesson-demos.js" defer></script><script src="../../assets/course-route.js" defer></script></head>
 <body data-page="reference-related-work" data-root="../../"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="../../index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="../../index.html#course">Course directory</a></nav></header>
-<div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html" aria-current="page">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
+<div class="layout"><aside class="sidebar"><details data-directory><summary>The learning path</summary><ol class="directory"><li><a href="../../lessons/forecast/index.html" aria-current="page">01 &nbsp; What are we predicting?</a></li><li><a href="../../lessons/prediction/index.html">02 &nbsp; From channels to a fire map</a></li><li><a href="../../lessons/evaluation/index.html">03 &nbsp; Judge a prediction</a></li><li><a href="../../lessons/fold2/index.html">04 &nbsp; Official Fold 2</a></li><li><a href="../../lessons/missingness/index.html">05 &nbsp; Missing observations</a></li><li><a href="../../lessons/erm/index.html">06 &nbsp; The ERM control</a></li><li><a href="../../lessons/schedule/index.html">07 &nbsp; Does the schedule help?</a></li><li><a href="../../lessons/specialists/index.html">08 &nbsp; When specialization helps</a></li></ol>
 <p class="small"><a href="../../handbook/student-start/index.html">Practical readiness</a><br><a href="../../handbook/student-real-data/index.html">Real-data examples</a><br><a href="../../handbook/student-report/index.html">Output → report</a><br><a href="../../handbook/student-help/index.html">I am stuck</a><br><a href="../../experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
-</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Reset this page’s progress</button></div></aside>
+</details><div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div></aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="../../index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside><header class="lesson-header reference-intro"><p class="eyebrow">Practical handbook &amp; reference library</p><h1>Research foundations and related work</h1><p class="lead">Original figures and explanations. Literature retains its 18 August 2026 review scope; this redesign is not a new literature survey.</p><p>Use the contents to jump to the section you need. Follow the linked lesson for the learning sequence.</p><button type="button" class="secondary js-only" id="print-lesson">Print the complete reference</button></header><details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections"><a href="#overview">1 · Why this chapter exists</a><a href="#drivers">2 · From a moving fire front to raster features</a><a href="#physical-models">3 · Classical fire-behavior models</a><a href="#observations">4 · Satellite observations are not ground truth</a><a href="#contract">5 · The forecast contract comes before the model</a><a href="#datasets">6 · Dataset lineage: inspect the target, not just the name</a><a href="#challenges">7 · Sparse labels, noisy observations, and heterogeneous events</a><a href="#baselines">8 · A credible method starts from matched baselines</a><a href="#missingness">9 · Missingness is not just a random mask</a><a href="#closest-work">10 · Direct wildfire comparisons</a><a href="#adjacent-work">11 · Incomplete multimodal learning and asynchronous fusion</a><a href="#gap">12 · Research gap matrix</a><a href="#roadmap">13 · Turn related work into an implementation checklist</a><a href="#summary">14 · Related-work-driven research positioning</a><a href="#references">15 · References used in this courseware</a></nav></details>
 <noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>
 <div class="reference-body"><section class="step-panel" id="overview"><p class="step-kicker">Reference · 1 / 15</p>
@@ -42,7 +42,7 @@
           <img src="../../related-work/assets/paper-ts-satfire-figure1-original.png" alt="TS-SatFire dataset inputs and its active-fire, burned-area, and progression tasks">
           <figcaption>TS-SatFire dataset components and three task definitions. Full-resolution Figure 1 supplied by the journal for <a href="https://www.nature.com/articles/s41597-025-06271-3" target="_blank" rel="noopener">Zhao, Gerard, and Ban (2025)</a>.</figcaption>
         </figure>
-      <div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" href="#drivers">Next section →</a></div></section>
+      <div class="reference-pager"><a href="../../index.html#handbook">← Handbook</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#drivers">Read next: From a moving fire front to raster features →</a></span></div></section>
 <section class="step-panel" id="drivers"><p class="step-kicker">Reference · 2 / 15</p>
         <div class="section-kicker">02 · Physical foundations</div>
         <h2>From a moving fire front to raster features</h2>
@@ -62,7 +62,7 @@
         </div>
 
         <div class="callout"><strong>Core interpretation:</strong> a data-driven model learns statistical relationships among proxy variables. It is not learning the complete set of fire-behavior equations.</div>
-      <div class="reference-pager"><a href="#overview">← Previous section</a><a class="button" href="#physical-models">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#overview">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#physical-models">Read next: Classical fire-behavior models →</a></span></div></section>
 <section class="step-panel" id="physical-models"><p class="step-kicker">Reference · 3 / 15</p>
         <div class="section-kicker">03 · Mechanistic background</div>
         <h2>Classical fire-behavior models</h2>
@@ -87,7 +87,7 @@
         </div>
 
         <div class="callout blue"><strong>Use in this project:</strong> interpret variables and failure cases, and motivate rule-based or physics-informed baselines. Do not present these simulators as direct substitutes for the main WSTS/WSTS+ prediction framework.</div>
-      <div class="reference-pager"><a href="#drivers">← Previous section</a><a class="button" href="#observations">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#drivers">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#observations">Read next: Satellite observations are not ground truth →</a></span></div></section>
 <section class="step-panel" id="observations"><p class="step-kicker">Reference · 4 / 15</p>
         <div class="section-kicker">04 · Remote-sensing foundations</div>
         <h2>Satellite observations are not ground truth</h2>
@@ -112,7 +112,7 @@
         </div>
 
         <div class="callout warning"><strong>Reading requirement:</strong> the student should be able to distinguish an active-fire proxy from a burned-area label before comparing any two papers.</div>
-      <div class="reference-pager"><a href="#physical-models">← Previous section</a><a class="button" href="#contract">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#physical-models">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#contract">Read next: The forecast contract comes before the model →</a></span></div></section>
 <section class="step-panel" id="contract"><p class="step-kicker">Reference · 5 / 15</p>
         <div class="section-kicker">05 · Task definition</div>
         <h2>The forecast contract comes before the model</h2>
@@ -136,7 +136,7 @@
         </div>
 
         <div class="callout accent"><strong>Teaching point:</strong> if the contract is not fixed first, later numerical comparisons have no stable meaning.</div>
-      <div class="reference-pager"><a href="#observations">← Previous section</a><a class="button" href="#datasets">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#observations">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#datasets">Read next: Dataset lineage: inspect the target, not just the name →</a></span></div></section>
 <section class="step-panel" id="datasets"><p class="step-kicker">Reference · 6 / 15</p>
         <div class="section-kicker">06 · Public benchmarks</div>
         <h2>Dataset lineage: inspect the target, not just the name</h2>
@@ -175,7 +175,7 @@
         </div>
 
         <div class="positioning">Current project line: use the audited 999-event WSTS+ tree for controlled missingness. Observation/availability timestamps, QA, coverage and target validity are incomplete. The retained VIIRS mini-screen is diagnostic evidence, not a natural-missingness benchmark. TS-SatFire is related-work context, not a completed project evaluation.</div>
-      <div class="reference-pager"><a href="#contract">← Previous section</a><a class="button" href="#challenges">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#contract">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#challenges">Read next: Sparse labels, noisy observations, and heterogeneous events →</a></span></div></section>
 <section class="step-panel" id="challenges"><p class="step-kicker">Reference · 7 / 15</p>
         <div class="section-kicker">07 · Benchmark behaviour</div>
         <h2>Sparse labels, noisy observations, and heterogeneous events</h2>
@@ -200,7 +200,7 @@
         </ul>
 
         <div class="callout"><strong>Evaluation consequence:</strong> use average precision as the primary metric, report event-level aggregation and uncertainty, and show cross-year results rather than relying on one pooled score.</div>
-      <div class="reference-pager"><a href="#datasets">← Previous section</a><a class="button" href="#baselines">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#datasets">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#baselines">Read next: A credible method starts from matched baselines →</a></span></div></section>
 <section class="step-panel" id="baselines"><p class="step-kicker">Reference · 8 / 15</p>
         <div class="section-kicker">08 · Method lineage</div>
         <h2>A credible method starts from matched baselines</h2>
@@ -219,7 +219,7 @@
           <article class="card accent"><h3>Partial observability</h3><p><strong>Reconstruction → forecasting</strong></p><p>The closest baseline family for corrupted fire observations.</p></article>
           <article class="card primary"><h3>Project control</h3><p><strong>Matched training and routing controls</strong></p><p>Match initialization, seed, optimizer budget and evaluation population. Distillation needs a student control; extra modules need their nearest attribution control.</p></article>
         </div>
-      <div class="reference-pager"><a href="#challenges">← Previous section</a><a class="button" href="#missingness">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#challenges">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#missingness">Read next: Missingness is not just a random mask →</a></span></div></section>
 <section class="step-panel" id="missingness"><p class="step-kicker">Reference · 9 / 15</p>
         <div class="section-kicker">09 · Observation mechanisms</div>
         <h2>Missingness is not just a random mask</h2>
@@ -238,7 +238,7 @@
         </div>
 
         <div class="callout warning"><strong>Current protocol:</strong> <span class="experiment-name">Complete-input scenario <small>(M00)</small></span> uses complete input, <span class="experiment-name">Fire-history-missing scenario <small>(M01)</small></span> removes active-fire history, and <span class="experiment-name">Quarter-block-missing scenario <small>(M06)</small></span>/<span class="experiment-name">Half-block-missing scenario <small>(M07)</small></span> apply 25%/50% structured blocks to dynamic inputs. Primary AP averages M01/M06/M07. Observation-age and asynchrony remain background concepts; they are not established current contributions.</div>
-      <div class="reference-pager"><a href="#baselines">← Previous section</a><a class="button" href="#closest-work">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#baselines">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#closest-work">Read next: Direct wildfire comparisons →</a></span></div></section>
 <section class="step-panel" id="closest-work"><p class="step-kicker">Reference · 10 / 15</p>
         <div class="section-kicker">10 · Direct comparison</div>
         <h2>Direct wildfire comparisons</h2>
@@ -262,7 +262,7 @@
         <div class="callout blue"><strong>Second direct prior:</strong> <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">FireEx</a> already uses fuel, weather, and generalist experts for modality-aware next-day wildfire spread prediction. This limits novelty claims about modality awareness. Our current claims must instead follow the measured controlled-missingness comparisons and their nearest controls; QA and observation-age fusion are not assumed results.</div>
 
         <p class="small">Direct sources: Yang et al. 2026, <a href="https://arxiv.org/abs/2603.09042" target="_blank" rel="noopener">Robust Wildfire Forecasting under Partial Observability</a> <span class="badge preprint">preprint</span>; Andrianarivony and Akhloufi 2026, <a href="https://doi.org/10.3390/rs18091416" target="_blank" rel="noopener">FireEx</a> <span class="badge peer">peer reviewed</span>.</p>
-      <div class="reference-pager"><a href="#missingness">← Previous section</a><a class="button" href="#adjacent-work">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#missingness">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#adjacent-work">Read next: Incomplete multimodal learning and asynchronous fusion →</a></span></div></section>
 <section class="step-panel" id="adjacent-work"><p class="step-kicker">Reference · 11 / 15</p>
         <div class="section-kicker">11 · Related techniques</div>
         <h2>Incomplete multimodal learning and asynchronous fusion</h2>
@@ -286,7 +286,7 @@
         </div>
 
         <div class="callout blue"><strong>Writing rule:</strong> place these papers under “related techniques,” not “direct wildfire baselines.” Their tasks and labels differ from next-day wildfire spread forecasting.</div>
-      <div class="reference-pager"><a href="#closest-work">← Previous section</a><a class="button" href="#gap">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#closest-work">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#gap">Read next: Research gap matrix →</a></span></div></section>
 <section class="step-panel" id="gap"><p class="step-kicker">Reference · 12 / 15</p>
         <div class="section-kicker">12 · Novelty boundary</div>
         <h2>Research gap matrix</h2>
@@ -306,7 +306,7 @@
         </div>
 
         <div class="positioning">Current positioning: study reliable next-calendar-day active-fire proxy forecasting under controlled missingness, using audited data, matched controls and explicit limits on each observed signal.</div>
-      <div class="reference-pager"><a href="#adjacent-work">← Previous section</a><a class="button" href="#roadmap">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#adjacent-work">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#roadmap">Read next: Turn related work into an implementation checklist →</a></span></div></section>
 <section class="step-panel" id="roadmap"><p class="step-kicker">Reference · 13 / 15</p>
         <div class="section-kicker">13 · Student route</div>
         <h2>Turn related work into an implementation checklist</h2>
@@ -332,7 +332,7 @@
         </div>
 
         <div class="callout"><strong>Initial must-read set:</strong> Huot 2022; Gerard 2023; Lahrichi 2026; Zhao 2025; Yang 2026; Andrianarivony 2026; Tang 2026; Fallah 2026; Chen 2024; Roberts &amp; Lean 2008.</div>
-      <div class="reference-pager"><a href="#gap">← Previous section</a><a class="button" href="#summary">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#gap">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#summary">Read next: Related-work-driven research positioning →</a></span></div></section>
 <section class="step-panel" id="summary"><p class="step-kicker">Reference · 14 / 15</p>
         <div class="closing-content">
           <div class="section-kicker" style="color:#b9e8cc">14 · Summary</div>
@@ -345,7 +345,7 @@
           </div>
           <p style="margin-top:20px;color:#d7efe1"><strong>Next:</strong> <a href="../reproduction/index.html">learn baseline reproduction</a>, then follow the <a href="../../handbook/res18-baseline-slurm/index.html">official single-fold Slurm tutorial</a>.</p>
         </div>
-      <div class="reference-pager"><a href="#roadmap">← Previous section</a><a class="button" href="#references">Next section →</a></div></section>
+      <div class="reference-pager"><a href="#roadmap">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="#references">Read next: References used in this courseware →</a></span></div></section>
 <section class="step-panel" id="references"><p class="step-kicker">Reference · 15 / 15</p>
         <div class="section-kicker">15 · Primary sources</div>
         <h2>References used in this courseware</h2>
@@ -369,5 +369,5 @@
         </ol>
 
         <div class="callout warning"><strong>Before formal writing:</strong> update the publication status of preprints and recheck dataset access, licences, field definitions, and links.</div>
-      <div class="reference-pager"><a href="#summary">← Previous section</a><a class="button" href="../../index.html#course">Back to the course →</a></div></section></div><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/reference/related-work.html">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
+      <div class="reference-pager"><a href="#summary">← Previous section</a><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a><span data-reference-next><a class="button" href="../../index.html#course">Back to the course →</a></span></div></section></div><p class="support-return"><a class="button" data-course-return-link hidden href="../../index.html#course">Return to your task</a></p><footer class="footer"><details><summary>Sources and course resources</summary><a href="../../site-content/en/reference/related-work.html">Maintained source</a> · <a href="../../index.html#course">Course directory</a> · <a href="../../experiments/index.html">Experiment names</a></details>
 Browser demonstrations are teaching examples, not new model results. Run model and data work through Slurm.</footer></main></div></body></html>
