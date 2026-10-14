@@ -50,7 +50,8 @@ def lesson_readings(fragment, slug, step):
         rows = ''.join(f'<li><a data-course-reading href="{escape(url,quote=True)}">{label}</a></li>' for url,label in links)
         label = re.sub('<[^>]+>', '', links[0][1])
         notes = list(dict.fromkeys(READING_NOTES[reading_key(url)] for url,_ in links if reading_key(url) in READING_NOTES))
+        default_open = ' open data-default-open' if notes else ''
         explanation = ''.join('<p>'+escape(note)+'</p>' for note in notes)
-        return body+f'<details class="task-reading" id="reading-{step}-{serial}"><summary>Supporting detail: {label}</summary>{explanation}<p class="source">Open the full reference only if you need more detail; its return button brings you back to this task.</p><ul>{rows}</ul></details>'
+        return body+f'<details{default_open} class="task-reading" id="reading-{step}-{serial}"><summary>Supporting detail: {label}</summary>{explanation}<p class="source">Open the full reference only if you need more detail; its return button brings you back to this task.</p><ul>{rows}</ul></details>'
 
     return re.sub(r'<p\b[^>]*>.*?</p>', paragraph, fragment, flags=re.S)

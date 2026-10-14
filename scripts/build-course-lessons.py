@@ -21,7 +21,7 @@ def main():
         if not sections:
             raise ValueError(f'No steps in {path}')
         route_map[slug] = {a['id']: {'title': a['data-title'], 'task': a['data-task'], 'practical': 'data-practical' in a} for a, _, _, _ in sections}
-        nav = '<details class="lesson-contents"><summary id="section-label">Contents · choose a step</summary><nav class="step-nav" aria-label="Lesson steps">' + ''.join(
+        nav = '<details open data-default-open class="lesson-contents"><summary id="section-label">Contents · choose a step</summary><nav class="step-nav" aria-label="Lesson steps">' + ''.join(
             f'<a href="#{a["id"]}">{i} · {escape(a["data-title"])}</a>'
             for i, (a, _, _, _) in enumerate(sections, 1)) + '</nav></details>'
         content = []
@@ -60,7 +60,7 @@ def main():
                 pager += '<p class="source"><a data-study-switch href="#step6">Pause the practical and study the worked result →</a></p>'
             content.append(body[:-len('</section>')] + ending + pager + '</section>')
         pre = 'Start here with basic Python and CNN concepts.' if lesson['number'] == 1 else f'Before this lesson: <a href="../{course[lesson["number"]-2]["slug"]}/index.html">{escape(course[lesson["number"]-2]["short"])}</a>.'
-        intro = f'''<header class="lesson-header"><p class="eyebrow">Lesson {lesson['number']:02} · Learn by doing</p><h1>{escape(lesson['title'])}</h1><p class="lead">{escape(lesson['goal'])}</p><div class="meta"><span>{escape(lesson['time'])}</span><span data-task-total>{len(sections)} tasks</span><span>Queue and training time are separate</span></div><details><summary>Before you start &amp; what you will produce</summary><p>{pre}</p><p><strong>Your deliverable:</strong> {escape(lesson['deliverable'])}</p><p>Complete the task shown above the activity, then follow its named next action. Supporting explanations stay beside the task. Browser activities use teaching examples and labelled real exports.</p></details></header>'''
+        intro = f'''<header class="lesson-header"><p class="eyebrow">Lesson {lesson['number']:02} · Learn by doing</p><h1>{escape(lesson['title'])}</h1><p class="lead">{escape(lesson['goal'])}</p><div class="meta"><span>{escape(lesson['time'])}</span><span data-task-total>{len(sections)} tasks</span><span>Queue and training time are separate</span></div><details open data-default-open id="lesson-before-start"><summary>Before you start &amp; what you will produce</summary><p>{pre}</p><p><strong>Your deliverable:</strong> {escape(lesson['deliverable'])}</p><p>Complete the task shown above the activity, then follow its named next action. Supporting explanations stay beside the task. Browser activities use teaching examples and labelled real exports.</p></details></header>'''
         output = ROOT / f'lessons/{slug}/index.html'
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(migrate_links(shell(lesson['title'], '\n'.join(content), prefix='../../', page=slug, current=slug,

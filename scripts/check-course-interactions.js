@@ -125,6 +125,14 @@ function runCourseChecks(fixtures) {
     b=boot(`lessons/${slug}/index.html`);b.set(id,value,id==='route-cost'?'change':'input');
     b=boot(`lessons/${slug}/index.html`,{store:b.store});assert(b.document.getElementById(output).textContent.includes(expected),'restored computed output '+id);
   }
+  for(const slug of ['forecast','prediction','evaluation','fold2','missingness','erm','schedule','specialists']) {
+    b=boot(`lessons/${slug}/index.html`, {store:new Map([[`wildfire-interactions-${slug}-v1`,JSON.stringify({details:{'lesson-before-start':false}})]])});
+    assert(b.document.getElementById('lesson-before-start').open,'required preparation overrides old collapsed state');
+    b.document.querySelectorAll('[data-default-open]').forEach(n=>assert(n.open,'required content is expanded'));
+    assert(b.document.querySelector('[data-directory]').open,'learning directory is expanded');
+    assert(b.document.querySelector('.lesson-contents').open,'lesson contents are expanded');
+    b.document.querySelectorAll('[data-quiz], [data-repair]').forEach(n=>assert(!b.document.getElementById(n.id+'-reasoning').open,'answer remains undisclosed'));
+  }
   return {checks,passed:true,scope:'Actual generated HTML and scripts; simulated DOM and URL, not browser rendering'};
 }
 

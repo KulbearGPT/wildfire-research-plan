@@ -5,8 +5,6 @@
   const page = document.body.dataset.page || 'home';
   const prefix = document.body.dataset.root || '';
   const panels = Array.from(document.querySelectorAll('.step-panel'));
-  const directory = document.querySelector('[data-directory]');
-  if (directory && window.matchMedia('(max-width: 720px)').matches) directory.open = false;
   document.documentElement.classList.add('enhanced');
   let storageAvailable = true;
   function read(key) {

@@ -124,7 +124,7 @@
 </div>
 <p class="note">
 <strong>ERM does not mean clean inputs only.</strong> The project control already uses FireDrop and BlockDrop. X22 keeps those rules; its intended change is the learning-rate schedule.</p>
-<details>
+<details open data-default-open>
 <summary>Inspect the augmentation settings</summary>
 <p>FireDrop and BlockDrop each have probability 0.3 and can overlap. Block severity is sampled at 25% or 50%. Removing these augmentations only from ERM would make the schedule comparison unfair.</p>
 <p>B3 itself is a corrected T1 foundation trained with FireDrop and BlockDrop. It is neither clean B0 nor your official Fold 2 checkpoint.</p>
@@ -223,7 +223,7 @@ optimizer.step()</code>
 <dt>Evaluation</dt>
 <dd>Same samples and masks · all four scenarios</dd>
 </div>
-</dl><details>
+</dl><details open data-default-open>
 <summary>Coming from official Fold 2? Read this transition.</summary>
 <p>Official Fold 2 trained on 2018/2020, validated on 2019 and tested on 2021 for 10,000 updates. This project uses corrected indexing, training-only normalization and a different split. Here 2021 is explicitly validation.</p>
 <p>Keep your official results separate. B3 is not the official checkpoint. Do not paste a Fold 2 score into row A.</p>
@@ -242,7 +242,7 @@ optimizer.step()</code>
 <p>
 <a href="../../guides/docs/research/reproduce.html">Set up the project</a> · <a href="../../guides/docs/research/data-preparation.html">Prepare data</a> · <a href="../../guides/docs/research/baselines.html">Prepare B3</a>
 </p>
-</article><details><summary>What belongs in the asset sheet?</summary><p>Record source and environment, corrected data and training-only statistics identities, the actual B3 checkpoint and checksum, provenance and selection rule, plus approved resource and output limits. Missing fields mean execution is not ready.</p><a href="../../handbook/student-bridge/index.html#handover">Inspect the complete handover checklist</a></details><p class="done"><strong>Done when:</strong> each required asset is identified and verified. Otherwise continue browser study with missing fields recorded.</p></section>
+</article><details open data-default-open><summary>What belongs in the asset sheet?</summary><p>Record source and environment, corrected data and training-only statistics identities, the actual B3 checkpoint and checksum, provenance and selection rule, plus approved resource and output limits. Missing fields mean execution is not ready.</p><a href="../../handbook/student-bridge/index.html#handover">Inspect the complete handover checklist</a></details><p class="done"><strong>Done when:</strong> each required asset is identified and verified. Otherwise continue browser study with missing fields recorded.</p></section>
 <section class="step-panel" id="step5-row-a" data-title="Establish frozen row A" data-task="Record four matched evaluation scores for frozen B3." data-practical aria-labelledby="title-step5-row-a"><h2 id="title-step5-row-a">Establish frozen row A</h2><article class="task">
 <h3>2 · Establish row A before continuing</h3>
 <p>
@@ -253,7 +253,7 @@ optimizer.step()</code>
 <a href="../../guides/docs/research/baselines.html">Foundation and evaluation reference</a> · <a href="../../guides/docs/research/evaluation-population.html">Check the evaluation population</a>
 </p>
 </article><p>Use 2021 validation and M00, M01, M06 and M07. Record metric paths, sample identities and masks. This is evaluation only: weights and normalization state remain fixed.</p><p class="done"><strong>Done when:</strong> row A has four AP values with traceable evaluation records; a clean-only training validation score cannot replace them.</p></section>
-<section class="step-panel" id="step5-smoke" data-title="Check the execution path" data-task="Establish that a separate smoke run can execute the control recipe." data-practical aria-labelledby="title-step5-smoke"><h2 id="title-step5-smoke">Check the execution path</h2><p>Preview the control command, then smoke-check an unfamiliar execution path through Slurm in a separate output directory. A short smoke establishes execution, not a score.</p><details>
+<section class="step-panel" id="step5-smoke" data-title="Check the execution path" data-task="Establish that a separate smoke run can execute the control recipe." data-practical aria-labelledby="title-step5-smoke"><h2 id="title-step5-smoke">Check the execution path</h2><p>Preview the control command, then smoke-check an unfamiliar execution path through Slurm in a separate output directory. A short smoke establishes execution, not a score.</p><details open data-default-open>
 <summary>Preview the control command without submitting a job</summary>
 <pre>
 <code>python3 -m reproductions.cross_history.mainline \
@@ -266,7 +266,7 @@ optimizer.step()</code>
 <a href="../../guides/docs/research/method-recipes.html#1-check-the-intended-command">Command preview and smoke rules</a> · <a href="../../guides/docs/research/method-recipes.html#2-train-one-matched-set">Submission recipe: select control only</a>
 </p>
 </details><p>Keep the source revision, configuration and loader/update logs. Fix execution failures before a formal run; do not reuse a smoke checkpoint as the formal starting weights.</p><p class="done"><strong>Done when:</strong> the intended control path executes and its evidence is saved.</p></section>
-<section class="step-panel" id="step5-run" data-title="Run the ERM control" data-task="Submit and monitor one formal continuation from B3." data-practical aria-labelledby="title-step5-run"><h2 id="title-step5-run">Run the ERM control</h2><p>Start independently from the verified B3 with a fresh optimizer, T1, seed 0, constant learning rate, batch 64 and 3,000 updates. Preserve the specified loss, augmentation and final-step selection.</p><p>Use the <code>control</code> role only. The shared recipe also lists cosine and specialists; those are not part of this A/B exercise.</p><details><summary>Open the submission instructions when ready</summary><p>The submitter snapshots committed HEAD. Give this formal run a new output directory and keep its configuration and job ID.</p><a href="../../handbook/method-recipes/index.html#2-train-one-matched-set">Submission recipe — select control only</a></details><p>PENDING means queued: monitor the existing job instead of submitting a duplicate. While waiting, you may study the worked result; that does not complete this practical.</p><p class="done"><strong>Done when:</strong> the identified run reaches a terminal state. The next task verifies whether it actually completed.</p></section>
+<section class="step-panel" id="step5-run" data-title="Run the ERM control" data-task="Submit and monitor one formal continuation from B3." data-practical aria-labelledby="title-step5-run"><h2 id="title-step5-run">Run the ERM control</h2><p>Start independently from the verified B3 with a fresh optimizer, T1, seed 0, constant learning rate, batch 64 and 3,000 updates. Preserve the specified loss, augmentation and final-step selection.</p><p>Use the <code>control</code> role only. The shared recipe also lists cosine and specialists; those are not part of this A/B exercise.</p><details open data-default-open><summary>Open the submission instructions when ready</summary><p>The submitter snapshots committed HEAD. Give this formal run a new output directory and keep its configuration and job ID.</p><a href="../../handbook/method-recipes/index.html#2-train-one-matched-set">Submission recipe — select control only</a></details><p>PENDING means queued: monitor the existing job instead of submitting a duplicate. While waiting, you may study the worked result; that does not complete this practical.</p><p class="done"><strong>Done when:</strong> the identified run reaches a terminal state. The next task verifies whether it actually completed.</p></section>
 <section class="step-panel" id="step5-verify" data-title="Verify row B" data-task="Establish completion and record four matched ERM evaluation scores." data-practical aria-labelledby="title-step5-verify"><h2 id="title-step5-verify">Verify row B</h2><article class="task">
 <h3>4 · Verify completion and establish row B</h3>
 <p>

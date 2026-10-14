@@ -54,7 +54,10 @@
     // An explicit practical deep link takes priority over a saved study mode.
     replay(restored.map(([n,v]) => [n, n.id === 'erm-mode' ? n.value : v]));
     if (saved.prediction === 'yes' || saved.prediction === 'no') document.querySelector(`[data-prediction="${saved.prediction}"]`)?.click();
-    details.forEach(n => { if (typeof saved.details?.[detailKey(n)] === 'boolean') n.open = saved.details[detailKey(n)]; });
+    details.forEach(n => {
+      if (n.hasAttribute('data-default-open')) n.open = true;
+      else if (typeof saved.details?.[detailKey(n)] === 'boolean') n.open = saved.details[detailKey(n)];
+    });
     // A direct anchor must stay visible even if this disclosure was saved closed.
     try {
       let target = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));

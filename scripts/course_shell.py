@@ -56,7 +56,7 @@ def shell(title, content, *, prefix, page, current='', step_links='', source='',
     progress_html = '<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div>' if step_links else ''
     in_lesson = page in {item['slug'] for item in lessons()}
     task_location = '<div class="task-location js-only" data-task-location aria-live="polite"></div>' if in_lesson else ''
-    directory_open = ''
+    directory_open = ' open'
     src = f'<a href="{escape(source, quote=True)}">Maintained source</a> · ' if source else ''
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -122,7 +122,7 @@ def descriptive_title(text):
 def reference_page(title, sections, *, prefix, page, source, description, current=''):
     """Render (id, title, content) chapters in the same progressively enhanced shell."""
     title = descriptive_title(title)
-    nav = '<details class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections">' + ''.join(
+    nav = '<details open data-default-open class="reference-toc" id="TOC"><summary id="section-label">Contents · choose a section</summary><nav class="step-nav" aria-label="Reference sections">' + ''.join(
         f'<a href="#{escape(ident,quote=True)}">{i+1} · {escape(descriptive_title(label))}</a>' for i,(ident,label,_) in enumerate(sections)) + '</nav></details>'
     content = []
     for i, (ident, label, fragment) in enumerate(sections):

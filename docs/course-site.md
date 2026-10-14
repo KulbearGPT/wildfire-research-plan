@@ -139,7 +139,12 @@ progress. Ordinary directory links resume; the separate restart action clears
 only that page’s activities and review reminder. `course-state.js` validates and
 restores choice, slider, prediction and disclosure state, then replays normal UI
 handlers to reconstruct feedback. Storage failure leaves navigation functional.
-Printing must not save the temporary all-expanded state.
+Printing must not save the temporary all-expanded state. Required preparation,
+practical instructions, figure legends and task contents use `open
+data-default-open`: they begin expanded on every visit, overriding old saved
+collapsed states. Students can still collapse them while reading. Answers and
+optional exploration remain closed initially; directory navigation also starts
+expanded on mobile.
 
 `course_visuals.py` supplies fixed observation tasks on real exported panels.
 Additional records, views and zoom are optional exploration with a task-view
