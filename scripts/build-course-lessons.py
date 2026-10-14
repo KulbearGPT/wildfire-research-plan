@@ -21,9 +21,9 @@ def main():
         if not sections:
             raise ValueError(f'No steps in {path}')
         route_map[slug] = {a['id']: {'title': a['data-title'], 'task': a['data-task'], 'practical': 'data-practical' in a} for a, _, _, _ in sections}
-        nav = '<details open data-default-open class="lesson-contents"><summary id="section-label">Contents · choose a step</summary><nav class="step-nav" aria-label="Lesson steps">' + ''.join(
+        nav = '<nav class="lesson-contents" aria-label="On this page"><h2>On this page</h2><div class="step-nav">' + ''.join(
             f'<a href="#{a["id"]}">{i} · {escape(a["data-title"])}</a>'
-            for i, (a, _, _, _) in enumerate(sections, 1)) + '</nav></details>'
+            for i, (a, _, _, _) in enumerate(sections, 1)) + '</div></nav>'
         content = []
         for i, (attrs, body, _, _) in enumerate(sections):
             # Replace the static lesson figure with an in-place guided explorer.
@@ -56,11 +56,13 @@ def main():
             if slug == 'erm' and attrs['id'] == 'step5':
                 next_link = ('#step6', 'Next: Interpret the A/B result →')
             pager = f'<div class="pager"><a data-task-prev href="{prev[0]}">{escape(prev[1])}</a><a data-task-next class="button" href="{next_link[0]}">{escape(next_link[1])}</a></div>'
+            if i < len(sections) - 1:
+                pager = ''
             if 'data-practical' in attrs:
-                pager += '<p class="source"><a data-study-switch href="#step6">Pause the practical and study the worked result →</a></p>'
+                pager += '<p class="source"><a data-study-switch href="#step6">Browser study: jump to the worked result below →</a></p>'
             content.append(body[:-len('</section>')] + ending + pager + '</section>')
         pre = 'Start here with basic Python and CNN concepts.' if lesson['number'] == 1 else f'Before this lesson: <a href="../{course[lesson["number"]-2]["slug"]}/index.html">{escape(course[lesson["number"]-2]["short"])}</a>.'
-        intro = f'''<header class="lesson-header"><p class="eyebrow">Lesson {lesson['number']:02} · Learn by doing</p><h1>{escape(lesson['title'])}</h1><p class="lead">{escape(lesson['goal'])}</p><div class="meta"><span>{escape(lesson['time'])}</span><span data-task-total>{len(sections)} tasks</span><span>Queue and training time are separate</span></div><details open data-default-open id="lesson-before-start"><summary>Before you start &amp; what you will produce</summary><p>{pre}</p><p><strong>Your deliverable:</strong> {escape(lesson['deliverable'])}</p><p>Complete the task shown above the activity, then follow its named next action. Supporting explanations stay beside the task. Browser activities use teaching examples and labelled real exports.</p></details></header>'''
+        intro = f'''<header class="lesson-header"><p class="eyebrow">Lesson {lesson['number']:02} · Learn by doing</p><h1>{escape(lesson['title'])}</h1><p class="lead">{escape(lesson['goal'])}</p><div class="meta"><span>{escape(lesson['time'])}</span><span data-task-total>{len(sections)} sections on one page</span><span>Queue and training time are separate</span></div><details open data-default-open id="lesson-before-start"><summary>Before you start &amp; what you will produce</summary><p>{pre}</p><p><strong>Your deliverable:</strong> {escape(lesson['deliverable'])}</p><p>Read down the page in order. The contents links jump to a section without hiding the rest of the lesson. Supporting explanations stay beside the relevant activity. Browser activities use teaching examples and labelled real exports.</p></details></header>'''
         output = ROOT / f'lessons/{slug}/index.html'
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(migrate_links(shell(lesson['title'], '\n'.join(content), prefix='../../', page=slug, current=slug,

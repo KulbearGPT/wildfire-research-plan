@@ -223,3 +223,24 @@ reports 144 pages and 8,707 local links/assets with zero errors. Whitespace chec
 pass. No browser is installed here; desktop/mobile rendering, native history and
 keyboard traversal remain unverified. No new compute or data export was run.
 The preceding question-analysis update was committed and pushed as 2947f06.
+
+
+## Continuous reading instead of slide navigation
+
+Implemented the user's long-page request across lessons and supporting chapters.
+All sections remain visible. The lesson contents is a simple in-page anchor list;
+intermediate lesson pagers are removed, leaving only navigation to the next
+lesson at the end. ERM's five optional practical sections are labelled and always
+readable, with a shortcut to the worked result for browser study. The sidebar's
+five unrelated resource links are removed; contextual resources remain.
+
+Reading progress follows natural scrolling, with replaceState rather than an
+extra history entry for every section. Saved entry and direct anchors scroll to
+the correct section. Reference visits preserve explicit origin; visits without
+an origin can continue the last saved lesson under an honest fallback label.
+
+Validation: 332 assertions passed on actual generated HTML and scripts in the
+simulated DOM/URL harness, including all-visible navigation, scroll save/resume,
+quiz and figure state, print, reference returns and blocked storage. The site
+checker reports 144 pages and 7,907 local links/assets with zero errors. Browser
+rendering and native scrolling/history remain untested on this host.

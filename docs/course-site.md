@@ -79,8 +79,8 @@ controlled and natural missingness, execution qualification and effectiveness,
 and historical signals and independent confirmation. Preserve original commands,
 anchors, figures, and evidence dates when reorganizing reference material.
 
-JavaScript progressively selects one section, with optional per-page local
-progress and course resume. The existing ERM storage key remains compatible.
+Lessons and reference chapters remain visible as continuous articles. JavaScript
+tracks the reading section while scrolling and supports per-page resume. The existing ERM storage key remains compatible.
 Without JavaScript all content is readable; lesson/reference printing expands
 sections and disclosures and restores their prior state. Deep links open the
 containing section and disclosures. Completion checkboxes record review, not
@@ -125,17 +125,20 @@ Each maintained lesson section declares `data-task` and `data-title`. The lesson
 builder generates `assets/course-map.js` from these declarations, so navigation,
 resume validation and reference return labels share the same task IDs. Preserve
 old ERM `step1`–`step7` anchors; optional practical tasks use `step5-*` IDs.
-Browser study skips the practical tasks; explicit practical deep links select the
-practical route. Review reminders never certify execution.
+The five optional practical sections remain visible and labelled. Browser study
+can use an anchor to jump past them to the worked result. Review reminders never certify execution.
 
 `course_flow.py` keeps optional explanations and full-reference links beside the
 paragraph that needs them. Its short reading notes are high-level teaching copy,
 not replacements for the authoritative execution records. Supplementary chapter
 footers prioritize returning to the originating lesson task, inherited through
-validated `via` query parameters. Continued reading is secondary.
+validated `via` query parameters. A direct reference visit without an origin can
+offer “Continue your last lesson” from valid local progress; that fallback is
+never labelled as the exact origin. Continued reading is secondary.
 
-`learning.js` resolves explicit anchors or saved positions before writing any
-progress. Ordinary directory links resume; the separate restart action clears
+`learning.js` resolves explicit anchors or saved positions and scrolls to them
+without hiding sections. Natural scrolling saves the current section and updates
+the hash with replaceState, so it does not add a history entry per section. Ordinary directory links resume; the separate restart action clears
 only that page’s activities and review reminder. `course-state.js` validates and
 restores choice, slider, prediction and disclosure state, then replays normal UI
 handlers to reconstruct feedback. Storage failure leaves navigation functional.
@@ -144,7 +147,8 @@ practical instructions, figure legends and task contents use `open
 data-default-open`: they begin expanded on every visit, overriding old saved
 collapsed states. Students can still collapse them while reading. Answers and
 optional exploration remain closed initially; directory navigation also starts
-expanded on mobile.
+expanded on mobile. The sidebar contains only the course sequence; support
+resources are offered at their relevant lesson locations.
 
 `course_visuals.py` supplies fixed observation tasks on real exported panels.
 Additional records, views and zoom are optional exploration with a task-view

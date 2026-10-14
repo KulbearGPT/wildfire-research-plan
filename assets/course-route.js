@@ -10,12 +10,20 @@
   window.CourseRoute = {parse,returnURL};
   const page = document.body.dataset.page;
   const root = new URL(document.body.dataset.root || './',window.location.href);
-  const inherited = parse(new URL(window.location.href).searchParams.get('via'));
+  const via = new URL(window.location.href).searchParams.get('via');
+  let inherited = parse(via);
+  const explicitOrigin = !!inherited;
+  if (!map[page] && via === null) {
+    try {
+      const last = JSON.parse(window.localStorage.getItem('wildfire-course-last-v1') || '{}');
+      inherited = parse(`${last.page}.${last.step}`);
+    } catch (_) { /* A direct visitor without saved progress can use the directory. */ }
+  }
   if (!map[page] && inherited) {
     const task = map[inherited.slug][inherited.step];
     document.querySelectorAll('[data-course-return-link]').forEach(link => {
       link.href = returnURL(root,inherited);
-      link.textContent = `Return to your task: ${task.title} →`;
+      link.textContent = `${explicitOrigin ? "Return to your lesson" : "Continue your last lesson"}: ${task.title} →`;
       link.hidden = false;
     });
     const banner = document.querySelector('[data-course-return]');
@@ -30,7 +38,7 @@
     let panel;
     try { panel = document.getElementById(decodeURIComponent(window.location.hash.slice(1)))?.closest('.step-panel'); } catch (_) {}
     if (!panel) panel = Array.from(document.querySelectorAll('.step-panel')).find(p => !p.hidden);
-    const route = map[page] ? parse(`${page}.${panel?.id || 'step1'}`) : inherited;
+    const route = map[page] ? parse(`${page}.${window.CourseReading?.current() || panel?.id || 'step1'}`) : inherited;
     document.querySelectorAll('a[href]').forEach(link => {
       const raw = link.getAttribute('href');
       if (!raw || raw.startsWith('#') || link.hasAttribute('download') || link.hasAttribute('data-course-return-link')) return;
@@ -48,6 +56,8 @@
     });
   }
   refresh();
+  document.addEventListener('click',refresh);
+  document.addEventListener('contextmenu',refresh);
   window.addEventListener('hashchange',refresh);
   window.addEventListener('pageshow',refresh);
 })();

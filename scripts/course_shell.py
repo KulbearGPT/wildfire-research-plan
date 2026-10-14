@@ -55,18 +55,19 @@ def directory(prefix, current=''):
 def shell(title, content, *, prefix, page, current='', step_links='', source='', intro=''):
     progress_html = '<div class="js-only"><p class="progress-note" id="progress-status" aria-live="polite"></p><button type="button" class="reset" id="reset-progress">Restart this lesson</button></div>' if step_links else ''
     in_lesson = page in {item['slug'] for item in lessons()}
-    task_location = '<div class="task-location js-only" data-task-location aria-live="polite"></div>' if in_lesson else ''
+    task_location = ''
+    body_class = 'lesson-page' if in_lesson else 'reference-page'
     directory_open = ' open'
     src = f'<a href="{escape(source, quote=True)}">Maintained source</a> · ' if source else ''
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{escape(title)} · Wildfire Lab</title><link rel="stylesheet" href="{prefix}assets/learning.css">
 <script src="{prefix}assets/course-map.js" defer></script><script src="{prefix}assets/course-state.js" defer></script><script src="{prefix}assets/visual-lab.js" defer></script><script src="{prefix}assets/learning.js" defer></script><script src="{prefix}assets/lesson-demos.js" defer></script><script src="{prefix}assets/course-route.js" defer></script></head>
-<body data-page="{page}" data-root="{prefix}"><a class="skip" href="#main">Skip to content</a>
+<body class="{body_class}" data-page="{page}" data-root="{prefix}"><a class="skip" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="{prefix}index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="{prefix}index.html#course">Course directory</a></nav></header>
 <div class="layout"><aside class="sidebar"><details{directory_open} data-directory><summary>The learning path</summary>{directory(prefix,current)}
-<p class="small"><a href="{prefix}handbook/student-start/index.html">Practical readiness</a><br><a href="{prefix}handbook/student-real-data/index.html">Real-data examples</a><br><a href="{prefix}handbook/student-report/index.html">Output → report</a><br><a href="{prefix}handbook/student-help/index.html">I am stuck</a><br><a href="{prefix}experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+
 </details>{progress_html}</aside>
 <main class="content" id="main"><aside class="course-return" data-course-return hidden><a data-course-return-link href="{prefix}index.html#course">Return to your lesson</a><span>Supporting material · your lesson is waiting</span></aside>{intro}{task_location}{step_links}
 <noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript. Use your browser’s Back button after reading a resource; the lesson-return button requires JavaScript.</p></noscript>

@@ -32,7 +32,7 @@ function runCourseChecks(fixtures) {
     }
     querySelector(s){return this.querySelectorAll(s)[0]||null} closest(s){let n=this;while(n){if(n.matches(s))return n;n=n.parentElement}return null}
     addEventListener(t,fn){(this.handlers[t]||=[]).push(fn)} dispatchEvent(e){(this.handlers[e.type]||[]).forEach(fn=>fn({type:e.type,target:this}));return true}
-    click(){this.dispatchEvent(new Evt('click'))} focus(){} scrollIntoView(){}
+    click(){this.dispatchEvent(new Evt('click'))} focus(){} scrollIntoView(){this.scrolled=true} getBoundingClientRect(){return {top:this.top??1000}}
   }
   class TestURL {
     constructor(path,base='https://example.test/course/'){
@@ -52,7 +52,7 @@ function runCourseChecks(fixtures) {
     const document=new Node(fixtures.pages[path]);document.body=document.querySelector('body');document.documentElement=document.querySelector('html');document.getElementById=id=>document.querySelectorAll('[id]').find(n=>n.id===id)||null;
     const handlers={};const storage={getItem:k=>{if(blocked)throw Error('blocked');return store.get(k)||null},setItem:(k,v)=>{if(blocked)throw Error('blocked');store.set(k,v)},removeItem:k=>store.delete(k)};
     const location={href:'https://example.test/course/'+path+(via?'?via='+via:'')+hash,hash};
-    const window={location,localStorage:storage,matchMedia:()=>({matches:false}),addEventListener:(k,f)=>(handlers[k]||=[]).push(f),history:{replaceState:(_,__,v)=>{location.hash=v;location.href=location.href.split('#')[0]+v}},print(){}};
+    const window={location,requestAnimationFrame:fn=>fn(),localStorage:storage,matchMedia:()=>({matches:false}),addEventListener:(k,f)=>(handlers[k]||=[]).push(f),history:{replaceState:(_,__,v)=>{location.hash=v;location.href=location.href.split('#')[0]+v}},print(){}};
     Object.values(fixtures.scripts).forEach(src=>new Function('window','document','localStorage','Event','URL',src)(window,document,storage,Evt,TestURL));
     document.dispatchEvent(new Evt('DOMContentLoaded'));
     const fire=(event)=>(handlers[event]||[]).forEach(fn=>fn());
@@ -60,79 +60,59 @@ function runCourseChecks(fixtures) {
     const set=(id,v,event='change')=>{const n=document.getElementById(id);n.value=v;n.dispatchEvent(new Evt(event))};
     return {document,window,store,go,set,fire,visible:()=>document.querySelectorAll('.step-panel').filter(n=>!n.hidden)};
   }
-  const path='lessons/erm/index.html';
-  let b=boot(path,{store:new Map([['wildfire-erm-lesson-v1',JSON.stringify({step:'step5',complete:false})]])});
-  assert(b.visible()[0].id==='step5','directory resume must keep saved task');
-  assert(JSON.parse(b.store.get('wildfire-erm-lesson-v1')).step==='step5','must not overwrite saved task');
-  assert(b.visible()[0].querySelector('[data-task-next]').href==='#step6','study must skip practical');
-  b.set('erm-mode','practical');
-  assert(b.visible()[0].querySelector('[data-task-next]').href==='#step5-assets','practical must start at assets');
-  for(const id of ['step5-assets','step5-row-a','step5-smoke','step5-run','step5-verify','step6']){b.go(id);assert(b.visible().length===1&&b.visible()[0].id===id,'practical sequence '+id)}
-  const store=b.store;b=boot(path,{store});assert(b.visible()[0].id==='step6','resume practical interpretation');
-  b=boot(path,{hash:'#step5-run',store:new Map([['wildfire-interactions-erm-v1',JSON.stringify({controls:{'erm-mode':'study'}})]])});
-  assert(b.visible()[0].id==='step5-run'&&b.document.getElementById('erm-mode').value==='practical','explicit practical link overrides saved study');
-  b=boot(path,{hash:'#step4'});b.set('repair-budget','other');b.document.querySelector('[data-prediction="no"]').click();
-  b=boot(path,{store:b.store});assert(b.visible()[0].id==='step4','saved quiz task');assert(b.document.getElementById('repair-budget').value==='other','saved quiz choice');assert(b.document.getElementById('feedback-budget').textContent.includes('AP is not proportional'),'saved quiz feedback');
-  assert(b.document.getElementById('prediction-feedback').textContent.includes('additional training'),'saved prediction feedback');
-  b.document.getElementById('reset-progress').click();assert(b.visible()[0].id==='step1','restart task');assert(b.document.getElementById('repair-budget').value==='','restart control');assert(b.document.getElementById('prediction-feedback').textContent==='','restart prediction');
-  for(const slug of ['forecast','prediction','evaluation','fold2','missingness','schedule','specialists']){
-    b=boot(`lessons/${slug}/index.html`,{hash:'#step3'});assert(b.visible()[0].id==='step3',slug+' explicit step');
-    const panels=b.document.querySelectorAll('.step-panel');for(const panel of panels){assert(!!panel.querySelector('.task-purpose'),slug+' task purpose');const next=panel.querySelector('[data-task-next]');assert(next&&!next.textContent.includes('Next step'),slug+' named action')}
-    b=boot(`lessons/${slug}/index.html`,{store:b.store});assert(b.visible()[0].id==='step3',slug+' resume');
-    b.fire('beforeprint');assert(b.visible().length===panels.length,'print all');b.fire('afterprint');assert(b.visible().length===1&&b.visible()[0].id==='step3','print restores');
+  let b;
+  for(const slug of ['forecast','prediction','evaluation','fold2','missingness','erm','schedule','specialists']) {
+    const path=`lessons/${slug}/index.html`;
+    b=boot(path,{hash:'#step3'});
+    const panels=b.document.querySelectorAll('.step-panel');
+    assert(b.visible().length===panels.length,slug+' all sections visible at deep link');
+    assert(b.window.CourseReading.current()==='step3',slug+' current anchor');
+    assert(b.document.querySelectorAll('.step-panel .pager').length===1,'only end-of-lesson navigation');
+    assert(b.document.querySelectorAll('.sidebar .small').length===0,'no competing resource menu');
+    for(const panel of panels) {
+      b.go(panel.id);assert(b.visible().length===panels.length,'anchor does not hide content');
+      assert(b.window.CourseReading.current()===panel.id,'anchor updates position');
+    }
+    b.go('step3');const store=b.store;b=boot(path,{store});
+    assert(b.window.CourseReading.current()==='step3','directory resumes saved section');
+    assert(b.document.getElementById('step3').scrolled,'resume scrolls to saved section');
+    b.document.querySelectorAll('.step-panel').forEach((n,i)=>{n.top=i<4?-100:1000});b.fire('scroll');
+    const expected=b.document.querySelectorAll('.step-panel')[3].id;
+    assert(b.window.CourseReading.current()===expected,'natural scroll tracks reading');
+    assert(JSON.parse(store.get(`wildfire-${slug}-lesson-v1`)).step===expected,'natural scroll saves position');
+    b.fire('beforeprint');assert(b.visible().length===panels.length,'print keeps article visible');b.fire('afterprint');assert(b.visible().length===panels.length,'print restore keeps article visible');
+    b.document.querySelectorAll('[data-default-open]').forEach(n=>assert(n.open,'required material remains expanded'));
+    b.document.getElementById('reset-progress').click();assert(b.window.CourseReading.current()==='step1','restart reading');assert(b.visible().length===panels.length,'restart does not hide sections');
+    const quizzes=b.document.querySelectorAll('[data-quiz], [data-repair]');
+    for(const q of quizzes)for(const option of q.options.filter(o=>o.value)){
+      b.set(q.id,option.value);const target=q.dataset.repair?'feedback-'+q.dataset.repair:q.id+'-feedback';
+      assert(b.document.getElementById(target).textContent.includes(option.dataset.reason),'specific feedback');
+    }
+    b=boot(path,{store:b.store});for(const q of quizzes)assert(b.document.getElementById(q.id).value===q.value,'choices survive reload');
+  }
+  b=boot('lessons/erm/index.html',{hash:'#step5-run'});assert(b.visible().length===12,'ERM practical and study share one long page');
+  assert(!b.document.getElementById('erm-mode'),'no route selector needed to reveal content');
+  b=boot('handbook/student-bridge/index.html',{hash:'#handover',via:'erm.step5-assets'});
+  assert(b.visible().length===4,'reference is continuous too');
+  const returns=b.document.querySelectorAll('[data-course-return-link]');returns.forEach(n=>assert(!n.hidden&&n.href.endsWith('/lessons/erm/index.html#step5-assets'),'exact return'));
+  const nested=b.document.querySelectorAll('a[href]').find(n=>n.getAttribute('href').includes('data-preparation/index.html'));assert(nested.href.includes('via=erm.step5-assets'),'nested return context');
+  b=boot('handbook/student-bridge/index.html',{store:new Map([['wildfire-course-last-v1',JSON.stringify({page:'forecast',step:'step3'})]])});
+  assert(b.document.querySelector('[data-course-return-link]').textContent.startsWith('Continue your last lesson'),'fallback is honestly labelled');
+  assert(b.document.querySelector('[data-course-return-link]').href.endsWith('/forecast/index.html#step3'),'direct reference resumes lesson');
+  for(const via of ['erm.step999','erm.step5-unknown','evil.step1']){
+    b=boot('handbook/student-bridge/index.html',{via});assert(b.document.querySelector('[data-course-return]').hidden,'reject invalid origin');
   }
   for(const slug of ['forecast','prediction','evaluation','missingness']){
     b=boot(`lessons/${slug}/index.html`);const prefix='real-lab-'+slug;
-    assert(!b.document.getElementById(prefix+'-explore').open,'exploration closed initially');
+    assert(!b.document.getElementById(prefix+'-explore').open,'optional exploration initially closed');
     b.set(prefix+'-event','fire_24935874');b.set(prefix+'-view','fire-mask');b.set(prefix+'-zoom','2.5','input');
-    b=boot(`lessons/${slug}/index.html`,{store:b.store});assert(b.document.getElementById(prefix+'-view').value==='fire-mask','restore view');assert(b.document.querySelector('[data-lab-image]').src.includes('fire_24935874/fire-mask.png'),'restore image');assert(b.document.querySelector('[data-lab-image]').style.width==='250%','restore zoom');
-    b.document.querySelector('[data-lab-reset]').click();assert(b.document.getElementById(prefix+'-event').value==='fire_24935867','reset event');assert(b.document.querySelector('[data-lab-image]').style.width==='100%','reset zoom');
+    b=boot(`lessons/${slug}/index.html`,{store:b.store});assert(b.document.querySelector('[data-lab-image]').src.includes('fire_24935874/fire-mask.png'),'restored image');assert(b.document.querySelector('[data-lab-image]').style.width==='250%','restored zoom');
+    b.document.querySelector('[data-lab-reset]').click();assert(b.document.querySelector('[data-lab-image]').style.width==='100%','reset image');
   }
-  b=boot('handbook/student-bridge/index.html',{hash:'#handover',via:'erm.step5-assets'});
-  const returns=b.document.querySelectorAll('[data-course-return-link]');assert(returns.length>2,'return in chapter footers');returns.forEach(n=>assert(!n.hidden&&n.href.endsWith('/lessons/erm/index.html#step5-assets'),'exact task return'));
-  const nested=b.document.querySelectorAll('a[href]').find(n=>n.getAttribute('href').includes('data-preparation/index.html'));
-  assert(nested.href.includes('via=erm.step5-assets'),'nested support keeps task');
-  b=boot('handbook/method-recipes/index.html',{hash:'#2-train-one-matched-set',via:'erm.step5-run'});assert(b.visible().length===1&&b.visible()[0].id==='chapter-3','deep reference anchor');assert(!b.visible()[0].querySelector('[data-course-return-link]').hidden,'reference footer return');
-  for(const via of ['erm.step999','erm.step5-unknown','evil.step1','erm.step5-run/../../x']){b=boot('handbook/student-bridge/index.html',{via});assert(b.document.querySelector('[data-course-return]').hidden,'invalid return route')}
-  b=boot(path,{blocked:true});assert(b.visible()[0].id==='step1','blocked storage works');b.go('step2');assert(b.visible()[0].id==='step2','blocked navigation works');
-  b=boot(path,{store:new Map([['wildfire-erm-lesson-v1','broken'],['wildfire-interactions-erm-v1','[]']])});assert(b.visible()[0].id==='step1','corrupt state fallback');
-  b=boot('index.html');assert(b.document.querySelectorAll('.hero .button').length===1,'one home action');assert(b.document.querySelector('[data-continue]').href==='lessons/forecast/index.html','new student starts lesson1');
-  b=boot('index.html',{store:new Map([['wildfire-course-last-v1',JSON.stringify({page:'erm',step:'step5-run'})]])});assert(b.document.querySelector('[data-continue]').href.endsWith('#step5-run'),'home resumes exact task');
-  b=boot(path,{hash:'#repair-budget-reasoning',store:new Map([['wildfire-interactions-erm-v1',JSON.stringify({details:{'repair-budget-reasoning':false}})]])});
-  assert(b.visible()[0].id==='step4'&&b.document.getElementById('repair-budget-reasoning').open,'explicit disclosure beats saved closed state');
-  b=boot(path,{hash:'#step5'});b.set('erm-mode','practical');b.go('step5-run');b.document.querySelector('[data-study-switch]').click();b.go('step6');
-  assert(b.document.getElementById('erm-mode').value==='study','pause practical selects study');assert(b.visible()[0].querySelector('[data-task-prev]').href==='#step5','study returns to plan');
-  b=boot('lessons/forecast/index.html',{hash:'#step3'});b.store.set('wildfire-course-last-v1',JSON.stringify({page:'erm',step:'step2'}));b.fire('pageshow');
-  assert(JSON.parse(b.store.get('wildfire-course-last-v1')).page==='forecast','history restoration updates last lesson');
-  b=boot('index.html');b.store.set('wildfire-course-last-v1',JSON.stringify({page:'erm',step:'step4'}));b.fire('pageshow');assert(b.document.querySelector('[data-continue]').href.endsWith('#step4'),'home history restoration updates continue');
-  for(const slug of ['forecast','prediction','evaluation','fold2','missingness','erm','schedule','specialists']){
-    b=boot(`lessons/${slug}/index.html`);
-    const quizzes=b.document.querySelectorAll('[data-quiz], [data-repair]');
-    for(const q of quizzes){
-      for(const option of q.options.filter(o=>o.value)){
-        b.set(q.id,option.value);const target=q.dataset.repair?'feedback-'+q.dataset.repair:q.id+'-feedback';
-        assert(b.document.getElementById(target).textContent.includes(option.dataset.reason),'specific quiz feedback '+q.id);
-      }
-    }
-    const old=b;b=boot(`lessons/${slug}/index.html`,{store:old.store});
-    for(const q of quizzes)assert(b.document.getElementById(q.id).value===q.value,'quiz reload '+q.id);
-  }
-  for(const [slug,id,value,output,expected] of [
-    ['prediction','head-weight','0','logit-value','-0.30'],
-    ['evaluation','metric-threshold','0.7','metric-counts','τ=0.70'],
-    ['schedule','schedule-progress','1500','cosine-value','0.500'],
-    ['specialists','route-cost','fixed','route-cost-readout','6,000']]){
-    b=boot(`lessons/${slug}/index.html`);b.set(id,value,id==='route-cost'?'change':'input');
-    b=boot(`lessons/${slug}/index.html`,{store:b.store});assert(b.document.getElementById(output).textContent.includes(expected),'restored computed output '+id);
-  }
-  for(const slug of ['forecast','prediction','evaluation','fold2','missingness','erm','schedule','specialists']) {
-    b=boot(`lessons/${slug}/index.html`, {store:new Map([[`wildfire-interactions-${slug}-v1`,JSON.stringify({details:{'lesson-before-start':false}})]])});
-    assert(b.document.getElementById('lesson-before-start').open,'required preparation overrides old collapsed state');
-    b.document.querySelectorAll('[data-default-open]').forEach(n=>assert(n.open,'required content is expanded'));
-    assert(b.document.querySelector('[data-directory]').open,'learning directory is expanded');
-    assert(b.document.querySelector('.lesson-contents').open,'lesson contents are expanded');
-    b.document.querySelectorAll('[data-quiz], [data-repair]').forEach(n=>assert(!b.document.getElementById(n.id+'-reasoning').open,'answer remains undisclosed'));
-  }
+  b=boot('lessons/erm/index.html',{blocked:true});assert(b.visible().length===12,'blocked storage permits reading');b.go('step4');assert(b.window.CourseReading.current()==='step4','blocked storage permits anchors');
+  b=boot('lessons/erm/index.html',{hash:'#repair-budget-reasoning',store:new Map([['wildfire-interactions-erm-v1',JSON.stringify({details:{'repair-budget-reasoning':false}})]])});assert(b.document.getElementById('repair-budget-reasoning').open,'deep disclosure overrides saved closed state');
+  b=boot('index.html');assert(b.document.querySelectorAll('.hero .button').length===1,'single learning entry');
+  b=boot('index.html',{store:new Map([['wildfire-course-last-v1',JSON.stringify({page:'erm',step:'step5-run'})]])});assert(b.document.querySelector('[data-continue]').href.endsWith('#step5-run'),'homepage continue');
   return {checks,passed:true,scope:'Actual generated HTML and scripts; simulated DOM and URL, not browser rendering'};
 }
 

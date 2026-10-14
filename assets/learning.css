@@ -236,3 +236,15 @@ html.enhanced .lab-explore:not([open]) .lab-controls{display:none}
 html{scroll-padding-top:155px}
 @media(max-width:720px){html.enhanced .task-location{top:0;font-size:12px}html{scroll-padding-top:115px}.step-panel{padding:22px}.pager .button{max-width:100%}}
 @media print{.task-location,.support-return,.study-route,.lab-explore button{display:none!important}}
+
+/* Lessons read as continuous articles; contents links only scroll. */
+.lesson-page .content{background:var(--paper)}
+.lesson-page .step-panel{border:0;border-top:1px solid var(--line);border-radius:0;margin:36px 0 0;padding:32px 0 0;background:transparent}
+.lesson-page .lesson-contents{padding:18px 22px;background:#f7fafc;border:1px solid var(--line);border-radius:8px}
+.lesson-page .lesson-contents h2{font-size:18px;margin-bottom:10px}
+.lesson-page .step-nav{border:0;padding:0;margin:0;display:block}
+.lesson-page .step-nav a{display:block;border:0;background:transparent;padding:4px 0;font-size:15px}
+.step-nav a[aria-current=location]{color:var(--teal);font-weight:750}
+.lesson-page .step-nav a[aria-current=location]{background:transparent}
+html{scroll-padding-top:85px}
+@media(max-width:720px){html{scroll-padding-top:20px}}

@@ -51,8 +51,7 @@
     }
   };
   document.addEventListener('DOMContentLoaded', () => {
-    // An explicit practical deep link takes priority over a saved study mode.
-    replay(restored.map(([n,v]) => [n, n.id === 'erm-mode' ? n.value : v]));
+    replay(restored);
     if (saved.prediction === 'yes' || saved.prediction === 'no') document.querySelector(`[data-prediction="${saved.prediction}"]`)?.click();
     details.forEach(n => {
       if (n.hasAttribute('data-default-open')) n.open = true;

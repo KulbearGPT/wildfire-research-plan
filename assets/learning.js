@@ -1,7 +1,7 @@
-/* Static content is complete; this adds section navigation and local reminders. */
+/* Continuous reading with anchor navigation and a saved reading position. */
 (() => {
   'use strict';
-  const slugs = ['forecast', 'prediction', 'evaluation', 'fold2', 'missingness', 'erm', 'schedule', 'specialists'];
+  const slugs = ['forecast','prediction','evaluation','fold2','missingness','erm','schedule','specialists'];
   const page = document.body.dataset.page || 'home';
   const prefix = document.body.dataset.root || '';
   const panels = Array.from(document.querySelectorAll('.step-panel'));
@@ -9,146 +9,103 @@
   let storageAvailable = true;
   function read(key) {
     try {
-      const item = JSON.parse(window.localStorage.getItem(key) || '{}');
-      return item && typeof item === 'object' && !Array.isArray(item) ? item : {};
-    } catch (_) { storageAvailable = false; return {}; }
+      const value = JSON.parse(window.localStorage.getItem(key) || '{}');
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    } catch (_) { storageAvailable=false; return {}; }
   }
-  function write(key, value) {
-    try { window.localStorage.setItem(key, JSON.stringify(value)); }
-    catch (_) { storageAvailable = false; }
+  function write(key,value) {
+    try { window.localStorage.setItem(key,JSON.stringify(value)); }
+    catch (_) { storageAvailable=false; }
+  }
+  function reveal(target) {
+    for (let n=target;n;n=n.parentElement) if (n.tagName==='DETAILS') n.open=true;
+  }
+  function targetFromHash() {
+    try { return document.getElementById(decodeURIComponent(window.location.hash.slice(1))); }
+    catch (_) { return null; }
   }
   if (!panels.length) {
-    function revealAnchor() {
-      let id; try { id = decodeURIComponent(window.location.hash.slice(1)); } catch (_) { return; }
-      let target = document.getElementById(id);
-      if (!target) return;
-      let parent = target;
-      while (parent) { if (parent.tagName === 'DETAILS') parent.open = true; parent = parent.parentElement; }
-    }
-    revealAnchor();
-    window.addEventListener('hashchange', revealAnchor);
-    function updateContinue() {
-    const resume = document.querySelector('[data-continue]');
-    const saved = read('wildfire-course-last-v1');
-    if (resume && window.CourseMap?.[saved.page]?.[saved.step]) {
-      resume.href = `${prefix}lessons/${saved.page}/index.html#${saved.step}`;
-      resume.textContent = `Continue learning: ${window.CourseMap[saved.page][saved.step].title} →`;
-    }
-    }
-    updateContinue();
-    window.addEventListener('pageshow',updateContinue);
+    const update=()=>{
+      reveal(targetFromHash());
+      const resume=document.querySelector('[data-continue]');
+      const saved=read('wildfire-course-last-v1');
+      if(resume && window.CourseMap?.[saved.page]?.[saved.step]) {
+        resume.href=`${prefix}lessons/${saved.page}/index.html#${saved.step}`;
+        resume.textContent=`Continue learning: ${window.CourseMap[saved.page][saved.step].title} →`;
+      }
+    };
+    update();window.addEventListener('hashchange',update);window.addEventListener('pageshow',update);
     return;
   }
-  const storageKey = page === 'erm' ? 'wildfire-erm-lesson-v1' : `wildfire-${page}-lesson-v1`;
-  let stored = read(storageKey);
-  const valid = id => panels.some(panel => panel.id === id);
-  if (!valid(stored.step)) stored.step = panels[0].id;
-  stored.complete = stored.complete === true;
-  const stepLinks = Array.from(document.querySelectorAll('.step-nav a'));
-  const progress = document.getElementById('progress-status');
-  const completion = document.getElementById('lesson-complete');
-  let current = stored.step;
-  const mode = document.getElementById('erm-mode');
-  const activePanels = () => panels.filter(p => !p.hasAttribute('data-practical') || !mode || mode.value === 'practical');
-  let printing = false;
-  let detailStates = [];
-
-  function save() {
-    stored.step = current;
-    write(storageKey, stored);
-    if (slugs.includes(page)) write('wildfire-course-last-v1', { page, step: current });
-    if (progress) progress.textContent = `Task ${activePanels().findIndex(p => p.id === current) + 1} of ${activePanels().length}${stored.complete ? ' · Reviewed' : ''}. ${storageAvailable ? 'Task and activity choices are saved on this browser.' : 'Progress is temporary; browser storage is unavailable.'}`;
-    if (completion) completion.checked = stored.complete;
-  }
-  function show(id, focus = false, target = null) {
-    current = valid(id) ? id : panels[0].id;
-    if (mode && panels.find(p => p.id === current).hasAttribute('data-practical')) mode.value = 'practical';
-    const active = activePanels();
-    const index = active.findIndex(p => p.id === current);
-    const panel = panels.find(p => p.id === current);
-    const next = active[index + 1];
-    const previous = active[index - 1];
-    const nextLink = panel.querySelector('[data-task-next]');
-    const previousLink = panel.querySelector('[data-task-prev]');
-    if (nextLink && next) { nextLink.href = `#${next.id}`; nextLink.textContent = `Next: ${next.dataset.title} →`; }
-    if (previousLink && previous) { previousLink.href = `#${previous.id}`; previousLink.textContent = `← ${previous.dataset.title}`; }
-    stepLinks.forEach(link => {
-      const target = panels.find(p => `#${p.id}` === link.getAttribute('href'));
-      link.hidden = !!target && !active.includes(target);
-    });
-    const count = document.querySelector('[data-task-total]');
-    if (count) count.textContent = `${active.length} tasks${mode ? (mode.value === 'practical' ? ' · cluster practical' : ' · browser study') : ''}`;
-    const location = document.querySelector('[data-task-location]');
-    if (location) location.textContent = `${slugs.includes(page) ? 'Lesson '+(slugs.indexOf(page)+1)+' · ' : 'Supporting detail · '}Task ${index+1}/${active.length}: ${panel.dataset.title || panel.querySelector('h2')?.textContent || ''}${next ? ' · Next: '+(next.dataset.title || next.querySelector('h2')?.textContent || '') : ' · Finish and return'}`;
-    panels.forEach(panel => { panel.hidden = !printing && panel.id !== current; });
-    stepLinks.forEach(link => {
-      if (link.getAttribute('href') === `#${current}`) link.setAttribute('aria-current', 'step');
+  const key=`wildfire-${page}-lesson-v1`;
+  let stored=read(key);
+  const valid=id=>panels.some(p=>p.id===id);
+  const savedStep=valid(stored.step)?stored.step:panels[0].id;
+  let current=savedStep, printing=false, detailStates=[], scrollPending=false;
+  window.CourseReading = {current:()=>current};
+  const links=Array.from(document.querySelectorAll('.step-nav a'));
+  const progress=document.getElementById('progress-status');
+  const completion=document.getElementById('lesson-complete');
+  panels.forEach(p=>{p.hidden=false});
+  function save(id) {
+    if (!valid(id)) return;
+    current=id; stored.step=id; stored.complete=stored.complete===true;
+    write(key,stored);
+    if(slugs.includes(page)) write('wildfire-course-last-v1',{page,step:id});
+    if(progress) progress.textContent=`Reading section ${panels.findIndex(p=>p.id===id)+1} of ${panels.length}${stored.complete?' · Reviewed':''}. ${storageAvailable?'Reading position saved on this browser.':'Progress is temporary; browser storage is unavailable.'}`;
+    if(completion) completion.checked=stored.complete;
+    links.forEach(link=>{
+      if(link.getAttribute('href')===`#${id}`) link.setAttribute('aria-current','location');
       else link.removeAttribute('aria-current');
     });
-    const selected = stepLinks.find(link => link.getAttribute('href') === `#${current}`);
-    const label = document.getElementById('section-label');
-    if (label && selected) label.textContent = `Contents · ${selected.textContent}`;
-    save();
-    if (focus) {
-      const panel = panels.find(p => p.id === current);
-      const heading = target && target !== panel ? target : panel.querySelector('h2');
-      if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); heading.scrollIntoView({ block: 'start' }); }
+  }
+  function navigate(focus=false) {
+    const target=targetFromHash();reveal(target);
+    const panel=target?.closest('.step-panel');
+    if(panel) save(panel.id);
+    else if(!window.location.hash) save(current);
+    if(focus && target) {
+      const heading=target===panel?panel.querySelector('h2'):target;
+      heading?.setAttribute('tabindex','-1');heading?.focus({preventScroll:true});
+      target.scrollIntoView({block:'start'});
     }
   }
-  function followLocation(focus) {
-    let hash;
-    try { hash = decodeURIComponent(window.location.hash.slice(1)); }
-    catch (_) { hash = ''; }
-    const target = document.getElementById(hash);
-    if (target) {
-      let ancestor = target;
-      while (ancestor) { if (ancestor.tagName === 'DETAILS') ancestor.open = true; ancestor = ancestor.parentElement; }
-    }
-    const panel = target && target.closest('.step-panel');
-    if (panel) show(panel.id, focus, target);
-    else if (!hash) show(stored.step, focus);
-    else if (!target) show(panels[0].id, false);
-    // Known anchors outside sections (e.g. Skip to content) stay outside them.
+  save(savedStep);navigate();
+  // Resume only an existing saved section, after deferred interactions settle.
+  if(!window.location.hash && valid(stored.step) && savedStep!==panels[0].id) {
+    window.history.replaceState(null,'',`#${savedStep}`);
+    document.addEventListener('DOMContentLoaded',()=>document.getElementById(savedStep).scrollIntoView({block:'start'}));
   }
-  followLocation(false);
-  if (panels.every(p => !p.hidden)) show(stored.step);
-  // Put the resolved task in the URL without adding a spurious Back entry.
-  if (!window.location.hash) window.history.replaceState(null, '', `#${current}`);
-  if (mode) mode.addEventListener('change', () => {
-    if (mode.value === 'study' && panels.find(p => p.id === current).hasAttribute('data-practical')) window.location.hash = 'step5';
-    else show(current);
+  function observeReading() {
+    if(printing || scrollPending) return;
+    scrollPending=true;
+    window.requestAnimationFrame(()=>{
+      scrollPending=false;if(printing)return;
+      let selected=panels[0];
+      for(const p of panels) {if(p.getBoundingClientRect().top<=160) selected=p;else break;}
+      if(selected.id!==current) {
+        save(selected.id);
+        window.history.replaceState(null,'',`#${selected.id}`);
+      }
+    });
+  }
+  window.addEventListener('scroll',observeReading,{passive:true});
+  window.addEventListener('hashchange',()=>navigate(true));
+  window.addEventListener('pageshow',event=>{if(event?.persisted)save(current);else navigate()});
+  if(completion)completion.addEventListener('change',()=>{stored.complete=completion.checked;save(current)});
+  document.getElementById('reset-progress')?.addEventListener('click',()=>{
+    window.CourseState?.reset();stored={complete:false,step:panels[0].id};save(panels[0].id);
+    window.history.replaceState(null,'',`#${panels[0].id}`);navigate(true);
   });
-  document.querySelectorAll('[data-study-switch]').forEach(link => link.addEventListener('click', () => {
-    if (mode) { mode.value = 'study'; window.CourseState?.save(); }
-  }));
-  window.addEventListener('hashchange', () => followLocation(true));
-  window.addEventListener('pageshow', () => followLocation(false));
-  if (completion) completion.addEventListener('change', () => { stored.complete = completion.checked; save(); });
-  const reset = document.getElementById('reset-progress');
-  if (reset) reset.addEventListener('click', () => {
-    window.CourseState?.reset();
-    stored = { complete: false, step: panels[0].id };
-    try { window.localStorage.removeItem(storageKey); } catch (_) { storageAvailable = false; }
-    show(panels[0].id, true);
-    window.location.hash = panels[0].id;
-  });
-  function preparePrint() {
-    if (printing) return;
-    printing = true;
-    window.CourseState?.printing(true);
-    detailStates = Array.from(document.querySelectorAll('main details')).map(detail => [detail, detail.open]);
-    detailStates.forEach(([detail]) => { detail.open = true; });
-    panels.forEach(panel => { panel.hidden = false; });
+  function preparePrint(){
+    if(printing)return;printing=true;window.CourseState?.printing(true);
+    detailStates=Array.from(document.querySelectorAll('main details')).map(n=>[n,n.open]);
+    detailStates.forEach(([n])=>{n.open=true});
   }
-  function restorePrint() {
-    if (!printing) return;
-    printing = false;
-    detailStates.forEach(([detail, open]) => { detail.open = open; });
-    show(current);
-    window.CourseState?.printing(false);
+  function restorePrint(){
+    if(!printing)return;detailStates.forEach(([n,open])=>{n.open=open});
+    printing=false;window.CourseState?.printing(false);
   }
-  window.addEventListener('beforeprint', preparePrint);
-  window.addEventListener('afterprint', restorePrint);
-  const print = document.getElementById('print-lesson');
-  if (print) print.addEventListener('click', () => { preparePrint(); window.print(); });
+  window.addEventListener('beforeprint',preparePrint);window.addEventListener('afterprint',restorePrint);
+  document.getElementById('print-lesson')?.addEventListener('click',()=>{preparePrint();window.print()});
 })();
