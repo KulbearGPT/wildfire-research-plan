@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "job_id": "23941309",
+  "job_state": "FAILED after completing two figure sets; third event had no qualifying window",
+  "source_commit": "8ca0932ab8717e70b8e131c80bfc5ec47ce88358",
+  "source_dataset": "WSTS original 2021 events in the corrected project HDF5 collection",
+  "source_record": "https://zenodo.org/records/8006177",
+  "selection": "Three fixed inventory records; first consecutive three-date window with positive last-input and target masks, target indices 6..19. Two records yielded images. No rerun or expanded search.",
+  "spatial_scope": "128x128 source-pixel center crop; nearest-neighbor display; not georeferenced or representative of independent fire events.",
+  "model_scope": "No neural model inference. Persistence copies the preceding observed binary mask.",
+  "recovery": "PNG content inspected individually. Dates transcribed from timeline headings and verified against the other labelled plots. Original array metadata was not saved before the interruption; numerical counts and array checksums cannot be recovered from these images.",
+  "skipped_events": [
+    {
+      "source_file": "2021/fire_24935885.hdf5",
+      "reason": "No qualifying window within fixed scan bound"
+    }
+  ],
+  "events": [
+    {
+      "id": "fire_24935867",
+      "source_file": "2021/fire_24935867.hdf5",
+      "dates": [
+        "2021-02-15",
+        "2021-02-16",
+        "2021-02-17"
+      ],
+      "crop_rule": "Center 128x128; source offsets not retained",
+      "persistence_counts": null,
+      "array_digests": null,
+      "feature_display": "Stored raw values, independent per-channel 2nd/98th percentile color limits. No unit conversion.",
+      "figures": [
+        {
+          "name": "timeline",
+          "title": "Observed fire changes across dates",
+          "path": "fire_24935867/timeline.png",
+          "sha256": "0e514e393c875c2adfd49a6aef75e390087374483de5e49c3baf097ae70019d0",
+          "width": 1638,
+          "height": 546
+        },
+        {
+          "name": "fire-mask",
+          "title": "A numeric active-fire channel becomes a binary mask",
+          "path": "fire_24935867/fire-mask.png",
+          "sha256": "3efbc0abc362f631364e3b08a0c5ce740f910efffb04d50081f99519b29bd39a",
+          "width": 1638,
+          "height": 546
+        },
+        {
+          "name": "channels",
+          "title": "Different features describe the same patch",
+          "path": "fire_24935867/channels.png",
+          "sha256": "e9c18a87a69c778d46955347fed2a88121ece65604777c215472d38ac1494dff",
+          "width": 1638,
+          "height": 546
+        },
+        {
+          "name": "missingness",
+          "title": "Gray means deliberately hidden, not observed background",
+          "path": "fire_24935867/missingness.png",
+          "sha256": "fae173684e9402cb452f520da72954145c743e8678bd489a38928e7adf5562a2",
+          "width": 1092,
+          "height": 1092
+        },
+        {
+          "name": "persistence",
+          "title": "Yesterday's mask is a simple forecast to challenge",
+          "path": "fire_24935867/persistence.png",
+          "sha256": "b123374112143c07730f1aa4e794166c4dd341de7eac4d626cfc1fc06c2e8233",
+          "width": 1638,
+          "height": 546
+        }
+      ]
+    },
+    {
+      "id": "fire_24935874",
+      "source_file": "2021/fire_24935874.hdf5",
+      "dates": [
+        "2021-02-15",
+        "2021-02-16",
+        "2021-02-17"
+      ],
+      "crop_rule": "Center 128x128; source offsets not retained",
+      "persistence_counts": null,
+      "array_digests": null,
+      "feature_display": "Stored raw values, independent per-channel 2nd/98th percentile color limits. No unit conversion.",
+      "figures": [
+        {
+          "name": "timeline",
+          "title": "Observed fire changes across dates",
+          "path": "fire_24935874/timeline.png",
+          "sha256": "62b9ab0048002db888f7e7022cdecb3998b4320835e2b6dfc67afdd0111dcfe7",
+          "width": 1638,
+          "height": 546
+        },
+        {
+          "name": "fire-mask",
+          "title": "A numeric active-fire channel becomes a binary mask",
+          "path": "fire_24935874/fire-mask.png",
+          "sha256": "30a14f375dc20e2c555cd11482dfe1e24058322dfcde087a3a64e4f7f4be830f",
+          "width": 1638,
+          "height": 546
+        },
+        {
+          "name": "channels",
+          "title": "Different features describe the same patch",
+          "path": "fire_24935874/channels.png",
+          "sha256": "2dd9e261dd29063848f3623f3fe3f644cdb8890748b3f80b25abfc9b418409f6",
+          "width": 1638,
+          "height": 546
+        },
+        {
+          "name": "missingness",
+          "title": "Gray means deliberately hidden, not observed background",
+          "path": "fire_24935874/missingness.png",
+          "sha256": "6ed6b7a57e5b0f973dae446b0ddc8240879708af904a9c26f1c9f6bf9f792a3f",
+          "width": 1092,
+          "height": 1092
+        },
+        {
+          "name": "persistence",
+          "title": "Yesterday's mask is a simple forecast to challenge",
+          "path": "fire_24935874/persistence.png",
+          "sha256": "c927fccbb10d34efc8ec42c7f2c83a1394202f7d4f280427a7db99fdec6a18fe",
+          "width": 1638,
+          "height": 546
+        }
+      ]
+    }
+  ]
+}

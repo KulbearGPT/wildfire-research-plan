@@ -85,3 +85,36 @@ Without JavaScript all content is readable; lesson/reference printing expands
 sections and disclosures and restores their prior state. Deep links open the
 containing section and disclosures. Completion checkboxes record review, not
 verified experimental completion. Storage failure must not prevent reading.
+
+## Real-data examples
+
+The real-data exporter is `scripts/course/export-real-examples.py`. It must run
+in a bounded Slurm CPU allocation, using read-only prepared HDF5 inputs and a new
+external output directory. The exporter records selected date/crop identities, array digests, corruption
+fractions, source commit and job ID incrementally in `manifest.json`. An event
+without a qualifying window is recorded as skipped within the fixed scan bound. These are teaching cases selected for visibility, not a random
+performance sample. No neural-model inference is performed: the error panels use
+persistence (copy the previous observed mask), labelled explicitly.
+
+After reviewing exported figures, import only those figures and their manifest:
+
+```bash
+python scripts/course/build-real-examples.py --export /absolute/reviewed/export
+python scripts/build-course-lessons.py
+python scripts/build-course-guides.py
+python scripts/build-course-references.py
+python scripts/check-course-site.py
+```
+
+The import writes maintained lesson fragments, the real-data support page, and
+`assets/real-examples/`. Normal documentation rebuilds do not access raw data.
+Colors, date labels and captions must distinguish observed background, controlled
+hidden inputs, next-day targets and prediction errors. Raw channel displays are
+not natural-color photographs; independently clipped color scales are not shared
+physical units. Synthetic Cedar and score examples remain labelled separately.
+
+The first published asset set uses a reviewed partial export from job 23941309.
+Its manifest explicitly records the job failure at the third event and unavailable
+array-level metadata. `recover-reviewed-export.py` preserves this exceptional
+provenance; do not use it to invent metadata for a new run. See the implementation
+record for the bounds and actual checks.

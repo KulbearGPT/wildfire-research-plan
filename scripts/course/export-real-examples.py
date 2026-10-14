@@ -41,7 +41,7 @@ def main():
         'selection':'Three fixed event IDs from the committed inventory; first consecutive three-date window with nonzero fire on last input and target, target indices 6..19. Selected for concept visibility, not representativeness or model performance.',
         'spatial_scope':'Center 128x128 source pixels, no smoothing or spatial reprojection. Row/column coordinates, not a basemap.',
         'model_scope':'No neural model inference. Persistence copies the previous observed binary mask unchanged.',
-        'events':[]}
+        'events':[], 'skipped_events':[]}
 
     def normalized(v):
         s = v.decode() if isinstance(v,bytes) else str(v)
@@ -65,7 +65,10 @@ def main():
                 fire=np.asarray(d[t-2:t+1,22,top:top+128,left:left+128])
                 if np.any(fire[-2]>0) and np.any(fire[-1]>0):
                     selected=t;break
-            if selected is None:raise ValueError('No qualifying window in fixed event '+relative)
+            if selected is None:
+                manifest['skipped_events'].append({'source_file':relative,'reason':'No qualifying window within the fixed scan bound'})
+                (args.output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+                continue
             raw=np.asarray(d[t-1:t,:,top:top+128,left:left+128])
             shape=list(d.shape)
         ident=Path(relative).stem
@@ -124,6 +127,7 @@ def main():
         event['hidden_fractions']=fractions
         event['feature_display']='Raw stored values; 2nd–98th percentile color limits per channel and event. No unit conversion; color saturation is display-only; incomparable color scales across features.'
         manifest['events'].append(event)
+        (args.output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     (args.output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     print(json.dumps({'events':len(manifest['events']),'figures':sum(len(x['figures']) for x in manifest['events']),'output':str(args.output)}))
 

@@ -11,7 +11,14 @@ Do not replace missing measurements or identities with teaching examples.
 - Agreed runs, per-run resource limits and output locations:
 - Blocker, next action and person to contact:
 
-## 2. Cedar exercises (synthetic)
+## 2. Real observations, then optional Cedar arithmetic
+
+- Real event record and input/target dates:
+- Describe an observed fire pixel, a hidden-input region and a forecast error:
+- What differs between the NDVI, wind and elevation grids?
+- Why does a persistence error not establish how a neural model performs?
+
+### Optional Cedar exercises (synthetic)
 
 - Input day / target day / legal inputs:
 - Pipeline sketch and two erroneous cells:

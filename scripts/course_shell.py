@@ -63,7 +63,7 @@ def shell(title, content, *, prefix, page, current='', step_links='', source='',
 <header class="topbar"><a class="brand" href="{prefix}index.html">WILDFIRE <span>/ LAB</span></a>
 <nav aria-label="Main navigation"><a href="{prefix}index.html#course">Course</a><a href="{prefix}index.html#handbook">Practical handbook</a><a href="{prefix}index.html#library">Reference library</a></nav></header>
 <div class="layout"><aside class="sidebar"><details open data-directory><summary>The learning path</summary>{directory(prefix,current)}
-<p class="small"><a href="{prefix}handbook/student-start/index.html">Practical readiness</a><br><a href="{prefix}handbook/student-case/index.html">Running example</a><br><a href="{prefix}handbook/student-report/index.html">Output → report</a><br><a href="{prefix}handbook/student-help/index.html">I am stuck</a><br><a href="{prefix}experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
+<p class="small"><a href="{prefix}handbook/student-start/index.html">Practical readiness</a><br><a href="{prefix}handbook/student-real-data/index.html">Real-data examples</a><br><a href="{prefix}handbook/student-report/index.html">Output → report</a><br><a href="{prefix}handbook/student-help/index.html">I am stuck</a><br><a href="{prefix}experiments/index.html">Experiment name finder</a><br>Eight lessons. Revisit any step.</p>
 {progress_html}</details></aside>
 <main class="content" id="main">{intro}{step_links}
 <noscript><p class="note">All sections are shown. Examples, answers and downloads remain readable without JavaScript.</p></noscript>

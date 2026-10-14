@@ -6,7 +6,8 @@ from course_shell import ROOT, Sections, reference_page
 
 def main():
     source = ROOT / 'site-content/en/student-support'
-    for page in json.loads((source / 'pages.json').read_text()):
+    pages = json.loads((source / 'pages.json').read_text())
+    for page in pages:
         slug = page['slug']
         fragment = (source / f'{slug}.html').read_text()
         sections = [(a['id'], a['data-title'], body[body.index('>') + 1:-len('</section>')])
@@ -19,7 +20,7 @@ def main():
     # All downloadable examples are maintained beside the page sources.
     for name, slug in [('cedar.json', 'case'), ('teaching-outputs.json', 'report')]:
         (ROOT / f'handbook/student-{slug}/{name}').write_text((source / name).read_text())
-    print('Rendered 5 student support pages and 2 synthetic teaching downloads.')
+    print(f'Rendered {len(pages)} student support pages and 2 synthetic teaching downloads.')
 
 
 if __name__ == '__main__':

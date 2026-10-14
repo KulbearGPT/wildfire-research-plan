@@ -129,3 +129,36 @@ foundation and continuation output schemas were inspected without model imports.
 51 V8 DOM-harness assertions pass across all five new pages for deep links,
 section isolation, blocked storage, mobile menu state and print restoration.
 No real browser rendering, training, commit, push or deployment was performed.
+
+## Real-data visualization follow-up
+
+Authorized budget: one CPU job, 4 cores, 8GB, at most 15 minutes; no neural
+inference or training. Export source was committed as 8ca0932 for the existing
+HEAD-snapshot submitter. Sandbox submission failed before obtaining a job ID;
+the successful submission was job 23941309. It ran for 23 seconds, completed
+two five-figure sets, then failed when the third fixed record had no qualifying
+window. No retry or expanded data scan was launched.
+
+All ten produced PNGs were individually inspected. They show real source
+observations for fire_24935867 and fire_24935874, input 2021-02-16 and target
+2021-02-17, plus the preceding day. Similar spatial structures mean these must
+not be presented as independent fire cases. The third record is explicitly
+recorded as unavailable under the bounded selection rule.
+
+The original exporter saved its manifest only at the end. Recovery therefore
+records PNG checksums, visible dates, source commit/job and the crop rule; it
+leaves array hashes, source crop offsets and exact confusion counts unavailable.
+The recovery script is narrowly scoped to these reviewed outputs. Future exports
+now save manifests incrementally and skip nonqualifying records. That numerical
+export change has not been rerun.
+
+Ten real figures are integrated into lessons 1/2/3/5 and a shared gallery, with
+native magnification disclosures. The main course points to real observations;
+Cedar remains explicitly optional synthetic arithmetic. Persistence error maps
+are labelled as copying yesterday's mask, not as ERM/cosine predictions.
+
+Validation: 144 pages and 8,438 local links/assets pass the structural/link
+checker; tracked whitespace checks pass. All ten imported PNG checksums match
+the individually inspected exports, and maintained Python files parse. Images
+were inspected directly; rendered desktop/mobile browser layouts remain untested.
+The source preparation commit is local; final page/asset changes are not pushed.
